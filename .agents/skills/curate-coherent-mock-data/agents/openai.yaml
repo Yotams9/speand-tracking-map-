@@ -1,0 +1,4 @@
+interface:
+  display_name: "Curate Coherent Mock Data"
+  short_description: "Create coherent mock scenarios without false claims"
+  default_prompt: "Use $curate-coherent-mock-data to define a small, internally consistent demo dataset."

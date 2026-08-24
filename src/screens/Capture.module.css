@@ -1,0 +1,232 @@
+.wrap { display: flex; flex-direction: column; gap: var(--s-4); }
+
+/* ---------------------------------------------------------------------------
+   Simulated viewfinder
+   --------------------------------------------------------------------------- */
+
+.finder {
+  position: relative;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 30%, #26323a 0%, #161e24 60%, #10161b 100%);
+  aspect-ratio: 4 / 3;
+  max-block-size: 46vh;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+@media (min-width: 760px) {
+  .finder { aspect-ratio: 16 / 9; max-block-size: 340px; }
+}
+
+.finderBrackets { position: absolute; inset: var(--s-5); pointer-events: none; }
+
+.bracket {
+  position: absolute;
+  inline-size: 30px;
+  block-size: 30px;
+  border: 2.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 4px;
+}
+
+.bracket:nth-child(1) { inset-block-start: 0; inset-inline-start: 0; border-inline-end: 0; border-block-end: 0; }
+.bracket:nth-child(2) { inset-block-start: 0; inset-inline-end: 0; border-inline-start: 0; border-block-end: 0; }
+.bracket:nth-child(3) { inset-block-end: 0; inset-inline-start: 0; border-inline-end: 0; border-block-start: 0; }
+.bracket:nth-child(4) { inset-block-end: 0; inset-inline-end: 0; border-inline-start: 0; border-block-start: 0; }
+
+.scanline {
+  position: absolute;
+  inset-inline: var(--s-6);
+  block-size: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--brand-500) 90%, white) 50%,
+    transparent
+  );
+  animation: sweep 2.6s var(--ease-in-out) infinite;
+  opacity: 0.85;
+}
+
+@keyframes sweep {
+  0%, 100% { inset-block-start: 22%; }
+  50% { inset-block-start: 74%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanline { animation: none; inset-block-start: 50%; }
+}
+
+.finderText {
+  position: relative;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  align-items: center;
+  padding-inline: var(--s-6);
+}
+
+.finderBadge {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 3px var(--s-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: var(--tracking-micro);
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------------------
+   Options
+   --------------------------------------------------------------------------- */
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-2);
+}
+
+.options > :first-child { grid-column: 1 / -1; }
+
+@media (min-width: 620px) {
+  .options { grid-template-columns: repeat(3, 1fr); }
+  .options > :first-child { grid-column: auto; }
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-block-size: 60px;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--ink-100);
+  box-shadow: var(--e-1);
+  text-align: start;
+  font-weight: 580;
+  transition: border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.option:hover { border-color: var(--brand-500); box-shadow: var(--e-2); }
+.option:active { transform: scale(0.985); }
+
+.optionIcon {
+  inline-size: 34px;
+  block-size: 34px;
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  background: var(--brand-050);
+  color: var(--brand-700);
+  flex: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Processing / review / success
+   --------------------------------------------------------------------------- */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-8) var(--s-5);
+  text-align: center;
+}
+
+.spinner {
+  inline-size: 38px;
+  block-size: 38px;
+  border-radius: 50%;
+  border: 3px solid var(--ink-100);
+  border-block-start-color: var(--brand-700);
+  animation: spin 780ms linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2.4s; }
+}
+
+.successMark {
+  inline-size: 60px;
+  block-size: 60px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--gain-100);
+  color: var(--gain-700);
+}
+
+.reviewLines { inline-size: 100%; }
+
+.reviewLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-block: var(--s-2);
+  font-size: var(--fs-sub);
+}
+
+.reviewLine + .reviewLine { border-block-start: 1px solid var(--ink-100); }
+
+.reviewTotal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-block-start: var(--s-3);
+  margin-block-start: var(--s-2);
+  border-block-start: 2px solid var(--ink-200);
+  font-weight: 680;
+  font-size: var(--fs-heading);
+}
+
+.actions { display: flex; gap: var(--s-2); inline-size: 100%; }
+.actions > * { flex: 1; }
+
+/* ---------------------------------------------------------------------------
+   Quick add form
+   --------------------------------------------------------------------------- */
+
+.field { display: flex; flex-direction: column; gap: var(--s-2); text-align: start; }
+
+.label { font-size: var(--fs-caption); font-weight: 640; color: var(--ink-700); }
+
+.input,
+.select {
+  min-block-size: var(--tap-min);
+  padding-inline: var(--s-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--ink-200);
+  background: var(--surface);
+  font-size: var(--fs-body);
+  inline-size: 100%;
+}
+
+.input:focus-visible,
+.select:focus-visible { border-color: var(--brand-500); }
+
+.input[aria-invalid='true'] { border-color: var(--alert-500); }
+
+.error { font-size: var(--fs-caption); color: var(--alert-700); font-weight: 600; }
+
+.failMark {
+  inline-size: 60px;
+  block-size: 60px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--alert-100);
+  color: var(--alert-700);
+}

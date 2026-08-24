@@ -1,0 +1,38 @@
+.grid {
+  display: grid;
+  gap: var(--s-3);
+}
+
+/* One column on phones. Two on wide screens, because these cards are read
+   independently — a single stretched column wastes the space and slows the
+   scan. */
+@media (min-width: 760px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--s-4);
+    align-items: start;
+  }
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-block-start: var(--s-3);
+}
+
+.pill {
+  padding: 4px var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--ink-050);
+  border: 1px solid var(--ink-100);
+  font-size: var(--fs-caption);
+  font-weight: 560;
+  color: var(--ink-700);
+}
+
+.footLink {
+  margin-block-start: var(--s-5);
+  font-size: var(--fs-sub);
+  font-weight: 600;
+}

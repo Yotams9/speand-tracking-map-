@@ -1,0 +1,15 @@
+{
+  "name": "Ledgerline — purchase intelligence demo",
+  "short_name": "Ledgerline",
+  "description": "Concept demo. Synthetic data only; not connected to any real account.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f3ef",
+  "theme_color": "#0f5c57",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

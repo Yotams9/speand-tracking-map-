@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan With Phase Gates"
+  short_description: "Plan deliverables and enforce approval gates"
+  default_prompt: "Use $plan-with-phase-gates to turn this request into an approval-gated phase plan."

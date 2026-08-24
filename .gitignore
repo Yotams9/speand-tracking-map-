@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vite/
+*.local
+.DS_Store
+Thumbs.db
+
+# No credentials belong in this repository. Phase 1 needs none at all.
+.env
+.env.*

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run Visual QA Loops"
+  short_description: "Inspect and refine responsive UI in repeatable loops"
+  default_prompt: "Use $run-visual-qa-loops to inspect the approved UI across target viewports and iterate on visible issues."

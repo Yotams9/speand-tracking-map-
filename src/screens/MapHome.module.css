@@ -1,0 +1,198 @@
+.wrap {
+  position: relative;
+  block-size: 100%;
+  inline-size: 100%;
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   Floating chrome above the map
+   --------------------------------------------------------------------------- */
+
+.top {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 10;
+  padding: calc(var(--safe-t) + var(--s-3)) var(--s-4) var(--s-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--map-land) 88%, transparent) 0%,
+    color-mix(in srgb, var(--map-land) 55%, transparent) 62%,
+    transparent 100%
+  );
+}
+
+.top > * { pointer-events: auto; }
+
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.summaryFigure {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+
+.summaryAmount {
+  font-size: var(--fs-title);
+  font-weight: 660;
+  letter-spacing: var(--tracking-title);
+}
+
+.chips { margin-inline: calc(var(--s-4) * -1); padding-inline: var(--s-4); }
+
+/* ---------------------------------------------------------------------------
+   Markers
+   --------------------------------------------------------------------------- */
+
+.marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+/* Cities. Size carries relative spend; the label carries the number, because
+   area alone is not something a person can read accurately. */
+.clusterDot {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--brand-700) 88%, transparent);
+  color: #fff;
+  font-weight: 660;
+  font-size: var(--fs-caption);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-700) 16%, transparent), var(--e-2);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.clusterBtn:hover .clusterDot { transform: scale(1.06); }
+
+.clusterLabel {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink-700);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 6px rgba(255, 255, 255, 0.7);
+}
+
+/* Places. */
+.merchantBtn { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+
+.merchantDot {
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 50%;
+  border: 3px solid var(--surface);
+  box-shadow: var(--e-2);
+  transition: transform var(--dur-base) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+}
+
+.merchantBtn:hover .merchantDot { transform: scale(1.18); }
+
+.merchantBtn[data-selected='true'] .merchantDot {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--ink-900) 12%, transparent), var(--e-3);
+}
+
+.merchantLabel {
+  font-size: var(--fs-micro);
+  font-weight: 650;
+  color: var(--ink-900);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.92), 0 0 6px rgba(255, 255, 255, 0.8);
+  max-inline-size: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Individual purchases orbit their place rather than claiming a position of
+   their own — the data says which shop, not which square metre. */
+.purchaseDot {
+  position: absolute;
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--surface);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* ---------------------------------------------------------------------------
+   Overlays
+   --------------------------------------------------------------------------- */
+
+.hint {
+  position: absolute;
+  inset-block-end: var(--s-4);
+  inset-inline: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.hintPill {
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-pill);
+  padding: var(--s-2) var(--s-4);
+  font-size: var(--fs-caption);
+  font-weight: 560;
+  color: var(--ink-500);
+  box-shadow: var(--e-1);
+}
+
+.emptyOverlay {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline: var(--s-5);
+  transform: translateY(-50%);
+  z-index: 12;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e-3);
+  padding: var(--s-5);
+  text-align: center;
+  max-inline-size: 340px;
+  margin-inline: auto;
+}
+
+.loading {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: var(--map-land);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-4);
+}
+
+.loadingBars { display: flex; flex-direction: column; gap: var(--s-2); align-items: center; }
+
+/* ---------------------------------------------------------------------------
+   Sheet contents
+   --------------------------------------------------------------------------- */
+
+.sheetActions { display: flex; gap: var(--s-2); margin-block-start: var(--s-4); }
+
+@media (min-width: 900px) {
+  .top { padding-inline: var(--s-5); }
+  .emptyOverlay { inset-inline-start: var(--s-7); inset-inline-end: auto; }
+}

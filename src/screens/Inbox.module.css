@@ -1,0 +1,159 @@
+.case {
+  background: var(--surface);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e-1);
+  overflow: hidden;
+}
+
+/* The one place in the app that uses the attention colour. If it appeared
+   anywhere else it would stop meaning anything here. */
+.caseTop {
+  padding: var(--s-5);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--alert-100) 70%, transparent),
+    transparent
+  );
+}
+
+.amount {
+  font-size: var(--fs-display);
+  font-weight: 660;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.05;
+  display: block;
+}
+
+.meta { margin-block-start: var(--s-2); color: var(--ink-500); font-size: var(--fs-sub); }
+
+.question {
+  padding: 0 var(--s-5) var(--s-5);
+}
+
+.questionText {
+  font-size: var(--fs-heading);
+  font-weight: 620;
+  margin-block-end: var(--s-3);
+}
+
+.choices { display: flex; flex-direction: column; gap: var(--s-2); }
+
+@media (min-width: 600px) {
+  .choices { flex-direction: row; }
+  .choices > * { flex: 1; }
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-block-size: 56px;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  border: 1px solid var(--ink-200);
+  background: var(--surface);
+  text-align: start;
+  font-weight: 600;
+  transition: border-color var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out);
+}
+
+.choice:hover { border-color: var(--brand-500); background: var(--brand-050); }
+.choice:active { transform: scale(0.985); }
+.choice:disabled { opacity: 0.5; }
+
+.choiceDot {
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.choiceText { flex: 1; min-inline-size: 0; }
+.choiceSub { display: block; font-size: var(--fs-caption); font-weight: 500; color: var(--ink-500); }
+
+.why {
+  margin-block-start: var(--s-4);
+  border-block-start: 1px solid var(--ink-100);
+  padding-block-start: var(--s-3);
+}
+
+.whySummary {
+  font-size: var(--fs-caption);
+  font-weight: 640;
+  color: var(--ink-500);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-block-size: 32px;
+}
+
+.whySummary::-webkit-details-marker { display: none; }
+
+.whyBody {
+  font-size: var(--fs-caption);
+  color: var(--ink-500);
+  line-height: 1.5;
+  margin-block-start: var(--s-2);
+}
+
+/* -- Resolved -------------------------------------------------------------- */
+
+.resolved {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  background: var(--gain-100);
+  border-radius: var(--r-lg);
+  color: var(--gain-700);
+  font-weight: 620;
+}
+
+.resolvedText { flex: 1; min-inline-size: 0; }
+
+.dismissResolved {
+  inline-size: var(--tap-min);
+  block-size: var(--tap-min);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-pill);
+  color: var(--gain-700);
+  opacity: 0.65;
+  flex: none;
+}
+
+.dismissResolved:hover { opacity: 1; background: rgba(255, 255, 255, 0.5); }
+
+.undo {
+  font-weight: 700;
+  font-size: var(--fs-sub);
+  color: var(--gain-700);
+  text-decoration: underline;
+  padding: var(--s-2);
+  flex: none;
+}
+
+.resolvingRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  color: var(--ink-500);
+}
+
+.miniSpinner {
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--ink-200);
+  border-block-start-color: var(--brand-700);
+  animation: spin 700ms linear infinite;
+  flex: none;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

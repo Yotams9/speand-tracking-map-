@@ -1,0 +1,97 @@
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  opacity: 0;
+  animation: fade var(--dur-base) var(--ease-out) forwards;
+  z-index: 30;
+}
+
+.sheet {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 31;
+  background: var(--surface);
+  border-start-start-radius: var(--r-sheet);
+  border-start-end-radius: var(--r-sheet);
+  box-shadow: var(--e-4);
+  max-block-size: 82%;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  animation: rise var(--dur-base) var(--ease-out) forwards;
+}
+
+.grip {
+  flex: none;
+  inline-size: 40px;
+  block-size: 4px;
+  border-radius: var(--r-pill);
+  background: var(--ink-200);
+  margin: var(--s-3) auto var(--s-1);
+}
+
+.head {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-5) 0;
+}
+
+.headText { flex: 1; min-inline-size: 0; }
+
+.closeBtn {
+  inline-size: var(--tap-min);
+  block-size: var(--tap-min);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-pill);
+  background: var(--ink-050);
+  color: var(--ink-500);
+  flex: none;
+}
+
+.closeBtn:hover { background: var(--ink-100); color: var(--ink-900); }
+
+.body {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--s-4) var(--s-5) var(--s-6);
+}
+
+@keyframes rise { to { transform: translateY(0); } }
+@keyframes fade { to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet { animation-duration: 1ms; }
+  .scrim { animation-duration: 1ms; }
+}
+
+/*
+ * On a wide screen the same content becomes a panel docked to the side. It is
+ * the identical component and the identical markup — only the surface moves,
+ * so the map stays visible and keeps its context.
+ */
+@media (min-width: 900px) {
+  .sheet {
+    inset-block: var(--s-5);
+    inset-inline-start: auto;
+    inset-inline-end: var(--s-5);
+    inline-size: 400px;
+    max-block-size: none;
+    border-radius: var(--r-xl);
+    transform: translateY(0) scale(0.98);
+    opacity: 0;
+    animation: panelIn var(--dur-base) var(--ease-out) forwards;
+  }
+
+  .scrim { background: transparent; }
+  .grip { display: none; }
+  .head { padding-block-start: var(--s-5); }
+}
+
+@keyframes panelIn { to { transform: translateY(0) scale(1); opacity: 1; } }

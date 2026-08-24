@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Mobile PWA UX"
+  short_description: "Design a polished mobile-first PWA experience"
+  default_prompt: "Use $design-mobile-pwa-ux to plan a polished mobile-first PWA experience for this phase."

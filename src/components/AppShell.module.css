@@ -1,0 +1,233 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  background: var(--canvas);
+}
+
+.main {
+  flex: 1;
+  min-block-size: 0;
+  position: relative;
+}
+
+/* Scrolling screens. The map route opts out via data-fill. */
+.main[data-fill='false'] {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.main[data-fill='true'] { overflow: hidden; }
+
+/* ---------------------------------------------------------------------------
+   Bottom navigation (phones)
+   --------------------------------------------------------------------------- */
+
+.nav {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: stretch;
+  block-size: calc(var(--nav-h) + var(--safe-b));
+  padding-block-end: var(--safe-b);
+  padding-inline: var(--safe-l) var(--safe-r);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(14px);
+  border-block-start: 1px solid var(--ink-100);
+  position: relative;
+  z-index: 20;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-block-size: var(--tap-min);
+  color: var(--ink-400);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.tab[aria-current='page'] { color: var(--brand-700); }
+.tab:hover { color: var(--ink-700); }
+.tab[aria-current='page']:hover { color: var(--brand-900); }
+
+.tabLabel {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Capture sits above the bar. It is the one action the product asks of the
+   user, so it gets the only raised affordance in the navigation. */
+.captureTab {
+  position: relative;
+  color: var(--ink-400);
+}
+
+.captureButton {
+  position: absolute;
+  inset-block-start: -18px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  inline-size: 52px;
+  block-size: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--brand-700);
+  color: #fff;
+  box-shadow: var(--e-3);
+  transition: transform var(--dur-fast) var(--ease-out),
+              background var(--dur-fast) var(--ease-out);
+}
+
+[dir='rtl'] .captureButton { transform: translateX(50%); }
+
+.captureTab:hover .captureButton { background: var(--brand-900); }
+.captureTab:active .captureButton { transform: translateX(-50%) scale(0.94); }
+[dir='rtl'] .captureTab:active .captureButton { transform: translateX(50%) scale(0.94); }
+
+.captureTab[aria-current='page'] .captureButton { background: var(--brand-900); }
+
+.captureSpacer { block-size: 26px; }
+
+/* A dot rather than a number: the inbox should never read as a task queue. */
+.dot {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-end: -7px;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--alert-500);
+  border: 2px solid var(--surface);
+}
+
+.tabIconWrap { position: relative; display: grid; place-items: center; }
+
+/* ---------------------------------------------------------------------------
+   Desktop: a rail, not a stretched phone
+   --------------------------------------------------------------------------- */
+
+@media (min-width: 900px) {
+  .shell { flex-direction: row; }
+
+  .nav {
+    order: -1;
+    grid-template-columns: none;
+    grid-auto-rows: max-content;
+    inline-size: var(--rail-w);
+    block-size: 100%;
+    padding: var(--s-5) var(--s-3);
+    padding-block-end: var(--s-5);
+    gap: var(--s-1);
+    border-block-start: 0;
+    border-inline-end: 1px solid var(--ink-100);
+    background: var(--surface);
+    backdrop-filter: none;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-3) var(--s-6);
+  }
+
+  .brandMark {
+    inline-size: 32px;
+    block-size: 32px;
+    border-radius: 9px;
+    background: var(--brand-700);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    flex: none;
+  }
+
+  .tab {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--s-3);
+    padding-inline: var(--s-3);
+    block-size: 46px;
+    border-radius: var(--r-md);
+    font-size: var(--fs-body);
+  }
+
+  .tab:hover { background: var(--ink-050); }
+  .tab[aria-current='page'] { background: var(--brand-050); }
+
+  .captureTab {
+    order: -1;
+    margin-block-end: var(--s-4);
+    background: var(--brand-700);
+    color: #fff;
+    border-radius: var(--r-md);
+    justify-content: flex-start;
+  }
+
+  .captureTab:hover { background: var(--brand-900); }
+  .captureTab[aria-current='page'] { background: var(--brand-900); color: #fff; }
+
+  .captureButton {
+    position: static;
+    transform: none;
+    inline-size: 24px;
+    block-size: 24px;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  [dir='rtl'] .captureButton { transform: none; }
+  .captureTab:active .captureButton,
+  [dir='rtl'] .captureTab:active .captureButton { transform: scale(0.94); }
+  .captureTab:hover .captureButton { background: none; }
+
+  .captureSpacer { display: none; }
+  .dot { position: static; margin-inline-start: auto; border-color: transparent; }
+}
+
+/* ---------------------------------------------------------------------------
+   Screen chrome
+   --------------------------------------------------------------------------- */
+
+.page {
+  max-inline-size: var(--content-max);
+  margin-inline: auto;
+  padding-inline: var(--s-4);
+  padding-block: var(--s-5) var(--s-8);
+}
+
+@media (min-width: 700px) {
+  .page { padding-inline: var(--s-7); }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  margin-block-end: var(--s-5);
+}
+
+.headerText { flex: 1; min-inline-size: 0; }
+
+.backBtn {
+  inline-size: var(--tap-min);
+  block-size: var(--tap-min);
+  margin-inline-start: calc(var(--s-3) * -1);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-pill);
+  color: var(--ink-700);
+  flex: none;
+}
+
+.backBtn:hover { background: var(--ink-050); }
+[dir='rtl'] .backBtn svg { transform: scaleX(-1); }

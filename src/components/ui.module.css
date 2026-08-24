@@ -1,0 +1,211 @@
+/* Small pieces that appear on more than one screen. */
+
+/* -- Empty state ----------------------------------------------------------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-3);
+  padding: var(--s-8) var(--s-5);
+}
+
+.emptyIcon {
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ink-050);
+  color: var(--ink-400);
+}
+
+.emptyBody { max-inline-size: 34ch; }
+
+/* -- Stat tiles ------------------------------------------------------------ */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: var(--s-2);
+}
+
+.stat {
+  background: var(--ink-050);
+  border-radius: var(--r-md);
+  padding: var(--s-3) var(--s-3) var(--s-3);
+}
+
+.statValue {
+  font-size: var(--fs-heading);
+  font-weight: 660;
+  letter-spacing: -0.01em;
+  display: block;
+}
+
+.statLabel {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--tracking-micro);
+  text-transform: uppercase;
+  color: var(--ink-400);
+  display: block;
+  margin-block-start: 2px;
+}
+
+/* -- Purchase row ---------------------------------------------------------- */
+
+.pRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  inline-size: 100%;
+  min-block-size: var(--tap-min);
+  padding-block: var(--s-3);
+  text-align: start;
+  border-radius: var(--r-md);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.pRow:hover { background: var(--ink-050); }
+
+.pRow + .pRow { border-block-start: 1px solid var(--ink-100); }
+.pRow:hover + .pRow { border-color: transparent; }
+
+.pDot {
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 50%;
+  flex: none;
+  margin-inline-start: var(--s-1);
+}
+
+.pMain { flex: 1; min-inline-size: 0; }
+
+.pName {
+  display: block;
+  font-weight: 580;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pMeta {
+  display: block;
+  font-size: var(--fs-caption);
+  color: var(--ink-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pAmount {
+  font-weight: 620;
+  flex: none;
+  white-space: nowrap;
+}
+
+/* -- Insight card ---------------------------------------------------------- */
+
+.insight {
+  display: block;
+  inline-size: 100%;
+  text-align: start;
+  background: var(--surface);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-lg);
+  padding: var(--s-5);
+  box-shadow: var(--e-1);
+  transition: box-shadow var(--dur-base) var(--ease-out),
+              transform var(--dur-fast) var(--ease-out),
+              border-color var(--dur-base) var(--ease-out);
+}
+
+a.insight:hover {
+  box-shadow: var(--e-2);
+  border-color: var(--ink-200);
+}
+
+a.insight:active { transform: scale(0.995); }
+a.insight { color: inherit; }
+
+.insightHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-block-end: var(--s-3);
+}
+
+.insightIcon {
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.insightFigure {
+  font-size: var(--fs-display);
+  font-weight: 660;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.05;
+  display: block;
+}
+
+.insightBody { margin-block-start: var(--s-2); color: var(--ink-700); }
+
+.insightFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-block-start: var(--s-4);
+  color: var(--brand-700);
+  font-weight: 620;
+  font-size: var(--fs-sub);
+}
+
+/* -- Section --------------------------------------------------------------- */
+
+.section { margin-block-start: var(--s-6); }
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-block-end: var(--s-3);
+}
+
+/* -- Note ------------------------------------------------------------------ */
+
+.note {
+  display: flex;
+  gap: var(--s-2);
+  align-items: flex-start;
+  padding: var(--s-3) var(--s-4);
+  background: var(--ink-050);
+  border-radius: var(--r-md);
+  color: var(--ink-500);
+  font-size: var(--fs-caption);
+  line-height: 1.45;
+}
+
+.note svg { flex: none; margin-block-start: 1px; }
+
+/* -- Deferred capability --------------------------------------------------- */
+
+.deferred {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  inline-size: 100%;
+  min-block-size: var(--tap-min);
+  padding-block: var(--s-3);
+  text-align: start;
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.deferred + .deferred { border-block-start: 1px solid var(--ink-100); }
