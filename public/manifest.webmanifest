@@ -1,13 +1,13 @@
 {
-  "name": "Ledgerline — purchase intelligence demo",
-  "short_name": "Ledgerline",
-  "description": "Concept demo. Synthetic data only; not connected to any real account.",
+  "name": "Spendscape — globe-first purchase intelligence",
+  "short_name": "Spendscape",
+  "description": "Phase 1 concept demo. Synthetic data only; no accounts or real purchase history.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#f5f3ef",
-  "theme_color": "#0f5c57",
+  "orientation": "any",
+  "background_color": "#06070a",
+  "theme_color": "#06070a",
   "icons": [
     { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }

@@ -1,97 +1,54 @@
-# Ledgerline — Phase 1 concept demo
+# Spendscape — Phase 1 globe checkpoint
 
-A mobile-first front-end concept demo for a purchase-intelligence product.
-**Every figure in it is synthetic.** Nothing is connected to a real account,
-receipt, card feed, price source, or location history, and nothing here is
-production code.
+Spendscape is a globe-first purchase-intelligence concept. This branch currently
+implements only approved Phase 1 Slices 1A–1C: the Next.js foundation, the
+responsive premium shell, and a real MapLibre globe fidelity spike.
 
-## Run it
+Every purchase, place, amount, coordinate, and performance story in the demo is
+synthetic. The app does not connect to accounts, services, location history, or
+real user data.
+
+## Local requirements
+
+- Node.js 22.14 or newer
+- npm 10.9.2
+
+Install and run:
 
 ```bash
 npm install
-```
-
-```bash
 npm run dev
 ```
 
-Then open <http://localhost:5173>. Use a phone viewport (about 390 × 844) —
-this is designed mobile first, and desktop is an adaptation rather than the
-source layout.
+Open <http://localhost:3000>.
 
-Type-check without building:
+Verification commands:
 
 ```bash
 npm run typecheck
+npm test
+npm run build
 ```
 
-## The 90-second walkthrough
+## Implemented through Slice 1C
 
-1. **Map / Home** — three city clusters. Filter to *Groceries*; the density
-   tells the habit before any text does.
-2. **Zoom into Tel Aviv** — clusters resolve into places. Tap **Shuk Express**.
-3. **See this place** — 14 visits, total, average, and the products that
-   actually repeat. Every one of those numbers is computed from the purchase
-   list below it.
-4. **Tap the most recent purchase** — line items, and one quiet insight:
-   a comparable basket was about ₪31 less nearby.
-5. **Tap the insight** — the route-aware comparison. This is the screen that
-   carries the argument: one alternative store, the extra driving subtracted,
-   and the substitution the system *refused* to make.
-6. **Inbox** — one ambiguous purchase in a mall where three shops match.
-   One tap files it. Then the screen goes quiet.
-7. **For You** — the recurring saving, a proactive prediction for Thursday
-   evening, a habit, and what is likely needed soon.
-8. **Capture** — simulated camera, five entry paths, and a working Quick Add
-   that puts a real purchase on the map.
+- Next.js App Router + TypeScript migration with pinned runtime dependencies
+- responsive desktop/mobile shell, dark-premium tokens, safe-area support,
+  keyboard labels, English/Hebrew RTL, and reduced-motion behavior
+- MapLibre globe with an OpenFreeMap development style, atmosphere, automatic
+  rotation with interaction interruption, zoom, fit, reset, place fly-to,
+  clusters, heatmap, selection, hover details, and session camera persistence
+- deterministic synthetic fixtures that aggregate many physical purchases into
+  one canonical place feature while excluding online and unresolved purchases
+- explicit loading (`?loading=1`) and map-failure (`?mapFailure=1`) QA routes;
+  search with no matches exercises the empty state
 
-## How the numbers work
+## Intentionally not implemented
 
-`src/data/fixtures.ts` is the single source of truth. No screen hard-codes a
-total, an average, a visit count, a trend, or a saving — `src/data/derive.ts`
-computes all of them, and `src/data/audit.ts` re-checks the arithmetic on every
-dev boot and prints the result to the console.
+Slice 1D and later work is blocked pending the explicit globe-checkpoint gate.
+That means no broader Scanner, AI control, Analytics, Purchases product flow,
+Life Replay, privacy/sharing experience, backend, authentication, integrations,
+deployment, service accounts, production credentials, or real data.
 
-Two things are **declared rather than derived**, because Phase 1 has no routing
-engine and an LLM must never be the source of a fact:
-
-- route distances and durations
-- the per-trip transport cost
-
-They are labelled as estimates in the UI and reported by the audit on every run.
-
-## Layout of the code
-
-```
-src/
-  data/       fixtures, derivation, and the consistency audit
-  map/        Web Mercator projection, map surface, camera
-  i18n/       English (default) and Hebrew, with RTL
-  state/      session state — added purchases, inbox resolutions
-  components/ shell, sheet, and the shared pieces
-  screens/    the nine screens
-  styles/     design tokens and global primitives
-```
-
-The map is deliberately self-contained: a real Web Mercator projection over
-hand-authored abstract basemap geometry. No tile provider, no API key, no
-network request — which is why it runs offline. Everything downstream talks to
-it through lon/lat and a `project` callback, so swapping in MapLibre later
-touches `src/map/MapSurface.tsx` and nothing else.
-
-## Not implemented yet
-
-Deliberately absent, per the Phase 1 scope:
-
-real bank / Open Banking / card integration · real Gmail, email or SMS access ·
-real OCR or receipt extraction · product recognition · barcode catalog lookup ·
-Purchase Fusion Engine · Purchase Matching / Confidence Engine · LLM
-orchestration · real price collection · production geolocation or background
-tracking · authentication · any backend · native apps · store packaging ·
-deployment · service worker and offline caching · dark mode.
-
-## Language
-
-English is the default. Hebrew (RTL) can be switched on from **Profile →
-Preferences**; the layout mirrors through CSS logical properties rather than
-per-component overrides.
+The basemap uses OpenFreeMap only as a free development style. It needs no API
+key and carries no production availability commitment in this checkpoint.

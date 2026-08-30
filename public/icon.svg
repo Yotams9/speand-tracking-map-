@@ -1,6 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="14" fill="#0f5c57"/>
-  <circle cx="32" cy="32" r="17" fill="none" stroke="#ffffff" stroke-width="2.6" opacity="0.55"/>
-  <path d="M15 32h34M32 15a26 26 0 0 1 0 34 26 26 0 0 1 0-34Z" fill="none" stroke="#ffffff" stroke-width="2.6" opacity="0.55"/>
-  <circle cx="32" cy="26" r="5.5" fill="#ffffff"/>
+  <defs>
+    <radialGradient id="g" cx="34%" cy="26%" r="76%">
+      <stop offset="0" stop-color="#7d89ff"/>
+      <stop offset="0.48" stop-color="#3c286c"/>
+      <stop offset="1" stop-color="#08090d"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#06070a"/>
+  <circle cx="32" cy="32" r="18" fill="url(#g)" stroke="#c8caff" stroke-width="1.4"/>
+  <path d="M14 31.5c6.5-8.8 29.6-12.7 38.2-3.6 7.9 8.4-10.1 16.9-26.6 14.6-14.2-2-20.2-8.6-11.6-15.1" fill="none" stroke="#f5f4ff" stroke-width="1.35" stroke-linecap="round" opacity=".85"/>
+  <circle cx="43.8" cy="21.6" r="3.2" fill="#73efd0" stroke="#07080b" stroke-width="1.5"/>
 </svg>
