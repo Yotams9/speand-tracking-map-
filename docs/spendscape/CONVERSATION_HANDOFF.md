@@ -27,9 +27,10 @@ form. It is a summary of user intent, not a verbatim transcript.
 - Deduplication/fusion across sources is mandatory.
 - Search, filters, timeline, analytics, AI map/UI control, Life Replay,
   multi-currency, sharing, and privacy controls are required.
-- Long-term recommended platform: Next.js/TypeScript, Vercel, Supabase
-  Postgres/PostGIS/Auth/Storage/Queues, Google Places, OpenAI Responses API,
-  Gmail API, and barcode/product provider adapters.
+- Current frontend: Next.js/TypeScript with MapLibre.
+- Long-term infrastructure, places, AI, OCR, email, product, FX, and deployment
+  systems remain gated candidates behind provider abstractions. The reconciled
+  evaluation policy is in `TECHNOLOGY_STRATEGY.md`.
 
 ## Reference decisions
 
@@ -40,9 +41,9 @@ form. It is a summary of user intent, not a verbatim transcript.
   auto-spin/interaction stop, popups, fly-to, and fit-bounds.
 - The user wants the Refero Origin Financial design language adapted without
   abandoning the globe-first product or copying the reference brand.
-- MapLibre is therefore the Phase 1 renderer recommendation for behavioral
-  fidelity; Google Places remains place intelligence. Google Maps JS 3D is a
-  gated alternative, not silently discarded.
+- MapLibre is therefore the current renderer for behavioral fidelity.
+  Place-provider candidates remain behind `PlaceProvider`; a Google Maps JS 3D
+  renderer remains a gated alternative, not silently discarded.
 
 ## Repository history
 
@@ -54,33 +55,52 @@ form. It is a summary of user intent, not a verbatim transcript.
 - The local `main` checkout remained clean and unchanged.
 - The feature branch currently has no upstream, preventing accidental push to
   `main`; it has not been published to GitHub.
-- No dependencies were installed and no application code/build/test was run
-  during worktree setup or planning-package authoring.
+- Planning/authority checkpoint: `7dfc330`.
+- Next.js migration, globe, PWA, tests, and Slice 1C.1 checkpoint: `cee5418`.
+- Canonical purchase experience through bounded Slice 1D.1: `56670045`.
+- The app now uses Next.js App Router, MapLibre, one canonical synthetic fixture
+  graph, Purchases/detail surfaces, and shared globe/search/filter/timeline
+  state. Engineering and rendered QA were completed at the approved slice
+  checkpoints.
+- Generated screenshots, recordings, browser caches, and Playwright output stay
+  ignored and local; they are not durable source authority.
 
-## Existing demo assessment
+## Current implementation assessment
 
-Useful inherited elements include coherent synthetic fixtures, deterministic
-derived metrics, purchase/merchant/comparison views, simulated Capture and
-Smart Inbox, and English/Hebrew RTL foundations. The current map is a custom SVG
-Web Mercator surface with hand-authored geometry, not a real globe/tile engine.
-The existing design is light and Ledgerline-branded, data is ILS-centric, there
-is no backend or real scanner/AI/Gmail/dedup, and close zoom can show purchase
-markers around a place—contrary to Spendscape's one-place-one-pin rule.
+The active Spendscape shell is dark, responsive, English/Hebrew/RTL-aware, and
+globe-first. MapLibre renders one canonical feature per confirmed physical
+place, with clusters and heatmap as renderer layers; online and unresolved
+purchases do not enter the place source. Slice 1D.1 adds coherent physical,
+online, cash/manual, nested receipt, multi-currency, and unresolved synthetic
+stories with synchronized discovery state.
+
+Analytics remains navigation-only. Scanner, capture, Smart Inbox, AI actions,
+Life Replay, privacy/sharing, backend, authentication, real OCR, Gmail,
+provider integrations, factual FX, accounts, deployment, and real data are not
+implemented.
 
 ## Current authority
 
-The user asked for this Master Prompt package and a parallel Codex task. That is
-authorization to create planning documentation and start a Phase 0 readiness
-task—not authorization to implement the application. The task must stop and ask
-for `APPROVE SPENDSCAPE PHASE 1 BUILD + QA` before code or QA begins.
+The user approved Phase 1 build/QA and then bounded implementation through
+Slices 1A–1C.1 and 1D.1. Those checkpoints are complete and accepted. The later
+`APPROVE SPENDSCAPE DOCUMENTATION-ONLY TECHNOLOGY STRATEGY INTEGRATION` token
+authorized the reconciled durable documentation and is now consumed.
+
+No product or technology slice is active.
+
+Do not infer Slice 1D.2, Analytics, Scanner, AI, Supabase, Zod, or any provider
+work from earlier Phase 1 approval. Require a new exact bounded instruction.
 
 ## Capability facts at handoff
 
 - Git, Node 22.14.0, npm 10.9.2, Corepack, and macOS command-line tools are
-  available.
+  available. Current installed application versions are recorded in
+  `TECHNOLOGY_STRATEGY.md` and `package.json`.
 - GitHub CLI, VS Code, and Homebrew are absent but optional.
 - GitHub write permission to the friend's repository has not been confirmed.
-- No Supabase, Vercel, Google, Gmail, OpenAI, mapping, barcode, or FX credential
-  is present or assumed.
-- Browser control was unavailable during final package authoring; public source
-  inspection via the web and direct public assets succeeded.
+- No Supabase, Vercel, Cloudflare, Geoapify, Google, Gmail, OpenAI, barcode, OCR,
+  or FX account/credential is present or assumed. OpenFreeMap is accessed only
+  as the current no-key development style.
+- Browser-control and visual-QA capabilities must be checked when a future
+  rendered-QA slice starts; public provider facts must be reverified from
+  current official documentation.

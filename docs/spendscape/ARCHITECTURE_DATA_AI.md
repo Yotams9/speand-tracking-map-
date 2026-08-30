@@ -3,21 +3,50 @@
 ## Target stack
 
 - **Application:** Next.js App Router + TypeScript.
-- **Hosting:** Vercel, introduced only in the deployment phase.
-- **Platform:** Supabase Postgres, PostGIS, Auth, Storage, and Queues.
+- **Hosting candidate:** Vercel, introduced only after the deployment gate;
+  Hobby is development/private-noncommercial-demo only unless current terms
+  permit the intended use.
+- **Platform candidate:** Supabase Postgres, PostGIS, Auth, and Storage in Phase
+  2; Queues only when an approved retryable workload requires them. Free is
+  development/MVP infrastructure, not a durability or availability guarantee.
 - **Globe:** MapLibre GL JS for benchmark parity; production tile/style provider
   selected separately.
-- **Places:** Google Places API, server-side where required by security/terms.
-- **AI:** OpenAI Responses API with image/file inputs, Structured Outputs, and
-  typed application tools.
-- **Email:** Gmail API with user-consented OAuth and server refresh tokens.
+- **Places:** `PlaceProvider` with Geoapify as an initial benchmark candidate,
+  Google Places as a comparison candidate, and bounded Overture evaluation
+  where justified.
+- **AI:** `AIProvider` with Cloudflare Workers AI/Gemma as an initial benchmark
+  candidate and an optional future OpenAI Responses API adapter.
+- **OCR:** `OCRProvider`; Tesseract.js is the first local bilingual receipt
+  benchmark candidate.
+- **Email candidate:** Gmail API with user-consented OAuth and server refresh
+  tokens in a separately approved slice.
 - **Barcode/products:** provider adapters with provenance, caching, confidence,
   and correction.
 - **Currencies:** provider adapter for timestamped factual FX rates.
 
-The inherited Vite/React code is a baseline, not a mandate. Migrate in a bounded
-Phase 1 slice and retain useful components/data logic where lower-risk than a
-blind rewrite.
+The bounded Vite-to-Next.js migration is complete through the Slice 1D.1
+checkpoint. Preserve the current canonical fixture and globe behavior until a
+later slice explicitly replaces or extends them.
+
+Candidate details, dated terms/quotas, dependency snapshots, billing rules, and
+promotion evidence are defined in `TECHNOLOGY_STRATEGY.md`. That document does
+not authorize implementation.
+
+## Provider abstraction contract
+
+- Canonical Spendscape IDs and facts never depend on one provider's object
+  shape.
+- `AIProvider`, `PlaceProvider`, `OCRProvider`, `ProductProvider`, and
+  `FXProvider` expose the smallest task-specific operations needed by an
+  approved slice.
+- Adapter results carry provider/version, fetched/effective time, confidence or
+  quality metadata, and required attribution/provenance.
+- External responses are untrusted and schema-validated before domain use.
+- Provider timeouts, quotas, and failures produce explicit unresolved or
+  degraded states, never fabricated facts, silent billing, or an undisclosed
+  fallback provider.
+- Every provider selection records licence, privacy, retention, commercial use,
+  cost, rate limit, reliability, exit path, and owner approval.
 
 ## Logical pipeline
 
@@ -78,7 +107,7 @@ merchant string or purchase ID.
 2. Classify receipt/product/barcode/document input.
 3. Create an idempotent job and content fingerprint.
 4. Use deterministic barcode/PDF/text parsing when available.
-5. Use OpenAI vision/file input where semantic extraction adds value.
+5. Use an approved `AIProvider` adapter where semantic extraction adds value.
 6. Require Structured Output matching a versioned extraction schema.
 7. Validate arithmetic, dates, currency, and required fields deterministically.
 8. Look up factual merchant/place/product candidates from providers.
@@ -104,10 +133,10 @@ Use layered idempotency/similarity rather than one LLM judgment:
 ## Place matching
 
 Inputs may include raw merchant text, receipt address, time, GPS/dwell evidence,
-nearby Google Places, category, amount, item semantics, prior confirmations, and
-habits. Never force the nearest place. Store provider ID/PostGIS coordinate only
-after resolution. Online merchants have no physical place unless a specific
-pickup branch is confirmed.
+nearby `PlaceProvider` candidates, category, amount, item semantics, prior
+confirmations, and habits. Never force the nearest place. Store an attributed
+provider reference/PostGIS coordinate only after resolution. Online merchants
+have no physical place unless a specific pickup branch is confirmed.
 
 ## Barcode/product provider interface
 
@@ -127,16 +156,20 @@ terms, latency, freshness, and correction-flow review.
 - LLMs never provide exchange rates.
 - Represent refunds, rounding, tax, and card-provider conversions explicitly.
 
-## OpenAI rules
+## AI provider rules
 
 - Server-side calls and secrets only.
-- Responses API, versioned prompts/schemas, and Structured Outputs.
+- Versioned prompts/schemas and strict structured responses.
 - Minimum necessary input and redaction of unrelated personal content.
 - Extraction is separate from validation/database writes.
 - Track model/prompt/schema, latency, cost, and failure class without raw
   sensitive logging.
 - Build evaluation fixtures before trusting auto-resolution.
 - Corrections feed aliases/evals, not silent training on private data.
+- Cloudflare Workers AI/Gemma is a benchmark candidate, not a required model.
+- Keep an optional OpenAI Responses adapter for approved image/file, structured
+  output, and typed-tool use; no provider receives data before its privacy and
+  account gate.
 
 ## AI UI/map controller
 
@@ -161,9 +194,13 @@ credentials nor permission to emit executable client code.
 
 - Production tile/style provider and cost/terms.
 - Google Maps 3D versus MapLibre reconsideration after measured spike.
-- OCR fallback beyond selected OpenAI/document parsing.
+- `PlaceProvider` selection and the Geoapify/Google Places/Overture comparison.
+- `AIProvider` selection and the Cloudflare/Gemma/OpenAI benchmark.
+- Tesseract.js promotion or OCR fallback after Hebrew/English receipt results.
 - Barcode/product providers by launch country/category.
 - FX provider and historical-rate policy.
 - Queue worker runtime/scheduling topology.
 - Document retention defaults and jurisdictional requirements.
 - Analytics/observability provider and privacy configuration.
+- Hosting/database plans, backups, SLAs, commercial terms, hard budgets, and
+  fail-closed quota behavior.

@@ -71,3 +71,11 @@ account, production credential, paid provider, or real user data.
 
 The basemap uses OpenFreeMap only as a free development style. It needs no API
 key and carries no production availability commitment in this checkpoint.
+
+## Technology strategy
+
+The reconciled candidate/provider strategy is documented in
+[`docs/spendscape/TECHNOLOGY_STRATEGY.md`](docs/spendscape/TECHNOLOGY_STRATEGY.md).
+It is subordinate to the product and phase gates and does not authorize a new
+slice, dependency, provider, account, backend, migration, credential, paid
+action, real-data use, or deployment.

@@ -1,7 +1,7 @@
 # Spendscape — Durable Project Package
 
 This directory is the durable memory and execution contract for Spendscape.
-Future Codex tasks should rely on these checked-in files instead of needing the
+Future Codex tasks should rely on these local authority files instead of needing the
 full brainstorming transcript.
 
 ## Read order
@@ -13,8 +13,9 @@ full brainstorming transcript.
 5. `DESIGN_AND_GLOBE_SPEC.md` — visual system and globe behavior.
 6. `ARCHITECTURE_DATA_AI.md` — stack, data, ingestion, AI, privacy.
 7. `EXECUTION_PLAN.md` — phased delivery and evidence.
-8. `REFERENCE_MANIFEST.md` — sources, tools, accounts, provenance.
-9. `PROMPT_SEQUENCE.md` — exact prompts for every gate.
+8. `TECHNOLOGY_STRATEGY.md` — subordinate candidates, evaluations, and risks.
+9. `REFERENCE_MANIFEST.md` — sources, tools, accounts, provenance.
+10. `PROMPT_SEQUENCE.md` — exact prompts for every gate.
 
 ## Status
 
@@ -23,10 +24,13 @@ full brainstorming transcript.
 - Branch: `feature/spendscape-rebuild`
 - Product: **Spendscape**
 - Delivery: responsive web/PWA only
-- Current authorization: Phase 0 readiness and documentation only
-- Existing app: Vite + React + TypeScript Ledgerline concept demo
-- Target app stack: Next.js + TypeScript, phased migration
+- Completed implementation checkpoint: Phase 1 through bounded Slice 1D.1
+- Current implementation authorization: none
+- Latest completed checkpoint: documentation-only technology-strategy integration
+- Existing app: Next.js App Router + React + TypeScript Spendscape concept
+- Current implementation commit: `56670045`
 - Phase 1 data: synthetic only
+- Backend/providers/accounts/deployment: not implemented or connected
 
 The old root Phase 1 documents remain as historical evidence. They are not the
 Spendscape execution contract.

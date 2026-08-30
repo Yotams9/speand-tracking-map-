@@ -120,11 +120,14 @@ was verified to use MapLibre GL JS, OpenFreeMap Liberty, globe projection,
 atmosphere/sky, GeoJSON circle and heatmap layers, auto-spin that stops on first
 interaction, hover/click popups, `flyTo`, and `fitBounds`.
 
-For Phase 1, MapLibre is the recommended renderer because it directly matches
-the benchmark. Google Places remains the place-resolution provider. Google Maps
-JavaScript 3D remains a documented production alternative, but it must not
-silently replace the renderer without a measured comparison and user approval.
-Do not run two full map renderers on the same primary surface.
+For Phase 1, MapLibre is the selected renderer because it directly matches the
+benchmark. Later place intelligence must flow through a gated `PlaceProvider`;
+Geoapify and Google Places are benchmark candidates with different attribution,
+caching, commercial, billing, and map-display constraints. Google Maps
+JavaScript 3D remains a documented production renderer alternative, but it must
+not silently replace MapLibre without a measured comparison and user approval.
+Do not run two full map renderers on the same primary surface. Provider
+evaluation and promotion rules are in `TECHNOLOGY_STRATEGY.md`.
 
 ## Existing baseline: preserve, adapt, replace
 

@@ -64,7 +64,10 @@ The public site `https://food-map-nu.vercel.app/` currently loads:
 
 Phase 1 should use the current stable MapLibre release compatible with the
 selected Next.js bundler, not blindly pin the benchmark's older version.
-Preserve behavior, not version numbers.
+Preserve behavior, not version numbers. OpenFreeMap's public service is only a
+development-style source; its use does not authorize scraping, offline tile
+harvesting, or a production availability assumption. See
+`TECHNOLOGY_STRATEGY.md` for the production provider gate.
 
 ## Globe states and behavior
 
