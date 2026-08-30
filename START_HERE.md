@@ -1,4 +1,26 @@
-# Start Here
+# Start Here — Spendscape in Codex
+
+Open this `spendscape-worktree` folder as the primary local project and start a
+new Codex task from this directory.
+
+Send the exact initial prompt stored in:
+
+`docs/spendscape/PROMPT_SEQUENCE.md` → **Prompt 0 — New Codex task handoff**.
+
+The first task is a Phase 0 readiness review only. It reads the durable project
+package, verifies branch and baseline, returns the requested readiness ledger,
+and stops. It does not change application code or run the app.
+
+When the readiness report is satisfactory, the exact Phase 1 authorization is:
+
+`APPROVE SPENDSCAPE PHASE 1 BUILD + QA`
+
+The inherited Ledgerline instructions below are historical and must not be used
+as the Spendscape task prompt.
+
+---
+
+# Legacy Start Here
 
 Open this folder as a project in Codex, start a new task in the project root, and send exactly this first instruction:
 
