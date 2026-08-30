@@ -172,8 +172,8 @@ test('desktop history, search, filters, timeline, selection, back, escape, and r
   await expect.poll(async () => (await evidence(page)).visiblePurchaseCount).toBe(42)
 
   await page.locator('nav[aria-label="Primary"]').getByRole('button', { name: /Analytics/ }).click()
-  await expect(page.getByTestId('stats-placeholder')).toBeVisible()
-  await page.screenshot({ path: path.join(artifactDir, 'desktop-stats-placeholder.png'), fullPage: true })
+  await expect(page.getByTestId('analytics-panel')).toBeVisible()
+  await page.screenshot({ path: path.join(artifactDir, 'desktop-analytics-regression.png'), fullPage: true })
   await page.locator('nav[aria-label="Primary"]').getByRole('button', { name: 'Globe', exact: true }).click()
 
   expect(errors).toEqual([])

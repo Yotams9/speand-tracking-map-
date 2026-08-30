@@ -1154,8 +1154,7 @@
 .app[data-surface='stats'] > .emptyState { display: none; }
 
 .purchasesPanel,
-.purchaseDetailPanel,
-.placeholderPanel {
+.purchaseDetailPanel {
   position: absolute;
   z-index: 30;
   inset-block-start: calc(82px + var(--safe-top));
@@ -1180,14 +1179,12 @@
 .panelHeader { position: relative; padding: 0 52px 2px 6px; }
 [dir='rtl'] .panelHeader { padding: 0 6px 2px 52px; }
 .panelHeader h2,
-.placeholderPanel h2,
 .purchaseDetailPanel h2 {
   margin: 0;
   font: 500 2rem/1.02 var(--display);
   letter-spacing: -0.035em;
 }
-.panelHeader > div > p:last-child,
-.placeholderPanel > p:not(.eyebrow) { margin: 8px 0 0; color: #9fa5b2; font-size: 0.78rem; line-height: 1.45; }
+.panelHeader > div > p:last-child { margin: 8px 0 0; color: #9fa5b2; font-size: 0.78rem; line-height: 1.45; }
 
 .historySummary {
   display: grid;
@@ -1280,7 +1277,6 @@
 .historyEmpty h3 { margin: 0; font: 500 1.7rem/1.05 var(--display); }
 .historyEmpty p { color: #959cab; font-size: 0.78rem; line-height: 1.5; }
 .historyEmpty button,
-.placeholderPanel > button,
 .viewPlaceButton {
   min-block-size: 42px;
   padding-inline: 16px;
@@ -1320,16 +1316,6 @@
 .provenanceBlock { display: grid; gap: 7px; margin-block: 16px; }
 .provenanceBlock strong { font-size: 0.69rem; font-weight: 570; line-height: 1.45; }
 .viewPlaceButton { inline-size: 100%; }
-
-.placeholderPanel {
-  block-size: min(360px, calc(100dvh - 104px));
-  inset-block-end: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 34px;
-}
-.placeholderPanel > button:last-child { align-self: flex-start; margin-block-start: 18px; }
 
 .experienceScrim {
   position: absolute;
@@ -1376,8 +1362,7 @@
   .mobileQueryActions button { min-block-size: 42px; }
 
   .purchasesPanel,
-  .purchaseDetailPanel,
-  .placeholderPanel {
+  .purchaseDetailPanel {
     inset-block-start: max(152px, 24dvh);
     inset-inline: calc(6px + var(--safe-left)) calc(6px + var(--safe-right));
     inset-block-end: calc(62px + var(--safe-bottom));
@@ -1401,8 +1386,6 @@
   .purchaseDetailPanel { padding: 24px 18px 20px; }
   .purchaseDetailPanel h2 { font-size: 1.85rem; }
   .amountLedger { grid-template-columns: 1fr; }
-
-  .placeholderPanel { block-size: auto; padding: 28px 24px; }
 
   .experienceScrim { inset-block-end: calc(58px + var(--safe-bottom)); }
   .experienceSheet {
@@ -1442,10 +1425,9 @@
 
 @media (max-height: 680px) and (max-width: 760px) {
   .purchasesPanel,
-  .purchaseDetailPanel,
-  .placeholderPanel { inset-block-start: calc(72px + var(--safe-top)); }
+  .purchaseDetailPanel { inset-block-start: calc(72px + var(--safe-top)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .purchasesPanel, .purchaseDetailPanel, .placeholderPanel, .experienceSheet { animation: none; }
+  .purchasesPanel, .purchaseDetailPanel, .experienceSheet { animation: none; }
 }

@@ -16,6 +16,7 @@ import type {
   StyleSpecification,
 } from 'maplibre-gl'
 import type { Point } from 'geojson'
+import { derivePurchaseAnalytics } from '@/data/spendscape-analytics'
 import {
   availableTimelineMonths,
   baseAmountIlsForPurchase,
@@ -42,6 +43,7 @@ import {
   type PlaceFeatureProperties,
   type PurchaseQuery,
 } from '@/data/spendscape-globe'
+import { SpendscapeAnalytics } from './SpendscapeAnalytics'
 import styles from './SpendscapeGlobe.module.css'
 
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/dark'
@@ -126,6 +128,16 @@ interface QaEvidence {
   renderedHeatFeatures: number
   camera: CameraSnapshot | null
   performance: PerformanceEvidence
+  analytics: {
+    purchaseCount: number
+    totalBaseAmountIls: number
+    averageBaseAmountIls: number
+    physicalCount: number
+    onlineCount: number
+    unresolvedCount: number
+    monthCount: number
+    topPhysicalPlaceId: string | null
+  }
 }
 
 interface QaActions {
@@ -142,7 +154,7 @@ declare global {
 const copy = {
   en: {
     product: 'Spendscape', checkpoint: 'Globe checkpoint', navGlobe: 'Globe',
-    navAnalytics: 'Analytics', navPurchases: 'Purchases', later: 'Later',
+    navAnalytics: 'Analytics', navPurchases: 'Purchases',
     headline: 'Your world, in purchases.',
     intro: 'Every confirmed place becomes one point in a living history.',
     search: 'Search places or cities', all: 'All', groceries: 'Groceries', food: 'Food',
@@ -161,7 +173,7 @@ const copy = {
     orbiting: 'Globe rotating until first interaction', interrupted: 'Interaction owns the camera',
     ready: 'Globe ready', modePins: 'Canonical pins visible', modeHeat: 'Purchase density visible',
     zoomIn: 'Zoom in', zoomOut: 'Zoom out', language: 'Switch to Hebrew',
-    mobileStats: 'Stats', mobileAi: 'AI', addLater: 'Capture · later', tools: 'Globe tools',
+    mobileStats: 'Stats', tools: 'Globe tools',
     closeTools: 'Close globe tools', placesSummary: 'places', purchasesSummary: 'confirmed purchases',
     history: 'Purchase history', historyIntro: 'One synthetic record across every channel and currency.',
     filters: 'Filters', timeline: 'Timeline', allHistory: 'All history', results: 'results',
@@ -177,13 +189,12 @@ const copy = {
     openPurchase: 'Open purchase', backToHistory: 'Back to history', viewPlace: 'View place',
     selectedMonth: 'Selected month', clearTimeline: 'Clear timeline', showTimeline: 'Open timeline',
     noPurchases: 'No purchases match this view', noPurchasesBody: 'Adjust the shared search, filters, or timeline.',
-    statsPlaceholder: 'Stats foundation', statsPlaceholderBody: 'Analytics calculations remain intentionally deferred.',
     reloadNote: 'Shared view saved for this session', onlineNoPin: 'Online · no map pin',
     unresolvedNoPin: 'Unresolved · no map pin', manualEntry: 'Manual cash record',
   },
   he: {
     product: 'Spendscape', checkpoint: 'נקודת ביקורת גלובוס', navGlobe: 'גלובוס',
-    navAnalytics: 'ניתוחים', navPurchases: 'רכישות', later: 'בהמשך',
+    navAnalytics: 'ניתוחים', navPurchases: 'רכישות',
     headline: 'עולם הרכישות שלך.',
     intro: 'כל מקום מאומת הופך לנקודה אחת בהיסטוריה חיה.',
     search: 'חיפוש מקומות או ערים', all: 'הכול', groceries: 'מכולת', food: 'אוכל',
@@ -202,7 +213,7 @@ const copy = {
     orbiting: 'הגלובוס מסתובב עד לאינטראקציה הראשונה', interrupted: 'האינטראקציה שולטת במצלמה',
     ready: 'הגלובוס מוכן', modePins: 'סיכות קנוניות מוצגות', modeHeat: 'צפיפות רכישות מוצגת',
     zoomIn: 'התקרב', zoomOut: 'התרחק', language: 'מעבר לאנגלית',
-    mobileStats: 'נתונים', mobileAi: 'AI', addLater: 'הוספה · בהמשך', tools: 'כלי גלובוס',
+    mobileStats: 'נתונים', tools: 'כלי גלובוס',
     closeTools: 'סגירת כלי גלובוס', placesSummary: 'מקומות', purchasesSummary: 'רכישות מאומתות',
     history: 'היסטוריית רכישות', historyIntro: 'רשומה סינתטית אחת לכל ערוץ ומטבע.',
     filters: 'מסננים', timeline: 'ציר זמן', allHistory: 'כל ההיסטוריה', results: 'תוצאות',
@@ -218,7 +229,6 @@ const copy = {
     openPurchase: 'פתיחת רכישה', backToHistory: 'חזרה להיסטוריה', viewPlace: 'הצגת מקום',
     selectedMonth: 'חודש נבחר', clearTimeline: 'ניקוי ציר הזמן', showTimeline: 'פתיחת ציר הזמן',
     noPurchases: 'אין רכישות התואמות לתצוגה', noPurchasesBody: 'אפשר לשנות חיפוש, מסננים או ציר זמן משותפים.',
-    statsPlaceholder: 'יסודות נתונים', statsPlaceholderBody: 'חישובי Analytics נשארו בכוונה לשלב מאוחר יותר.',
     reloadNote: 'התצוגה המשותפת נשמרה להפעלה זו', onlineNoPin: 'אונליין · ללא סיכה',
     unresolvedNoPin: 'לא פתור · ללא סיכה', manualEntry: 'רשומת מזומן ידנית',
   },
@@ -473,6 +483,7 @@ export function SpendscapeGlobe() {
     [visiblePurchases],
   )
   const visibleSummary = useMemo(() => derivedPurchaseSummary(visiblePurchases), [visiblePurchases])
+  const visibleAnalytics = useMemo(() => derivePurchaseAnalytics(visiblePurchases), [visiblePurchases])
   const timelineMonths = useMemo(() => availableTimelineMonths(), [])
   const selectedFeature = useMemo(
     () => visibleData.features.find(
@@ -1301,8 +1312,18 @@ export function SpendscapeGlobe() {
       renderedHeatFeatures: renderedEvidence.heatFeatures,
       camera: mapRef.current ? snapshotCamera(mapRef.current) : null,
       performance: performanceEvidence,
+      analytics: {
+        purchaseCount: visibleAnalytics.purchaseCount,
+        totalBaseAmountIls: visibleAnalytics.totalBaseAmountIls,
+        averageBaseAmountIls: visibleAnalytics.averageBaseAmountIls,
+        physicalCount: visibleAnalytics.channels.find((channel) => channel.key === 'physical')?.purchaseCount ?? 0,
+        onlineCount: visibleAnalytics.channels.find((channel) => channel.key === 'online')?.purchaseCount ?? 0,
+        unresolvedCount: visibleAnalytics.channels.find((channel) => channel.key === 'unresolved')?.purchaseCount ?? 0,
+        monthCount: visibleAnalytics.months.length,
+        topPhysicalPlaceId: visibleAnalytics.topPhysicalPlaces[0]?.placeId ?? null,
+      },
     }
-  }, [autoSpin, loading, locale, mapError, mode, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sourceUpdates, surface, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
+  }, [autoSpin, loading, locale, mapError, mode, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
 
   const runCameraAction = useCallback((name: string, action: (map: MapLibreMap) => void) => {
     const map = mapRef.current
@@ -1424,7 +1445,7 @@ export function SpendscapeGlobe() {
 
         <nav className={styles.desktopNav} aria-label="Primary">
           <button type="button" data-active={surface === 'globe'} onClick={() => openSurface('globe')}>{t.navGlobe}</button>
-          <button type="button" data-active={surface === 'stats'} onClick={() => openSurface('stats')}>{t.navAnalytics}<em>{t.later}</em></button>
+          <button type="button" data-active={surface === 'stats'} onClick={() => openSurface('stats')}>{t.navAnalytics}</button>
           <button type="button" data-active={surface === 'purchases'} onClick={() => openSurface('purchases')}>{t.navPurchases}</button>
         </nav>
 
@@ -1746,15 +1767,23 @@ export function SpendscapeGlobe() {
       )}
 
       {surface === 'stats' && (
-        <section className={styles.placeholderPanel} aria-labelledby="stats-title" data-testid="stats-placeholder">
-          <button type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.close}>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-          </button>
-          <p className={styles.eyebrow}>{t.later}</p>
-          <h2 id="stats-title">{t.statsPlaceholder}</h2>
-          <p>{t.statsPlaceholderBody}</p>
-          <button type="button" onClick={() => openSurface('globe')}>{t.navGlobe}</button>
-        </section>
+        <SpendscapeAnalytics
+          analytics={visibleAnalytics}
+          locale={locale}
+          query={query}
+          activeFilterCount={activeFilterCount}
+          onClose={closeTopLayer}
+          onSearch={(search) => { stopSpin(false); updateQuery({ search }) }}
+          onOpenFilters={() => { stopSpin(false); setFiltersOpen(true) }}
+          onOpenTimeline={() => { stopSpin(false); setTimelineOpen(true) }}
+          onReset={clearFilters}
+          onOpenPurchases={() => openSurface('purchases')}
+          onSelectCategory={(category) => { stopSpin(false); updateQuery({ category }) }}
+          onSelectChannel={(channel) => { stopSpin(false); updateQuery({ channel }) }}
+          onSelectCurrency={(currency) => { stopSpin(false); updateQuery({ currency }) }}
+          onSelectMonth={setTimelineMonth}
+          onSelectPlace={selectPlace}
+        />
       )}
 
       {selectedPurchase && selectedMerchant && (
@@ -1845,7 +1874,7 @@ export function SpendscapeGlobe() {
       <nav className={styles.mobileNav} aria-label="Mobile primary">
         <button type="button" data-active={surface === 'globe'} onClick={() => openSurface('globe')}><i className={styles.globeIcon} />{t.navGlobe}</button>
         <button type="button" data-active={surface === 'purchases'} onClick={() => openSurface('purchases')}><i className={styles.purchaseIcon} />{t.navPurchases}</button>
-        <button type="button" data-active={surface === 'stats'} onClick={() => openSurface('stats')}><i className={styles.statsIcon} />{t.mobileStats}<em>{t.later}</em></button>
+        <button type="button" data-active={surface === 'stats'} onClick={() => openSurface('stats')}><i className={styles.statsIcon} />{t.mobileStats}</button>
       </nav>
     </main>
   )
