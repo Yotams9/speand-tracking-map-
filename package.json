@@ -13,7 +13,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "qa:globe": "playwright test qa/spendscape-globe.spec.ts"
+    "qa:globe": "playwright test qa/spendscape-globe.spec.ts",
+    "qa:experience": "playwright test qa/spendscape-slice-1d1.spec.ts"
   },
   "dependencies": {
     "maplibre-gl": "6.6.0",

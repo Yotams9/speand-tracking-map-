@@ -15,15 +15,32 @@ import type {
   MapMouseEvent,
   StyleSpecification,
 } from 'maplibre-gl'
-import type { FeatureCollection, Point } from 'geojson'
+import type { Point } from 'geojson'
 import {
+  availableTimelineMonths,
+  baseAmountIlsForPurchase,
+  buildPlaceFeatureCollection,
+  defaultPurchaseQuery,
+  derivedPurchaseSummary,
+  filterPurchases,
   globeEvidence,
+  globeEvidenceRecords,
+  globePlaces,
   localized,
+  merchantForId,
   placeFeatureCollection,
   placeForId,
+  purchaseForId,
+  purchasesForPlace,
+  synchronizeSelection,
+  type CategoryFilter,
+  type ChannelFilter,
+  type CurrencyCode,
+  type CurrencyFilter,
+  type DateRangeFilter,
   type LocaleCode,
   type PlaceFeatureProperties,
-  type PurchaseCategory,
+  type PurchaseQuery,
 } from '@/data/spendscape-globe'
 import styles from './SpendscapeGlobe.module.css'
 
@@ -43,7 +60,7 @@ const LABEL_LAYER = 'spendscape-place-labels'
 const CAMERA_STORAGE_KEY = 'spendscape.phase1.globe-camera'
 
 type MapMode = 'pins' | 'heatmap'
-type CategoryFilter = 'all' | PurchaseCategory
+type ProductSurface = 'globe' | 'purchases' | 'stats'
 
 interface CameraSnapshot {
   center: [number, number]
@@ -61,13 +78,31 @@ interface PerformanceEvidence {
   lastCameraMs: number | null
 }
 
+interface NavigationSnapshot {
+  marker: 'spendscape-1d1'
+  surface: ProductSurface
+  selectedPlaceId: string | null
+  selectedPurchaseId: string | null
+}
+
+interface StoredExperienceState extends NavigationSnapshot {
+  locale: LocaleCode
+  query: PurchaseQuery
+  mode: MapMode
+}
+
 interface QaEvidence {
   ready: boolean
   locale: LocaleCode
   reducedMotion: boolean
   autoSpin: boolean
   mode: MapMode
+  surface: ProductSurface
+  query: PurchaseQuery
   selectedPlaceId: string | null
+  selectedPurchaseId: string | null
+  visiblePurchaseCount: number
+  visibleBaseTotalIls: number
   visiblePinFeatures: number
   canonicalPins: number
   physicalPurchases: number
@@ -128,6 +163,23 @@ const copy = {
     zoomIn: 'Zoom in', zoomOut: 'Zoom out', language: 'Switch to Hebrew',
     mobileStats: 'Stats', mobileAi: 'AI', addLater: 'Capture · later', tools: 'Globe tools',
     closeTools: 'Close globe tools', placesSummary: 'places', purchasesSummary: 'confirmed purchases',
+    history: 'Purchase history', historyIntro: 'One synthetic record across every channel and currency.',
+    filters: 'Filters', timeline: 'Timeline', allHistory: 'All history', results: 'results',
+    total: 'Illustrative base total', average: 'Average', currencies: 'currencies',
+    category: 'Category', currency: 'Currency', channel: 'Channel', dateRange: 'Date range',
+    physical: 'Physical', onlineOnly: 'Online', cashManual: 'Cash / manual', unresolvedOnly: 'Unresolved',
+    last30: 'Last 30 days', last90: 'Last 90 days', thisYear: 'Past year',
+    resetQuery: 'Reset query', closeHistory: 'Close purchase history', closeFilters: 'Close filters', closeTimeline: 'Close timeline',
+    purchaseDetail: 'Purchase detail', placeDetail: 'Place detail', receiptItems: 'Receipt items',
+    noReceiptItems: 'No nested receipt lines for this record.', sourceEvidence: 'Evidence',
+    originalAmount: 'Original amount', baseAmount: 'Illustrative ILS conversion', fxProvenance: 'Conversion provenance',
+    cash: 'Cash', card: 'Card', manual: 'Manual', confirmedStatus: 'Confirmed', unresolvedStatus: 'Unresolved',
+    openPurchase: 'Open purchase', backToHistory: 'Back to history', viewPlace: 'View place',
+    selectedMonth: 'Selected month', clearTimeline: 'Clear timeline', showTimeline: 'Open timeline',
+    noPurchases: 'No purchases match this view', noPurchasesBody: 'Adjust the shared search, filters, or timeline.',
+    statsPlaceholder: 'Stats foundation', statsPlaceholderBody: 'Analytics calculations remain intentionally deferred.',
+    reloadNote: 'Shared view saved for this session', onlineNoPin: 'Online · no map pin',
+    unresolvedNoPin: 'Unresolved · no map pin', manualEntry: 'Manual cash record',
   },
   he: {
     product: 'Spendscape', checkpoint: 'נקודת ביקורת גלובוס', navGlobe: 'גלובוס',
@@ -152,12 +204,44 @@ const copy = {
     zoomIn: 'התקרב', zoomOut: 'התרחק', language: 'מעבר לאנגלית',
     mobileStats: 'נתונים', mobileAi: 'AI', addLater: 'הוספה · בהמשך', tools: 'כלי גלובוס',
     closeTools: 'סגירת כלי גלובוס', placesSummary: 'מקומות', purchasesSummary: 'רכישות מאומתות',
+    history: 'היסטוריית רכישות', historyIntro: 'רשומה סינתטית אחת לכל ערוץ ומטבע.',
+    filters: 'מסננים', timeline: 'ציר זמן', allHistory: 'כל ההיסטוריה', results: 'תוצאות',
+    total: 'סכום בסיס להמחשה', average: 'ממוצע', currencies: 'מטבעות',
+    category: 'קטגוריה', currency: 'מטבע', channel: 'ערוץ', dateRange: 'טווח תאריכים',
+    physical: 'פיזי', onlineOnly: 'אונליין', cashManual: 'מזומן / ידני', unresolvedOnly: 'לא פתור',
+    last30: '30 ימים אחרונים', last90: '90 ימים אחרונים', thisYear: 'שנה אחרונה',
+    resetQuery: 'איפוס שאילתה', closeHistory: 'סגירת היסטוריית רכישות', closeFilters: 'סגירת מסננים', closeTimeline: 'סגירת ציר הזמן',
+    purchaseDetail: 'פרטי רכישה', placeDetail: 'פרטי מקום', receiptItems: 'פריטי קבלה',
+    noReceiptItems: 'לרשומה זו אין שורות קבלה מקוננות.', sourceEvidence: 'ראיות',
+    originalAmount: 'סכום מקורי', baseAmount: 'המרת ש״ח להמחשה', fxProvenance: 'מקור ההמרה',
+    cash: 'מזומן', card: 'כרטיס', manual: 'ידני', confirmedStatus: 'מאומת', unresolvedStatus: 'לא פתור',
+    openPurchase: 'פתיחת רכישה', backToHistory: 'חזרה להיסטוריה', viewPlace: 'הצגת מקום',
+    selectedMonth: 'חודש נבחר', clearTimeline: 'ניקוי ציר הזמן', showTimeline: 'פתיחת ציר הזמן',
+    noPurchases: 'אין רכישות התואמות לתצוגה', noPurchasesBody: 'אפשר לשנות חיפוש, מסננים או ציר זמן משותפים.',
+    statsPlaceholder: 'יסודות נתונים', statsPlaceholderBody: 'חישובי Analytics נשארו בכוונה לשלב מאוחר יותר.',
+    reloadNote: 'התצוגה המשותפת נשמרה להפעלה זו', onlineNoPin: 'אונליין · ללא סיכה',
+    unresolvedNoPin: 'לא פתור · ללא סיכה', manualEntry: 'רשומת מזומן ידנית',
   },
 } as const
 
 const categoryLabels: Record<CategoryFilter, keyof typeof copy.en> = {
   all: 'all', groceries: 'groceries', food: 'food', retail: 'retail', travel: 'travel',
 }
+
+const channelLabels: Record<ChannelFilter, keyof typeof copy.en> = {
+  all: 'all', physical: 'physical', online: 'onlineOnly',
+  'cash-manual': 'cashManual', unresolved: 'unresolvedOnly',
+}
+
+const dateRangeLabels: Record<DateRangeFilter, keyof typeof copy.en> = {
+  all: 'allHistory', '30d': 'last30', '90d': 'last90', year: 'thisYear',
+}
+
+const currencyOptions: CurrencyFilter[] = [
+  'all', 'ILS', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'MXN', 'ZAR',
+]
+
+const EXPERIENCE_STORAGE_KEY = 'spendscape.phase1d1.experience-state'
 
 function homeCamera(): CameraSnapshot {
   const compact = window.innerWidth <= 760
@@ -290,25 +374,6 @@ async function fetchDevelopmentStyle(signal: AbortSignal): Promise<StyleSpecific
   } as StyleSpecification
 }
 
-function filteredCollection(
-  search: string,
-  category: CategoryFilter,
-): FeatureCollection<Point, PlaceFeatureProperties> {
-  const normalized = search.trim().toLocaleLowerCase()
-  return {
-    type: 'FeatureCollection',
-    features: placeFeatureCollection.features.filter((feature) => {
-      const properties = feature.properties
-      const matchesCategory = category === 'all' || properties.category === category
-      const searchable = [
-        properties.nameEn, properties.nameHe, properties.branchEn, properties.branchHe,
-        properties.cityEn, properties.cityHe, properties.countryEn, properties.countryHe,
-      ].join(' ').toLocaleLowerCase()
-      return matchesCategory && (!normalized || searchable.includes(normalized))
-    }),
-  }
-}
-
 function percentile(values: number[], value: number): number {
   if (values.length === 0) return 0
   const ordered = [...values].sort((a, b) => a - b)
@@ -319,9 +384,9 @@ function spatialEasing(value: number): number {
   return 1 - Math.pow(1 - value, 3)
 }
 
-function formatMoney(amount: number, locale: LocaleCode): string {
-  return new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-IL', {
-    style: 'currency', currency: 'ILS', maximumFractionDigits: 0,
+function formatMoney(amount: number, locale: LocaleCode, currency: CurrencyCode = 'ILS'): string {
+  return new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-GB', {
+    style: 'currency', currency, maximumFractionDigits: currency === 'JPY' ? 0 : 2,
   }).format(amount)
 }
 
@@ -329,6 +394,25 @@ function formatDate(timestamp: string, locale: LocaleCode): string {
   return new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-GB', {
     day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
   }).format(new Date(timestamp))
+}
+
+function formatMonth(month: string, locale: LocaleCode): string {
+  return new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-GB', {
+    month: 'long', year: 'numeric', timeZone: 'UTC',
+  }).format(new Date(`${month}-01T00:00:00Z`))
+}
+
+function navigationHash(snapshot: NavigationSnapshot): string {
+  if (snapshot.selectedPurchaseId) return `#purchase/${snapshot.selectedPurchaseId}`
+  if (snapshot.selectedPlaceId) return `#place/${snapshot.selectedPlaceId}`
+  if (snapshot.surface === 'purchases') return '#purchases'
+  if (snapshot.surface === 'stats') return '#stats'
+  return '#globe'
+}
+
+function isNavigationSnapshot(value: unknown): value is NavigationSnapshot {
+  if (!value || typeof value !== 'object') return false
+  return (value as Partial<NavigationSnapshot>).marker === 'spendscape-1d1'
 }
 
 export function SpendscapeGlobe() {
@@ -344,10 +428,14 @@ export function SpendscapeGlobe() {
   const localeRef = useRef<LocaleCode>('en')
 
   const [locale, setLocale] = useState<LocaleCode>('en')
-  const [category, setCategory] = useState<CategoryFilter>('all')
-  const [search, setSearch] = useState('')
+  const [query, setQuery] = useState<PurchaseQuery>(defaultPurchaseQuery)
   const [mode, setMode] = useState<MapMode>('pins')
+  const [surface, setSurface] = useState<ProductSurface>('globe')
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
+  const [selectedPurchaseId, setSelectedPurchaseId] = useState<string | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [timelineOpen, setTimelineOpen] = useState(false)
+  const [stateRestored, setStateRestored] = useState(false)
   const [loading, setLoading] = useState(true)
   const [mapError, setMapError] = useState<string | null>(null)
   const [autoSpin, setAutoSpin] = useState(true)
@@ -379,18 +467,87 @@ export function SpendscapeGlobe() {
   })
 
   const t = copy[locale]
-  const visibleData = useMemo(() => filteredCollection(search, category), [search, category])
+  const visiblePurchases = useMemo(() => filterPurchases(query), [query])
+  const visibleData = useMemo(
+    () => buildPlaceFeatureCollection(globePlaces, visiblePurchases),
+    [visiblePurchases],
+  )
+  const visibleSummary = useMemo(() => derivedPurchaseSummary(visiblePurchases), [visiblePurchases])
+  const timelineMonths = useMemo(() => availableTimelineMonths(), [])
   const selectedFeature = useMemo(
-    () => placeFeatureCollection.features.find(
+    () => visibleData.features.find(
       (feature) => feature.properties.placeId === selectedPlaceId,
     ) ?? null,
-    [selectedPlaceId],
+    [selectedPlaceId, visibleData.features],
   )
   const selectedPlace = selectedPlaceId ? placeForId(selectedPlaceId) : undefined
+  const selectedPurchase = selectedPurchaseId ? purchaseForId(selectedPurchaseId) : undefined
+  const selectedMerchant = selectedPurchase ? merchantForId(selectedPurchase.merchantId) : undefined
+  const selectedEvidence = useMemo(
+    () => selectedPurchase
+      ? globeEvidenceRecords.filter((record) => selectedPurchase.evidenceIds.includes(record.id))
+      : [],
+    [selectedPurchase],
+  )
+  const selectedPlacePurchases = useMemo(
+    () => selectedPlaceId ? purchasesForPlace(selectedPlaceId, visiblePurchases) : [],
+    [selectedPlaceId, visiblePurchases],
+  )
+  const activeFilterCount = [
+    query.currency !== 'all', query.channel !== 'all', query.dateRange !== 'all',
+    query.timelineMonth !== null,
+  ].filter(Boolean).length
 
   filteredRef.current = visibleData
   reducedMotionRef.current = reducedMotion
   localeRef.current = locale
+
+  const updateQuery = useCallback((patch: Partial<PurchaseQuery>) => {
+    setQuery((current) => ({ ...current, ...patch }))
+  }, [])
+
+  useEffect(() => {
+    let restored: Partial<StoredExperienceState> = {}
+    try {
+      const raw = window.sessionStorage.getItem(EXPERIENCE_STORAGE_KEY)
+      if (raw) restored = JSON.parse(raw) as Partial<StoredExperienceState>
+    } catch {
+      restored = {}
+    }
+
+    if (restored.locale === 'en' || restored.locale === 'he') setLocale(restored.locale)
+    if (restored.query) setQuery({ ...defaultPurchaseQuery, ...restored.query })
+    if (restored.mode === 'pins' || restored.mode === 'heatmap') setMode(restored.mode)
+    if (restored.surface === 'globe' || restored.surface === 'purchases' || restored.surface === 'stats') {
+      setSurface(restored.surface)
+    }
+    if (typeof restored.selectedPlaceId === 'string' || restored.selectedPlaceId === null) {
+      setSelectedPlaceId(restored.selectedPlaceId)
+    }
+    if (typeof restored.selectedPurchaseId === 'string' || restored.selectedPurchaseId === null) {
+      setSelectedPurchaseId(restored.selectedPurchaseId)
+    }
+
+    const snapshot: NavigationSnapshot = isNavigationSnapshot(window.history.state)
+      ? window.history.state
+      : {
+          marker: 'spendscape-1d1',
+          surface: restored.surface ?? 'globe',
+          selectedPlaceId: restored.selectedPlaceId ?? null,
+          selectedPurchaseId: restored.selectedPurchaseId ?? null,
+        }
+    window.history.replaceState(snapshot, '', navigationHash(snapshot))
+    setStateRestored(true)
+  }, [])
+
+  useEffect(() => {
+    if (!stateRestored) return
+    const stored: StoredExperienceState = {
+      marker: 'spendscape-1d1', locale, query, mode, surface,
+      selectedPlaceId, selectedPurchaseId,
+    }
+    window.sessionStorage.setItem(EXPERIENCE_STORAGE_KEY, JSON.stringify(stored))
+  }, [locale, mode, query, selectedPlaceId, selectedPurchaseId, stateRestored, surface])
 
   const clearSpinTimer = useCallback(() => {
     if (spinTimerRef.current !== null) {
@@ -454,14 +611,73 @@ export function SpendscapeGlobe() {
     }
   }, [])
 
-  const selectPlace = useCallback((placeId: string, shouldFly = true) => {
+  const applyNavigation = useCallback((snapshot: NavigationSnapshot) => {
+    setSurface(snapshot.surface)
+    setSelectedPlaceId(snapshot.selectedPlaceId)
+    setSelectedPurchaseId(snapshot.selectedPurchaseId)
+    setFiltersOpen(false)
+    setTimelineOpen(false)
+    setMobileToolsOpen(false)
+    updateSelectedFilter(snapshot.selectedPlaceId)
+  }, [updateSelectedFilter])
+
+  const pushNavigation = useCallback((patch: Partial<NavigationSnapshot>) => {
+    const snapshot: NavigationSnapshot = {
+      marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
+      ...patch,
+    }
+    window.history.pushState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+  }, [applyNavigation, selectedPlaceId, selectedPurchaseId, surface])
+
+  const closeTopLayer = useCallback(() => {
+    if (filtersOpen) {
+      setFiltersOpen(false)
+      return
+    }
+    if (timelineOpen) {
+      setTimelineOpen(false)
+      return
+    }
+    if (mobileToolsOpen) {
+      setMobileToolsOpen(false)
+      return
+    }
+
+    const snapshot: NavigationSnapshot = selectedPurchaseId
+      ? { marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId: null }
+      : selectedPlaceId
+        ? { marker: 'spendscape-1d1', surface, selectedPlaceId: null, selectedPurchaseId: null }
+        : { marker: 'spendscape-1d1', surface: 'globe', selectedPlaceId: null, selectedPurchaseId: null }
+    window.history.replaceState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+  }, [applyNavigation, filtersOpen, mobileToolsOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
+
+  useEffect(() => {
+    const restoreNavigation = (event: PopStateEvent) => {
+      if (isNavigationSnapshot(event.state)) applyNavigation(event.state)
+    }
+    window.addEventListener('popstate', restoreNavigation)
+    return () => window.removeEventListener('popstate', restoreNavigation)
+  }, [applyNavigation])
+
+  const selectPlace = useCallback((placeId: string, shouldFly = true, recordHistory = true) => {
     const map = mapRef.current
     const place = placeForId(placeId)
     if (!map || !place) return
     stopSpin(false)
     setMobileToolsOpen(false)
+    setSurface('globe')
     setSelectedPlaceId(placeId)
+    setSelectedPurchaseId(null)
     updateSelectedFilter(placeId)
+    if (recordHistory) {
+      const snapshot: NavigationSnapshot = {
+        marker: 'spendscape-1d1', surface: 'globe',
+        selectedPlaceId: placeId, selectedPurchaseId: null,
+      }
+      window.history.pushState(snapshot, '', navigationHash(snapshot))
+    }
     const activeLocale = localeRef.current
     setStatus(`${localized(place.name, activeLocale)} · ${copy[activeLocale].ready}`)
     if (shouldFly) {
@@ -508,14 +724,11 @@ export function SpendscapeGlobe() {
 
   useEffect(() => {
     const dismiss = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      setMobileToolsOpen(false)
-      setSelectedPlaceId(null)
-      updateSelectedFilter(null)
+      if (event.key === 'Escape') closeTopLayer()
     }
     document.addEventListener('keydown', dismiss)
     return () => document.removeEventListener('keydown', dismiss)
-  }, [updateSelectedFilter])
+  }, [closeTopLayer])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -886,7 +1099,15 @@ export function SpendscapeGlobe() {
             const hit = map.queryRenderedFeatures(event.point, { layers: [CLUSTER_LAYER, PIN_LAYER] })
             if (hit.length === 0) {
               setSelectedPlaceId(null)
+              setSelectedPurchaseId(null)
               updateSelectedFilter(null)
+              const current: NavigationSnapshot = isNavigationSnapshot(window.history.state)
+                ? window.history.state
+                : { marker: 'spendscape-1d1', surface: 'globe', selectedPlaceId: null, selectedPurchaseId: null }
+              const snapshot: NavigationSnapshot = {
+                ...current, selectedPlaceId: null, selectedPurchaseId: null,
+              }
+              window.history.replaceState(snapshot, '', navigationHash(snapshot))
             }
           })
 
@@ -1016,13 +1237,15 @@ export function SpendscapeGlobe() {
         setMapError(error instanceof Error ? error.message : 'Canonical place source update failed')
       })
     }
-    if (selectedPlaceId && !visibleData.features.some(
-      (feature) => feature.properties.placeId === selectedPlaceId,
-    )) {
-      setSelectedPlaceId(null)
-      updateSelectedFilter(null)
+    const synchronized = synchronizeSelection(visiblePurchases, { selectedPlaceId, selectedPurchaseId })
+    if (synchronized.selectedPlaceId !== selectedPlaceId) {
+      setSelectedPlaceId(synchronized.selectedPlaceId)
+      updateSelectedFilter(synchronized.selectedPlaceId)
     }
-  }, [selectedPlaceId, updateSelectedFilter, visibleData])
+    if (synchronized.selectedPurchaseId !== selectedPurchaseId) {
+      setSelectedPurchaseId(synchronized.selectedPurchaseId)
+    }
+  }, [selectedPlaceId, selectedPurchaseId, updateSelectedFilter, visibleData, visiblePurchases])
 
   useEffect(() => {
     const map = mapRef.current
@@ -1049,7 +1272,12 @@ export function SpendscapeGlobe() {
       reducedMotion,
       autoSpin,
       mode,
+      surface,
+      query,
       selectedPlaceId,
+      selectedPurchaseId,
+      visiblePurchaseCount: visiblePurchases.length,
+      visibleBaseTotalIls: visibleSummary.totalBaseAmountIls,
       visiblePinFeatures: visibleData.features.length,
       canonicalPins: globeEvidence.pinCount,
       physicalPurchases: globeEvidence.physicalConfirmedCount,
@@ -1074,7 +1302,7 @@ export function SpendscapeGlobe() {
       camera: mapRef.current ? snapshotCamera(mapRef.current) : null,
       performance: performanceEvidence,
     }
-  }, [autoSpin, loading, locale, mapError, mode, performanceEvidence, reducedMotion, renderedEvidence, selectedPlaceId, sourceUpdates, visibleData.features.length])
+  }, [autoSpin, loading, locale, mapError, mode, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sourceUpdates, surface, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
 
   const runCameraAction = useCallback((name: string, action: (map: MapLibreMap) => void) => {
     const map = mapRef.current
@@ -1116,6 +1344,8 @@ export function SpendscapeGlobe() {
 
   const resetGlobe = useCallback(() => {
     setSelectedPlaceId(null)
+    setSelectedPurchaseId(null)
+    setSurface('globe')
     updateSelectedFilter(null)
     runCameraAction('reset-globe', (map) => map.flyTo({
       ...homeCamera(),
@@ -1126,9 +1356,32 @@ export function SpendscapeGlobe() {
     }))
   }, [runCameraAction, updateSelectedFilter])
 
-  const clearFilters = () => {
-    setSearch('')
-    setCategory('all')
+  const clearFilters = () => setQuery(defaultPurchaseQuery)
+
+  const openSurface = (nextSurface: ProductSurface) => {
+    stopSpin(false)
+    pushNavigation({
+      surface: nextSurface,
+      selectedPurchaseId: null,
+      selectedPlaceId: nextSurface === 'globe' ? selectedPlaceId : null,
+    })
+  }
+
+  const openPurchase = (purchaseId: string) => {
+    const purchase = purchaseForId(purchaseId)
+    if (!purchase) return
+    stopSpin(false)
+    if (purchase.placeId) selectPlace(purchase.placeId, true, false)
+    pushNavigation({
+      surface: 'purchases',
+      selectedPlaceId: purchase.placeId,
+      selectedPurchaseId: purchase.id,
+    })
+  }
+
+  const setTimelineMonth = (month: string | null) => {
+    stopSpin(false)
+    updateQuery({ timelineMonth: month, dateRange: 'all' })
   }
 
   const retryMap = () => {
@@ -1150,13 +1403,16 @@ export function SpendscapeGlobe() {
       data-unresolved-excluded={globeEvidence.unresolvedCount}
       data-frame-p95={performanceEvidence.p95FrameMs}
       data-mobile-tools={mobileToolsOpen}
+      data-surface={surface}
+      data-visible-purchases={visiblePurchases.length}
+      data-visible-pins={visibleData.features.length}
     >
       <div ref={mapNodeRef} className={styles.map} data-testid="map-canvas" />
       <div className={styles.vignette} aria-hidden="true" />
 
       <header className={styles.header}>
         <a href="#globe-controls" className={styles.skipLink}>Skip to globe controls</a>
-        <a className={styles.brand} href="/" aria-label={t.product}>
+        <button type="button" className={styles.brand} onClick={() => openSurface('globe')} aria-label={t.product}>
           <span className={styles.brandMark} aria-hidden="true">
             <span />
           </span>
@@ -1164,12 +1420,12 @@ export function SpendscapeGlobe() {
             <strong>{t.product}</strong>
             <small>{t.checkpoint}</small>
           </span>
-        </a>
+        </button>
 
         <nav className={styles.desktopNav} aria-label="Primary">
-          <span className={styles.navActive}>{t.navGlobe}</span>
-          <span className={styles.navFuture} title={t.later}>{t.navAnalytics}<em>{t.later}</em></span>
-          <span className={styles.navFuture} title={t.later}>{t.navPurchases}<em>{t.later}</em></span>
+          <button type="button" data-active={surface === 'globe'} onClick={() => openSurface('globe')}>{t.navGlobe}</button>
+          <button type="button" data-active={surface === 'stats'} onClick={() => openSurface('stats')}>{t.navAnalytics}<em>{t.later}</em></button>
+          <button type="button" data-active={surface === 'purchases'} onClick={() => openSurface('purchases')}>{t.navPurchases}</button>
         </nav>
 
         <div className={styles.headerActions}>
@@ -1202,10 +1458,11 @@ export function SpendscapeGlobe() {
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
           <input
             type="search"
-            value={search}
-            onChange={(event) => { stopSpin(false); setSearch(event.target.value) }}
+            value={query.search}
+            onChange={(event) => { stopSpin(false); updateQuery({ search: event.target.value }) }}
             placeholder={t.search}
             aria-label={t.search}
+            data-testid="shared-search"
           />
         </label>
         <div className={`${styles.categories} ${styles.desktopCategories}`} role="group" aria-label="Categories">
@@ -1214,12 +1471,21 @@ export function SpendscapeGlobe() {
               key={item}
               type="button"
               data-category={item}
-              aria-pressed={category === item}
-              onClick={() => { stopSpin(false); setCategory(item) }}
+              aria-pressed={query.category === item}
+              onClick={() => { stopSpin(false); updateQuery({ category: item }) }}
             >
               {t[categoryLabels[item]]}
             </button>
           ))}
+        </div>
+        <div className={styles.queryActions}>
+          <button type="button" onClick={() => { stopSpin(false); setFiltersOpen(true) }} data-testid="filters-open">
+            {t.filters}{activeFilterCount > 0 && <span>{activeFilterCount}</span>}
+          </button>
+          <button type="button" onClick={() => { stopSpin(false); setTimelineOpen(true) }} data-testid="timeline-open">
+            {query.timelineMonth ?? t.timeline}
+          </button>
+          <output aria-live="polite">{visiblePurchases.length} {t.results} · {visibleData.features.length} {t.placesSummary}</output>
         </div>
       </section>
 
@@ -1247,12 +1513,17 @@ export function SpendscapeGlobe() {
               key={item}
               type="button"
               data-category={item}
-              aria-pressed={category === item}
-              onClick={() => { stopSpin(false); setCategory(item) }}
+              aria-pressed={query.category === item}
+              onClick={() => { stopSpin(false); updateQuery({ category: item }) }}
             >
               {t[categoryLabels[item]]}
             </button>
           ))}
+        </div>
+
+        <div className={styles.mobileQueryActions}>
+          <button type="button" onClick={() => { setMobileToolsOpen(false); setFiltersOpen(true) }}>{t.filters}</button>
+          <button type="button" onClick={() => { setMobileToolsOpen(false); setTimelineOpen(true) }}>{t.timeline}</button>
         </div>
 
         <div className={styles.modeSwitch} role="group" aria-label="Visualization">
@@ -1361,12 +1632,12 @@ export function SpendscapeGlobe() {
         </div>
       )}
 
-      {selectedFeature && selectedPlace && (
+      {selectedFeature && selectedPlace && !selectedPurchase && surface === 'globe' && (
         <aside className={styles.placePanel} aria-labelledby="place-title" data-testid="place-panel">
           <button
             type="button"
             className={styles.closePanel}
-            onClick={() => { setSelectedPlaceId(null); updateSelectedFilter(null) }}
+            onClick={closeTopLayer}
             aria-label={t.close}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
@@ -1384,15 +1655,197 @@ export function SpendscapeGlobe() {
             <span>{t.latestVisit}</span>
             <strong>{formatDate(selectedFeature.properties.latestTimestamp, locale)}</strong>
           </div>
+          <div className={styles.placePurchaseList}>
+            {selectedPlacePurchases.slice(0, 4).map((purchase) => (
+              <button type="button" key={purchase.id} onClick={() => openPurchase(purchase.id)}>
+                <span>{formatDate(purchase.timestamp, locale)}</span>
+                <strong>{formatMoney(purchase.originalAmount, locale, purchase.originalCurrency)}</strong>
+              </button>
+            ))}
+          </div>
           <p className={styles.panelTruth}>{t.synthetic} · {globeEvidence.recurringPlacePurchaseCount}:1 {locale === 'en' ? 'pin rule verified in fixtures' : 'כלל הסיכה אומת בנתונים'}</p>
         </aside>
       )}
 
+      {surface === 'purchases' && !selectedPurchase && (
+        <section className={styles.purchasesPanel} aria-labelledby="purchases-title" data-testid="purchases-panel">
+          <header className={styles.panelHeader}>
+            <div>
+              <p className={styles.eyebrow}>{t.synthetic}</p>
+              <h2 id="purchases-title">{t.history}</h2>
+              <p>{t.historyIntro}</p>
+            </div>
+            <button type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.closeHistory}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+            </button>
+          </header>
+
+          <div className={styles.historySummary} data-testid="derived-summary">
+            <span><strong>{visibleSummary.purchaseCount}</strong>{t.results}</span>
+            <span><strong>{formatMoney(visibleSummary.totalBaseAmountIls, locale)}</strong>{t.total}</span>
+            <span><strong>{visibleSummary.currencies.length}</strong>{t.currencies}</span>
+          </div>
+
+          <label className={styles.panelSearch}>
+            <span className={styles.srOnly}>{t.search}</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+            <input type="search" value={query.search} onChange={(event) => updateQuery({ search: event.target.value })} placeholder={t.search} aria-label={t.search} data-testid="history-search" />
+          </label>
+
+          <div className={styles.historyActions}>
+            <button type="button" data-testid="history-filters" onClick={() => setFiltersOpen(true)}>{t.filters}{activeFilterCount > 0 && <span>{activeFilterCount}</span>}</button>
+            <button type="button" data-testid="history-timeline" onClick={() => setTimelineOpen(true)}>{query.timelineMonth ? formatMonth(query.timelineMonth, locale) : t.timeline}</button>
+            {(query.search || query.category !== 'all' || activeFilterCount > 0) && (
+              <button type="button" data-testid="history-reset" onClick={clearFilters}>{t.resetQuery}</button>
+            )}
+          </div>
+
+          {visiblePurchases.length === 0 ? (
+            <div className={styles.historyEmpty} role="status" data-testid="purchases-empty">
+              <h3>{t.noPurchases}</h3>
+              <p>{t.noPurchasesBody}</p>
+              <button type="button" onClick={clearFilters}>{t.resetQuery}</button>
+            </div>
+          ) : (
+            <div className={styles.purchaseList}>
+              {visiblePurchases.map((purchase) => {
+                const merchant = merchantForId(purchase.merchantId)
+                const place = purchase.placeId ? placeForId(purchase.placeId) : undefined
+                const typeLabel = purchase.resolution === 'unresolved'
+                  ? t.unresolvedNoPin
+                  : purchase.channel === 'online'
+                    ? t.onlineNoPin
+                    : purchase.paymentMode === 'cash'
+                      ? t.manualEntry
+                      : place ? localized(place.city, locale) : t.physical
+                return (
+                  <button
+                    type="button"
+                    key={purchase.id}
+                    className={styles.purchaseRow}
+                    onClick={() => openPurchase(purchase.id)}
+                    data-testid={`purchase-${purchase.id}`}
+                    data-purchase-kind={purchase.resolution === 'unresolved' ? 'unresolved' : purchase.channel === 'online' ? 'online' : purchase.paymentMode === 'cash' ? 'cash-manual' : 'physical'}
+                  >
+                    <span className={styles.purchaseGlyph} data-category={purchase.category} aria-hidden="true" />
+                    <span className={styles.purchaseIdentity}>
+                      <strong>{merchant ? localized(merchant.name, locale) : purchase.merchantId}</strong>
+                      <small>{typeLabel} · {formatDate(purchase.timestamp, locale)}</small>
+                      {purchase.items.length > 0 && <em>{purchase.items.length} {t.receiptItems.toLocaleLowerCase()}</em>}
+                    </span>
+                    <span className={styles.purchaseAmount}>
+                      <strong>{formatMoney(purchase.originalAmount, locale, purchase.originalCurrency)}</strong>
+                      {purchase.originalCurrency !== 'ILS' && <small>{formatMoney(baseAmountIlsForPurchase(purchase), locale)}</small>}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {surface === 'stats' && (
+        <section className={styles.placeholderPanel} aria-labelledby="stats-title" data-testid="stats-placeholder">
+          <button type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.close}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+          <p className={styles.eyebrow}>{t.later}</p>
+          <h2 id="stats-title">{t.statsPlaceholder}</h2>
+          <p>{t.statsPlaceholderBody}</p>
+          <button type="button" onClick={() => openSurface('globe')}>{t.navGlobe}</button>
+        </section>
+      )}
+
+      {selectedPurchase && selectedMerchant && (
+        <aside className={styles.purchaseDetailPanel} aria-labelledby="purchase-title" data-testid="purchase-detail">
+          <button type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.backToHistory}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+          <p className={styles.eyebrow}>{t.purchaseDetail} · {t.synthetic}</p>
+          <h2 id="purchase-title">{localized(selectedMerchant.name, locale)}</h2>
+          <p className={styles.panelLocation}>
+            {selectedPurchase.placeId
+              ? `${localized(placeForId(selectedPurchase.placeId)!.branch, locale)} · ${localized(placeForId(selectedPurchase.placeId)!.city, locale)}`
+              : selectedPurchase.resolution === 'unresolved' ? t.unresolvedNoPin : t.onlineNoPin}
+          </p>
+
+          <div className={styles.detailBadges}>
+            <span>{t[selectedPurchase.category]}</span>
+            <span>{t[selectedPurchase.paymentMode]}</span>
+            <span>{selectedPurchase.resolution === 'confirmed' ? t.confirmedStatus : t.unresolvedStatus}</span>
+          </div>
+
+          <div className={styles.amountLedger}>
+            <span><small>{t.originalAmount}</small><strong>{formatMoney(selectedPurchase.originalAmount, locale, selectedPurchase.originalCurrency)}</strong></span>
+            <span><small>{t.baseAmount}</small><strong>{formatMoney(baseAmountIlsForPurchase(selectedPurchase), locale)}</strong></span>
+          </div>
+
+          <section className={styles.receiptSection} aria-labelledby="receipt-title">
+            <h3 id="receipt-title">{t.receiptItems}</h3>
+            {selectedPurchase.items.length === 0 ? <p>{t.noReceiptItems}</p> : (
+              <ul>
+                {selectedPurchase.items.map((item) => (
+                  <li key={item.id}>
+                    <span>{localized(item.label, locale)}<small>{item.quantity} × {formatMoney(item.unitPrice, locale, selectedPurchase.originalCurrency)}</small></span>
+                    <strong>{formatMoney(item.lineTotal, locale, selectedPurchase.originalCurrency)}</strong>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <div className={styles.provenanceBlock}>
+            <span><small>{t.fxProvenance}</small><strong>{localized(selectedPurchase.fx.label, locale)} · {selectedPurchase.fx.rateToBase} {selectedPurchase.fx.baseCurrency}</strong></span>
+            <span><small>{t.sourceEvidence}</small><strong>{selectedEvidence.map((record) => localized(record.label, locale)).join(' · ')}</strong></span>
+          </div>
+
+          {selectedPurchase.placeId && (
+            <button type="button" className={styles.viewPlaceButton} onClick={() => selectPlace(selectedPurchase.placeId!)}>{t.viewPlace}</button>
+          )}
+        </aside>
+      )}
+
+      {filtersOpen && (
+        <>
+          <button type="button" className={styles.experienceScrim} onClick={() => setFiltersOpen(false)} aria-label={t.closeFilters} />
+          <aside className={`${styles.experienceSheet} ${styles.filterSheet}`} role="dialog" aria-modal="true" aria-labelledby="filters-title" data-testid="filters-sheet">
+            <header><h2 id="filters-title">{t.filters}</h2><button type="button" onClick={() => setFiltersOpen(false)} aria-label={t.closeFilters}>×</button></header>
+            <div className={styles.filterGrid}>
+              <label>{t.category}<select value={query.category} onChange={(event) => updateQuery({ category: event.target.value as CategoryFilter })}>{(Object.keys(categoryLabels) as CategoryFilter[]).map((item) => <option key={item} value={item}>{t[categoryLabels[item]]}</option>)}</select></label>
+              <label>{t.currency}<select data-testid="currency-filter" value={query.currency} onChange={(event) => updateQuery({ currency: event.target.value as CurrencyFilter })}>{currencyOptions.map((item) => <option key={item} value={item}>{item === 'all' ? t.all : item}</option>)}</select></label>
+              <label>{t.channel}<select data-testid="channel-filter" value={query.channel} onChange={(event) => updateQuery({ channel: event.target.value as ChannelFilter })}>{(Object.keys(channelLabels) as ChannelFilter[]).map((item) => <option key={item} value={item}>{t[channelLabels[item]]}</option>)}</select></label>
+              <label>{t.dateRange}<select data-testid="date-filter" value={query.dateRange} onChange={(event) => updateQuery({ dateRange: event.target.value as DateRangeFilter, timelineMonth: null })}>{(Object.keys(dateRangeLabels) as DateRangeFilter[]).map((item) => <option key={item} value={item}>{t[dateRangeLabels[item]]}</option>)}</select></label>
+            </div>
+            <footer><button type="button" onClick={clearFilters}>{t.resetQuery}</button><output>{visiblePurchases.length} {t.results} · {visibleData.features.length} {t.placesSummary}</output></footer>
+          </aside>
+        </>
+      )}
+
+      {timelineOpen && (
+        <>
+          <button type="button" className={styles.experienceScrim} onClick={() => setTimelineOpen(false)} aria-label={t.closeTimeline} />
+          <aside className={`${styles.experienceSheet} ${styles.timelineSheet}`} role="dialog" aria-modal="true" aria-labelledby="timeline-title" data-testid="timeline-sheet">
+            <header><div><p className={styles.eyebrow}>{t.selectedMonth}</p><h2 id="timeline-title">{query.timelineMonth ? formatMonth(query.timelineMonth, locale) : t.allHistory}</h2></div><button type="button" onClick={() => setTimelineOpen(false)} aria-label={t.closeTimeline}>×</button></header>
+            <input
+              type="range"
+              min="0"
+              max={timelineMonths.length}
+              value={query.timelineMonth ? timelineMonths.indexOf(query.timelineMonth) + 1 : 0}
+              onChange={(event) => setTimelineMonth(Number(event.target.value) === 0 ? null : timelineMonths[Number(event.target.value) - 1])}
+              aria-label={t.timeline}
+              data-testid="timeline-range"
+            />
+            <div className={styles.timelineLabels}><span>{t.allHistory}</span><span>{formatMonth(timelineMonths[timelineMonths.length - 1], locale)}</span><span>{formatMonth(timelineMonths[0], locale)}</span></div>
+            <footer><button type="button" onClick={() => setTimelineMonth(null)}>{t.clearTimeline}</button><output>{visiblePurchases.length} {t.results} · {visibleData.features.length} {t.placesSummary}</output></footer>
+          </aside>
+        </>
+      )}
+
       <nav className={styles.mobileNav} aria-label="Mobile primary">
-        <span data-active="true"><i className={styles.globeIcon} />{t.navGlobe}</span>
-        <span aria-disabled="true"><i className={styles.statsIcon} />{t.mobileStats}<em>{t.later}</em></span>
-        <span className={styles.addFuture} aria-disabled="true">+<em>{t.addLater}</em></span>
-        <span aria-disabled="true"><i className={styles.aiIcon}>✦</i>{t.mobileAi}<em>{t.later}</em></span>
+        <button type="button" data-active={surface === 'globe'} onClick={() => openSurface('globe')}><i className={styles.globeIcon} />{t.navGlobe}</button>
+        <button type="button" data-active={surface === 'purchases'} onClick={() => openSurface('purchases')}><i className={styles.purchaseIcon} />{t.navPurchases}</button>
+        <button type="button" data-active={surface === 'stats'} onClick={() => openSurface('stats')}><i className={styles.statsIcon} />{t.mobileStats}<em>{t.later}</em></button>
       </nav>
     </main>
   )

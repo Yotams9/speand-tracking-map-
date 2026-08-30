@@ -2,7 +2,7 @@ import { expect, test, type Browser, type BrowserContext, type Page } from '@pla
 import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-const artifactDir = path.join(process.cwd(), 'artifacts', 'spendscape-globe-polish-1c1')
+const artifactDir = path.join(process.cwd(), 'artifacts', 'spendscape-slice-1d1', 'globe-regression')
 
 interface CameraEvidence {
   center: [number, number]

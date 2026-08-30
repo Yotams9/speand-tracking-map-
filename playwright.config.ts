@@ -7,7 +7,13 @@ export default defineConfig({
   timeout: 120_000,
   expect: { timeout: 15_000 },
   reporter: 'line',
-  outputDir: 'artifacts/spendscape-globe-polish-1c1/playwright-results',
+  outputDir: 'artifacts/spendscape-slice-1d1/playwright-results',
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: true,
+    timeout: 30_000,
+  },
   use: {
     baseURL: 'http://localhost:3000',
     browserName: 'chromium',

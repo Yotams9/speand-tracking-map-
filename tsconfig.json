@@ -39,8 +39,7 @@
     "src/app/**/*.tsx",
     "src/features/globe/**/*.ts",
     "src/features/globe/**/*.tsx",
-    "src/data/spendscape-globe.ts",
-    "src/data/spendscape-globe.test.ts",
+    "src/data/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [

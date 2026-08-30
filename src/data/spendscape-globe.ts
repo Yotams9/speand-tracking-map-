@@ -1,5 +1,5 @@
 /**
- * Canonical synthetic data for the Phase 1 globe checkpoint.
+ * Canonical synthetic data for Spendscape Phase 1.
  *
  * Everything here is invented. Merchant names are fictional, coordinates use
  * broad public commercial districts, and normalized ILS values are fixed mock
@@ -11,6 +11,10 @@ import type { Feature, FeatureCollection, Point } from 'geojson'
 export type LocaleCode = 'en' | 'he'
 export type PurchaseCategory = 'groceries' | 'food' | 'retail' | 'travel'
 export type CurrencyCode = 'ILS' | 'EUR' | 'GBP' | 'USD' | 'JPY' | 'AUD' | 'MXN' | 'ZAR'
+export type PurchaseChannel = 'physical' | 'online' | 'unknown'
+export type PaymentMode = 'card' | 'cash' | 'manual'
+export type PurchaseResolution = 'confirmed' | 'unresolved'
+export type EvidenceKind = 'card-record' | 'receipt' | 'email-receipt' | 'manual-entry'
 
 export interface LocalizedText {
   en: string
@@ -28,16 +32,53 @@ export interface Place {
   category: PurchaseCategory
 }
 
+export interface Merchant {
+  id: string
+  name: LocalizedText
+  category: PurchaseCategory
+  onlineOnly?: boolean
+}
+
+export interface PurchaseItem {
+  id: string
+  label: LocalizedText
+  quantity: number
+  unit: 'item' | 'kg'
+  unitPrice: number
+  lineTotal: number
+}
+
+export interface FxProvenance {
+  baseCurrency: 'ILS'
+  rateToBase: number
+  effectiveAt: string
+  source: 'synthetic-fixture-rate'
+  label: LocalizedText
+}
+
 export interface GlobePurchase {
   id: string
+  merchantId: string
   timestamp: string
-  channel: 'physical' | 'online' | 'unknown'
-  resolution: 'confirmed' | 'unresolved'
+  channel: PurchaseChannel
+  resolution: PurchaseResolution
+  paymentMode: PaymentMode
   placeId: string | null
+  category: PurchaseCategory
   originalAmount: number
   originalCurrency: CurrencyCode
-  /** Fixed synthetic normalization for cross-currency display in this demo. */
-  baseAmountIls: number
+  fx: FxProvenance
+  items: PurchaseItem[]
+  evidenceIds: string[]
+}
+
+export interface PurchaseEvidence {
+  id: string
+  purchaseId: string
+  kind: EvidenceKind
+  observedAt: string
+  label: LocalizedText
+  synthetic: true
 }
 
 export interface PlaceFeatureProperties {
@@ -58,6 +99,24 @@ export interface PlaceFeatureProperties {
 }
 
 const text = (en: string, he: string): LocalizedText => ({ en, he })
+
+export const globeMerchants: Merchant[] = [
+  { id: 'merchant_shuk', name: text('Shuk Express', 'שוק אקספרס'), category: 'groceries' },
+  { id: 'merchant_nomi', name: text('Cafe Nomi', 'קפה נומי'), category: 'food' },
+  { id: 'merchant_rimon', name: text('Rimon Market', 'רימון מרקט'), category: 'groceries' },
+  { id: 'merchant_lumen', name: text('Lumen Books', 'לומן ספרים'), category: 'retail' },
+  { id: 'merchant_morrow', name: text('Morrow Coffee', 'מורו קפה'), category: 'food' },
+  { id: 'merchant_azulejo', name: text('Azulejo Pantry', 'אזולז׳ו מזווה'), category: 'groceries' },
+  { id: 'merchant_kumo', name: text('Kumo Objects', 'קומו אובייקטים'), category: 'retail' },
+  { id: 'merchant_harbour', name: text('Harbour Table', 'הרבור טייבל'), category: 'food' },
+  { id: 'merchant_casa', name: text('Casa Nopal', 'קאסה נופאל'), category: 'food' },
+  { id: 'merchant_atlas', name: text('Atlas Supply', 'אטלס סופליי'), category: 'retail' },
+  { id: 'merchant_northline', name: text('Northline Market', 'נורת׳ליין מרקט'), category: 'groceries' },
+  { id: 'merchant_orbit', name: text('Orbit Travel', 'אורביט טרוול'), category: 'travel' },
+  { id: 'merchant_serein', name: text('Serein Online', 'סריין אונליין'), category: 'retail', onlineOnly: true },
+  { id: 'merchant_cloudfare', name: text('Cloudfare Travel', 'קלאודפר נסיעות'), category: 'travel', onlineOnly: true },
+  { id: 'merchant_unresolved', name: text('Unresolved merchant', 'בית עסק לא פתור'), category: 'retail' },
+]
 
 export const globePlaces: Place[] = [
   {
@@ -141,91 +200,270 @@ interface PurchaseSeriesInput {
   firstDate: string
   originalAmount: number
   originalCurrency: CurrencyCode
-  baseAmountIls: number
+  rateToIls: number
+}
+
+function fixedFx(currency: CurrencyCode, rateToBase: number, effectiveAt: string): FxProvenance {
+  return {
+    baseCurrency: 'ILS',
+    rateToBase,
+    effectiveAt,
+    source: 'synthetic-fixture-rate',
+    label: text(
+      currency === 'ILS' ? 'Synthetic identity rate' : 'Fixed synthetic demo rate',
+      currency === 'ILS' ? 'שער זהות סינתטי' : 'שער הדגמה סינתטי קבוע',
+    ),
+  }
 }
 
 function purchaseSeries(input: PurchaseSeriesInput): GlobePurchase[] {
   const first = new Date(`${input.firstDate}T12:00:00Z`)
+  const place = globePlaces.find((candidate) => candidate.id === input.placeId)
+  if (!place) throw new Error(`Synthetic series references missing place: ${input.placeId}`)
   return Array.from({ length: input.count }, (_, index) => {
     const date = new Date(first.getTime() - index * 7 * 86_400_000)
+    const id = `${input.prefix}_${String(index + 1).padStart(2, '0')}`
     return {
-      id: `${input.prefix}_${String(index + 1).padStart(2, '0')}`,
+      id,
+      merchantId: place.merchantId,
       timestamp: date.toISOString(),
       channel: 'physical',
       resolution: 'confirmed',
+      paymentMode: 'card',
       placeId: input.placeId,
+      category: place.category,
       originalAmount: input.originalAmount + (index % 3) * 4.5,
       originalCurrency: input.originalCurrency,
-      baseAmountIls: input.baseAmountIls + (index % 3) * 4.5,
+      fx: fixedFx(input.originalCurrency, input.rateToIls, date.toISOString()),
+      items: [],
+      evidenceIds: [`evidence_${id}`],
     }
   })
 }
 
-export const globePurchases: GlobePurchase[] = [
+const purchaseSeed: GlobePurchase[] = [
   ...purchaseSeries({
     prefix: 'purchase_shuk', placeId: 'place_shuk_bograshov', count: 14,
-    firstDate: '2026-08-20', originalAmount: 214.4, originalCurrency: 'ILS', baseAmountIls: 214.4,
+    firstDate: '2026-08-20', originalAmount: 214.4, originalCurrency: 'ILS', rateToIls: 1,
   }),
   ...purchaseSeries({
     prefix: 'purchase_nomi', placeId: 'place_nomi_dizengoff', count: 6,
-    firstDate: '2026-08-18', originalAmount: 26, originalCurrency: 'ILS', baseAmountIls: 26,
+    firstDate: '2026-08-18', originalAmount: 26, originalCurrency: 'ILS', rateToIls: 1,
   }),
   ...purchaseSeries({
     prefix: 'purchase_rimon', placeId: 'place_rimon_park', count: 2,
-    firstDate: '2026-07-05', originalAmount: 88, originalCurrency: 'ILS', baseAmountIls: 88,
+    firstDate: '2026-07-05', originalAmount: 88, originalCurrency: 'ILS', rateToIls: 1,
   }),
   ...purchaseSeries({
     prefix: 'purchase_lumen', placeId: 'place_lumen_soho', count: 3,
-    firstDate: '2026-08-08', originalAmount: 32, originalCurrency: 'GBP', baseAmountIls: 145,
+    firstDate: '2026-08-08', originalAmount: 32, originalCurrency: 'GBP', rateToIls: 4.5,
   }),
   ...purchaseSeries({
     prefix: 'purchase_morrow', placeId: 'place_morrow_brooklyn', count: 2,
-    firstDate: '2026-07-29', originalAmount: 18, originalCurrency: 'USD', baseAmountIls: 59,
+    firstDate: '2026-07-29', originalAmount: 18, originalCurrency: 'USD', rateToIls: 3.3,
   }),
   ...purchaseSeries({
     prefix: 'purchase_azulejo', placeId: 'place_azulejo_baixa', count: 2,
-    firstDate: '2026-06-22', originalAmount: 41, originalCurrency: 'EUR', baseAmountIls: 166,
+    firstDate: '2026-06-22', originalAmount: 41, originalCurrency: 'EUR', rateToIls: 4.05,
   }),
   ...purchaseSeries({
     prefix: 'purchase_kumo', placeId: 'place_kumo_shibuya', count: 2,
-    firstDate: '2026-05-17', originalAmount: 6800, originalCurrency: 'JPY', baseAmountIls: 153,
+    firstDate: '2026-05-17', originalAmount: 6800, originalCurrency: 'JPY', rateToIls: 0.0225,
   }),
   ...purchaseSeries({
     prefix: 'purchase_harbour', placeId: 'place_harbour_surry', count: 2,
-    firstDate: '2026-04-12', originalAmount: 54, originalCurrency: 'AUD', baseAmountIls: 119,
+    firstDate: '2026-04-12', originalAmount: 54, originalCurrency: 'AUD', rateToIls: 2.2,
   }),
   ...purchaseSeries({
     prefix: 'purchase_casa', placeId: 'place_casa_roma', count: 1,
-    firstDate: '2026-03-02', originalAmount: 720, originalCurrency: 'MXN', baseAmountIls: 133,
+    firstDate: '2026-03-02', originalAmount: 720, originalCurrency: 'MXN', rateToIls: 0.185,
   }),
   ...purchaseSeries({
     prefix: 'purchase_atlas', placeId: 'place_atlas_woodstock', count: 1,
-    firstDate: '2026-02-17', originalAmount: 890, originalCurrency: 'ZAR', baseAmountIls: 172,
+    firstDate: '2026-02-17', originalAmount: 890, originalCurrency: 'ZAR', rateToIls: 0.193,
   }),
   ...purchaseSeries({
     prefix: 'purchase_northline', placeId: 'place_northline_mitte', count: 2,
-    firstDate: '2026-01-14', originalAmount: 67, originalCurrency: 'EUR', baseAmountIls: 271,
+    firstDate: '2026-01-14', originalAmount: 67, originalCurrency: 'EUR', rateToIls: 4.05,
   }),
   ...purchaseSeries({
     prefix: 'purchase_orbit', placeId: 'place_orbit_changi', count: 2,
-    firstDate: '2025-12-20', originalAmount: 84, originalCurrency: 'USD', baseAmountIls: 277,
+    firstDate: '2025-12-20', originalAmount: 84, originalCurrency: 'USD', rateToIls: 3.3,
   }),
   {
-    id: 'purchase_online_01', timestamp: '2026-08-23T08:22:00Z',
+    id: 'purchase_online_01', merchantId: 'merchant_serein', timestamp: '2026-08-23T08:22:00Z',
     channel: 'online', resolution: 'confirmed', placeId: null,
-    originalAmount: 36, originalCurrency: 'USD', baseAmountIls: 118,
+    paymentMode: 'card', category: 'retail', originalAmount: 36, originalCurrency: 'USD',
+    fx: fixedFx('USD', 3.3, '2026-08-23T08:22:00Z'), items: [],
+    evidenceIds: ['evidence_purchase_online_01'],
   },
   {
-    id: 'purchase_online_02', timestamp: '2026-07-30T18:12:00Z',
+    id: 'purchase_online_02', merchantId: 'merchant_cloudfare', timestamp: '2026-07-30T18:12:00Z',
     channel: 'online', resolution: 'confirmed', placeId: null,
-    originalAmount: 52, originalCurrency: 'EUR', baseAmountIls: 210,
+    paymentMode: 'card', category: 'travel', originalAmount: 52, originalCurrency: 'EUR',
+    fx: fixedFx('EUR', 4.05, '2026-07-30T18:12:00Z'), items: [],
+    evidenceIds: ['evidence_purchase_online_02'],
   },
   {
-    id: 'purchase_unresolved_01', timestamp: '2026-08-24T13:24:00Z',
+    id: 'purchase_unresolved_01', merchantId: 'merchant_unresolved', timestamp: '2026-08-24T13:24:00Z',
     channel: 'unknown', resolution: 'unresolved', placeId: null,
-    originalAmount: 58.9, originalCurrency: 'ILS', baseAmountIls: 58.9,
+    paymentMode: 'manual', category: 'retail', originalAmount: 58.9, originalCurrency: 'ILS',
+    fx: fixedFx('ILS', 1, '2026-08-24T13:24:00Z'), items: [],
+    evidenceIds: ['evidence_purchase_unresolved_01'],
   },
 ]
+
+const nestedItemsByPurchaseId: Record<string, PurchaseItem[]> = {
+  purchase_shuk_01: [
+    { id: 'item_shuk_bread', label: text('Olive sourdough', 'לחם מחמצת זיתים'), quantity: 2, unit: 'item', unitPrice: 18.5, lineTotal: 37 },
+    { id: 'item_shuk_tomatoes', label: text('Vine tomatoes', 'עגבניות אשכול'), quantity: 1.4, unit: 'kg', unitPrice: 15, lineTotal: 21 },
+    { id: 'item_shuk_tahini', label: text('Whole sesame tahini', 'טחינה משומשום מלא'), quantity: 1, unit: 'item', unitPrice: 24.9, lineTotal: 24.9 },
+    { id: 'item_shuk_feta', label: text('Sheep feta', 'פטה כבשים'), quantity: 2, unit: 'item', unitPrice: 29.5, lineTotal: 59 },
+    { id: 'item_shuk_fruit', label: text('Seasonal fruit', 'פירות עונתיים'), quantity: 1, unit: 'item', unitPrice: 42.5, lineTotal: 42.5 },
+    { id: 'item_shuk_pantry', label: text('Pantry staples', 'מצרכי מזווה'), quantity: 1, unit: 'item', unitPrice: 30, lineTotal: 30 },
+  ],
+  purchase_rimon_01: [
+    { id: 'item_rimon_produce', label: text('Market produce', 'תוצרת שוק'), quantity: 1, unit: 'item', unitPrice: 55, lineTotal: 55 },
+    { id: 'item_rimon_bakery', label: text('Bakery selection', 'מבחר מאפים'), quantity: 1, unit: 'item', unitPrice: 33, lineTotal: 33 },
+  ],
+  purchase_kumo_01: [
+    { id: 'item_kumo_vase', label: text('Ceramic vase', 'אגרטל קרמיקה'), quantity: 1, unit: 'item', unitPrice: 4800, lineTotal: 4800 },
+    { id: 'item_kumo_cloth', label: text('Linen cloth', 'מפת פשתן'), quantity: 2, unit: 'item', unitPrice: 1000, lineTotal: 2000 },
+  ],
+  purchase_online_01: [
+    { id: 'item_serein_notebook', label: text('Recycled notebook', 'מחברת ממוחזרת'), quantity: 1, unit: 'item', unitPrice: 24, lineTotal: 24 },
+    { id: 'item_serein_pens', label: text('Ink pen set', 'ערכת עטי דיו'), quantity: 1, unit: 'item', unitPrice: 12, lineTotal: 12 },
+  ],
+}
+
+export const globePurchases: GlobePurchase[] = purchaseSeed.map((purchase) => ({
+  ...purchase,
+  paymentMode: purchase.id === 'purchase_rimon_01' ? 'cash' : purchase.paymentMode,
+  items: nestedItemsByPurchaseId[purchase.id] ?? purchase.items,
+}))
+
+function evidenceKindForPurchase(purchase: GlobePurchase): EvidenceKind {
+  if (purchase.paymentMode === 'cash' || purchase.paymentMode === 'manual') return 'manual-entry'
+  if (purchase.channel === 'online') return 'email-receipt'
+  if (purchase.items.length > 0) return 'receipt'
+  return 'card-record'
+}
+
+export const globeEvidenceRecords: PurchaseEvidence[] = globePurchases.map((purchase) => ({
+  id: purchase.evidenceIds[0],
+  purchaseId: purchase.id,
+  kind: evidenceKindForPurchase(purchase),
+  observedAt: purchase.timestamp,
+  label: text(
+    evidenceKindForPurchase(purchase).replaceAll('-', ' '),
+    evidenceKindForPurchase(purchase) === 'manual-entry' ? 'הזנה ידנית' :
+      evidenceKindForPurchase(purchase) === 'email-receipt' ? 'קבלה בדוא״ל' :
+        evidenceKindForPurchase(purchase) === 'receipt' ? 'קבלה סינתטית' : 'רשומת כרטיס סינתטית',
+  ),
+  synthetic: true,
+}))
+
+export function nestedItemTotal(purchase: GlobePurchase): number {
+  return Math.round(purchase.items.reduce((sum, item) => sum + item.lineTotal, 0) * 100) / 100
+}
+
+export function baseAmountIlsForPurchase(purchase: GlobePurchase): number {
+  return Math.round(purchase.originalAmount * purchase.fx.rateToBase * 100) / 100
+}
+
+export type CategoryFilter = 'all' | PurchaseCategory
+export type CurrencyFilter = 'all' | CurrencyCode
+export type ChannelFilter = 'all' | 'physical' | 'online' | 'cash-manual' | 'unresolved'
+export type DateRangeFilter = 'all' | '30d' | '90d' | 'year'
+
+export interface PurchaseQuery {
+  search: string
+  category: CategoryFilter
+  currency: CurrencyFilter
+  channel: ChannelFilter
+  dateRange: DateRangeFilter
+  timelineMonth: string | null
+}
+
+export const defaultPurchaseQuery: PurchaseQuery = {
+  search: '',
+  category: 'all',
+  currency: 'all',
+  channel: 'all',
+  dateRange: 'all',
+  timelineMonth: null,
+}
+
+const fixtureNow = new Date('2026-08-30T00:00:00Z')
+
+function searchTextForPurchase(purchase: GlobePurchase): string {
+  const merchant = merchantForId(purchase.merchantId)
+  const place = purchase.placeId ? placeForId(purchase.placeId) : undefined
+  return [
+    merchant?.name.en, merchant?.name.he, place?.name.en, place?.name.he,
+    place?.branch.en, place?.branch.he, place?.city.en, place?.city.he,
+    place?.country.en, place?.country.he, purchase.originalCurrency,
+    purchase.channel, purchase.paymentMode, purchase.resolution,
+    ...purchase.items.flatMap((item) => [item.label.en, item.label.he]),
+  ].filter(Boolean).join(' ').toLocaleLowerCase()
+}
+
+export function filterPurchases(
+  query: PurchaseQuery,
+  purchases: GlobePurchase[] = globePurchases,
+): GlobePurchase[] {
+  const normalizedSearch = query.search.trim().toLocaleLowerCase()
+  const rangeDays = query.dateRange === '30d' ? 30 : query.dateRange === '90d' ? 90 : query.dateRange === 'year' ? 365 : null
+  const earliest = rangeDays === null ? null : new Date(fixtureNow.getTime() - rangeDays * 86_400_000)
+
+  return purchases
+    .filter((purchase) => {
+      if (normalizedSearch && !searchTextForPurchase(purchase).includes(normalizedSearch)) return false
+      if (query.category !== 'all' && purchase.category !== query.category) return false
+      if (query.currency !== 'all' && purchase.originalCurrency !== query.currency) return false
+      if (query.channel === 'physical' && purchase.channel !== 'physical') return false
+      if (query.channel === 'online' && purchase.channel !== 'online') return false
+      if (query.channel === 'cash-manual' && purchase.paymentMode !== 'cash' && purchase.paymentMode !== 'manual') return false
+      if (query.channel === 'unresolved' && purchase.resolution !== 'unresolved') return false
+      if (earliest && new Date(purchase.timestamp) < earliest) return false
+      if (query.timelineMonth && !purchase.timestamp.startsWith(query.timelineMonth)) return false
+      return true
+    })
+    .sort((left, right) => right.timestamp.localeCompare(left.timestamp))
+}
+
+export function availableTimelineMonths(purchases: GlobePurchase[] = globePurchases): string[] {
+  return [...new Set(purchases.map((purchase) => purchase.timestamp.slice(0, 7)))].sort().reverse()
+}
+
+export interface PurchaseSelection {
+  selectedPlaceId: string | null
+  selectedPurchaseId: string | null
+}
+
+export function synchronizeSelection(
+  purchases: GlobePurchase[],
+  selection: PurchaseSelection,
+): PurchaseSelection {
+  const selectedPurchase = selection.selectedPurchaseId
+    ? purchases.find((purchase) => purchase.id === selection.selectedPurchaseId)
+    : undefined
+  const selectedPurchaseId = selectedPurchase?.id ?? null
+  const candidatePlaceId = selectedPurchase
+    ? selectedPurchase.placeId
+    : selection.selectedPlaceId
+  const visiblePlaceIds = new Set(
+    buildPlaceFeatureCollection(globePlaces, purchases).features.map(
+      (feature) => feature.properties.placeId,
+    ),
+  )
+  return {
+    selectedPurchaseId,
+    selectedPlaceId: candidatePlaceId && visiblePlaceIds.has(candidatePlaceId)
+      ? candidatePlaceId
+      : null,
+  }
+}
 
 export function buildPlaceFeatureCollection(
   places: Place[] = globePlaces,
@@ -272,7 +510,7 @@ export function buildPlaceFeatureCollection(
         category: place.category,
         visitCount: placePurchases.length,
         totalBaseAmountIls: Math.round(
-          placePurchases.reduce((sum, purchase) => sum + purchase.baseAmountIls, 0) * 100,
+          placePurchases.reduce((sum, purchase) => sum + baseAmountIlsForPurchase(purchase), 0) * 100,
         ) / 100,
         latestTimestamp: ordered[0].timestamp,
       },
@@ -283,6 +521,24 @@ export function buildPlaceFeatureCollection(
 }
 
 export const placeFeatureCollection = buildPlaceFeatureCollection()
+
+export function derivedPurchaseSummary(purchases: GlobePurchase[] = globePurchases) {
+  const confirmed = purchases.filter((purchase) => purchase.resolution === 'confirmed')
+  const currencies = [...new Set(purchases.map((purchase) => purchase.originalCurrency))].sort()
+  return {
+    purchaseCount: purchases.length,
+    confirmedCount: confirmed.length,
+    pinCount: buildPlaceFeatureCollection(globePlaces, purchases).features.length,
+    totalBaseAmountIls: Math.round(
+      purchases.reduce((sum, purchase) => sum + baseAmountIlsForPurchase(purchase), 0) * 100,
+    ) / 100,
+    averageBaseAmountIls: purchases.length === 0 ? 0 : Math.round(
+      purchases.reduce((sum, purchase) => sum + baseAmountIlsForPurchase(purchase), 0) /
+      purchases.length * 100,
+    ) / 100,
+    currencies,
+  }
+}
 
 export const globeEvidence = {
   purchaseCount: globePurchases.length,
@@ -302,6 +558,38 @@ export const globeEvidence = {
 
 export function placeForId(placeId: string): Place | undefined {
   return globePlaces.find((place) => place.id === placeId)
+}
+
+export function merchantForId(merchantId: string): Merchant | undefined {
+  return globeMerchants.find((merchant) => merchant.id === merchantId)
+}
+
+export function purchaseForId(purchaseId: string): GlobePurchase | undefined {
+  return globePurchases.find((purchase) => purchase.id === purchaseId)
+}
+
+export function purchasesForPlace(
+  placeId: string,
+  purchases: GlobePurchase[] = globePurchases,
+): GlobePurchase[] {
+  return purchases
+    .filter((purchase) => purchase.placeId === placeId)
+    .sort((left, right) => right.timestamp.localeCompare(left.timestamp))
+}
+
+export const canonicalSpendscapeData = {
+  fixtureKind: 'synthetic' as const,
+  fixtureVersion: 'phase-1d1-v1',
+  profile: {
+    id: 'profile_demo',
+    name: text('Demo explorer', 'משתמש הדגמה'),
+    baseCurrency: 'ILS' as const,
+    timezone: 'Asia/Jerusalem',
+  },
+  merchants: globeMerchants,
+  places: globePlaces,
+  purchases: globePurchases,
+  evidence: globeEvidenceRecords,
 }
 
 export function localized(value: LocalizedText, locale: LocaleCode): string {
