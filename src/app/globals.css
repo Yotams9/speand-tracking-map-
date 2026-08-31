@@ -93,6 +93,13 @@ a { color: inherit; text-decoration: none; }
 
 .maplibregl-ctrl-attrib a { color: rgba(255, 255, 255, 0.82) !important; }
 
+@media (max-width: 760px) {
+  .maplibregl-ctrl-bottom-left,
+  .maplibregl-ctrl-bottom-right {
+    bottom: calc(100px + var(--safe-bottom));
+  }
+}
+
 .maplibregl-popup-content {
   padding: 0 !important;
   overflow: hidden;

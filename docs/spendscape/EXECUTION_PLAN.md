@@ -3,11 +3,12 @@
 Every phase has a separate human gate. Later phases are context, not current
 authorization.
 
-Current implementation checkpoint: Phase 1 through bounded Slice 1D.1 is
-complete and accepted. The completed documentation-only technology-strategy
-integration did not authorize another product or technology slice. Technology
-candidates and evaluation work nest inside these phases as specified in
-`TECHNOLOGY_STRATEGY.md`; they do not create a competing roadmap.
+Current completed implementation checkpoint: Phase 1 through bounded Slice
+1D.2 plus the accepted globe-fidelity correction at `b5796c5`. Bounded Slice
+1D.3 synthetic Universal Scanner/Capture simulation and its local QA are the
+only active implementation authorization. Technology candidates and evaluation
+work nest inside these phases as specified in `TECHNOLOGY_STRATEGY.md`; they do
+not create a competing roadmap or authorize real ingestion.
 
 ## Phase 0 — readiness and decision checkpoint
 
@@ -72,11 +73,13 @@ Status: completed through the approved Slice 1C.1 visual-polish checkpoint.
 
 ### 1D — synthetic product experience
 
-Status: only bounded Slice 1D.1 is complete. Search, filters, timeline,
-Purchases, place/purchase detail, shared state, nested receipts, cash/manual,
-multi-currency provenance, and unresolved examples are implemented. Analytics,
-Scanner, Smart Inbox, AI actions, Life Replay, and privacy/share concepts remain
-deferred until a new exact bounded approval.
+Status: bounded Slices 1D.1 and 1D.2 are complete and checkpointed. Search,
+filters, timeline, Purchases, place/purchase detail, shared state, nested
+receipts, cash/manual, multi-currency provenance, unresolved examples, and
+deterministic Analytics/Stats are implemented. Slice 1D.3 is active only for a
+synthetic frontend Universal Scanner/Capture simulation with session-only demo
+records and local QA. Smart Inbox, AI actions, Life Replay, privacy/share,
+providers, real ingestion, and backend work remain deferred.
 
 - Search, filters, timeline, Analytics/Stats, Purchases, place/purchase detail.
 - Universal Scanner simulation, cash/manual, nested receipt items.

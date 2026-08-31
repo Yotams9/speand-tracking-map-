@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import dynamic from 'next/dynamic'
 import * as maplibregl from 'maplibre-gl'
 import type {
   ExpressionSpecification,
@@ -27,11 +28,11 @@ import {
   globeEvidence,
   globeEvidenceRecords,
   globePlaces,
+  globePurchases,
   localized,
   merchantForId,
   placeFeatureCollection,
   placeForId,
-  purchaseForId,
   purchasesForPlace,
   synchronizeSelection,
   type CategoryFilter,
@@ -43,6 +44,11 @@ import {
   type PlaceFeatureProperties,
   type PurchaseQuery,
 } from '@/data/spendscape-globe'
+import {
+  combineSessionPurchases,
+  type CaptureStep,
+  type SessionCaptureRecord,
+} from '@/features/capture/capture-domain'
 import { SpendscapeAnalytics } from './SpendscapeAnalytics'
 import {
   buildDevelopmentGlobeStyle,
@@ -64,6 +70,11 @@ import {
   SPENDSCAPE_BLUE_DEEP,
 } from './globe-map-config'
 import styles from './SpendscapeGlobe.module.css'
+
+const CaptureExperience = dynamic(
+  () => import('@/features/capture/CaptureExperience').then((module) => module.CaptureExperience),
+  { ssr: false },
+)
 
 const SOURCE_ID = 'spendscape-places'
 const HEAT_LAYER = 'spendscape-heat'
@@ -161,6 +172,8 @@ interface NavigationSnapshot {
   surface: ProductSurface
   selectedPlaceId: string | null
   selectedPurchaseId: string | null
+  captureStep?: CaptureStep | null
+  captureDepth?: number
 }
 
 interface StoredExperienceState extends NavigationSnapshot {
@@ -179,6 +192,11 @@ interface QaEvidence {
   query: PurchaseQuery
   selectedPlaceId: string | null
   selectedPurchaseId: string | null
+  captureOpen: boolean
+  captureStep: CaptureStep | null
+  sessionPurchaseCount: number
+  combinedPurchaseCount: number
+  mapInstanceCount: number
   visiblePurchaseCount: number
   visibleBaseTotalIls: number
   visiblePinFeatures: number
@@ -300,6 +318,7 @@ const copy = {
   en: {
     product: 'Spendscape', checkpoint: 'Globe checkpoint', navGlobe: 'Globe',
     navAnalytics: 'Analytics', navPurchases: 'Purchases',
+    addPurchase: 'Add purchase', capture: 'Capture',
     headline: 'Your world, in purchases.',
     intro: 'Every confirmed place becomes one point in a living history.',
     search: 'Search places or cities', all: 'All', groceries: 'Groceries', food: 'Food',
@@ -340,6 +359,7 @@ const copy = {
   he: {
     product: 'Spendscape', checkpoint: 'נקודת ביקורת גלובוס', navGlobe: 'גלובוס',
     navAnalytics: 'ניתוחים', navPurchases: 'רכישות',
+    addPurchase: 'הוספת רכישה', capture: 'קליטה',
     headline: 'עולם הרכישות שלך.',
     intro: 'כל מקום מאומת הופך לנקודה אחת בהיסטוריה חיה.',
     search: 'חיפוש מקומות או ערים', all: 'הכול', groceries: 'מכולת', food: 'אוכל',
@@ -533,6 +553,7 @@ function formatMonth(month: string, locale: LocaleCode): string {
 }
 
 function navigationHash(snapshot: NavigationSnapshot): string {
+  if (snapshot.captureStep) return '#capture'
   if (snapshot.selectedPurchaseId) return `#purchase/${snapshot.selectedPurchaseId}`
   if (snapshot.selectedPlaceId) return `#place/${snapshot.selectedPlaceId}`
   if (snapshot.surface === 'purchases') return '#purchases'
@@ -558,6 +579,10 @@ export function SpendscapeGlobe() {
   const loadStartRef = useRef(0)
   const localeRef = useRef<LocaleCode>('en')
   const modeRef = useRef<MapMode>('pins')
+  const mapInstanceCountRef = useRef(0)
+  const pendingCaptureExitRef = useRef<null | (() => void)>(null)
+  const captureDismissedRef = useRef(false)
+  const captureResumeSpinRef = useRef(false)
 
   const [locale, setLocale] = useState<LocaleCode>('en')
   const [query, setQuery] = useState<PurchaseQuery>(defaultPurchaseQuery)
@@ -565,6 +590,9 @@ export function SpendscapeGlobe() {
   const [surface, setSurface] = useState<ProductSurface>('globe')
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [selectedPurchaseId, setSelectedPurchaseId] = useState<string | null>(null)
+  const [captureStep, setCaptureStep] = useState<CaptureStep | null>(null)
+  const [captureDepth, setCaptureDepth] = useState(0)
+  const [sessionCaptureRecords, setSessionCaptureRecords] = useState<SessionCaptureRecord[]>([])
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [timelineOpen, setTimelineOpen] = useState(false)
   const [stateRestored, setStateRestored] = useState(false)
@@ -609,14 +637,25 @@ export function SpendscapeGlobe() {
   })
 
   const t = copy[locale]
-  const visiblePurchases = useMemo(() => filterPurchases(query), [query])
+  const allPurchases = useMemo(
+    () => combineSessionPurchases(globePurchases, sessionCaptureRecords),
+    [sessionCaptureRecords],
+  )
+  const allEvidence = useMemo(
+    () => [...globeEvidenceRecords, ...sessionCaptureRecords.map((record) => record.evidence)],
+    [sessionCaptureRecords],
+  )
+  const visiblePurchases = useMemo(() => filterPurchases(query, allPurchases), [allPurchases, query])
   const visibleData = useMemo(
     () => buildPlaceFeatureCollection(globePlaces, visiblePurchases),
     [visiblePurchases],
   )
   const visibleSummary = useMemo(() => derivedPurchaseSummary(visiblePurchases), [visiblePurchases])
-  const visibleAnalytics = useMemo(() => derivePurchaseAnalytics(visiblePurchases), [visiblePurchases])
-  const timelineMonths = useMemo(() => availableTimelineMonths(), [])
+  const visibleAnalytics = useMemo(
+    () => derivePurchaseAnalytics(visiblePurchases, allEvidence),
+    [allEvidence, visiblePurchases],
+  )
+  const timelineMonths = useMemo(() => availableTimelineMonths(allPurchases), [allPurchases])
   const selectedFeature = useMemo(
     () => visibleData.features.find(
       (feature) => feature.properties.placeId === selectedPlaceId,
@@ -624,13 +663,15 @@ export function SpendscapeGlobe() {
     [selectedPlaceId, visibleData.features],
   )
   const selectedPlace = selectedPlaceId ? placeForId(selectedPlaceId) : undefined
-  const selectedPurchase = selectedPurchaseId ? purchaseForId(selectedPurchaseId) : undefined
+  const selectedPurchase = selectedPurchaseId
+    ? allPurchases.find((purchase) => purchase.id === selectedPurchaseId)
+    : undefined
   const selectedMerchant = selectedPurchase ? merchantForId(selectedPurchase.merchantId) : undefined
   const selectedEvidence = useMemo(
     () => selectedPurchase
-      ? globeEvidenceRecords.filter((record) => selectedPurchase.evidenceIds.includes(record.id))
+      ? allEvidence.filter((record) => selectedPurchase.evidenceIds.includes(record.id))
       : [],
-    [selectedPurchase],
+    [allEvidence, selectedPurchase],
   )
   const selectedPlacePurchases = useMemo(
     () => selectedPlaceId ? purchasesForPlace(selectedPlaceId, visiblePurchases) : [],
@@ -672,14 +713,29 @@ export function SpendscapeGlobe() {
       setSelectedPurchaseId(restored.selectedPurchaseId)
     }
 
-    const snapshot: NavigationSnapshot = isNavigationSnapshot(window.history.state)
+    const historicalSnapshot: NavigationSnapshot | null = isNavigationSnapshot(window.history.state)
       ? window.history.state
+      : null
+    const snapshot: NavigationSnapshot = historicalSnapshot
+      ? {
+          ...historicalSnapshot,
+          captureStep: null,
+          captureDepth: 0,
+          selectedPurchaseId: historicalSnapshot.selectedPurchaseId?.startsWith('session_purchase_')
+            ? null
+            : historicalSnapshot.selectedPurchaseId,
+        }
       : {
           marker: 'spendscape-1d1',
           surface: restored.surface ?? 'globe',
           selectedPlaceId: restored.selectedPlaceId ?? null,
-          selectedPurchaseId: restored.selectedPurchaseId ?? null,
+          selectedPurchaseId: restored.selectedPurchaseId?.startsWith('session_purchase_')
+            ? null
+            : restored.selectedPurchaseId ?? null,
+          captureStep: null,
+          captureDepth: 0,
         }
+    setSelectedPurchaseId(snapshot.selectedPurchaseId)
     window.history.replaceState(snapshot, '', navigationHash(snapshot))
     setStateRestored(true)
   }, [])
@@ -688,7 +744,10 @@ export function SpendscapeGlobe() {
     if (!stateRestored) return
     const stored: StoredExperienceState = {
       marker: 'spendscape-1d1', locale, query, mode, surface,
-      selectedPlaceId, selectedPurchaseId,
+      selectedPlaceId,
+      selectedPurchaseId: selectedPurchaseId?.startsWith('session_purchase_') ? null : selectedPurchaseId,
+      captureStep: null,
+      captureDepth: 0,
     }
     window.sessionStorage.setItem(EXPERIENCE_STORAGE_KEY, JSON.stringify(stored))
   }, [locale, mode, query, selectedPlaceId, selectedPurchaseId, stateRestored, surface])
@@ -747,6 +806,14 @@ export function SpendscapeGlobe() {
     queueSpin()
   }, [queueSpin])
 
+  const resumeAfterCapture = useCallback(() => {
+    if (!captureResumeSpinRef.current) return
+    captureResumeSpinRef.current = false
+    if (reducedMotionRef.current) return
+    spinEnabledRef.current = true
+    queueSpin()
+  }, [queueSpin])
+
   const updateSelectedFilter = useCallback((placeId: string | null) => {
     const map = mapRef.current
     if (!map) return
@@ -761,6 +828,8 @@ export function SpendscapeGlobe() {
     setSurface(snapshot.surface)
     setSelectedPlaceId(snapshot.selectedPlaceId)
     setSelectedPurchaseId(snapshot.selectedPurchaseId)
+    setCaptureStep(snapshot.captureStep ?? null)
+    setCaptureDepth(snapshot.captureDepth ?? 0)
     setFiltersOpen(false)
     setTimelineOpen(false)
     setMobileToolsOpen(false)
@@ -770,11 +839,13 @@ export function SpendscapeGlobe() {
   const pushNavigation = useCallback((patch: Partial<NavigationSnapshot>) => {
     const snapshot: NavigationSnapshot = {
       marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
+      captureStep,
+      captureDepth,
       ...patch,
     }
     window.history.pushState(snapshot, '', navigationHash(snapshot))
     applyNavigation(snapshot)
-  }, [applyNavigation, selectedPlaceId, selectedPurchaseId, surface])
+  }, [applyNavigation, captureDepth, captureStep, selectedPlaceId, selectedPurchaseId, surface])
 
   const closeTopLayer = useCallback(() => {
     if (filtersOpen) {
@@ -801,11 +872,22 @@ export function SpendscapeGlobe() {
 
   useEffect(() => {
     const restoreNavigation = (event: PopStateEvent) => {
-      if (isNavigationSnapshot(event.state)) applyNavigation(event.state)
+      if (!isNavigationSnapshot(event.state)) return
+      if (event.state.captureStep && captureDismissedRef.current) {
+        window.history.go(-Math.max(1, event.state.captureDepth ?? 1))
+        return
+      }
+      applyNavigation(event.state)
+      if (!event.state.captureStep) resumeAfterCapture()
+      if (!event.state.captureStep && pendingCaptureExitRef.current) {
+        const pending = pendingCaptureExitRef.current
+        pendingCaptureExitRef.current = null
+        window.setTimeout(pending, 0)
+      }
     }
     window.addEventListener('popstate', restoreNavigation)
     return () => window.removeEventListener('popstate', restoreNavigation)
-  }, [applyNavigation])
+  }, [applyNavigation, resumeAfterCapture])
 
   const selectPlace = useCallback((placeId: string, shouldFly = true, recordHistory = true) => {
     const map = mapRef.current
@@ -934,6 +1016,7 @@ export function SpendscapeGlobe() {
         })
 
         mapRef.current = map
+        mapInstanceCountRef.current += 1
         map.scrollZoom.enable()
         map.cooperativeGestures.disable()
         map.touchZoomRotate.enable()
@@ -1487,6 +1570,11 @@ export function SpendscapeGlobe() {
       query,
       selectedPlaceId,
       selectedPurchaseId,
+      captureOpen: captureStep !== null,
+      captureStep,
+      sessionPurchaseCount: sessionCaptureRecords.length,
+      combinedPurchaseCount: allPurchases.length,
+      mapInstanceCount: mapInstanceCountRef.current,
       visiblePurchaseCount: visiblePurchases.length,
       visibleBaseTotalIls: visibleSummary.totalBaseAmountIls,
       visiblePinFeatures: visibleData.features.length,
@@ -1558,7 +1646,7 @@ export function SpendscapeGlobe() {
         topPhysicalPlaceId: visibleAnalytics.topPhysicalPlaces[0]?.placeId ?? null,
       },
     }
-  }, [autoSpin, inputEvidence, loading, locale, mapError, mode, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
+  }, [allPurchases.length, autoSpin, captureStep, inputEvidence, loading, locale, mapError, mode, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sessionCaptureRecords.length, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
 
   const runCameraAction = useCallback((name: string, action: (map: MapLibreMap) => void) => {
     const map = mapRef.current
@@ -1615,6 +1703,65 @@ export function SpendscapeGlobe() {
 
   const clearFilters = () => setQuery(defaultPurchaseQuery)
 
+  const openCapture = () => {
+    captureDismissedRef.current = false
+    captureResumeSpinRef.current = spinEnabledRef.current
+    spinEnabledRef.current = false
+    clearSpinTimer()
+    mapRef.current?.stop()
+    const current: NavigationSnapshot = isNavigationSnapshot(window.history.state)
+      ? window.history.state
+      : {
+          marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
+        }
+    const snapshot: NavigationSnapshot = {
+      ...current,
+      captureStep: 'scanner',
+      captureDepth: 1,
+    }
+    window.history.pushState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+  }
+
+  const navigateCapture = useCallback((nextStep: CaptureStep, mode: 'push' | 'replace' = 'push') => {
+    const snapshot: NavigationSnapshot = {
+      marker: 'spendscape-1d1',
+      surface,
+      selectedPlaceId,
+      selectedPurchaseId,
+      captureStep: nextStep,
+      captureDepth: mode === 'push' ? Math.max(1, captureDepth + 1) : Math.max(1, captureDepth),
+    }
+    if (mode === 'push') window.history.pushState(snapshot, '', navigationHash(snapshot))
+    else window.history.replaceState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+  }, [applyNavigation, captureDepth, selectedPlaceId, selectedPurchaseId, surface])
+
+  const closeCapture = useCallback(() => {
+    if (!captureStep) return
+    pendingCaptureExitRef.current = null
+    captureDismissedRef.current = true
+    const snapshot: NavigationSnapshot = {
+      marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
+      captureStep: null, captureDepth: 0,
+    }
+    window.history.replaceState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+    resumeAfterCapture()
+  }, [applyNavigation, captureStep, resumeAfterCapture, selectedPlaceId, selectedPurchaseId, surface])
+
+  const exitCaptureThen = useCallback((action: () => void) => {
+    captureDismissedRef.current = true
+    const snapshot: NavigationSnapshot = {
+      marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
+      captureStep: null, captureDepth: 0,
+    }
+    window.history.replaceState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+    resumeAfterCapture()
+    window.setTimeout(action, 0)
+  }, [applyNavigation, resumeAfterCapture, selectedPlaceId, selectedPurchaseId, surface])
+
   const openSurface = (nextSurface: ProductSurface) => {
     stopSpin(false)
     pushNavigation({
@@ -1625,7 +1772,7 @@ export function SpendscapeGlobe() {
   }
 
   const openPurchase = (purchaseId: string) => {
-    const purchase = purchaseForId(purchaseId)
+    const purchase = allPurchases.find((candidate) => candidate.id === purchaseId)
     if (!purchase) return
     stopSpin(false)
     if (purchase.placeId) selectPlace(purchase.placeId, true, false)
@@ -1634,6 +1781,15 @@ export function SpendscapeGlobe() {
       selectedPlaceId: purchase.placeId,
       selectedPurchaseId: purchase.id,
     })
+  }
+
+  const resetSessionCaptures = () => {
+    setSessionCaptureRecords([])
+    if (selectedPurchaseId?.startsWith('session_purchase_')) {
+      setSelectedPurchaseId(null)
+      setSelectedPlaceId(null)
+    }
+    setStatus(locale === 'he' ? 'תוספות ההדגמה אופסו' : 'Demo additions reset')
   }
 
   const setTimelineMonth = (month: string | null) => {
@@ -1663,6 +1819,8 @@ export function SpendscapeGlobe() {
       data-surface={surface}
       data-visible-purchases={visiblePurchases.length}
       data-visible-pins={visibleData.features.length}
+      data-capture-open={captureStep !== null}
+      data-session-purchases={sessionCaptureRecords.length}
     >
       <div ref={mapNodeRef} className={styles.map} data-testid="map-canvas" />
       <div className={styles.vignette} aria-hidden="true" />
@@ -1686,6 +1844,14 @@ export function SpendscapeGlobe() {
         </nav>
 
         <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.addPurchaseButton}
+            onClick={openCapture}
+            data-testid="capture-open-desktop"
+          >
+            <span aria-hidden="true">＋</span>{t.addPurchase}
+          </button>
           <span className={styles.syntheticBadge}>{t.synthetic}</span>
           <button
             type="button"
@@ -2107,10 +2273,42 @@ export function SpendscapeGlobe() {
         </>
       )}
 
+      {captureStep && (
+        <CaptureExperience
+          locale={locale}
+          step={captureStep}
+          reducedMotion={reducedMotion}
+          sessionRecords={sessionCaptureRecords}
+          onNavigate={navigateCapture}
+          onBack={() => window.history.back()}
+          onClose={closeCapture}
+          onConfirm={(record) => {
+            setSessionCaptureRecords((current) => [...current, record])
+            setStatus(locale === 'he' ? 'הרכישת ההדגמה נוספה' : 'Demo purchase added')
+          }}
+          onResetSession={resetSessionCaptures}
+          onViewPurchase={(purchaseId) => exitCaptureThen(() => openPurchase(purchaseId))}
+          onShowOnGlobe={(placeId) => exitCaptureThen(() => selectPlace(placeId))}
+        />
+      )}
+
       <nav className={styles.mobileNav} aria-label="Mobile primary">
-        <button type="button" data-active={surface === 'globe'} onClick={() => openSurface('globe')}><i className={styles.globeIcon} />{t.navGlobe}</button>
-        <button type="button" data-active={surface === 'purchases'} onClick={() => openSurface('purchases')}><i className={styles.purchaseIcon} />{t.navPurchases}</button>
-        <button type="button" data-active={surface === 'stats'} onClick={() => openSurface('stats')}><i className={styles.statsIcon} />{t.mobileStats}</button>
+        <button type="button" data-active={surface === 'globe'} aria-current={surface === 'globe' ? 'page' : undefined} onClick={() => openSurface('globe')}>
+          <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.5 4 5.5 4 9s-1.4 6.5-4 9c-2.6-2.5-4-5.5-4-9s1.4-6.5 4-9Z"/></svg></i>
+          <span>{t.navGlobe}</span>
+        </button>
+        <button type="button" data-active={surface === 'purchases'} aria-current={surface === 'purchases' ? 'page' : undefined} onClick={() => openSurface('purchases')}>
+          <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4.5"/></svg></i>
+          <span>{t.navPurchases}</span>
+        </button>
+        <button type="button" className={styles.mobileCaptureButton} data-active={Boolean(captureStep)} aria-pressed={Boolean(captureStep)} onClick={openCapture} data-testid="capture-open-mobile">
+          <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg></i>
+          <span>{t.capture}</span>
+        </button>
+        <button type="button" data-active={surface === 'stats'} aria-current={surface === 'stats' ? 'page' : undefined} onClick={() => openSurface('stats')}>
+          <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19v-6M12 19V5M19 19v-9M3 19h18"/></svg></i>
+          <span>{t.mobileStats}</span>
+        </button>
       </nav>
     </main>
   )

@@ -1,10 +1,12 @@
-# Spendscape — Phase 1 Slice 1D.2 working checkpoint
+# Spendscape — Phase 1 Slice 1D.3 active working checkpoint
 
 Spendscape is a globe-first purchase-intelligence concept. This branch currently
-implements only approved Phase 1 Slices 1A–1C.1, Slice 1D.1, and the bounded Slice 1D.2
-foundation: the Next.js shell, the real MapLibre globe, canonical synthetic
-purchase data, Purchases history, details, shared discovery state, and
-deterministic Analytics/Stats.
+implements completed Phase 1 Slices 1A–1C.1, 1D.1, 1D.2, the accepted globe
+fidelity correction, and only the currently authorized bounded Slice 1D.3
+synthetic Universal Scanner/Capture simulation. The current foundation includes
+the Next.js shell, real MapLibre globe, canonical synthetic purchase graph,
+Purchases/history/detail, shared discovery state, and deterministic
+Analytics/Stats.
 
 Every purchase, place, amount, coordinate, and performance story in the demo is
 synthetic. The app does not connect to accounts, services, location history, or
@@ -33,13 +35,14 @@ npm run build
 npm run qa:globe
 npm run qa:experience
 npm run qa:analytics
+npm run qa:capture
 ```
 
 The Playwright commands start the local development server when needed and write
 screenshots, recordings, and run output only to the ignored local `artifacts/`
 directory.
 
-## Implemented through bounded Slice 1D.2
+## Implemented through the active bounded Slice 1D.3 checkpoint
 
 - Next.js App Router + TypeScript migration with pinned runtime dependencies
 - responsive desktop/mobile shell, dark-premium tokens, safe-area support,
@@ -68,14 +71,25 @@ directory.
   behavior covered by deterministic and rendered QA
 - explicit loading (`?loading=1`) and map-failure (`?mapFailure=1`) QA routes;
   search with no matches exercises the empty state
+- camera-first Universal Capture overlay with desktop and raised mobile entry,
+  an explicit simulated-scanner label, focus trapping, Escape/Back/close, and
+  no MapLibre remount
+- working deterministic demos for receipt, product, barcode, document, PDF,
+  CSV preview, Gmail future explanation, manual/cash, and failure/retry states
+- confirm-first receipt review with nested arithmetic, place-suggestion truth
+  language, fixed synthetic FX provenance, and no retained photo value
+- separate in-memory session additions that update Purchases, Analytics, and
+  canonical place aggregates without mutating the checked-in fixture graph;
+  reload resets them and online/unresolved additions remain unpinned
 
 ## Intentionally not implemented
 
-The remainder of Slice 1D and later work remains blocked behind a new explicit
-approval. There is no Scanner, capture workflow, Smart Inbox, AI control or
-actions, Life Replay, privacy/sharing experience, backend, authentication, API
-integration, factual FX feed, deployment, service account, production
-credential, paid provider, or real user data.
+Slice 1D.3 authorizes only a simulated, built-in Universal Scanner/Capture
+experience and session-only synthetic additions. Real camera/file input,
+barcode lookup, OCR, Gmail, product providers, Smart Inbox, AI control/actions,
+Life Replay, privacy/sharing, backend, authentication, factual FX, deployment,
+service accounts, production credentials, paid providers, and real user data
+remain unimplemented and unauthorized.
 
 The basemap uses OpenFreeMap only as a free development style. It needs no API
 key and carries no production availability commitment in this checkpoint.

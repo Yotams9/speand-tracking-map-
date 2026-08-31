@@ -203,10 +203,24 @@ interface PurchaseSeriesInput {
   rateToIls: number
 }
 
-function fixedFx(currency: CurrencyCode, rateToBase: number, effectiveAt: string): FxProvenance {
+export function syntheticFx(
+  currency: CurrencyCode,
+  effectiveAt: string,
+  rateToBase?: number,
+): FxProvenance {
+  const fixedRates: Record<CurrencyCode, number> = {
+    ILS: 1,
+    EUR: 4.05,
+    GBP: 4.5,
+    USD: 3.3,
+    JPY: 0.0225,
+    AUD: 2.2,
+    MXN: 0.185,
+    ZAR: 0.193,
+  }
   return {
     baseCurrency: 'ILS',
-    rateToBase,
+    rateToBase: rateToBase ?? fixedRates[currency],
     effectiveAt,
     source: 'synthetic-fixture-rate',
     label: text(
@@ -234,7 +248,7 @@ function purchaseSeries(input: PurchaseSeriesInput): GlobePurchase[] {
       category: place.category,
       originalAmount: input.originalAmount + (index % 3) * 4.5,
       originalCurrency: input.originalCurrency,
-      fx: fixedFx(input.originalCurrency, input.rateToIls, date.toISOString()),
+      fx: syntheticFx(input.originalCurrency, date.toISOString(), input.rateToIls),
       items: [],
       evidenceIds: [`evidence_${id}`],
     }
@@ -294,21 +308,21 @@ const purchaseSeed: GlobePurchase[] = [
     id: 'purchase_online_01', merchantId: 'merchant_serein', timestamp: '2026-08-23T08:22:00Z',
     channel: 'online', resolution: 'confirmed', placeId: null,
     paymentMode: 'card', category: 'retail', originalAmount: 36, originalCurrency: 'USD',
-    fx: fixedFx('USD', 3.3, '2026-08-23T08:22:00Z'), items: [],
+    fx: syntheticFx('USD', '2026-08-23T08:22:00Z', 3.3), items: [],
     evidenceIds: ['evidence_purchase_online_01'],
   },
   {
     id: 'purchase_online_02', merchantId: 'merchant_cloudfare', timestamp: '2026-07-30T18:12:00Z',
     channel: 'online', resolution: 'confirmed', placeId: null,
     paymentMode: 'card', category: 'travel', originalAmount: 52, originalCurrency: 'EUR',
-    fx: fixedFx('EUR', 4.05, '2026-07-30T18:12:00Z'), items: [],
+    fx: syntheticFx('EUR', '2026-07-30T18:12:00Z', 4.05), items: [],
     evidenceIds: ['evidence_purchase_online_02'],
   },
   {
     id: 'purchase_unresolved_01', merchantId: 'merchant_unresolved', timestamp: '2026-08-24T13:24:00Z',
     channel: 'unknown', resolution: 'unresolved', placeId: null,
     paymentMode: 'manual', category: 'retail', originalAmount: 58.9, originalCurrency: 'ILS',
-    fx: fixedFx('ILS', 1, '2026-08-24T13:24:00Z'), items: [],
+    fx: syntheticFx('ILS', '2026-08-24T13:24:00Z', 1), items: [],
     evidenceIds: ['evidence_purchase_unresolved_01'],
   },
 ]

@@ -84,6 +84,7 @@ function summarize<Key extends string>(
 
 export function derivePurchaseAnalytics(
   purchases: GlobePurchase[] = globePurchases,
+  evidenceRecords = globeEvidenceRecords,
 ): PurchaseAnalytics {
   const totalBaseAmountIls = roundMoney(purchases.reduce(
     (sum, purchase) => sum + baseAmountIlsForPurchase(purchase),
@@ -177,7 +178,7 @@ export function derivePurchaseAnalytics(
   const visiblePurchaseIds = new Set(purchases.map((purchase) => purchase.id))
   const evidenceSources = evidenceOrder.map((key) => {
     const matchingPurchaseIds = new Set(
-      globeEvidenceRecords
+      evidenceRecords
         .filter((record) => record.kind === key && visiblePurchaseIds.has(record.purchaseId))
         .map((record) => record.purchaseId),
     )
