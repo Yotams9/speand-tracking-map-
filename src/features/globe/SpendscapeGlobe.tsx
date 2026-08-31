@@ -44,9 +44,27 @@ import {
   type PurchaseQuery,
 } from '@/data/spendscape-globe'
 import { SpendscapeAnalytics } from './SpendscapeAnalytics'
+import {
+  buildDevelopmentGlobeStyle,
+  HEATMAP_COLOR_EXPRESSION,
+  HEATMAP_INTENSITY_EXPRESSION,
+  HEATMAP_OPACITY,
+  HEATMAP_RADIUS_EXPRESSION,
+  HEATMAP_WEIGHT_EXPRESSION,
+  OPENFREEMAP_LIBERTY_STYLE_URL,
+  PIN_GLOW_RADIUS_EXPRESSION,
+  PIN_HOVER_RADIUS_EXPRESSION,
+  PIN_SELECTION_GLOW_RADIUS_EXPRESSION,
+  PIN_SELECTION_HALO_RADIUS_EXPRESSION,
+  PIN_SHADOW_RADIUS_EXPRESSION,
+  PIN_STROKE_WIDTH_EXPRESSION,
+  RTL_TEXT_PLUGIN_URL,
+  SPENDSCAPE_BLUE,
+  SPENDSCAPE_BLUE_BRIGHT,
+  SPENDSCAPE_BLUE_DEEP,
+} from './globe-map-config'
 import styles from './SpendscapeGlobe.module.css'
 
-const STYLE_URL = 'https://tiles.openfreemap.org/styles/dark'
 const SOURCE_ID = 'spendscape-places'
 const HEAT_LAYER = 'spendscape-heat'
 const CLUSTER_GLOW_LAYER = 'spendscape-cluster-glow'
@@ -57,9 +75,33 @@ const PIN_SHADOW_LAYER = 'spendscape-pin-shadow'
 const HALO_LAYER = 'spendscape-selected-halo'
 const SELECTION_GLOW_LAYER = 'spendscape-selected-glow'
 const PIN_LAYER = 'spendscape-place-pins'
-const PIN_CORE_LAYER = 'spendscape-pin-core'
 const LABEL_LAYER = 'spendscape-place-labels'
 const CAMERA_STORAGE_KEY = 'spendscape.phase1.globe-camera'
+
+const SPENDSCAPE_TOP_LAYER_ORDER = [
+  HEAT_LAYER,
+  CLUSTER_GLOW_LAYER,
+  PIN_GLOW_LAYER,
+  SELECTION_GLOW_LAYER,
+  PIN_SHADOW_LAYER,
+  CLUSTER_LAYER,
+  PIN_LAYER,
+  HALO_LAYER,
+  CLUSTER_COUNT_LAYER,
+  LABEL_LAYER,
+] as const
+
+const PIN_MODE_LAYERS = [
+  CLUSTER_GLOW_LAYER,
+  CLUSTER_LAYER,
+  CLUSTER_COUNT_LAYER,
+  PIN_GLOW_LAYER,
+  PIN_SHADOW_LAYER,
+  SELECTION_GLOW_LAYER,
+  HALO_LAYER,
+  PIN_LAYER,
+  LABEL_LAYER,
+] as const
 
 type MapMode = 'pins' | 'heatmap'
 type ProductSurface = 'globe' | 'purchases' | 'stats'
@@ -78,6 +120,40 @@ interface PerformanceEvidence {
   loadMs: number | null
   lastCameraAction: string | null
   lastCameraMs: number | null
+}
+
+interface InputEvidence {
+  scrollZoomEnabled: boolean
+  cooperativeGesturesEnabled: boolean
+  rtlPluginStatus: string
+  wheelEvents: number
+  smallDeltaWheelEvents: number
+  lastWheelDeltaY: number | null
+  lastWheelClientPoint: [number, number] | null
+}
+
+interface RenderedBasemapLabel {
+  name: string | null
+  nameLatin: string | null
+  nameNonLatin: string | null
+  nameEnglish: string | null
+  sourceLayer: string | null
+}
+
+interface LayerOrderEvidence {
+  firstLibertySymbol: { id: string; index: number } | null
+  building: number | null
+  building3d: number | null
+  heatmap: number | null
+  clusterGlow: number | null
+  cluster: number | null
+  clusterCount: number | null
+  pinGlow: number | null
+  pinShadow: number | null
+  pin: number | null
+  selectionGlow: number | null
+  selectionHalo: number | null
+  label: number | null
 }
 
 interface NavigationSnapshot {
@@ -126,8 +202,35 @@ interface QaEvidence {
   renderedPins: number
   renderedSelectionHalos: number
   renderedHeatFeatures: number
+  renderedPlaceLabels: number
   camera: CameraSnapshot | null
   performance: PerformanceEvidence
+  input: InputEvidence
+  mapStyle: {
+    name: string | null
+    sourceUrl: string
+    projection: string | null
+    pinColor: string | null
+    clusterColor: unknown
+    heatmapColor: unknown
+    layerOrder: LayerOrderEvidence | null
+    pinOpacity: unknown
+    pinStrokeColor: unknown
+    pinRadius: unknown
+    pinStrokeWidth: unknown
+    pinPitchAlignment: unknown
+    pinPitchScale: unknown
+    selectionGlowOpacity: unknown
+    selectionHaloColor: unknown
+    selectionHaloStroke: unknown
+    heatmapWeight: unknown
+    heatmapIntensity: unknown
+    heatmapRadius: unknown
+    heatmapOpacity: unknown
+    pinVisibility: unknown
+    heatmapVisibility: unknown
+    layerVisibility: Record<string, unknown>
+  }
   analytics: {
     purchaseCount: number
     totalBaseAmountIls: number
@@ -142,6 +245,10 @@ interface QaEvidence {
 
 interface QaActions {
   firstRenderedPoint: (layerId: 'cluster' | 'pin') => [number, number] | null
+  jumpTo: (center: [number, number], zoom: number, pitch?: number) => void
+  unproject: (point: [number, number]) => [number, number]
+  renderedPlaceIdsAt: (placeId: string) => string[]
+  renderedBasemapLabels: () => RenderedBasemapLabel[]
 }
 
 declare global {
@@ -149,6 +256,44 @@ declare global {
     __SPENDSCAPE_QA__?: QaEvidence
     __SPENDSCAPE_QA_ACTIONS__?: QaActions
   }
+}
+
+let rtlTextPluginPromise: Promise<void> | null = null
+
+async function ensureRtlTextPlugin(): Promise<void> {
+  const status = maplibregl.getRTLTextPluginStatus()
+  if (status === 'loaded') return
+  if (rtlTextPluginPromise) return rtlTextPluginPromise
+
+  if (status === 'unavailable') {
+    rtlTextPluginPromise = maplibregl.setRTLTextPlugin(RTL_TEXT_PLUGIN_URL, false)
+      .catch((error: unknown) => {
+        rtlTextPluginPromise = null
+        throw error
+      })
+    return rtlTextPluginPromise
+  }
+
+  rtlTextPluginPromise = new Promise<void>((resolve, reject) => {
+    const started = performance.now()
+    const waitForExistingLoad = () => {
+      const current = maplibregl.getRTLTextPluginStatus()
+      if (current === 'loaded') {
+        resolve()
+        return
+      }
+      if (current === 'error' || performance.now() - started > 5_000) {
+        reject(new Error(`RTL text plugin did not load (status: ${current})`))
+        return
+      }
+      window.setTimeout(waitForExistingLoad, 25)
+    }
+    waitForExistingLoad()
+  }).catch((error: unknown) => {
+    rtlTextPluginPromise = null
+    throw error
+  })
+  return rtlTextPluginPromise
 }
 
 const copy = {
@@ -291,107 +436,82 @@ function snapshotCamera(map: MapLibreMap): CameraSnapshot {
   }
 }
 
-async function fetchDevelopmentStyle(signal: AbortSignal): Promise<StyleSpecification> {
-  const response = await fetch(STYLE_URL, { signal })
-  if (!response.ok) throw new Error(`Development map style returned ${response.status}`)
-  const providerStyle = await response.json() as StyleSpecification
-  const tunedLayers = structuredClone(providerStyle.layers) as unknown as Array<Record<string, unknown>>
-
-  for (const layer of tunedLayers) {
-    const id = String(layer.id ?? '').toLocaleLowerCase()
-    const sourceLayer = String(layer['source-layer'] ?? '').toLocaleLowerCase()
-    const signature = `${id} ${sourceLayer}`
-    const type = String(layer.type ?? '')
-    const minZoom = Number(layer.minzoom ?? 0)
-    const paint = (layer.paint ?? {}) as Record<string, unknown>
-
-    if (type === 'background') {
-      paint['background-color'] = '#05070b'
-    }
-
-    if (type === 'fill' && /water|ocean|lake|river/.test(signature)) {
-      paint['fill-color'] = '#071620'
-      paint['fill-opacity'] = 0.98
-    }
-
-    if (type === 'fill' && /building/.test(signature)) {
-      layer.minzoom = Math.max(minZoom, 12)
-      paint['fill-color'] = '#252b35'
-    }
-
-    if (type === 'line' && /boundary|admin/.test(signature)) {
-      paint['line-color'] = '#68738a'
-      paint['line-opacity'] = [
-        'interpolate', ['linear'], ['zoom'],
-        0, 0.16,
-        3, 0.34,
-        7, 0.62,
-      ]
-    } else if (type === 'line' && /road|street|highway|motorway|rail|transit/.test(signature)) {
-      layer.minzoom = Math.max(minZoom, 5)
-      paint['line-opacity'] = 0.42
-    } else if (type === 'line' && /waterway|river|stream/.test(signature)) {
-      layer.minzoom = Math.max(minZoom, 4)
-      paint['line-color'] = '#173849'
-    }
-
-    if (type === 'symbol') {
-      const isCountry = /country/.test(signature)
-      const isSettlement = /place|city|town|village|state|province/.test(signature)
-      const isHighNoise = /poi|housenumber|road|street|highway|motorway|transit|station|airport|ferry/.test(signature)
-      layer.minzoom = Math.max(minZoom, isCountry ? 0.7 : isSettlement ? 2.6 : isHighNoise ? 5.4 : 3.8)
-      paint['text-color'] = isCountry ? '#aeb8c9' : '#8893a7'
-      paint['text-opacity'] = [
-        'interpolate', ['linear'], ['zoom'],
-        0, isCountry ? 0.28 : 0,
-        2.5, isCountry ? 0.58 : 0.28,
-        5.5, 0.88,
-      ]
-      paint['text-halo-color'] = 'rgba(4, 7, 11, 0.96)'
-      paint['text-halo-width'] = 1.35
-      paint['icon-opacity'] = isHighNoise ? 0.38 : 0.68
-    }
-
-    layer.paint = paint
+function captureLayerOrder(map: MapLibreMap): LayerOrderEvidence {
+  const layers = map.getStyle().layers ?? []
+  const indexOf = (id: string) => {
+    const index = layers.findIndex((layer) => layer.id === id)
+    return index >= 0 ? index : null
   }
+  const firstLibertySymbolIndex = layers.findIndex((layer) => (
+    layer.type === 'symbol' && 'source' in layer && layer.source !== SOURCE_ID
+  ))
 
   return {
-    ...providerStyle,
-    layers: tunedLayers as unknown as StyleSpecification['layers'],
-    name: 'Spendscape OpenFreeMap dark development globe',
-    metadata: {
-      'spendscape:provider': 'OpenFreeMap',
-      'spendscape:sourceStyle': STYLE_URL,
-    },
-    projection: { type: 'globe' },
-    light: {
-      anchor: 'viewport',
-      color: '#d6e5ff',
-      intensity: 0.42,
-      position: [1.15, 210, 32],
-    },
-    sky: {
-      'sky-color': '#030509',
-      'horizon-color': '#91aed7',
-      'fog-color': '#132236',
-      'atmosphere-blend': [
-        'interpolate', ['linear'], ['zoom'],
-        0, 1,
-        3.5, 0.76,
-        7, 0,
-      ],
-    },
-  } as StyleSpecification
+    firstLibertySymbol: firstLibertySymbolIndex >= 0
+      ? { id: layers[firstLibertySymbolIndex].id, index: firstLibertySymbolIndex }
+      : null,
+    building: indexOf('building'),
+    building3d: indexOf('building-3d'),
+    heatmap: indexOf(HEAT_LAYER),
+    clusterGlow: indexOf(CLUSTER_GLOW_LAYER),
+    cluster: indexOf(CLUSTER_LAYER),
+    clusterCount: indexOf(CLUSTER_COUNT_LAYER),
+    pinGlow: indexOf(PIN_GLOW_LAYER),
+    pinShadow: indexOf(PIN_SHADOW_LAYER),
+    pin: indexOf(PIN_LAYER),
+    selectionGlow: indexOf(SELECTION_GLOW_LAYER),
+    selectionHalo: indexOf(HALO_LAYER),
+    label: indexOf(LABEL_LAYER),
+  }
+}
+
+function ensureSpendscapeTopLayerOrder(map: MapLibreMap): void {
+  for (const layerId of SPENDSCAPE_TOP_LAYER_ORDER) {
+    if (map.getLayer(layerId)) map.moveLayer(layerId)
+  }
+}
+
+function applyGlobeMode(map: MapLibreMap, mode: MapMode): void {
+  ensureSpendscapeTopLayerOrder(map)
+  const pinVisibility = mode === 'pins' ? 'visible' : 'none'
+  for (const layerId of PIN_MODE_LAYERS) {
+    if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', pinVisibility)
+  }
+  if (map.getLayer(HEAT_LAYER)) {
+    map.setLayoutProperty(HEAT_LAYER, 'visibility', mode === 'heatmap' ? 'visible' : 'none')
+  }
+}
+
+function placeLabelExpression(locale: LocaleCode): ExpressionSpecification {
+  return [
+    'format',
+    ['get', locale === 'he' ? 'nameHe' : 'nameEn'], { 'font-scale': 1 },
+    '\n', {},
+    [
+      'concat',
+      ['number-format', ['to-number', ['get', 'totalBaseAmountIls'], 0], {
+        currency: 'ILS',
+        'max-fraction-digits': 0,
+        'min-fraction-digits': 0,
+      }],
+      ' · ',
+      ['to-string', ['to-number', ['get', 'visitCount'], 0]],
+      locale === 'he' ? ' ביקורים' : ' visits',
+    ], { 'font-scale': 0.82 },
+  ]
+}
+
+async function fetchDevelopmentStyle(signal: AbortSignal): Promise<StyleSpecification> {
+  const response = await fetch(OPENFREEMAP_LIBERTY_STYLE_URL, { signal })
+  if (!response.ok) throw new Error(`Development map style returned ${response.status}`)
+  const providerStyle = await response.json() as StyleSpecification
+  return buildDevelopmentGlobeStyle(providerStyle)
 }
 
 function percentile(values: number[], value: number): number {
   if (values.length === 0) return 0
   const ordered = [...values].sort((a, b) => a - b)
   return ordered[Math.min(ordered.length - 1, Math.floor((ordered.length - 1) * value))]
-}
-
-function spatialEasing(value: number): number {
-  return 1 - Math.pow(1 - value, 3)
 }
 
 function formatMoney(amount: number, locale: LocaleCode, currency: CurrencyCode = 'ILS'): string {
@@ -430,12 +550,14 @@ export function SpendscapeGlobe() {
   const mapRef = useRef<MapLibreMap | null>(null)
   const spinEnabledRef = useRef(true)
   const spinTimerRef = useRef<number | null>(null)
+  const programmaticCameraRef = useRef(false)
   const reducedMotionRef = useRef(false)
   const filteredRef = useRef(placeFeatureCollection)
   const mapReadyRef = useRef(false)
   const actionTimerRef = useRef<number | null>(null)
   const loadStartRef = useRef(0)
   const localeRef = useRef<LocaleCode>('en')
+  const modeRef = useRef<MapMode>('pins')
 
   const [locale, setLocale] = useState<LocaleCode>('en')
   const [query, setQuery] = useState<PurchaseQuery>(defaultPurchaseQuery)
@@ -466,6 +588,7 @@ export function SpendscapeGlobe() {
     pins: 0,
     selectionHalos: 0,
     heatFeatures: 0,
+    placeLabels: 0,
   })
   const [performanceEvidence, setPerformanceEvidence] = useState<PerformanceEvidence>({
     samples: 0,
@@ -474,6 +597,15 @@ export function SpendscapeGlobe() {
     loadMs: null,
     lastCameraAction: null,
     lastCameraMs: null,
+  })
+  const [inputEvidence, setInputEvidence] = useState<InputEvidence>({
+    scrollZoomEnabled: false,
+    cooperativeGesturesEnabled: false,
+    rtlPluginStatus: 'unavailable',
+    wheelEvents: 0,
+    smallDeltaWheelEvents: 0,
+    lastWheelDeltaY: null,
+    lastWheelClientPoint: null,
   })
 
   const t = copy[locale]
@@ -512,6 +644,7 @@ export function SpendscapeGlobe() {
   filteredRef.current = visibleData
   reducedMotionRef.current = reducedMotion
   localeRef.current = locale
+  modeRef.current = mode
 
   const updateQuery = useCallback((patch: Partial<PurchaseQuery>) => {
     setQuery((current) => ({ ...current, ...patch }))
@@ -568,9 +701,11 @@ export function SpendscapeGlobe() {
   }, [])
 
   const stopSpin = useCallback((announce = true) => {
+    const shouldStopCamera = spinEnabledRef.current || programmaticCameraRef.current
     spinEnabledRef.current = false
+    programmaticCameraRef.current = false
     clearSpinTimer()
-    mapRef.current?.stop()
+    if (shouldStopCamera) mapRef.current?.stop()
     setAutoSpin(false)
     if (announce) setStatus(copy[localeRef.current].interrupted)
   }, [clearSpinTimer])
@@ -693,7 +828,9 @@ export function SpendscapeGlobe() {
     setStatus(`${localized(place.name, activeLocale)} · ${copy[activeLocale].ready}`)
     if (shouldFly) {
       const started = performance.now()
+      programmaticCameraRef.current = true
       map.once('moveend', () => {
+        programmaticCameraRef.current = false
         setPerformanceEvidence((current) => ({
           ...current,
           lastCameraAction: 'fly-to-place',
@@ -702,10 +839,14 @@ export function SpendscapeGlobe() {
       })
       map.flyTo({
         center: place.coordinates,
-        zoom: Math.max(map.getZoom(), 7.4),
-        duration: reducedMotionRef.current ? 0 : 1250,
-        curve: 1.18,
-        easing: spatialEasing,
+        zoom: 15.2,
+        speed: 1.6,
+        // Keep the selected spot above the mobile detail sheet; desktop follows
+        // the unmodified reference center because its side panel does not cover it.
+        offset: window.innerWidth <= 760
+          ? [0, -Math.round(Math.min(180, window.innerHeight * 0.2))]
+          : [0, 0],
+        ...(reducedMotionRef.current ? { duration: 0 } : {}),
         essential: false,
       })
     }
@@ -729,17 +870,20 @@ export function SpendscapeGlobe() {
     document.documentElement.dir = locale === 'he' ? 'rtl' : 'ltr'
     const map = mapRef.current
     if (map?.getLayer(LABEL_LAYER)) {
-      map.setLayoutProperty(LABEL_LAYER, 'text-field', ['get', locale === 'he' ? 'nameHe' : 'nameEn'])
+      map.setLayoutProperty(LABEL_LAYER, 'text-field', placeLabelExpression(locale))
     }
   }, [locale])
 
   useEffect(() => {
     const dismiss = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeTopLayer()
+      if (event.key === 'Escape') {
+        stopSpin(false)
+        closeTopLayer()
+      }
     }
     document.addEventListener('keydown', dismiss)
     return () => document.removeEventListener('keydown', dismiss)
-  }, [closeTopLayer])
+  }, [closeTopLayer, stopSpin])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -757,11 +901,13 @@ export function SpendscapeGlobe() {
     }
 
     let disposed = false
+    let detachInteractionListeners = () => {}
     loadStartRef.current = performance.now()
 
     const initialize = async () => {
       try {
         maplibregl.setWorkerUrl('/maplibre-gl-worker.mjs')
+        await ensureRtlTextPlugin()
         if (holdLoadingState) {
           await new Promise((resolve) => window.setTimeout(resolve, 1800))
         }
@@ -780,11 +926,23 @@ export function SpendscapeGlobe() {
           maxZoom: 16,
           attributionControl: { compact: true },
           keyboard: true,
+          scrollZoom: true,
+          cooperativeGestures: false,
+          touchZoomRotate: true,
           renderWorldCopies: false,
           localIdeographFontFamily: 'system-ui, sans-serif',
         })
 
         mapRef.current = map
+        map.scrollZoom.enable()
+        map.cooperativeGestures.disable()
+        map.touchZoomRotate.enable()
+        setInputEvidence((current) => ({
+          ...current,
+          scrollZoomEnabled: map.scrollZoom.isEnabled(),
+          cooperativeGesturesEnabled: map.cooperativeGestures.isEnabled(),
+          rtlPluginStatus: maplibregl.getRTLTextPluginStatus(),
+        }))
         map.on('error', (event) => {
           console.error('[Spendscape MapLibre]', event.error?.message ?? 'Unknown map error')
         })
@@ -834,15 +992,28 @@ export function SpendscapeGlobe() {
         })
 
         const interrupt = () => stopSpin(true)
-        node.addEventListener('pointerdown', interrupt, { passive: true })
-        node.addEventListener('wheel', interrupt, { passive: true })
-        node.addEventListener('keydown', interrupt)
+        const captureWheel = (event: WheelEvent) => {
+          interrupt()
+          setInputEvidence((current) => ({
+            ...current,
+            wheelEvents: current.wheelEvents + 1,
+            smallDeltaWheelEvents: current.smallDeltaWheelEvents + (Math.abs(event.deltaY) < 4 ? 1 : 0),
+            lastWheelDeltaY: event.deltaY,
+            lastWheelClientPoint: [event.clientX, event.clientY],
+          }))
+        }
+        node.addEventListener('pointerdown', interrupt, { passive: true, capture: true })
+        node.addEventListener('wheel', captureWheel, { passive: true, capture: true })
+        node.addEventListener('keydown', interrupt, { capture: true })
+        detachInteractionListeners = () => {
+          node.removeEventListener('pointerdown', interrupt, { capture: true })
+          node.removeEventListener('wheel', captureWheel, { capture: true })
+          node.removeEventListener('keydown', interrupt, { capture: true })
+        }
 
         map.on('load', async () => {
           if (disposed) return
           mapReadyRef.current = true
-          const symbolLayer = map.getStyle().layers?.find((layer) => layer.type === 'symbol')?.id
-
           map.addSource(SOURCE_ID, {
             type: 'geojson',
             data: filteredRef.current,
@@ -856,37 +1027,15 @@ export function SpendscapeGlobe() {
             id: HEAT_LAYER,
             type: 'heatmap',
             source: SOURCE_ID,
-            maxzoom: 8,
             layout: { visibility: 'none' },
             paint: {
-              'heatmap-weight': [
-                'interpolate', ['linear'],
-                ['to-number', ['coalesce', ['get', 'visitCount'], ['get', 'point_count']], 1],
-                1, 0.15,
-                14, 1,
-              ],
-              'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 0.75, 7, 1.8],
-              'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 12, 7, 44],
-              'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 0, 0.78, 8, 0.2],
-              'heatmap-color': [
-                'interpolate', ['linear'], ['heatmap-density'],
-                0, 'rgba(81, 221, 255, 0)',
-                0.18, 'rgba(81, 221, 255, 0.48)',
-                0.42, 'rgba(100, 115, 255, 0.72)',
-                0.7, 'rgba(183, 91, 255, 0.88)',
-                1, 'rgba(255, 239, 201, 0.98)',
-              ],
+              'heatmap-weight': HEATMAP_WEIGHT_EXPRESSION,
+              'heatmap-intensity': HEATMAP_INTENSITY_EXPRESSION,
+              'heatmap-radius': HEATMAP_RADIUS_EXPRESSION,
+              'heatmap-opacity': HEATMAP_OPACITY,
+              'heatmap-color': HEATMAP_COLOR_EXPRESSION,
             },
-          }, symbolLayer)
-
-          const categoryColor: ExpressionSpecification = [
-            'match', ['get', 'category'],
-            'groceries', '#57e1c0',
-            'food', '#ff9f68',
-            'retail', '#b58cff',
-            'travel', '#58c8ff',
-            '#f8fbff',
-          ]
+          })
 
           map.addLayer({
             id: CLUSTER_GLOW_LAYER,
@@ -896,13 +1045,15 @@ export function SpendscapeGlobe() {
             paint: {
               'circle-color': [
                 'step', ['get', 'point_count'],
-                '#5f8cff', 3, '#8e66ff', 7, '#d365ff',
+                SPENDSCAPE_BLUE_BRIGHT, 3, SPENDSCAPE_BLUE, 7, SPENDSCAPE_BLUE_DEEP,
               ],
               'circle-radius': ['step', ['get', 'point_count'], 25, 4, 31, 8, 38],
               'circle-opacity': 0.46,
               'circle-blur': 0.72,
+              'circle-pitch-alignment': 'viewport',
+              'circle-pitch-scale': 'viewport',
             },
-          }, symbolLayer)
+          })
 
           map.addLayer({
             id: CLUSTER_LAYER,
@@ -912,15 +1063,17 @@ export function SpendscapeGlobe() {
             paint: {
               'circle-color': [
                 'step', ['get', 'point_count'],
-                '#4d72ea', 3, '#7652e5', 7, '#aa4bd4',
+                SPENDSCAPE_BLUE_BRIGHT, 3, SPENDSCAPE_BLUE, 7, SPENDSCAPE_BLUE_DEEP,
               ],
               'circle-radius': ['step', ['get', 'point_count'], 16, 4, 21, 8, 27],
               'circle-stroke-color': 'rgba(239,244,255,0.9)',
               'circle-stroke-width': 1.25,
               'circle-opacity': 0.96,
               'circle-blur': 0.02,
+              'circle-pitch-alignment': 'viewport',
+              'circle-pitch-scale': 'viewport',
             },
-          }, symbolLayer)
+          })
 
           map.addLayer({
             id: CLUSTER_COUNT_LAYER,
@@ -937,7 +1090,7 @@ export function SpendscapeGlobe() {
               'text-halo-color': 'rgba(5,7,12,0.5)',
               'text-halo-width': 1.1,
             },
-          }, symbolLayer)
+          })
 
           map.addLayer({
             id: PIN_GLOW_LAYER,
@@ -945,12 +1098,14 @@ export function SpendscapeGlobe() {
             source: SOURCE_ID,
             filter: ['!', ['has', 'point_count']],
             paint: {
-              'circle-radius': ['interpolate', ['linear'], ['get', 'visitCount'], 1, 13, 14, 22],
-              'circle-color': categoryColor,
-              'circle-opacity': 0.42,
+              'circle-radius': PIN_GLOW_RADIUS_EXPRESSION,
+              'circle-color': SPENDSCAPE_BLUE_BRIGHT,
+              'circle-opacity': 0.34,
               'circle-blur': 0.76,
+              'circle-pitch-alignment': 'viewport',
+              'circle-pitch-scale': 'viewport',
             },
-          }, symbolLayer)
+          })
 
           map.addLayer({
             id: PIN_SHADOW_LAYER,
@@ -958,13 +1113,15 @@ export function SpendscapeGlobe() {
             source: SOURCE_ID,
             filter: ['!', ['has', 'point_count']],
             paint: {
-              'circle-radius': ['interpolate', ['linear'], ['get', 'visitCount'], 1, 8, 14, 13],
+              'circle-radius': PIN_SHADOW_RADIUS_EXPRESSION,
               'circle-color': '#020306',
               'circle-opacity': 0.7,
               'circle-translate': [0, 2.5],
               'circle-blur': 0.22,
+              'circle-pitch-alignment': 'viewport',
+              'circle-pitch-scale': 'viewport',
             },
-          }, symbolLayer)
+          })
 
           map.addLayer({
             id: PIN_LAYER,
@@ -972,25 +1129,16 @@ export function SpendscapeGlobe() {
             source: SOURCE_ID,
             filter: ['!', ['has', 'point_count']],
             paint: {
-              'circle-radius': ['interpolate', ['linear'], ['get', 'visitCount'], 1, 6.5, 14, 11.5],
-              'circle-color': categoryColor,
-              'circle-stroke-color': 'rgba(244,248,255,0.92)',
-              'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 0, 0.9, 5, 1.45],
-              'circle-opacity': 0.99,
+              // Visit count is the only base-dot size metric; category never changes its color.
+              'circle-radius': PIN_HOVER_RADIUS_EXPRESSION,
+              'circle-color': SPENDSCAPE_BLUE,
+              'circle-stroke-color': '#f7fbff',
+              'circle-stroke-width': PIN_STROKE_WIDTH_EXPRESSION,
+              'circle-opacity': 1,
+              'circle-pitch-alignment': 'viewport',
+              'circle-pitch-scale': 'viewport',
             },
-          }, symbolLayer)
-
-          map.addLayer({
-            id: PIN_CORE_LAYER,
-            type: 'circle',
-            source: SOURCE_ID,
-            filter: ['!', ['has', 'point_count']],
-            paint: {
-              'circle-radius': ['interpolate', ['linear'], ['get', 'visitCount'], 1, 1.7, 14, 2.7],
-              'circle-color': '#ffffff',
-              'circle-opacity': 0.94,
-            },
-          }, symbolLayer)
+          })
 
           map.addLayer({
             id: SELECTION_GLOW_LAYER,
@@ -998,12 +1146,14 @@ export function SpendscapeGlobe() {
             source: SOURCE_ID,
             filter: ['==', ['get', 'placeId'], ''],
             paint: {
-              'circle-radius': 28,
-              'circle-color': categoryColor,
-              'circle-opacity': 0.6,
-              'circle-blur': 0.68,
+              'circle-radius': PIN_SELECTION_GLOW_RADIUS_EXPRESSION,
+              'circle-color': SPENDSCAPE_BLUE_BRIGHT,
+              'circle-opacity': 0.54,
+              'circle-blur': 0.72,
+              'circle-pitch-alignment': 'viewport',
+              'circle-pitch-scale': 'viewport',
             },
-          }, symbolLayer)
+          })
 
           map.addLayer({
             id: HALO_LAYER,
@@ -1011,34 +1161,38 @@ export function SpendscapeGlobe() {
             source: SOURCE_ID,
             filter: ['==', ['get', 'placeId'], ''],
             paint: {
-              'circle-radius': 17,
+              'circle-radius': PIN_SELECTION_HALO_RADIUS_EXPRESSION,
               'circle-color': 'rgba(255,255,255,0)',
               'circle-stroke-color': '#ffffff',
-              'circle-stroke-width': 2,
+              'circle-stroke-width': 2.4,
               'circle-opacity': 1,
+              'circle-pitch-alignment': 'viewport',
+              'circle-pitch-scale': 'viewport',
             },
-          }, symbolLayer)
+          })
 
           map.addLayer({
             id: LABEL_LAYER,
             type: 'symbol',
             source: SOURCE_ID,
             filter: ['!', ['has', 'point_count']],
-            minzoom: 3.6,
+            minzoom: 12.5,
             layout: {
-              'text-field': ['get', localeRef.current === 'he' ? 'nameHe' : 'nameEn'],
-              'text-font': ['Noto Sans Regular'],
-              'text-size': ['interpolate', ['linear'], ['zoom'], 3.6, 11, 8, 12.5],
-              'text-offset': [0, 1.65],
+              'text-field': placeLabelExpression(localeRef.current),
+              'text-font': ['Noto Sans Bold'],
+              'text-size': ['interpolate', ['linear'], ['zoom'], 12.5, 12, 16, 13.5],
+              'text-offset': [0, 1.8],
               'text-anchor': 'top',
               'text-optional': true,
             },
             paint: {
-              'text-color': '#f7f7fb',
-              'text-halo-color': 'rgba(4,7,11,0.98)',
-              'text-halo-width': 1.8,
+              'text-color': SPENDSCAPE_BLUE_DEEP,
+              'text-halo-color': 'rgba(252,253,255,0.98)',
+              'text-halo-width': 2.2,
             },
           })
+
+          applyGlobeMode(map, modeRef.current)
 
           const canonicalSource = map.getSource(SOURCE_ID) as GeoJSONSource
           try {
@@ -1063,16 +1217,20 @@ export function SpendscapeGlobe() {
             const zoom = await source.getClusterExpansionZoom(clusterId)
             const coordinates = (feature?.geometry as Point).coordinates as [number, number]
             const started = performance.now()
-            map.once('moveend', () => setPerformanceEvidence((current) => ({
-              ...current,
-              lastCameraAction: 'cluster-expansion',
-              lastCameraMs: Math.round((performance.now() - started) * 10) / 10,
-            })))
-            map.easeTo({
+            programmaticCameraRef.current = true
+            map.once('moveend', () => {
+              programmaticCameraRef.current = false
+              setPerformanceEvidence((current) => ({
+                ...current,
+                lastCameraAction: 'cluster-expansion',
+                lastCameraMs: Math.round((performance.now() - started) * 10) / 10,
+              }))
+            })
+            map.flyTo({
               center: coordinates,
               zoom,
-              duration: reducedMotionRef.current ? 0 : 900,
-              easing: spatialEasing,
+              speed: 1.6,
+              ...(reducedMotionRef.current ? { duration: 0 } : {}),
               essential: false,
             })
           })
@@ -1083,10 +1241,18 @@ export function SpendscapeGlobe() {
           })
 
           const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 16 })
+          let hoveredFeatureId: string | number | null = null
           map.on('mouseenter', PIN_LAYER, (event) => {
             map.getCanvas().style.cursor = 'pointer'
             const feature = event.features?.[0]
             if (!feature) return
+            if (hoveredFeatureId !== null) {
+              map.setFeatureState({ source: SOURCE_ID, id: hoveredFeatureId }, { hover: false })
+            }
+            hoveredFeatureId = feature.id ?? null
+            if (hoveredFeatureId !== null) {
+              map.setFeatureState({ source: SOURCE_ID, id: hoveredFeatureId }, { hover: true })
+            }
             const properties = feature.properties as PlaceFeatureProperties
             const tooltip = document.createElement('div')
             tooltip.className = styles.mapTooltip
@@ -1102,6 +1268,10 @@ export function SpendscapeGlobe() {
           })
           map.on('mouseleave', PIN_LAYER, () => {
             map.getCanvas().style.cursor = ''
+            if (hoveredFeatureId !== null) {
+              map.setFeatureState({ source: SOURCE_ID, id: hoveredFeatureId }, { hover: false })
+              hoveredFeatureId = null
+            }
             popup.remove()
           })
           map.on('mouseenter', CLUSTER_LAYER, () => { map.getCanvas().style.cursor = 'pointer' })
@@ -1161,6 +1331,7 @@ export function SpendscapeGlobe() {
               pins: map.queryRenderedFeatures({ layers: [PIN_LAYER] }).length,
               selectionHalos: map.queryRenderedFeatures({ layers: [HALO_LAYER] }).length,
               heatFeatures: map.queryRenderedFeatures({ layers: [HEAT_LAYER] }).length,
+              placeLabels: map.queryRenderedFeatures({ layers: [LABEL_LAYER] }).length,
             }
             setRenderedEvidence((current) => (
               current.sourcePresent === next.sourcePresent
@@ -1174,6 +1345,7 @@ export function SpendscapeGlobe() {
               && current.pins === next.pins
               && current.selectionHalos === next.selectionHalos
               && current.heatFeatures === next.heatFeatures
+              && current.placeLabels === next.placeLabels
                 ? current
                 : next
             ))
@@ -1208,6 +1380,42 @@ export function SpendscapeGlobe() {
               const point = map.project(feature.geometry.coordinates as [number, number])
               return [point.x, point.y]
             },
+            jumpTo: (center, zoom, pitch = 0) => map.jumpTo({ center, zoom, bearing: 0, pitch }),
+            unproject: (point) => {
+              const coordinate = map.unproject(point)
+              return [coordinate.lng, coordinate.lat]
+            },
+            renderedPlaceIdsAt: (placeId) => {
+              const place = placeForId(placeId)
+              if (!place || !map.getLayer(PIN_LAYER)) return []
+              const point = map.project(place.coordinates)
+              return map.queryRenderedFeatures(point, { layers: [PIN_LAYER] })
+                .map((feature) => String(feature.properties?.placeId ?? ''))
+                .filter(Boolean)
+            },
+            renderedBasemapLabels: () => {
+              const labels = map.queryRenderedFeatures()
+                .filter((feature) => feature.layer.type === 'symbol' && feature.source !== SOURCE_ID)
+                .map((feature): RenderedBasemapLabel => ({
+                  name: typeof feature.properties?.name === 'string' ? feature.properties.name : null,
+                  nameLatin: typeof feature.properties?.['name:latin'] === 'string'
+                    ? feature.properties['name:latin']
+                    : null,
+                  nameNonLatin: typeof feature.properties?.['name:nonlatin'] === 'string'
+                    ? feature.properties['name:nonlatin']
+                    : null,
+                  nameEnglish: typeof feature.properties?.name_en === 'string'
+                    ? feature.properties.name_en
+                    : null,
+                  sourceLayer: feature.sourceLayer ?? null,
+                }))
+              return labels.filter((label, index) => labels.findIndex((candidate) => (
+                candidate.name === label.name
+                && candidate.nameLatin === label.nameLatin
+                && candidate.nameNonLatin === label.nameNonLatin
+                && candidate.sourceLayer === label.sourceLayer
+              )) === index)
+            },
           }
 
           const loadMs = Math.round((performance.now() - loadStartRef.current) * 10) / 10
@@ -1231,8 +1439,10 @@ export function SpendscapeGlobe() {
       disposed = true
       controller.abort()
       clearSpinTimer()
+      detachInteractionListeners()
       if (actionTimerRef.current !== null) window.clearTimeout(actionTimerRef.current)
       mapReadyRef.current = false
+      programmaticCameraRef.current = false
       mapRef.current?.remove()
       mapRef.current = null
       delete window.__SPENDSCAPE_QA_ACTIONS__
@@ -1261,22 +1471,12 @@ export function SpendscapeGlobe() {
   useEffect(() => {
     const map = mapRef.current
     if (!map?.getLayer(PIN_LAYER)) return
-    const pinsVisibility = mode === 'pins' ? 'visible' : 'none'
-    map.setLayoutProperty(CLUSTER_GLOW_LAYER, 'visibility', pinsVisibility)
-    map.setLayoutProperty(CLUSTER_LAYER, 'visibility', pinsVisibility)
-    map.setLayoutProperty(CLUSTER_COUNT_LAYER, 'visibility', pinsVisibility)
-    map.setLayoutProperty(PIN_GLOW_LAYER, 'visibility', pinsVisibility)
-    map.setLayoutProperty(PIN_SHADOW_LAYER, 'visibility', pinsVisibility)
-    map.setLayoutProperty(SELECTION_GLOW_LAYER, 'visibility', pinsVisibility)
-    map.setLayoutProperty(HALO_LAYER, 'visibility', pinsVisibility)
-    map.setLayoutProperty(PIN_LAYER, 'visibility', pinsVisibility)
-    map.setLayoutProperty(PIN_CORE_LAYER, 'visibility', pinsVisibility)
-    map.setLayoutProperty(LABEL_LAYER, 'visibility', pinsVisibility)
-    map.setLayoutProperty(HEAT_LAYER, 'visibility', mode === 'heatmap' ? 'visible' : 'none')
+    applyGlobeMode(map, mode)
     setStatus(mode === 'pins' ? copy[locale].modePins : copy[locale].modeHeat)
   }, [locale, mode])
 
   useEffect(() => {
+    const evidenceMap = !loading && !mapError && mapReadyRef.current ? mapRef.current : null
     window.__SPENDSCAPE_QA__ = {
       ready: !loading && !mapError,
       locale,
@@ -1310,8 +1510,43 @@ export function SpendscapeGlobe() {
       renderedPins: renderedEvidence.pins,
       renderedSelectionHalos: renderedEvidence.selectionHalos,
       renderedHeatFeatures: renderedEvidence.heatFeatures,
-      camera: mapRef.current ? snapshotCamera(mapRef.current) : null,
+      renderedPlaceLabels: renderedEvidence.placeLabels,
+      camera: evidenceMap ? snapshotCamera(evidenceMap) : null,
       performance: performanceEvidence,
+      input: {
+        ...inputEvidence,
+        rtlPluginStatus: maplibregl.getRTLTextPluginStatus(),
+      },
+      mapStyle: {
+        name: evidenceMap?.getStyle().name ?? null,
+        sourceUrl: OPENFREEMAP_LIBERTY_STYLE_URL,
+        projection: evidenceMap ? String(evidenceMap.getProjection().type) : null,
+        pinColor: (evidenceMap?.getPaintProperty(PIN_LAYER, 'circle-color') as string | null) ?? null,
+        clusterColor: evidenceMap?.getPaintProperty(CLUSTER_LAYER, 'circle-color') ?? null,
+        heatmapColor: evidenceMap?.getPaintProperty(HEAT_LAYER, 'heatmap-color') ?? null,
+        layerOrder: evidenceMap ? captureLayerOrder(evidenceMap) : null,
+        pinOpacity: evidenceMap?.getPaintProperty(PIN_LAYER, 'circle-opacity') ?? null,
+        pinStrokeColor: evidenceMap?.getPaintProperty(PIN_LAYER, 'circle-stroke-color') ?? null,
+        pinRadius: evidenceMap?.getPaintProperty(PIN_LAYER, 'circle-radius') ?? null,
+        pinStrokeWidth: evidenceMap?.getPaintProperty(PIN_LAYER, 'circle-stroke-width') ?? null,
+        pinPitchAlignment: evidenceMap?.getPaintProperty(PIN_LAYER, 'circle-pitch-alignment') ?? null,
+        pinPitchScale: evidenceMap?.getPaintProperty(PIN_LAYER, 'circle-pitch-scale') ?? null,
+        selectionGlowOpacity: evidenceMap?.getPaintProperty(SELECTION_GLOW_LAYER, 'circle-opacity') ?? null,
+        selectionHaloColor: evidenceMap?.getPaintProperty(HALO_LAYER, 'circle-color') ?? null,
+        selectionHaloStroke: evidenceMap?.getPaintProperty(HALO_LAYER, 'circle-stroke-color') ?? null,
+        heatmapWeight: evidenceMap?.getPaintProperty(HEAT_LAYER, 'heatmap-weight') ?? null,
+        heatmapIntensity: evidenceMap?.getPaintProperty(HEAT_LAYER, 'heatmap-intensity') ?? null,
+        heatmapRadius: evidenceMap?.getPaintProperty(HEAT_LAYER, 'heatmap-radius') ?? null,
+        heatmapOpacity: evidenceMap?.getPaintProperty(HEAT_LAYER, 'heatmap-opacity') ?? null,
+        pinVisibility: evidenceMap?.getLayoutProperty(PIN_LAYER, 'visibility') ?? null,
+        heatmapVisibility: evidenceMap?.getLayoutProperty(HEAT_LAYER, 'visibility') ?? null,
+        layerVisibility: evidenceMap
+          ? Object.fromEntries(SPENDSCAPE_TOP_LAYER_ORDER.map((layerId) => [
+              layerId,
+              evidenceMap.getLayoutProperty(layerId, 'visibility') ?? 'visible',
+            ]))
+          : {},
+      },
       analytics: {
         purchaseCount: visibleAnalytics.purchaseCount,
         totalBaseAmountIls: visibleAnalytics.totalBaseAmountIls,
@@ -1323,7 +1558,7 @@ export function SpendscapeGlobe() {
         topPhysicalPlaceId: visibleAnalytics.topPhysicalPlaces[0]?.placeId ?? null,
       },
     }
-  }, [autoSpin, loading, locale, mapError, mode, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
+  }, [autoSpin, inputEvidence, loading, locale, mapError, mode, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
 
   const runCameraAction = useCallback((name: string, action: (map: MapLibreMap) => void) => {
     const map = mapRef.current
@@ -1334,6 +1569,7 @@ export function SpendscapeGlobe() {
     const finish = () => {
       if (completed) return
       completed = true
+      programmaticCameraRef.current = false
       if (actionTimerRef.current !== null) window.clearTimeout(actionTimerRef.current)
       setPerformanceEvidence((current) => ({
         ...current,
@@ -1342,7 +1578,8 @@ export function SpendscapeGlobe() {
       }))
     }
     map.once('moveend', finish)
-    actionTimerRef.current = window.setTimeout(finish, 2500)
+    programmaticCameraRef.current = true
+    actionTimerRef.current = window.setTimeout(finish, 10_000)
     action(map)
   }, [stopSpin])
 
@@ -1355,9 +1592,9 @@ export function SpendscapeGlobe() {
       }
       map.fitBounds(bounds, {
         padding: window.innerWidth < 700 ? 66 : 150,
-        duration: reducedMotionRef.current ? 0 : 1100,
+        speed: 1.5,
+        ...(reducedMotionRef.current ? { duration: 0 } : {}),
         maxZoom: 7,
-        easing: spatialEasing,
         essential: false,
       })
     })
@@ -1370,9 +1607,8 @@ export function SpendscapeGlobe() {
     updateSelectedFilter(null)
     runCameraAction('reset-globe', (map) => map.flyTo({
       ...homeCamera(),
-      duration: reducedMotionRef.current ? 0 : 1150,
-      curve: 1.18,
-      easing: spatialEasing,
+      speed: 1.4,
+      ...(reducedMotionRef.current ? { duration: 0 } : {}),
       essential: false,
     }))
   }, [runCameraAction, updateSelectedFilter])

@@ -3,7 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { arch, platform, release } from 'node:os'
 import path from 'node:path'
 
-const artifactDir = path.join(process.cwd(), 'artifacts', 'spendscape-slice-1d1', 'headed-globe-regression')
+const artifactDir = path.join(process.cwd(), 'artifacts', 'spendscape-globe-fidelity-correction', 'headed')
 
 interface QaEvidence {
   ready: boolean
@@ -15,6 +15,13 @@ interface QaEvidence {
   renderedClusters: number
   camera: { center: [number, number]; zoom: number }
   performance: { lastCameraAction: string | null; lastCameraMs: number | null }
+  input: {
+    scrollZoomEnabled: boolean
+    cooperativeGesturesEnabled: boolean
+    rtlPluginStatus: string
+    wheelEvents: number
+    smallDeltaWheelEvents: number
+  }
 }
 
 interface QaActions {
@@ -176,6 +183,18 @@ test('collects headed Chrome interaction frame diagnostics and recordings', asyn
     await desktop.mouse.wheel(0, -540)
   }, 700))
 
+  const zoomBeforeTrackpadSequence = (await qa(desktop)).camera.zoom
+  const smallDeltaEventsBefore = (await qa(desktop)).input.smallDeltaWheelEvents
+  desktopInteractions.push(await measure(desktop, 'small-delta-trackpad-sequence', async () => {
+    await desktop.mouse.move(canvas.x + 860, canvas.y + 430)
+    for (let index = 0; index < 24; index += 1) {
+      await desktop.mouse.wheel(0, -1)
+      await desktop.waitForTimeout(8)
+    }
+  }, 500))
+  expect((await qa(desktop)).camera.zoom).toBeGreaterThan(zoomBeforeTrackpadSequence + 0.05)
+  expect((await qa(desktop)).input.smallDeltaWheelEvents - smallDeltaEventsBefore).toBe(24)
+
   await clickCameraAction(desktop, 'Reset globe', 'reset-globe')
   const clusterPoint = await firstPoint(desktop, 'cluster')
   if (!clusterPoint) throw new Error('No cluster point for headed measurement')
@@ -193,8 +212,10 @@ test('collects headed Chrome interaction frame diagnostics and recordings', asyn
   }, 250))
 
   await desktop.getByRole('button', { name: 'Close place details' }).click()
-  const pinPoint = await firstPoint(desktop, 'pin')
-  if (!pinPoint) throw new Error('No pin point for headed selection measurement')
+  const pinPoint: [number, number] = [
+    canvas.x + canvas.width / 2,
+    canvas.y + canvas.height / 2,
+  ]
   desktopInteractions.push(await measure(desktop, 'pin-selection', async () => {
     await desktop.mouse.click(pinPoint[0], pinPoint[1])
     await expect.poll(async () => (await qa(desktop)).selectedPlaceId).not.toBeNull()
@@ -231,7 +252,15 @@ test('collects headed Chrome interaction frame diagnostics and recordings', asyn
     await desktop.mouse.move(canvas.x + 820, canvas.y + 480, { steps: 10 })
     await desktop.mouse.up()
   }, 500))
-  expect((await qa(desktop)).camera.zoom).toBeLessThan(7.2)
+  const interruptedCamera = (await qa(desktop)).camera
+  expect(Math.abs(interruptedCamera.zoom - 15.2)).toBeGreaterThan(0.3)
+  await desktop.waitForTimeout(900)
+  const settledAfterInterruption = (await qa(desktop)).camera
+  expect(Math.abs(settledAfterInterruption.zoom - 15.2)).toBeGreaterThan(0.3)
+  await desktop.waitForTimeout(600)
+  const stableAfterInterruption = (await qa(desktop)).camera
+  expect(Math.abs(stableAfterInterruption.zoom - settledAfterInterruption.zoom)).toBeLessThan(0.05)
+  expect(Math.abs(stableAfterInterruption.center[0] - settledAfterInterruption.center[0])).toBeLessThan(0.1)
 
   configurations.push({
     name: 'headed-desktop',
@@ -267,6 +296,24 @@ test('collects headed Chrome interaction frame diagnostics and recordings', asyn
     })
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
   }, 500))
+
+  const mobileZoomBeforePinch = (await qa(mobile)).camera.zoom
+  mobileInteractions.push(await measure(mobile, 'touch-pinch-zoom', async () => {
+    const x = mobileCanvas.x + 195
+    const y = mobileCanvas.y + 385
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: x - 28, y }, { x: x + 28, y }],
+    })
+    for (const distance of [40, 54, 70, 84]) {
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: x - distance, y }, { x: x + distance, y }],
+      })
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  }, 500))
+  expect((await qa(mobile)).camera.zoom).toBeGreaterThan(mobileZoomBeforePinch + 0.15)
 
   mobileInteractions.push(await measure(mobile, 'mobile-fly-to', async () => {
     const previous = (await qa(mobile)).performance.lastCameraMs
@@ -304,6 +351,7 @@ test('collects headed Chrome interaction frame diagnostics and recordings', asyn
     host: { platform: platform(), release: release(), architecture: arch() },
     configurations,
     interpretation: 'requestAnimationFrame diagnostics from headed local Chrome. These measurements are browser/viewport evidence, not proof of real-device sustained 60fps.',
+    hardwareQualification: 'The small-delta sequence is trusted Chromium wheel input, not a physical MacBook trackpad event. Final hardware sign-off remains manual.',
   }, null, 2))
 
   await writeFile(path.join(artifactDir, 'video-capture-capability.json'), JSON.stringify({

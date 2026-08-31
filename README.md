@@ -44,7 +44,7 @@ directory.
 - Next.js App Router + TypeScript migration with pinned runtime dependencies
 - responsive desktop/mobile shell, dark-premium tokens, safe-area support,
   keyboard labels, English/Hebrew RTL, and reduced-motion behavior
-- MapLibre globe with an OpenFreeMap development style, atmosphere, automatic
+- MapLibre globe with the OpenFreeMap Liberty development style, atmosphere, automatic
   rotation with interaction interruption, zoom, fit, reset, place fly-to,
   clusters, heatmap, selection, hover details, and session camera persistence
 - deterministic synthetic fixtures that aggregate many physical purchases into
@@ -79,6 +79,19 @@ credential, paid provider, or real user data.
 
 The basemap uses OpenFreeMap only as a free development style. It needs no API
 key and carries no production availability commitment in this checkpoint.
+
+## Map RTL asset provenance
+
+Hebrew basemap shaping uses exactly one added dependency:
+`@mapbox/mapbox-gl-rtl-text@0.4.0`, pinned exactly and licensed BSD-2-Clause.
+Its 133,355-byte UMD runtime is self-hosted at
+`/vendor/mapbox-gl-rtl-text-0.4.0.js` and loaded once before MapLibre creates the
+map; this adds no account, provider request, or runtime third-party script fetch.
+The vendored license is stored beside the asset. The runtime SHA-256 is
+`ca7b9d54a01e7280c3d6babd6f68e46a49af4d853ec7d4d2d74de4bd762694ff`.
+The installation-time npm audit on 2026-08-30 reported zero known
+vulnerabilities; this is checkpoint evidence, not a permanent security
+guarantee, so later dependency updates must re-run the audit and label QA.
 
 ## Technology strategy
 
