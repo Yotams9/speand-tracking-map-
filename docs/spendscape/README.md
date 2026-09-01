@@ -24,11 +24,11 @@ full brainstorming transcript.
 - Branch: `feature/spendscape-rebuild`
 - Product: **Spendscape**
 - Delivery: responsive web/PWA only
-- Completed implementation checkpoint: Phase 1 through bounded Slice 1D.1
+- Completed implementation checkpoint: Phase 1 through bounded Slice 1D.3
 - Current implementation authorization: none
-- Latest completed checkpoint: documentation-only technology-strategy integration
+- Latest completed checkpoint: bounded Slice 1D.3 synthetic Universal Scanner/Capture simulation + local QA
 - Existing app: Next.js App Router + React + TypeScript Spendscape concept
-- Current implementation commit: `56670045`
+- Prior implementation checkpoint: `b5796c5d393d8271dd7ee1b175c2c45bfe364806`
 - Phase 1 data: synthetic only
 - Backend/providers/accounts/deployment: not implemented or connected
 

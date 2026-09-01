@@ -1,10 +1,12 @@
-# Spendscape — Phase 1 Slice 1D.2 working checkpoint
+# Spendscape — Phase 1 Slice 1D.3 checkpoint
 
 Spendscape is a globe-first purchase-intelligence concept. This branch currently
-implements only approved Phase 1 Slices 1A–1C.1, Slice 1D.1, and the bounded Slice 1D.2
-foundation: the Next.js shell, the real MapLibre globe, canonical synthetic
-purchase data, Purchases history, details, shared discovery state, and
-deterministic Analytics/Stats.
+implements completed Phase 1 Slices 1A–1C.1, 1D.1, 1D.2, the accepted globe
+fidelity correction, and bounded Slice 1D.3 synthetic Universal
+Scanner/Capture simulation. The current foundation includes
+the Next.js shell, real MapLibre globe, canonical synthetic purchase graph,
+Purchases/history/detail, shared discovery state, and deterministic
+Analytics/Stats.
 
 Every purchase, place, amount, coordinate, and performance story in the demo is
 synthetic. The app does not connect to accounts, services, location history, or
@@ -24,6 +26,46 @@ npm run dev
 
 Open <http://localhost:3000>.
 
+### Test from a phone on the same network
+
+The installed Next.js 16.3.3 CLI defaults both `next dev` and `next start` to
+`0.0.0.0`; the explicit mobile scripts make that LAN binding visible and
+repeatable:
+
+```bash
+# Development only — includes compilation and debugging overhead.
+npm run dev:mobile
+
+# Correct local performance comparison.
+npm run build
+npm run start:mobile
+```
+
+Find the Mac's Wi-Fi address with `ipconfig getifaddr en0` (or read it in
+System Settings → Network), then open `http://<mac-lan-ip>:3000` on the phone.
+Do not use `localhost` on the phone: it refers to the phone itself. The Mac and
+phone must share the same local network. VPNs, iCloud Private Relay, guest Wi-Fi
+client isolation, and the macOS firewall can block the connection. Press
+`Control-C` in the server terminal to stop it.
+
+Next.js development assets are allowlisted only for loopback and standard
+RFC 1918 private-network addresses, so no machine-specific IP is stored in the
+repository. Do not expose the development server to the public internet.
+
+If the shell opens but the globe does not, open
+<https://tiles.openfreemap.org/styles/liberty> directly on the phone. Failure
+there isolates a provider, DNS, or network-policy problem from the local
+Spendscape server. Development first-request compilation is intentionally not
+reported as production performance; use `start:mobile` after `build` for that
+comparison.
+
+Globe initialization loads the self-hosted RTL runtime and Liberty style in
+parallel. It aborts a Liberty style request after 12 seconds, stops waiting for
+RTL initialization after 8 seconds, and bounds MapLibre readiness at 18
+seconds. A failure leaves Purchases, Capture, Stats, filters, and session-only
+synthetic data intact and offers one explicit Retry; it never retries forever
+or silently changes provider.
+
 Verification commands:
 
 ```bash
@@ -33,13 +75,15 @@ npm run build
 npm run qa:globe
 npm run qa:experience
 npm run qa:analytics
+npm run qa:capture
+npm run qa:load
 ```
 
 The Playwright commands start the local development server when needed and write
 screenshots, recordings, and run output only to the ignored local `artifacts/`
 directory.
 
-## Implemented through bounded Slice 1D.2
+## Implemented through the bounded Slice 1D.3 checkpoint
 
 - Next.js App Router + TypeScript migration with pinned runtime dependencies
 - responsive desktop/mobile shell, dark-premium tokens, safe-area support,
@@ -66,16 +110,30 @@ directory.
 - browser-back, close, Escape, reload restoration, responsive mobile sheets,
   keyboard navigation, Hebrew RTL, reduced motion, empty, loading, and recovery
   behavior covered by deterministic and rendered QA
-- explicit loading (`?loading=1`) and map-failure (`?mapFailure=1`) QA routes;
+- progressive globe-only loading (`?loading=1`), deterministic timeout
+  (`?mapTimeout=style` / `?mapTimeout=ready`), and map-failure
+  (`?mapFailure=1`) QA routes;
   search with no matches exercises the empty state
+- camera-first Universal Capture overlay with desktop entry and a uniform
+  four-column mobile navigation action,
+  an explicit simulated-scanner label, focus trapping, Escape/Back/close, and
+  no MapLibre remount
+- working deterministic demos for receipt, product, barcode, document, PDF,
+  CSV preview, Gmail future explanation, manual/cash, and failure/retry states
+- confirm-first receipt review with nested arithmetic, place-suggestion truth
+  language, fixed synthetic FX provenance, and no retained photo value
+- separate in-memory session additions that update Purchases, Analytics, and
+  canonical place aggregates without mutating the checked-in fixture graph;
+  reload resets them and online/unresolved additions remain unpinned
 
 ## Intentionally not implemented
 
-The remainder of Slice 1D and later work remains blocked behind a new explicit
-approval. There is no Scanner, capture workflow, Smart Inbox, AI control or
-actions, Life Replay, privacy/sharing experience, backend, authentication, API
-integration, factual FX feed, deployment, service account, production
-credential, paid provider, or real user data.
+Slice 1D.3 implements only a simulated, built-in Universal Scanner/Capture
+experience and session-only synthetic additions. Real camera/file input,
+barcode lookup, OCR, Gmail, product providers, Smart Inbox, AI control/actions,
+Life Replay, privacy/sharing, backend, authentication, factual FX, deployment,
+service accounts, production credentials, paid providers, and real user data
+remain unimplemented and unauthorized.
 
 The basemap uses OpenFreeMap only as a free development style. It needs no API
 key and carries no production availability commitment in this checkpoint.

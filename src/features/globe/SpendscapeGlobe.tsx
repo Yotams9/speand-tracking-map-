@@ -7,6 +7,8 @@ import {
   useRef,
   useState,
 } from 'react'
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from 'react'
+import dynamic from 'next/dynamic'
 import * as maplibregl from 'maplibre-gl'
 import type {
   ExpressionSpecification,
@@ -22,19 +24,21 @@ import {
   baseAmountIlsForPurchase,
   buildPlaceFeatureCollection,
   defaultPurchaseQuery,
+  deriveCanonicalSearchResults,
   derivedPurchaseSummary,
   filterPurchases,
   globeEvidence,
   globeEvidenceRecords,
   globePlaces,
+  globePurchases,
   localized,
   merchantForId,
   placeFeatureCollection,
   placeForId,
-  purchaseForId,
   purchasesForPlace,
   synchronizeSelection,
   type CategoryFilter,
+  type CanonicalSearchResult,
   type ChannelFilter,
   type CurrencyCode,
   type CurrencyFilter,
@@ -43,6 +47,11 @@ import {
   type PlaceFeatureProperties,
   type PurchaseQuery,
 } from '@/data/spendscape-globe'
+import {
+  combineSessionPurchases,
+  type CaptureStep,
+  type SessionCaptureRecord,
+} from '@/features/capture/capture-domain'
 import { SpendscapeAnalytics } from './SpendscapeAnalytics'
 import {
   buildDevelopmentGlobeStyle,
@@ -65,6 +74,19 @@ import {
 } from './globe-map-config'
 import styles from './SpendscapeGlobe.module.css'
 
+const CaptureExperience = dynamic(
+  () => import('@/features/capture/CaptureExperience').then((module) => module.CaptureExperience),
+  {
+    ssr: false,
+    loading: () => (
+      <div className={styles.featureLoading} role="status" data-testid="capture-chunk-loading">
+        <span className={styles.featureLoadingMark} aria-hidden="true" />
+        <p><span lang="en">Opening Capture…</span><span lang="he">פותח את Capture…</span></p>
+      </div>
+    ),
+  },
+)
+
 const SOURCE_ID = 'spendscape-places'
 const HEAT_LAYER = 'spendscape-heat'
 const CLUSTER_GLOW_LAYER = 'spendscape-cluster-glow'
@@ -77,6 +99,10 @@ const SELECTION_GLOW_LAYER = 'spendscape-selected-glow'
 const PIN_LAYER = 'spendscape-place-pins'
 const LABEL_LAYER = 'spendscape-place-labels'
 const CAMERA_STORAGE_KEY = 'spendscape.phase1.globe-camera'
+const LIBERTY_STYLE_TIMEOUT_MS = 12_000
+const RTL_PLUGIN_TIMEOUT_MS = 8_000
+const MAP_READY_TIMEOUT_MS = 18_000
+const QA_TIMEOUT_MS = 700
 
 const SPENDSCAPE_TOP_LAYER_ORDER = [
   HEAT_LAYER,
@@ -122,6 +148,21 @@ interface PerformanceEvidence {
   lastCameraMs: number | null
 }
 
+type InitializationStage = 'idle' | 'resources' | 'constructing' | 'map-ready' | 'failed'
+
+interface InitializationEvidence {
+  attempt: number
+  stage: InitializationStage
+  styleFetchMs: number | null
+  rtlPluginMs: number | null
+  mapConstructedMs: number | null
+  mapReadyMs: number | null
+  failureStage: 'style' | 'rtl' | 'map-ready' | 'map' | null
+  styleTimeoutMs: number
+  rtlTimeoutMs: number
+  mapReadyTimeoutMs: number
+}
+
 interface InputEvidence {
   scrollZoomEnabled: boolean
   cooperativeGesturesEnabled: boolean
@@ -161,6 +202,13 @@ interface NavigationSnapshot {
   surface: ProductSurface
   selectedPlaceId: string | null
   selectedPurchaseId: string | null
+  captureStep?: CaptureStep | null
+  captureDepth?: number
+}
+
+interface DesktopPanelBounds {
+  top: number
+  maxHeight: number
 }
 
 interface StoredExperienceState extends NavigationSnapshot {
@@ -179,6 +227,13 @@ interface QaEvidence {
   query: PurchaseQuery
   selectedPlaceId: string | null
   selectedPurchaseId: string | null
+  captureOpen: boolean
+  captureStep: CaptureStep | null
+  sessionPurchaseCount: number
+  combinedPurchaseCount: number
+  mapInstanceCount: number
+  mapConstructionCount: number
+  initialization: InitializationEvidence
   visiblePurchaseCount: number
   visibleBaseTotalIls: number
   visiblePinFeatures: number
@@ -260,6 +315,63 @@ declare global {
 
 let rtlTextPluginPromise: Promise<void> | null = null
 
+class InitializationError extends Error {
+  constructor(
+    readonly stage: 'style' | 'rtl' | 'map-ready' | 'map',
+    message: string,
+  ) {
+    super(message)
+    this.name = 'InitializationError'
+  }
+}
+
+function abortableTimeout<T>(
+  promise: Promise<T>,
+  signal: AbortSignal,
+  timeoutMs: number,
+  stage: InitializationError['stage'],
+  label: string,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    let settled = false
+    const finish = (callback: () => void) => {
+      if (settled) return
+      settled = true
+      window.clearTimeout(timeout)
+      signal.removeEventListener('abort', abort)
+      callback()
+    }
+    const abort = () => finish(() => reject(new DOMException('Initialization aborted', 'AbortError')))
+    const timeout = window.setTimeout(() => {
+      finish(() => reject(new InitializationError(stage, `${label} timed out after ${timeoutMs}ms`)))
+    }, timeoutMs)
+    signal.addEventListener('abort', abort, { once: true })
+    if (signal.aborted) {
+      abort()
+      return
+    }
+    promise.then(
+      (value) => finish(() => resolve(value)),
+      (error: unknown) => finish(() => reject(error)),
+    )
+  })
+}
+
+function abortableDelay(durationMs: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      signal.removeEventListener('abort', abort)
+      resolve()
+    }, durationMs)
+    const abort = () => {
+      window.clearTimeout(timeout)
+      reject(new DOMException('Initialization aborted', 'AbortError'))
+    }
+    signal.addEventListener('abort', abort, { once: true })
+    if (signal.aborted) abort()
+  })
+}
+
 async function ensureRtlTextPlugin(): Promise<void> {
   const status = maplibregl.getRTLTextPluginStatus()
   if (status === 'loaded') return
@@ -300,15 +412,19 @@ const copy = {
   en: {
     product: 'Spendscape', checkpoint: 'Globe checkpoint', navGlobe: 'Globe',
     navAnalytics: 'Analytics', navPurchases: 'Purchases',
+    addPurchase: 'Add purchase', capture: 'Capture',
     headline: 'Your world, in purchases.',
     intro: 'Every confirmed place becomes one point in a living history.',
-    search: 'Search places or cities', all: 'All', groceries: 'Groceries', food: 'Food',
+    search: 'Search places or cities', searchPlaceholder: 'Search your places or cities',
+    searchScope: 'Your synthetic purchase history', searchPlace: 'Place', searchCity: 'City',
+    searchPurchase: 'Purchase', noSearchResults: 'No places or cities found in your purchases.',
+    physicalPurchaseMatches: 'physical purchases', all: 'All', groceries: 'Groceries', food: 'Food',
     retail: 'Retail', travel: 'Travel', pins: 'Pins', heatmap: 'Heatmap',
     fit: 'Fit purchases', latest: 'Fly to latest', reset: 'Reset globe',
     resume: 'Resume orbit', pause: 'Pause orbit', jump: 'Jump to a place',
     choosePlace: 'Choose a place', visits: 'visits', normalized: 'Illustrative base spend',
     latestVisit: 'Latest visit', close: 'Close place details', loading: 'Awakening your globe',
-    loadingBody: 'Loading the map and placing synthetic purchases…',
+    loadingBody: 'The globe is loading. Purchases, Capture, and Stats are ready.',
     noPlaces: 'No places match this view', noPlacesBody: 'Clear the search or choose another category.',
     clear: 'Clear filters', mapFailed: 'The globe could not load',
     mapFailedBody: 'Your synthetic purchase history is safe. Retry the development map style.',
@@ -340,15 +456,19 @@ const copy = {
   he: {
     product: 'Spendscape', checkpoint: 'נקודת ביקורת גלובוס', navGlobe: 'גלובוס',
     navAnalytics: 'ניתוחים', navPurchases: 'רכישות',
+    addPurchase: 'הוספת רכישה', capture: 'קליטה',
     headline: 'עולם הרכישות שלך.',
     intro: 'כל מקום מאומת הופך לנקודה אחת בהיסטוריה חיה.',
-    search: 'חיפוש מקומות או ערים', all: 'הכול', groceries: 'מכולת', food: 'אוכל',
+    search: 'חיפוש מקומות או ערים', searchPlaceholder: 'חיפוש במקומות או בערים שלך',
+    searchScope: 'היסטוריית הרכישות הסינתטית שלך', searchPlace: 'מקום', searchCity: 'עיר',
+    searchPurchase: 'רכישה', noSearchResults: 'לא נמצאו מקומות או ערים ברכישות שלך.',
+    physicalPurchaseMatches: 'רכישות פיזיות', all: 'הכול', groceries: 'מכולת', food: 'אוכל',
     retail: 'קמעונאות', travel: 'נסיעות', pins: 'סיכות', heatmap: 'מפת חום',
     fit: 'התאם לרכישות', latest: 'טוס למקום האחרון', reset: 'אפס גלובוס',
     resume: 'המשך סיבוב', pause: 'עצור סיבוב', jump: 'עבור למקום',
     choosePlace: 'בחר מקום', visits: 'ביקורים', normalized: 'הוצאה בסיסית להמחשה',
     latestVisit: 'ביקור אחרון', close: 'סגירת פרטי מקום', loading: 'מעירים את הגלובוס',
-    loadingBody: 'טוענים מפה וממקמים רכישות סינתטיות…',
+    loadingBody: 'הגלובוס נטען. רכישות, Capture ונתונים כבר זמינים.',
     noPlaces: 'אין מקומות התואמים לתצוגה', noPlacesBody: 'נקה את החיפוש או בחר קטגוריה אחרת.',
     clear: 'נקה מסננים', mapFailed: 'לא ניתן לטעון את הגלובוס',
     mapFailedBody: 'היסטוריית ההדגמה בטוחה. אפשר לנסות שוב את סגנון מפת הפיתוח.',
@@ -501,11 +621,40 @@ function placeLabelExpression(locale: LocaleCode): ExpressionSpecification {
   ]
 }
 
-async function fetchDevelopmentStyle(signal: AbortSignal): Promise<StyleSpecification> {
-  const response = await fetch(OPENFREEMAP_LIBERTY_STYLE_URL, { signal })
-  if (!response.ok) throw new Error(`Development map style returned ${response.status}`)
-  const providerStyle = await response.json() as StyleSpecification
-  return buildDevelopmentGlobeStyle(providerStyle)
+async function fetchDevelopmentStyle(
+  parentSignal: AbortSignal,
+  timeoutMs: number,
+  simulateStall = false,
+): Promise<StyleSpecification> {
+  const controller = new AbortController()
+  let timedOut = false
+  const abortFromParent = () => controller.abort()
+  const timeout = window.setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, timeoutMs)
+  parentSignal.addEventListener('abort', abortFromParent, { once: true })
+  if (parentSignal.aborted) controller.abort()
+
+  try {
+    if (simulateStall) {
+      await new Promise<never>((_, reject) => {
+        controller.signal.addEventListener('abort', () => reject(new DOMException('Style fetch aborted', 'AbortError')), { once: true })
+      })
+    }
+    const response = await fetch(OPENFREEMAP_LIBERTY_STYLE_URL, { signal: controller.signal })
+    if (!response.ok) throw new InitializationError('style', `Development map style returned ${response.status}`)
+    const providerStyle = await response.json() as StyleSpecification
+    return buildDevelopmentGlobeStyle(providerStyle)
+  } catch (error) {
+    if (timedOut) {
+      throw new InitializationError('style', `Liberty style timed out after ${timeoutMs}ms`)
+    }
+    throw error
+  } finally {
+    window.clearTimeout(timeout)
+    parentSignal.removeEventListener('abort', abortFromParent)
+  }
 }
 
 function percentile(values: number[], value: number): number {
@@ -533,6 +682,7 @@ function formatMonth(month: string, locale: LocaleCode): string {
 }
 
 function navigationHash(snapshot: NavigationSnapshot): string {
+  if (snapshot.captureStep) return '#capture'
   if (snapshot.selectedPurchaseId) return `#purchase/${snapshot.selectedPurchaseId}`
   if (snapshot.selectedPlaceId) return `#place/${snapshot.selectedPlaceId}`
   if (snapshot.surface === 'purchases') return '#purchases'
@@ -547,6 +697,12 @@ function isNavigationSnapshot(value: unknown): value is NavigationSnapshot {
 
 export function SpendscapeGlobe() {
   const mapNodeRef = useRef<HTMLDivElement>(null)
+  const queryDockRef = useRef<HTMLElement>(null)
+  const controlDockRef = useRef<HTMLElement>(null)
+  const searchRootRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const suppressSearchFocusOpenRef = useRef(false)
+  const placeReturnFocusRef = useRef<HTMLElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const spinEnabledRef = useRef(true)
   const spinTimerRef = useRef<number | null>(null)
@@ -558,6 +714,11 @@ export function SpendscapeGlobe() {
   const loadStartRef = useRef(0)
   const localeRef = useRef<LocaleCode>('en')
   const modeRef = useRef<MapMode>('pins')
+  const mapInstanceCountRef = useRef(0)
+  const mapConstructionCountRef = useRef(0)
+  const pendingCaptureExitRef = useRef<null | (() => void)>(null)
+  const captureDismissedRef = useRef(false)
+  const captureResumeSpinRef = useRef(false)
 
   const [locale, setLocale] = useState<LocaleCode>('en')
   const [query, setQuery] = useState<PurchaseQuery>(defaultPurchaseQuery)
@@ -565,9 +726,13 @@ export function SpendscapeGlobe() {
   const [surface, setSurface] = useState<ProductSurface>('globe')
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [selectedPurchaseId, setSelectedPurchaseId] = useState<string | null>(null)
+  const [captureStep, setCaptureStep] = useState<CaptureStep | null>(null)
+  const [captureDepth, setCaptureDepth] = useState(0)
+  const [sessionCaptureRecords, setSessionCaptureRecords] = useState<SessionCaptureRecord[]>([])
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [timelineOpen, setTimelineOpen] = useState(false)
   const [stateRestored, setStateRestored] = useState(false)
+  const [mapAttempt, setMapAttempt] = useState(0)
   const [loading, setLoading] = useState(true)
   const [mapError, setMapError] = useState<string | null>(null)
   const [autoSpin, setAutoSpin] = useState(true)
@@ -575,6 +740,9 @@ export function SpendscapeGlobe() {
   const [status, setStatus] = useState<string>(copy.en.loading)
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false)
   const [compactViewport, setCompactViewport] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [activeSearchIndex, setActiveSearchIndex] = useState(-1)
+  const [desktopPanelBounds, setDesktopPanelBounds] = useState<DesktopPanelBounds | null>(null)
   const [sourceUpdates, setSourceUpdates] = useState(0)
   const [renderedEvidence, setRenderedEvidence] = useState({
     sourcePresent: false,
@@ -607,16 +775,47 @@ export function SpendscapeGlobe() {
     lastWheelDeltaY: null,
     lastWheelClientPoint: null,
   })
+  const [initializationEvidence, setInitializationEvidence] = useState<InitializationEvidence>({
+    attempt: 0,
+    stage: 'idle',
+    styleFetchMs: null,
+    rtlPluginMs: null,
+    mapConstructedMs: null,
+    mapReadyMs: null,
+    failureStage: null,
+    styleTimeoutMs: LIBERTY_STYLE_TIMEOUT_MS,
+    rtlTimeoutMs: RTL_PLUGIN_TIMEOUT_MS,
+    mapReadyTimeoutMs: MAP_READY_TIMEOUT_MS,
+  })
 
   const t = copy[locale]
-  const visiblePurchases = useMemo(() => filterPurchases(query), [query])
+  const allPurchases = useMemo(
+    () => combineSessionPurchases(globePurchases, sessionCaptureRecords),
+    [sessionCaptureRecords],
+  )
+  const allEvidence = useMemo(
+    () => [...globeEvidenceRecords, ...sessionCaptureRecords.map((record) => record.evidence)],
+    [sessionCaptureRecords],
+  )
+  const searchScopePurchases = useMemo(
+    () => filterPurchases({ ...query, search: '' }, allPurchases),
+    [allPurchases, query],
+  )
+  const searchResults = useMemo(
+    () => deriveCanonicalSearchResults(query.search, searchScopePurchases),
+    [query.search, searchScopePurchases],
+  )
+  const visiblePurchases = useMemo(() => filterPurchases(query, allPurchases), [allPurchases, query])
   const visibleData = useMemo(
     () => buildPlaceFeatureCollection(globePlaces, visiblePurchases),
     [visiblePurchases],
   )
   const visibleSummary = useMemo(() => derivedPurchaseSummary(visiblePurchases), [visiblePurchases])
-  const visibleAnalytics = useMemo(() => derivePurchaseAnalytics(visiblePurchases), [visiblePurchases])
-  const timelineMonths = useMemo(() => availableTimelineMonths(), [])
+  const visibleAnalytics = useMemo(
+    () => derivePurchaseAnalytics(visiblePurchases, allEvidence),
+    [allEvidence, visiblePurchases],
+  )
+  const timelineMonths = useMemo(() => availableTimelineMonths(allPurchases), [allPurchases])
   const selectedFeature = useMemo(
     () => visibleData.features.find(
       (feature) => feature.properties.placeId === selectedPlaceId,
@@ -624,13 +823,15 @@ export function SpendscapeGlobe() {
     [selectedPlaceId, visibleData.features],
   )
   const selectedPlace = selectedPlaceId ? placeForId(selectedPlaceId) : undefined
-  const selectedPurchase = selectedPurchaseId ? purchaseForId(selectedPurchaseId) : undefined
+  const selectedPurchase = selectedPurchaseId
+    ? allPurchases.find((purchase) => purchase.id === selectedPurchaseId)
+    : undefined
   const selectedMerchant = selectedPurchase ? merchantForId(selectedPurchase.merchantId) : undefined
   const selectedEvidence = useMemo(
     () => selectedPurchase
-      ? globeEvidenceRecords.filter((record) => selectedPurchase.evidenceIds.includes(record.id))
+      ? allEvidence.filter((record) => selectedPurchase.evidenceIds.includes(record.id))
       : [],
-    [selectedPurchase],
+    [allEvidence, selectedPurchase],
   )
   const selectedPlacePurchases = useMemo(
     () => selectedPlaceId ? purchasesForPlace(selectedPlaceId, visiblePurchases) : [],
@@ -640,6 +841,12 @@ export function SpendscapeGlobe() {
     query.currency !== 'all', query.channel !== 'all', query.dateRange !== 'all',
     query.timelineMonth !== null,
   ].filter(Boolean).length
+  const searchHasValue = query.search.trim().length > 0
+  const showSearchResults = searchOpen && searchHasValue && surface === 'globe'
+  const placePanelStyle = desktopPanelBounds ? ({
+    '--place-panel-top': `${desktopPanelBounds.top}px`,
+    '--place-panel-max-height': `${desktopPanelBounds.maxHeight}px`,
+  } as CSSProperties) : undefined
 
   filteredRef.current = visibleData
   reducedMotionRef.current = reducedMotion
@@ -672,23 +879,56 @@ export function SpendscapeGlobe() {
       setSelectedPurchaseId(restored.selectedPurchaseId)
     }
 
-    const snapshot: NavigationSnapshot = isNavigationSnapshot(window.history.state)
+    const historicalSnapshot: NavigationSnapshot | null = isNavigationSnapshot(window.history.state)
       ? window.history.state
+      : null
+    const snapshot: NavigationSnapshot = historicalSnapshot
+      ? {
+          ...historicalSnapshot,
+          captureStep: null,
+          captureDepth: 0,
+          selectedPurchaseId: historicalSnapshot.selectedPurchaseId?.startsWith('session_purchase_')
+            ? null
+            : historicalSnapshot.selectedPurchaseId,
+        }
       : {
           marker: 'spendscape-1d1',
           surface: restored.surface ?? 'globe',
           selectedPlaceId: restored.selectedPlaceId ?? null,
-          selectedPurchaseId: restored.selectedPurchaseId ?? null,
+          selectedPurchaseId: restored.selectedPurchaseId?.startsWith('session_purchase_')
+            ? null
+            : restored.selectedPurchaseId ?? null,
+          captureStep: null,
+          captureDepth: 0,
         }
+    setSelectedPurchaseId(snapshot.selectedPurchaseId)
     window.history.replaceState(snapshot, '', navigationHash(snapshot))
     setStateRestored(true)
+  }, [])
+
+  useEffect(() => {
+    setActiveSearchIndex(-1)
+  }, [query.search, searchResults.length])
+
+  useEffect(() => {
+    const dismissSearch = (event: PointerEvent) => {
+      if (!searchRootRef.current?.contains(event.target as Node)) {
+        setSearchOpen(false)
+        setActiveSearchIndex(-1)
+      }
+    }
+    document.addEventListener('pointerdown', dismissSearch)
+    return () => document.removeEventListener('pointerdown', dismissSearch)
   }, [])
 
   useEffect(() => {
     if (!stateRestored) return
     const stored: StoredExperienceState = {
       marker: 'spendscape-1d1', locale, query, mode, surface,
-      selectedPlaceId, selectedPurchaseId,
+      selectedPlaceId,
+      selectedPurchaseId: selectedPurchaseId?.startsWith('session_purchase_') ? null : selectedPurchaseId,
+      captureStep: null,
+      captureDepth: 0,
     }
     window.sessionStorage.setItem(EXPERIENCE_STORAGE_KEY, JSON.stringify(stored))
   }, [locale, mode, query, selectedPlaceId, selectedPurchaseId, stateRestored, surface])
@@ -721,6 +961,41 @@ export function SpendscapeGlobe() {
     return () => media.removeEventListener('change', updateViewport)
   }, [])
 
+  useEffect(() => {
+    if (compactViewport) {
+      setDesktopPanelBounds(null)
+      return
+    }
+
+    let frame = 0
+    const measure = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        const queryDock = queryDockRef.current?.getBoundingClientRect()
+        const controlDock = controlDockRef.current?.getBoundingClientRect()
+        if (!queryDock || !controlDock) return
+        const top = Math.ceil(queryDock.bottom + 16)
+        const maxHeight = Math.max(180, Math.floor(controlDock.top - 16 - top))
+        setDesktopPanelBounds((current) => (
+          current?.top === top && current.maxHeight === maxHeight
+            ? current
+            : { top, maxHeight }
+        ))
+      })
+    }
+
+    const observer = new ResizeObserver(measure)
+    if (queryDockRef.current) observer.observe(queryDockRef.current)
+    if (controlDockRef.current) observer.observe(controlDockRef.current)
+    window.addEventListener('resize', measure)
+    measure()
+    return () => {
+      window.cancelAnimationFrame(frame)
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [compactViewport, locale, surface])
+
   const queueSpin = useCallback(() => {
     const map = mapRef.current
     clearSpinTimer()
@@ -747,6 +1022,14 @@ export function SpendscapeGlobe() {
     queueSpin()
   }, [queueSpin])
 
+  const resumeAfterCapture = useCallback(() => {
+    if (!captureResumeSpinRef.current) return
+    captureResumeSpinRef.current = false
+    if (reducedMotionRef.current) return
+    spinEnabledRef.current = true
+    queueSpin()
+  }, [queueSpin])
+
   const updateSelectedFilter = useCallback((placeId: string | null) => {
     const map = mapRef.current
     if (!map) return
@@ -761,22 +1044,33 @@ export function SpendscapeGlobe() {
     setSurface(snapshot.surface)
     setSelectedPlaceId(snapshot.selectedPlaceId)
     setSelectedPurchaseId(snapshot.selectedPurchaseId)
+    setCaptureStep(snapshot.captureStep ?? null)
+    setCaptureDepth(snapshot.captureDepth ?? 0)
     setFiltersOpen(false)
     setTimelineOpen(false)
     setMobileToolsOpen(false)
+    setSearchOpen(false)
+    setActiveSearchIndex(-1)
     updateSelectedFilter(snapshot.selectedPlaceId)
   }, [updateSelectedFilter])
 
   const pushNavigation = useCallback((patch: Partial<NavigationSnapshot>) => {
     const snapshot: NavigationSnapshot = {
       marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
+      captureStep,
+      captureDepth,
       ...patch,
     }
     window.history.pushState(snapshot, '', navigationHash(snapshot))
     applyNavigation(snapshot)
-  }, [applyNavigation, selectedPlaceId, selectedPurchaseId, surface])
+  }, [applyNavigation, captureDepth, captureStep, selectedPlaceId, selectedPurchaseId, surface])
 
   const closeTopLayer = useCallback(() => {
+    if (searchOpen) {
+      setSearchOpen(false)
+      setActiveSearchIndex(-1)
+      return
+    }
     if (filtersOpen) {
       setFiltersOpen(false)
       return
@@ -790,6 +1084,7 @@ export function SpendscapeGlobe() {
       return
     }
 
+    const focusTarget = selectedPlaceId && !selectedPurchaseId ? placeReturnFocusRef.current : null
     const snapshot: NavigationSnapshot = selectedPurchaseId
       ? { marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId: null }
       : selectedPlaceId
@@ -797,20 +1092,42 @@ export function SpendscapeGlobe() {
         : { marker: 'spendscape-1d1', surface: 'globe', selectedPlaceId: null, selectedPurchaseId: null }
     window.history.replaceState(snapshot, '', navigationHash(snapshot))
     applyNavigation(snapshot)
-  }, [applyNavigation, filtersOpen, mobileToolsOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
+    if (focusTarget?.isConnected) {
+      if (focusTarget === searchInputRef.current) suppressSearchFocusOpenRef.current = true
+      window.requestAnimationFrame(() => {
+        focusTarget.focus()
+        suppressSearchFocusOpenRef.current = false
+      })
+    }
+  }, [applyNavigation, filtersOpen, mobileToolsOpen, searchOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
 
   useEffect(() => {
     const restoreNavigation = (event: PopStateEvent) => {
-      if (isNavigationSnapshot(event.state)) applyNavigation(event.state)
+      if (!isNavigationSnapshot(event.state)) return
+      if (event.state.captureStep && captureDismissedRef.current) {
+        window.history.go(-Math.max(1, event.state.captureDepth ?? 1))
+        return
+      }
+      applyNavigation(event.state)
+      if (!event.state.captureStep) resumeAfterCapture()
+      if (!event.state.captureStep && pendingCaptureExitRef.current) {
+        const pending = pendingCaptureExitRef.current
+        pendingCaptureExitRef.current = null
+        window.setTimeout(pending, 0)
+      }
     }
     window.addEventListener('popstate', restoreNavigation)
     return () => window.removeEventListener('popstate', restoreNavigation)
-  }, [applyNavigation])
+  }, [applyNavigation, resumeAfterCapture])
 
   const selectPlace = useCallback((placeId: string, shouldFly = true, recordHistory = true) => {
     const map = mapRef.current
     const place = placeForId(placeId)
-    if (!map || !place) return
+    if (!place) return
+    const activeElement = document.activeElement
+    if (activeElement instanceof HTMLElement && activeElement !== document.body) {
+      placeReturnFocusRef.current = activeElement
+    }
     stopSpin(false)
     setMobileToolsOpen(false)
     setSurface('globe')
@@ -826,7 +1143,7 @@ export function SpendscapeGlobe() {
     }
     const activeLocale = localeRef.current
     setStatus(`${localized(place.name, activeLocale)} · ${copy[activeLocale].ready}`)
-    if (shouldFly) {
+    if (shouldFly && map) {
       const started = performance.now()
       programmaticCameraRef.current = true
       map.once('moveend', () => {
@@ -893,27 +1210,130 @@ export function SpendscapeGlobe() {
     const searchParams = new URLSearchParams(window.location.search)
     const forceFailure = searchParams.get('mapFailure') === '1'
     const holdLoadingState = searchParams.get('loading') === '1'
+    const simulatedTimeout = mapAttempt === 0 ? searchParams.get('mapTimeout') : null
+    const styleTimeoutMs = simulatedTimeout === 'style' ? QA_TIMEOUT_MS : LIBERTY_STYLE_TIMEOUT_MS
+    const mapReadyTimeoutMs = simulatedTimeout === 'ready' ? QA_TIMEOUT_MS : MAP_READY_TIMEOUT_MS
+    // Configure the worker before any status/evidence read can create
+    // MapLibre's global dispatcher, including deterministic failure states.
+    maplibregl.setWorkerUrl('/maplibre-gl-worker.mjs')
+    setLoading(true)
+    setMapError(null)
+    setStatus(copy[localeRef.current].loading)
+    setInitializationEvidence({
+      attempt: mapAttempt + 1,
+      stage: 'resources',
+      styleFetchMs: null,
+      rtlPluginMs: null,
+      mapConstructedMs: null,
+      mapReadyMs: null,
+      failureStage: null,
+      styleTimeoutMs,
+      rtlTimeoutMs: RTL_PLUGIN_TIMEOUT_MS,
+      mapReadyTimeoutMs,
+    })
     if (forceFailure) {
       setLoading(false)
       setMapError('Simulated development style failure')
       setStatus(copy.en.mapFailed)
+      setInitializationEvidence((current) => ({ ...current, stage: 'failed', failureStage: 'style' }))
       return () => controller.abort()
     }
 
     let disposed = false
+    let attemptFailed = false
+    let attemptMap: MapLibreMap | null = null
+    let mapReadyTimer: number | null = null
     let detachInteractionListeners = () => {}
     loadStartRef.current = performance.now()
 
+    const removeAttemptMap = () => {
+      if (!attemptMap) return
+      if (mapRef.current === attemptMap) mapRef.current = null
+      attemptMap.remove()
+      attemptMap = null
+      mapInstanceCountRef.current = 0
+    }
+
+    const failInitialization = (error: unknown, fallbackStage: InitializationError['stage']) => {
+      if (disposed || attemptFailed) return
+      attemptFailed = true
+      if (mapReadyTimer !== null) window.clearTimeout(mapReadyTimer)
+      controller.abort()
+      detachInteractionListeners()
+      removeAttemptMap()
+      const failure = error instanceof InitializationError
+        ? error
+        : new InitializationError(
+            fallbackStage,
+            error instanceof Error ? error.message : 'Map initialization failed',
+          )
+      setLoading(false)
+      setMapError(failure.message)
+      setStatus(copy[localeRef.current].mapFailed)
+      setInitializationEvidence((current) => ({
+        ...current,
+        stage: 'failed',
+        failureStage: failure.stage,
+      }))
+    }
+
     const initialize = async () => {
       try {
-        maplibregl.setWorkerUrl('/maplibre-gl-worker.mjs')
-        await ensureRtlTextPlugin()
-        if (holdLoadingState) {
-          await new Promise((resolve) => window.setTimeout(resolve, 1800))
-        }
-        const developmentStyle = await fetchDevelopmentStyle(controller.signal)
+        // Let React's development-only Strict Mode probe dispose before any
+        // network or worker work begins. The stable effect starts both
+        // independent resources together on the next task.
+        await abortableDelay(0, controller.signal)
+        if (disposed) return
+        const rtlStartedAt = performance.now()
+        const rtlPromise = abortableTimeout(
+          ensureRtlTextPlugin(),
+          controller.signal,
+          RTL_PLUGIN_TIMEOUT_MS,
+          'rtl',
+          'RTL text support',
+        ).then(() => {
+          setInitializationEvidence((current) => ({
+            ...current,
+            rtlPluginMs: Math.round((performance.now() - rtlStartedAt) * 10) / 10,
+          }))
+        }).catch((error: unknown) => {
+          if (error instanceof InitializationError) {
+            // A timed-out wrapper must not pin the next user-triggered Retry to
+            // the same unresolved application promise. MapLibre keeps its own
+            // plugin status, so the next attempt can observe a late success.
+            rtlTextPluginPromise = null
+            throw error
+          }
+          if (controller.signal.aborted) throw error
+          throw new InitializationError('rtl', error instanceof Error ? error.message : 'RTL text support failed')
+        })
+
+        const styleStartedAt = performance.now()
+        const stylePromise = fetchDevelopmentStyle(
+          controller.signal,
+          styleTimeoutMs,
+          simulatedTimeout === 'style',
+        ).then((style) => {
+          setInitializationEvidence((current) => ({
+            ...current,
+            styleFetchMs: Math.round((performance.now() - styleStartedAt) * 10) / 10,
+          }))
+          return style
+        }).catch((error: unknown) => {
+          if (error instanceof InitializationError || controller.signal.aborted) throw error
+          throw new InitializationError('style', error instanceof Error ? error.message : 'Liberty style failed')
+        })
+
+        const resourcesPromise = Promise.all([rtlPromise, stylePromise])
+        const [, developmentStyle] = holdLoadingState
+          ? (await Promise.all([
+              resourcesPromise,
+              abortableDelay(1_800, controller.signal),
+            ]))[0]
+          : await resourcesPromise
         if (disposed || !mapNodeRef.current) return
 
+        setInitializationEvidence((current) => ({ ...current, stage: 'constructing' }))
         const camera = getStoredCamera()
         const map = new maplibregl.Map({
           container: mapNodeRef.current,
@@ -933,7 +1353,20 @@ export function SpendscapeGlobe() {
           localIdeographFontFamily: 'system-ui, sans-serif',
         })
 
+        attemptMap = map
         mapRef.current = map
+        mapInstanceCountRef.current = 1
+        mapConstructionCountRef.current += 1
+        setInitializationEvidence((current) => ({
+          ...current,
+          mapConstructedMs: Math.round((performance.now() - loadStartRef.current) * 10) / 10,
+        }))
+        mapReadyTimer = window.setTimeout(() => {
+          failInitialization(
+            new InitializationError('map-ready', `Map resources timed out after ${mapReadyTimeoutMs}ms`),
+            'map-ready',
+          )
+        }, mapReadyTimeoutMs)
         map.scrollZoom.enable()
         map.cooperativeGestures.disable()
         map.touchZoomRotate.enable()
@@ -1012,7 +1445,11 @@ export function SpendscapeGlobe() {
         }
 
         map.on('load', async () => {
-          if (disposed) return
+          if (disposed || attemptFailed || simulatedTimeout === 'ready') return
+          if (mapReadyTimer !== null) {
+            window.clearTimeout(mapReadyTimer)
+            mapReadyTimer = null
+          }
           mapReadyRef.current = true
           map.addSource(SOURCE_ID, {
             type: 'geojson',
@@ -1199,13 +1636,11 @@ export function SpendscapeGlobe() {
             await canonicalSource.setData(filteredRef.current)
             setSourceUpdates((current) => current + 1)
           } catch (error) {
-            if (disposed) return
-            setLoading(false)
-            setMapError(error instanceof Error ? error.message : 'Canonical place source failed')
-            setStatus(copy[localeRef.current].mapFailed)
+            if (disposed || attemptFailed) return
+            failInitialization(error, 'map')
             return
           }
-          if (disposed) return
+          if (disposed || attemptFailed) return
           map.triggerRepaint()
 
           map.on('click', CLUSTER_LAYER, async (event) => {
@@ -1420,16 +1855,20 @@ export function SpendscapeGlobe() {
 
           const loadMs = Math.round((performance.now() - loadStartRef.current) * 10) / 10
           setPerformanceEvidence((current) => ({ ...current, loadMs }))
+          setInitializationEvidence((current) => ({
+            ...current,
+            stage: 'map-ready',
+            mapReadyMs: loadMs,
+            failureStage: null,
+          }))
           setLoading(false)
           setMapError(null)
-          setStatus(copy.en.ready)
+          setStatus(copy[localeRef.current].ready)
         })
 
       } catch (error) {
         if (controller.signal.aborted || disposed) return
-        setLoading(false)
-        setMapError(error instanceof Error ? error.message : 'Map initialization failed')
-        setStatus(copy.en.mapFailed)
+        failInitialization(error, 'map')
       }
     }
 
@@ -1438,16 +1877,16 @@ export function SpendscapeGlobe() {
     return () => {
       disposed = true
       controller.abort()
+      if (mapReadyTimer !== null) window.clearTimeout(mapReadyTimer)
       clearSpinTimer()
       detachInteractionListeners()
       if (actionTimerRef.current !== null) window.clearTimeout(actionTimerRef.current)
       mapReadyRef.current = false
       programmaticCameraRef.current = false
-      mapRef.current?.remove()
-      mapRef.current = null
+      removeAttemptMap()
       delete window.__SPENDSCAPE_QA_ACTIONS__
     }
-  }, [clearSpinTimer, queueSpin, selectPlace, stopSpin, updateSelectedFilter])
+  }, [clearSpinTimer, mapAttempt, queueSpin, selectPlace, stopSpin, updateSelectedFilter])
 
   useEffect(() => {
     const canonicalSource = mapRef.current?.getSource(SOURCE_ID) as GeoJSONSource | undefined
@@ -1487,6 +1926,13 @@ export function SpendscapeGlobe() {
       query,
       selectedPlaceId,
       selectedPurchaseId,
+      captureOpen: captureStep !== null,
+      captureStep,
+      sessionPurchaseCount: sessionCaptureRecords.length,
+      combinedPurchaseCount: allPurchases.length,
+      mapInstanceCount: mapInstanceCountRef.current,
+      mapConstructionCount: mapConstructionCountRef.current,
+      initialization: initializationEvidence,
       visiblePurchaseCount: visiblePurchases.length,
       visibleBaseTotalIls: visibleSummary.totalBaseAmountIls,
       visiblePinFeatures: visibleData.features.length,
@@ -1558,7 +2004,7 @@ export function SpendscapeGlobe() {
         topPhysicalPlaceId: visibleAnalytics.topPhysicalPlaces[0]?.placeId ?? null,
       },
     }
-  }, [autoSpin, inputEvidence, loading, locale, mapError, mode, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
+  }, [allPurchases.length, autoSpin, captureStep, initializationEvidence, inputEvidence, loading, locale, mapError, mode, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sessionCaptureRecords.length, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
 
   const runCameraAction = useCallback((name: string, action: (map: MapLibreMap) => void) => {
     const map = mapRef.current
@@ -1600,6 +2046,22 @@ export function SpendscapeGlobe() {
     })
   }, [runCameraAction, visibleData.features])
 
+  const fitPlaceIds = useCallback((placeIds: string[]) => {
+    const places = placeIds.map(placeForId).filter((place): place is NonNullable<typeof place> => Boolean(place))
+    if (places.length === 0) return
+    runCameraAction('search-city-fit', (map) => {
+      const bounds = new maplibregl.LngLatBounds()
+      for (const place of places) bounds.extend(place.coordinates)
+      map.fitBounds(bounds, {
+        padding: window.innerWidth <= 760 ? 58 : 150,
+        speed: 1.5,
+        maxZoom: 11,
+        ...(reducedMotionRef.current ? { duration: 0 } : {}),
+        essential: false,
+      })
+    })
+  }, [runCameraAction])
+
   const resetGlobe = useCallback(() => {
     setSelectedPlaceId(null)
     setSelectedPurchaseId(null)
@@ -1615,6 +2077,65 @@ export function SpendscapeGlobe() {
 
   const clearFilters = () => setQuery(defaultPurchaseQuery)
 
+  const openCapture = () => {
+    captureDismissedRef.current = false
+    captureResumeSpinRef.current = spinEnabledRef.current
+    spinEnabledRef.current = false
+    clearSpinTimer()
+    mapRef.current?.stop()
+    const current: NavigationSnapshot = isNavigationSnapshot(window.history.state)
+      ? window.history.state
+      : {
+          marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
+        }
+    const snapshot: NavigationSnapshot = {
+      ...current,
+      captureStep: 'scanner',
+      captureDepth: 1,
+    }
+    window.history.pushState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+  }
+
+  const navigateCapture = useCallback((nextStep: CaptureStep, mode: 'push' | 'replace' = 'push') => {
+    const snapshot: NavigationSnapshot = {
+      marker: 'spendscape-1d1',
+      surface,
+      selectedPlaceId,
+      selectedPurchaseId,
+      captureStep: nextStep,
+      captureDepth: mode === 'push' ? Math.max(1, captureDepth + 1) : Math.max(1, captureDepth),
+    }
+    if (mode === 'push') window.history.pushState(snapshot, '', navigationHash(snapshot))
+    else window.history.replaceState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+  }, [applyNavigation, captureDepth, selectedPlaceId, selectedPurchaseId, surface])
+
+  const closeCapture = useCallback(() => {
+    if (!captureStep) return
+    pendingCaptureExitRef.current = null
+    captureDismissedRef.current = true
+    const snapshot: NavigationSnapshot = {
+      marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
+      captureStep: null, captureDepth: 0,
+    }
+    window.history.replaceState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+    resumeAfterCapture()
+  }, [applyNavigation, captureStep, resumeAfterCapture, selectedPlaceId, selectedPurchaseId, surface])
+
+  const exitCaptureThen = useCallback((action: () => void) => {
+    captureDismissedRef.current = true
+    const snapshot: NavigationSnapshot = {
+      marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
+      captureStep: null, captureDepth: 0,
+    }
+    window.history.replaceState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+    resumeAfterCapture()
+    window.setTimeout(action, 0)
+  }, [applyNavigation, resumeAfterCapture, selectedPlaceId, selectedPurchaseId, surface])
+
   const openSurface = (nextSurface: ProductSurface) => {
     stopSpin(false)
     pushNavigation({
@@ -1625,7 +2146,7 @@ export function SpendscapeGlobe() {
   }
 
   const openPurchase = (purchaseId: string) => {
-    const purchase = purchaseForId(purchaseId)
+    const purchase = allPurchases.find((candidate) => candidate.id === purchaseId)
     if (!purchase) return
     stopSpin(false)
     if (purchase.placeId) selectPlace(purchase.placeId, true, false)
@@ -1636,6 +2157,65 @@ export function SpendscapeGlobe() {
     })
   }
 
+  const selectSearchResult = (result: CanonicalSearchResult) => {
+    setSearchOpen(false)
+    setActiveSearchIndex(-1)
+    searchInputRef.current?.blur()
+
+    if (result.kind === 'place') {
+      placeReturnFocusRef.current = searchInputRef.current
+      updateQuery({ search: localized(result.place.name, locale) })
+      selectPlace(result.place.id)
+      return
+    }
+
+    if (result.kind === 'city') {
+      stopSpin(false)
+      updateQuery({ search: localized(result.city, locale) })
+      pushNavigation({ surface: 'globe', selectedPlaceId: null, selectedPurchaseId: null })
+      updateSelectedFilter(null)
+      fitPlaceIds(result.placeIds)
+      setStatus(`${localized(result.city, locale)} · ${result.placeCount} ${t.placesSummary}`)
+      return
+    }
+
+    openPurchase(result.purchase.id)
+  }
+
+  const handleSearchKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      if (!showSearchResults) return
+      event.preventDefault()
+      event.stopPropagation()
+      setSearchOpen(false)
+      setActiveSearchIndex(-1)
+      return
+    }
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp' && event.key !== 'Enter') return
+    if (!showSearchResults && event.key !== 'Enter') setSearchOpen(true)
+    if (searchResults.length === 0) return
+    if (event.key === 'Enter') {
+      if (activeSearchIndex < 0) return
+      event.preventDefault()
+      selectSearchResult(searchResults[activeSearchIndex])
+      return
+    }
+    event.preventDefault()
+    setActiveSearchIndex((current) => {
+      if (event.key === 'ArrowDown') return current >= searchResults.length - 1 ? 0 : current + 1
+      return current <= 0 ? searchResults.length - 1 : current - 1
+    })
+  }
+
+  const resetSessionCaptures = () => {
+    setSessionCaptureRecords([])
+    if (selectedPurchaseId?.startsWith('session_purchase_')) {
+      setSelectedPurchaseId(null)
+      setSelectedPlaceId(null)
+    }
+    setStatus(locale === 'he' ? 'תוספות ההדגמה אופסו' : 'Demo additions reset')
+  }
+
   const setTimelineMonth = (month: string | null) => {
     stopSpin(false)
     updateQuery({ timelineMonth: month, dateRange: 'all' })
@@ -1644,8 +2224,8 @@ export function SpendscapeGlobe() {
   const retryMap = () => {
     const url = new URL(window.location.href)
     url.searchParams.delete('mapFailure')
-    window.history.replaceState({}, '', url)
-    window.location.reload()
+    window.history.replaceState(window.history.state, '', url)
+    setMapAttempt((current) => current + 1)
   }
 
   return (
@@ -1663,6 +2243,8 @@ export function SpendscapeGlobe() {
       data-surface={surface}
       data-visible-purchases={visiblePurchases.length}
       data-visible-pins={visibleData.features.length}
+      data-capture-open={captureStep !== null}
+      data-session-purchases={sessionCaptureRecords.length}
     >
       <div ref={mapNodeRef} className={styles.map} data-testid="map-canvas" />
       <div className={styles.vignette} aria-hidden="true" />
@@ -1686,6 +2268,14 @@ export function SpendscapeGlobe() {
         </nav>
 
         <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.addPurchaseButton}
+            onClick={openCapture}
+            data-testid="capture-open-desktop"
+          >
+            <span aria-hidden="true">＋</span>{t.addPurchase}
+          </button>
           <span className={styles.syntheticBadge}>{t.synthetic}</span>
           <button
             type="button"
@@ -1709,19 +2299,88 @@ export function SpendscapeGlobe() {
         </p>
       </section>
 
-      <section className={styles.queryDock} aria-label="Globe query controls">
-        <label className={styles.searchField}>
-          <span className={styles.srOnly}>{t.search}</span>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-          <input
-            type="search"
-            value={query.search}
-            onChange={(event) => { stopSpin(false); updateQuery({ search: event.target.value }) }}
-            placeholder={t.search}
-            aria-label={t.search}
-            data-testid="shared-search"
-          />
-        </label>
+      <section ref={queryDockRef} className={styles.queryDock} aria-label="Globe query controls" data-testid="query-dock">
+        <div ref={searchRootRef} className={styles.searchShell}>
+          <label className={styles.searchField}>
+            <span className={styles.srOnly}>{t.search}</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+            <input
+              ref={searchInputRef}
+              type="search"
+              role="combobox"
+              value={query.search}
+              onChange={(event) => {
+                stopSpin(false)
+                const nextSearch = event.target.value
+                updateQuery({ search: nextSearch })
+                setSearchOpen(nextSearch.trim().length > 0)
+              }}
+              onFocus={() => {
+                if (searchHasValue && !suppressSearchFocusOpenRef.current) setSearchOpen(true)
+              }}
+              onKeyDown={handleSearchKeyDown}
+              placeholder={t.searchPlaceholder}
+              aria-label={t.search}
+              aria-autocomplete="list"
+              aria-expanded={showSearchResults}
+              aria-controls="canonical-search-results"
+              aria-activedescendant={activeSearchIndex >= 0 ? `canonical-search-option-${activeSearchIndex}` : undefined}
+              data-testid="shared-search"
+            />
+          </label>
+          {showSearchResults && (
+            <div
+              id="canonical-search-results"
+              className={styles.searchResults}
+              role="listbox"
+              aria-label={t.searchScope}
+              data-testid="search-results"
+            >
+              <header>
+                <strong>{t.searchScope}</strong>
+                <span>{searchResults.length} {t.results}</span>
+              </header>
+              {searchResults.length === 0 ? (
+                <p className={styles.searchEmpty} role="status">{t.noSearchResults}</p>
+              ) : searchResults.map((result, index) => {
+                const primary = result.kind === 'place'
+                  ? localized(result.place.name, locale)
+                  : result.kind === 'city'
+                    ? localized(result.city, locale)
+                    : localized(result.merchant.name, locale)
+                const secondary = result.kind === 'place'
+                  ? `${localized(result.place.branch, locale)} · ${localized(result.place.city, locale)} · ${result.purchaseCount} ${t.visits}`
+                  : result.kind === 'city'
+                    ? `${result.placeCount} ${t.placesSummary} · ${result.physicalPurchaseCount} ${t.physicalPurchaseMatches}`
+                    : result.matchedItems.length > 0
+                      ? `${localized(result.matchedItems[0], locale)} · ${formatDate(result.purchase.timestamp, locale)}`
+                      : `${result.purchase.channel === 'online' ? t.onlineNoPin : t.unresolvedNoPin} · ${formatDate(result.purchase.timestamp, locale)}`
+                return (
+                  <button
+                    key={result.id}
+                    id={`canonical-search-option-${index}`}
+                    type="button"
+                    role="option"
+                    aria-selected={activeSearchIndex === index}
+                    className={styles.searchResult}
+                    data-result-kind={result.kind}
+                    data-result-id={result.id}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => setActiveSearchIndex(index)}
+                    onClick={() => selectSearchResult(result)}
+                  >
+                    <span className={styles.searchResultIcon} data-kind={result.kind} aria-hidden="true" />
+                    <span className={styles.searchResultCopy}>
+                      <strong>{primary}</strong>
+                      <small>{secondary}</small>
+                    </span>
+                    <em>{result.kind === 'place' ? t.searchPlace : result.kind === 'city' ? t.searchCity : t.searchPurchase}</em>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
         <div className={`${styles.categories} ${styles.desktopCategories}`} role="group" aria-label="Categories">
           {(Object.keys(categoryLabels) as CategoryFilter[]).map((item) => (
             <button
@@ -1756,7 +2415,7 @@ export function SpendscapeGlobe() {
       )}
 
       {(!compactViewport || mobileToolsOpen) && (
-      <section className={styles.controlDock} id="globe-controls" aria-label="Globe controls" data-testid="globe-tools">
+      <section ref={controlDockRef} className={styles.controlDock} id="globe-controls" aria-label="Globe controls" data-testid="globe-tools">
         <div className={styles.mobileControlsHeader}>
           <span>{t.tools}</span>
           <button type="button" onClick={() => setMobileToolsOpen(false)} aria-label={t.closeTools}>
@@ -1859,7 +2518,7 @@ export function SpendscapeGlobe() {
         <span data-active={autoSpin} /><span className={styles.statusText}>{status}</span>
       </div>
 
-      {loading && (
+      {loading && surface === 'globe' && !captureStep && (
         <div className={styles.loadingState} role="status" data-testid="map-loading">
           <div className={styles.loadingGlobe} aria-hidden="true"><span /></div>
           <p className={styles.eyebrow}>{t.synthetic}</p>
@@ -1869,7 +2528,7 @@ export function SpendscapeGlobe() {
         </div>
       )}
 
-      {mapError && (
+      {mapError && surface === 'globe' && !captureStep && (
         <div className={styles.failureState} role="alert" data-testid="map-failure">
           <span className={styles.failureIcon} aria-hidden="true">!</span>
           <p className={styles.eyebrow}>{t.checkpoint}</p>
@@ -1890,7 +2549,12 @@ export function SpendscapeGlobe() {
       )}
 
       {selectedFeature && selectedPlace && !selectedPurchase && surface === 'globe' && (
-        <aside className={styles.placePanel} aria-labelledby="place-title" data-testid="place-panel">
+        <aside
+          className={styles.placePanel}
+          style={placePanelStyle}
+          aria-labelledby="place-title"
+          data-testid="place-panel"
+        >
           <button
             type="button"
             className={styles.closePanel}
@@ -1899,28 +2563,30 @@ export function SpendscapeGlobe() {
           >
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
           </button>
-          <span className={styles.panelCategory}>{t[selectedFeature.properties.category]}</span>
-          <h2 id="place-title">{localized(selectedPlace.name, locale)}</h2>
-          <p className={styles.panelLocation}>
-            {localized(selectedPlace.branch, locale)} · {localized(selectedPlace.city, locale)}
-          </p>
-          <div className={styles.panelStats}>
-            <span><strong>{selectedFeature.properties.visitCount}</strong>{t.visits}</span>
-            <span><strong>{formatMoney(selectedFeature.properties.totalBaseAmountIls, locale)}</strong>{t.normalized}</span>
+          <div className={styles.placePanelScroll} data-testid="place-panel-scroll">
+            <span className={styles.panelCategory}>{t[selectedFeature.properties.category]}</span>
+            <h2 id="place-title">{localized(selectedPlace.name, locale)}</h2>
+            <p className={styles.panelLocation}>
+              {localized(selectedPlace.branch, locale)} · {localized(selectedPlace.city, locale)}
+            </p>
+            <div className={styles.panelStats}>
+              <span><strong>{selectedFeature.properties.visitCount}</strong>{t.visits}</span>
+              <span><strong>{formatMoney(selectedFeature.properties.totalBaseAmountIls, locale)}</strong>{t.normalized}</span>
+            </div>
+            <div className={styles.panelLatest}>
+              <span>{t.latestVisit}</span>
+              <strong>{formatDate(selectedFeature.properties.latestTimestamp, locale)}</strong>
+            </div>
+            <div className={styles.placePurchaseList}>
+              {selectedPlacePurchases.map((purchase) => (
+                <button type="button" key={purchase.id} onClick={() => openPurchase(purchase.id)}>
+                  <span>{formatDate(purchase.timestamp, locale)}</span>
+                  <strong>{formatMoney(purchase.originalAmount, locale, purchase.originalCurrency)}</strong>
+                </button>
+              ))}
+            </div>
+            <p className={styles.panelTruth}>{t.synthetic} · {globeEvidence.recurringPlacePurchaseCount}:1 {locale === 'en' ? 'pin rule verified in fixtures' : 'כלל הסיכה אומת בנתונים'}</p>
           </div>
-          <div className={styles.panelLatest}>
-            <span>{t.latestVisit}</span>
-            <strong>{formatDate(selectedFeature.properties.latestTimestamp, locale)}</strong>
-          </div>
-          <div className={styles.placePurchaseList}>
-            {selectedPlacePurchases.slice(0, 4).map((purchase) => (
-              <button type="button" key={purchase.id} onClick={() => openPurchase(purchase.id)}>
-                <span>{formatDate(purchase.timestamp, locale)}</span>
-                <strong>{formatMoney(purchase.originalAmount, locale, purchase.originalCurrency)}</strong>
-              </button>
-            ))}
-          </div>
-          <p className={styles.panelTruth}>{t.synthetic} · {globeEvidence.recurringPlacePurchaseCount}:1 {locale === 'en' ? 'pin rule verified in fixtures' : 'כלל הסיכה אומת בנתונים'}</p>
         </aside>
       )}
 
@@ -2107,10 +2773,42 @@ export function SpendscapeGlobe() {
         </>
       )}
 
+      {captureStep && (
+        <CaptureExperience
+          locale={locale}
+          step={captureStep}
+          reducedMotion={reducedMotion}
+          sessionRecords={sessionCaptureRecords}
+          onNavigate={navigateCapture}
+          onBack={() => window.history.back()}
+          onClose={closeCapture}
+          onConfirm={(record) => {
+            setSessionCaptureRecords((current) => [...current, record])
+            setStatus(locale === 'he' ? 'הרכישת ההדגמה נוספה' : 'Demo purchase added')
+          }}
+          onResetSession={resetSessionCaptures}
+          onViewPurchase={(purchaseId) => exitCaptureThen(() => openPurchase(purchaseId))}
+          onShowOnGlobe={(placeId) => exitCaptureThen(() => selectPlace(placeId))}
+        />
+      )}
+
       <nav className={styles.mobileNav} aria-label="Mobile primary">
-        <button type="button" data-active={surface === 'globe'} onClick={() => openSurface('globe')}><i className={styles.globeIcon} />{t.navGlobe}</button>
-        <button type="button" data-active={surface === 'purchases'} onClick={() => openSurface('purchases')}><i className={styles.purchaseIcon} />{t.navPurchases}</button>
-        <button type="button" data-active={surface === 'stats'} onClick={() => openSurface('stats')}><i className={styles.statsIcon} />{t.mobileStats}</button>
+        <button type="button" data-active={surface === 'globe'} aria-current={surface === 'globe' ? 'page' : undefined} onClick={() => openSurface('globe')}>
+          <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.5 4 5.5 4 9s-1.4 6.5-4 9c-2.6-2.5-4-5.5-4-9s1.4-6.5 4-9Z"/></svg></i>
+          <span>{t.navGlobe}</span>
+        </button>
+        <button type="button" data-active={surface === 'purchases'} aria-current={surface === 'purchases' ? 'page' : undefined} onClick={() => openSurface('purchases')}>
+          <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4.5"/></svg></i>
+          <span>{t.navPurchases}</span>
+        </button>
+        <button type="button" className={styles.mobileCaptureButton} data-active={Boolean(captureStep)} aria-pressed={Boolean(captureStep)} onClick={openCapture} data-testid="capture-open-mobile">
+          <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg></i>
+          <span>{t.capture}</span>
+        </button>
+        <button type="button" data-active={surface === 'stats'} aria-current={surface === 'stats' ? 'page' : undefined} onClick={() => openSurface('stats')}>
+          <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19v-6M12 19V5M19 19v-9M3 19h18"/></svg></i>
+          <span>{t.mobileStats}</span>
+        </button>
       </nav>
     </main>
   )

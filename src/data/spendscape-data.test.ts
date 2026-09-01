@@ -4,6 +4,7 @@ import {
   buildPlaceFeatureCollection,
   canonicalSpendscapeData,
   defaultPurchaseQuery,
+  deriveCanonicalSearchResults,
   derivedPurchaseSummary,
   filterPurchases,
   globeEvidenceRecords,
@@ -78,6 +79,7 @@ describe('Spendscape canonical synthetic data', () => {
     const retail = filterPurchases({ ...defaultPurchaseQuery, category: 'retail' })
     const august = filterPurchases({ ...defaultPurchaseQuery, timelineMonth: '2026-08' })
     const recent = filterPurchases({ ...defaultPurchaseQuery, dateRange: '30d' })
+    const normalizedCity = filterPurchases({ ...defaultPurchaseQuery, search: '  TEL   AVIV  ' })
 
     expect(itemSearch.map((purchase) => purchase.id)).toEqual(['purchase_shuk_01'])
     expect(yen).toHaveLength(2)
@@ -86,7 +88,39 @@ describe('Spendscape canonical synthetic data', () => {
     expect(retail.every((purchase) => purchase.category === 'retail')).toBe(true)
     expect(august).toHaveLength(10)
     expect(recent.every((purchase) => purchase.timestamp >= '2026-07-31')).toBe(true)
+    expect(normalizedCity).toHaveLength(20)
     expect(derivedPurchaseSummary(onlineOnly()).pinCount).toBe(0)
+  })
+
+  it('derives deduplicated bilingual place, city, item, and online search results', () => {
+    const telAviv = deriveCanonicalSearchResults('  Tel   Aviv ')
+    const city = telAviv.find((result) => result.kind === 'city' && result.city.en === 'Tel Aviv')
+    expect(city).toMatchObject({
+      kind: 'city',
+      placeCount: 2,
+      physicalPurchaseCount: 20,
+      placeIds: ['place_shuk_bograshov', 'place_nomi_dizengoff'],
+    })
+
+    const shuk = deriveCanonicalSearchResults('shuk express')
+    expect(shuk.filter((result) => result.kind === 'place')).toEqual([
+      expect.objectContaining({ kind: 'place', purchaseCount: 14 }),
+    ])
+
+    const hebrew = deriveCanonicalSearchResults('לחם מחמצת')
+    expect(hebrew).toEqual([
+      expect.objectContaining({ kind: 'purchase', id: 'purchase:purchase_shuk_01' }),
+    ])
+
+    const online = deriveCanonicalSearchResults('Serein Online')
+    expect(online.some((result) => result.kind === 'place')).toBe(false)
+    expect(online).toEqual([
+      expect.objectContaining({
+        kind: 'purchase',
+        id: 'purchase:purchase_online_01',
+        purchase: expect.objectContaining({ placeId: null, channel: 'online' }),
+      }),
+    ])
   })
 
   it('synchronizes selection with the shared filtered purchase set', () => {

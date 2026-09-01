@@ -9,13 +9,17 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:mobile": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
+    "start:mobile": "next start -H 0.0.0.0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "qa:globe": "playwright test qa/spendscape-globe.spec.ts",
     "qa:experience": "playwright test qa/spendscape-slice-1d1.spec.ts",
-    "qa:analytics": "playwright test qa/spendscape-analytics.spec.ts"
+    "qa:analytics": "playwright test qa/spendscape-analytics.spec.ts",
+    "qa:capture": "playwright test qa/spendscape-capture.spec.ts",
+    "qa:load": "playwright test qa/spendscape-load-performance.spec.ts"
   },
   "dependencies": {
     "@mapbox/mapbox-gl-rtl-text": "0.4.0",

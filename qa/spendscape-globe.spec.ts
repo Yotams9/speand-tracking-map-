@@ -492,7 +492,7 @@ test('records desktop globe behavior, interruption, renderer, source, and persis
   await expect.poll(async () => (await qaEvidence(page)).mapStyle.heatmapVisibility).toBe('none')
 
   const updatesBeforeFilter = (await qaEvidence(page)).sourceUpdates
-  const search = page.getByRole('searchbox', { name: 'Search places or cities' })
+  const search = page.getByRole('combobox', { name: 'Search places or cities' })
   await search.fill('Tel Aviv')
   await expect.poll(async () => (await qaEvidence(page)).sourceDatasetFeatures).toBe(2)
   await search.fill('')
@@ -658,7 +658,9 @@ test('proves top-layer close-zoom pins and visible heatmap density across suppor
   for (let index = 0; index < 3; index += 1) {
     await pinsButton.click()
     await expect.poll(async () => (await qaEvidence(page)).mapStyle.pinVisibility).toBe('visible')
-    expect(await renderedPlaceIdsAt(page, 'place_shuk_bograshov')).toContain('place_shuk_bograshov')
+    await expect.poll(async () => (
+      await renderedPlaceIdsAt(page, 'place_shuk_bograshov')
+    ).includes('place_shuk_bograshov')).toBe(true)
     await heatmapButton.click()
     await expect.poll(async () => (await qaEvidence(page)).mapStyle.heatmapVisibility).toBe('visible')
   }
@@ -678,7 +680,9 @@ test('proves top-layer close-zoom pins and visible heatmap density across suppor
   await expect.poll(async () => (await qaEvidence(page)).renderedHeatFeatures).toBeGreaterThan(0)
   await page.screenshot({ path: path.join(artifactDir, 'desktop-close-zoom-max-heatmap.png'), fullPage: true })
   await pinsButton.click()
-  expect(await renderedPlaceIdsAt(page, 'place_shuk_bograshov')).toContain('place_shuk_bograshov')
+  await expect.poll(async () => (
+    await renderedPlaceIdsAt(page, 'place_shuk_bograshov')
+  ).includes('place_shuk_bograshov')).toBe(true)
 
   await page.getByRole('button', { name: 'Switch to Hebrew' }).click()
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
@@ -763,11 +767,11 @@ test('records mobile touch, disclosure, RTL, keyboard, empty, loading, failure, 
   await mobilePage.waitForTimeout(80)
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchStart',
-    touchPoints: [{ x: box.x + box.width * 0.48, y: box.y + box.height * 0.44 }],
+    touchPoints: [{ x: box.x + box.width * 0.48, y: box.y + box.height * 0.2 }],
   })
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchMove',
-    touchPoints: [{ x: box.x + box.width * 0.63, y: box.y + box.height * 0.48 }],
+    touchPoints: [{ x: box.x + box.width * 0.63, y: box.y + box.height * 0.24 }],
   })
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
   await mobilePage.waitForTimeout(450)
@@ -834,7 +838,7 @@ test('records mobile touch, disclosure, RTL, keyboard, empty, loading, failure, 
   await mobilePage.waitForTimeout(500)
   expect((await qaEvidence(mobilePage)).camera.zoom).toBeLessThan(zoomAfterKeyboardPlus)
 
-  const search = mobilePage.getByRole('searchbox', { name: 'Search places or cities' })
+  const search = mobilePage.getByRole('combobox', { name: 'Search places or cities' })
   await search.fill('place-that-does-not-exist')
   await expect(mobilePage.getByTestId('map-empty')).toBeVisible()
   await mobilePage.screenshot({ path: path.join(artifactDir, 'mobile-empty.png'), fullPage: true })

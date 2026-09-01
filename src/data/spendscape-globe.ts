@@ -203,10 +203,24 @@ interface PurchaseSeriesInput {
   rateToIls: number
 }
 
-function fixedFx(currency: CurrencyCode, rateToBase: number, effectiveAt: string): FxProvenance {
+export function syntheticFx(
+  currency: CurrencyCode,
+  effectiveAt: string,
+  rateToBase?: number,
+): FxProvenance {
+  const fixedRates: Record<CurrencyCode, number> = {
+    ILS: 1,
+    EUR: 4.05,
+    GBP: 4.5,
+    USD: 3.3,
+    JPY: 0.0225,
+    AUD: 2.2,
+    MXN: 0.185,
+    ZAR: 0.193,
+  }
   return {
     baseCurrency: 'ILS',
-    rateToBase,
+    rateToBase: rateToBase ?? fixedRates[currency],
     effectiveAt,
     source: 'synthetic-fixture-rate',
     label: text(
@@ -234,7 +248,7 @@ function purchaseSeries(input: PurchaseSeriesInput): GlobePurchase[] {
       category: place.category,
       originalAmount: input.originalAmount + (index % 3) * 4.5,
       originalCurrency: input.originalCurrency,
-      fx: fixedFx(input.originalCurrency, input.rateToIls, date.toISOString()),
+      fx: syntheticFx(input.originalCurrency, date.toISOString(), input.rateToIls),
       items: [],
       evidenceIds: [`evidence_${id}`],
     }
@@ -294,21 +308,21 @@ const purchaseSeed: GlobePurchase[] = [
     id: 'purchase_online_01', merchantId: 'merchant_serein', timestamp: '2026-08-23T08:22:00Z',
     channel: 'online', resolution: 'confirmed', placeId: null,
     paymentMode: 'card', category: 'retail', originalAmount: 36, originalCurrency: 'USD',
-    fx: fixedFx('USD', 3.3, '2026-08-23T08:22:00Z'), items: [],
+    fx: syntheticFx('USD', '2026-08-23T08:22:00Z', 3.3), items: [],
     evidenceIds: ['evidence_purchase_online_01'],
   },
   {
     id: 'purchase_online_02', merchantId: 'merchant_cloudfare', timestamp: '2026-07-30T18:12:00Z',
     channel: 'online', resolution: 'confirmed', placeId: null,
     paymentMode: 'card', category: 'travel', originalAmount: 52, originalCurrency: 'EUR',
-    fx: fixedFx('EUR', 4.05, '2026-07-30T18:12:00Z'), items: [],
+    fx: syntheticFx('EUR', '2026-07-30T18:12:00Z', 4.05), items: [],
     evidenceIds: ['evidence_purchase_online_02'],
   },
   {
     id: 'purchase_unresolved_01', merchantId: 'merchant_unresolved', timestamp: '2026-08-24T13:24:00Z',
     channel: 'unknown', resolution: 'unresolved', placeId: null,
     paymentMode: 'manual', category: 'retail', originalAmount: 58.9, originalCurrency: 'ILS',
-    fx: fixedFx('ILS', 1, '2026-08-24T13:24:00Z'), items: [],
+    fx: syntheticFx('ILS', '2026-08-24T13:24:00Z', 1), items: [],
     evidenceIds: ['evidence_purchase_unresolved_01'],
   },
 ]
@@ -385,6 +399,33 @@ export interface PurchaseQuery {
   timelineMonth: string | null
 }
 
+export interface PlaceSearchResult {
+  id: string
+  kind: 'place'
+  place: Place
+  purchaseCount: number
+}
+
+export interface CitySearchResult {
+  id: string
+  kind: 'city'
+  city: LocalizedText
+  country: LocalizedText
+  placeIds: string[]
+  placeCount: number
+  physicalPurchaseCount: number
+}
+
+export interface PurchaseSearchResult {
+  id: string
+  kind: 'purchase'
+  purchase: GlobePurchase
+  merchant: Merchant
+  matchedItems: LocalizedText[]
+}
+
+export type CanonicalSearchResult = PlaceSearchResult | CitySearchResult | PurchaseSearchResult
+
 export const defaultPurchaseQuery: PurchaseQuery = {
   search: '',
   category: 'all',
@@ -399,20 +440,150 @@ const fixtureNow = new Date('2026-08-30T00:00:00Z')
 function searchTextForPurchase(purchase: GlobePurchase): string {
   const merchant = merchantForId(purchase.merchantId)
   const place = purchase.placeId ? placeForId(purchase.placeId) : undefined
-  return [
+  return normalizeCanonicalSearch([
     merchant?.name.en, merchant?.name.he, place?.name.en, place?.name.he,
     place?.branch.en, place?.branch.he, place?.city.en, place?.city.he,
     place?.country.en, place?.country.he, purchase.originalCurrency,
     purchase.channel, purchase.paymentMode, purchase.resolution,
     ...purchase.items.flatMap((item) => [item.label.en, item.label.he]),
-  ].filter(Boolean).join(' ').toLocaleLowerCase()
+  ].filter(Boolean).join(' '))
+}
+
+export function normalizeCanonicalSearch(value: string): string {
+  return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+}
+
+function localizedSearchText(...values: Array<LocalizedText | string | undefined>): string {
+  return normalizeCanonicalSearch(values.flatMap((value) => {
+    if (!value) return []
+    return typeof value === 'string' ? [value] : [value.en, value.he]
+  }).join(' '))
+}
+
+function searchRank(searchText: string, term: string): number {
+  if (searchText === term) return 0
+  if (searchText.split(' ').some((token) => token.startsWith(term))) return 1
+  return 2
+}
+
+/**
+ * Derives local-only search suggestions from the same synthetic purchase graph
+ * used by the globe, Purchases, Analytics, filters, and timeline. No result
+ * invents a coordinate, count, or provider-backed place.
+ */
+export function deriveCanonicalSearchResults(
+  value: string,
+  purchases: GlobePurchase[] = globePurchases,
+): CanonicalSearchResult[] {
+  const term = normalizeCanonicalSearch(value)
+  if (!term) return []
+
+  const placePurchases = new Map<string, GlobePurchase[]>()
+  for (const purchase of purchases) {
+    if (purchase.channel !== 'physical' || purchase.resolution !== 'confirmed' || !purchase.placeId) continue
+    const current = placePurchases.get(purchase.placeId) ?? []
+    current.push(purchase)
+    placePurchases.set(purchase.placeId, current)
+  }
+
+  const placeResults = globePlaces
+    .filter((place) => placePurchases.has(place.id))
+    .map((place) => {
+      const merchant = merchantForId(place.merchantId)
+      const searchText = localizedSearchText(
+        place.name,
+        merchant?.name,
+        place.branch,
+        place.city,
+        place.country,
+      )
+      return { place, searchText, rank: searchRank(searchText, term) }
+    })
+    .filter((candidate) => candidate.searchText.includes(term))
+    .sort((left, right) => left.rank - right.rank || left.place.name.en.localeCompare(right.place.name.en))
+    .slice(0, 4)
+    .map(({ place }): PlaceSearchResult => ({
+      id: `place:${place.id}`,
+      kind: 'place',
+      place,
+      purchaseCount: placePurchases.get(place.id)?.length ?? 0,
+    }))
+
+  const cityGroups = new Map<string, {
+    city: LocalizedText
+    country: LocalizedText
+    placeIds: string[]
+    physicalPurchaseCount: number
+  }>()
+  for (const place of globePlaces) {
+    const matchingPurchases = placePurchases.get(place.id)
+    if (!matchingPurchases?.length) continue
+    const key = `${normalizeCanonicalSearch(place.city.en)}:${normalizeCanonicalSearch(place.country.en)}`
+    const group = cityGroups.get(key) ?? {
+      city: place.city,
+      country: place.country,
+      placeIds: [],
+      physicalPurchaseCount: 0,
+    }
+    group.placeIds.push(place.id)
+    group.physicalPurchaseCount += matchingPurchases.length
+    cityGroups.set(key, group)
+  }
+
+  const cityResults = [...cityGroups.entries()]
+    .map(([key, group]) => {
+      const searchText = localizedSearchText(group.city, group.country)
+      return { key, group, searchText, rank: searchRank(searchText, term) }
+    })
+    .filter((candidate) => candidate.searchText.includes(term))
+    .sort((left, right) => left.rank - right.rank || left.group.city.en.localeCompare(right.group.city.en))
+    .slice(0, 3)
+    .map(({ key, group }): CitySearchResult => ({
+      id: `city:${key}`,
+      kind: 'city',
+      city: group.city,
+      country: group.country,
+      placeIds: group.placeIds,
+      placeCount: group.placeIds.length,
+      physicalPurchaseCount: group.physicalPurchaseCount,
+    }))
+
+  const purchaseResults = purchases
+    .map((purchase) => {
+      const merchant = merchantForId(purchase.merchantId)
+      if (!merchant) return null
+      const matchedItems = purchase.items
+        .filter((item) => localizedSearchText(item.label).includes(term))
+        .map((item) => item.label)
+      const merchantMatches = localizedSearchText(merchant.name).includes(term)
+      const usefulPurchaseMatch = matchedItems.length > 0 || (
+        merchantMatches && (purchase.channel !== 'physical' || purchase.resolution !== 'confirmed' || !purchase.placeId)
+      )
+      if (!usefulPurchaseMatch) return null
+      return {
+        result: {
+          id: `purchase:${purchase.id}`,
+          kind: 'purchase' as const,
+          purchase,
+          merchant,
+          matchedItems,
+        },
+        rank: matchedItems.length > 0 ? 0 : 1,
+      }
+    })
+    .filter((candidate): candidate is { result: PurchaseSearchResult; rank: number } => candidate !== null)
+    .sort((left, right) => left.rank - right.rank || right.result.purchase.timestamp.localeCompare(left.result.purchase.timestamp))
+    .slice(0, 3)
+    .map((candidate) => candidate.result)
+
+  return [...placeResults, ...cityResults, ...purchaseResults].slice(0, 8)
 }
 
 export function filterPurchases(
   query: PurchaseQuery,
   purchases: GlobePurchase[] = globePurchases,
 ): GlobePurchase[] {
-  const normalizedSearch = query.search.trim().toLocaleLowerCase()
+  const normalizedSearch = normalizeCanonicalSearch(query.search)
   const rangeDays = query.dateRange === '30d' ? 30 : query.dateRange === '90d' ? 90 : query.dateRange === 'year' ? 365 : null
   const earliest = rangeDays === null ? null : new Date(fixtureNow.getTime() - rangeDays * 86_400_000)
 

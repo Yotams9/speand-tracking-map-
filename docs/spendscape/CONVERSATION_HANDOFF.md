@@ -58,6 +58,10 @@ form. It is a summary of user intent, not a verbatim transcript.
 - Planning/authority checkpoint: `7dfc330`.
 - Next.js migration, globe, PWA, tests, and Slice 1C.1 checkpoint: `cee5418`.
 - Canonical purchase experience through bounded Slice 1D.1: `56670045`.
+- Deterministic Analytics/Stats foundation through bounded Slice 1D.2:
+  `2d7d75e`.
+- Accepted OpenFreeMap Liberty, RTL, trackpad, close-zoom pin, and Heatmap
+  fidelity correction: `b5796c5`.
 - The app now uses Next.js App Router, MapLibre, one canonical synthetic fixture
   graph, Purchases/detail surfaces, and shared globe/search/filter/timeline
   state. Engineering and rendered QA were completed at the approved slice
@@ -72,24 +76,27 @@ globe-first. MapLibre renders one canonical feature per confirmed physical
 place, with clusters and heatmap as renderer layers; online and unresolved
 purchases do not enter the place source. Slice 1D.1 adds coherent physical,
 online, cash/manual, nested receipt, multi-currency, and unresolved synthetic
-stories with synchronized discovery state.
+stories with synchronized discovery state. Slice 1D.2 adds deterministic
+desktop Analytics/mobile Stats derived from that graph. The accepted globe
+correction preserves OpenFreeMap Liberty while completing RTL shaping,
+trackpad/wheel behavior, top-layer close-zoom pins, and visible Heatmap density.
 
-Analytics remains navigation-only. Scanner, capture, Smart Inbox, AI actions,
-Life Replay, privacy/sharing, backend, authentication, real OCR, Gmail,
-provider integrations, factual FX, accounts, deployment, and real data are not
-implemented.
+Scanner/Capture is implemented only as the bounded Slice 1D.3 synthetic
+frontend simulation. Smart Inbox, AI actions, Life Replay, privacy/sharing, backend,
+authentication, real camera/file handling, OCR, Gmail, provider integrations,
+factual FX, accounts, deployment, and real data are not implemented or
+authorized.
 
 ## Current authority
 
 The user approved Phase 1 build/QA and then bounded implementation through
-Slices 1A–1C.1 and 1D.1. Those checkpoints are complete and accepted. The later
-`APPROVE SPENDSCAPE DOCUMENTATION-ONLY TECHNOLOGY STRATEGY INTEGRATION` token
-authorized the reconciled durable documentation and is now consumed.
+Slices 1A–1C.1, 1D.1, 1D.2, the globe-fidelity correction, and bounded Slice
+1D.3. Those checkpoints are complete and accepted. No product or technology
+slice is active.
 
-No product or technology slice is active.
-
-Do not infer Slice 1D.2, Analytics, Scanner, AI, Supabase, Zod, or any provider
-work from earlier Phase 1 approval. Require a new exact bounded instruction.
+Do not infer Smart Inbox, AI, Supabase, Zod, any provider, real ingestion, or a
+later slice from the completed Slice 1D.3 checkpoint. Require a new exact
+bounded authorization.
 
 ## Capability facts at handoff
 
