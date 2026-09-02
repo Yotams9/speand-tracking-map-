@@ -154,6 +154,25 @@
 
 .languageButton:hover { background: rgba(255, 255, 255, 0.13); }
 
+.inboxButton {
+  position: relative;
+  min-block-size: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding-inline: 11px;
+  border: 1px solid rgba(148, 213, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(43, 104, 145, 0.09);
+  color: #c9eefe;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 640;
+}
+.inboxButton:hover { border-color: rgba(148, 213, 255, 0.4); background: rgba(72, 154, 205, 0.14); }
+.inboxButton svg { inline-size: 17px; block-size: 17px; fill: none; stroke: currentColor; stroke-width: 1.55; stroke-linecap: round; stroke-linejoin: round; }
+.inboxButton em { min-inline-size: 18px; block-size: 18px; display: grid; place-items: center; border-radius: 99px; background: #94e5ff; color: #07111a; font-size: 0.61rem; font-style: normal; font-weight: 760; }
+
 .hero {
   position: absolute;
   z-index: 10;
@@ -1457,6 +1476,24 @@
 .provenanceBlock { display: grid; gap: 7px; margin-block: 16px; }
 .provenanceBlock strong { font-size: 0.69rem; font-weight: 570; line-height: 1.45; }
 .viewPlaceButton { inline-size: 100%; }
+.reviewMatchButton {
+  inline-size: 100%;
+  min-block-size: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-block-end: 8px;
+  border: 1px solid rgba(117, 218, 255, 0.32);
+  border-radius: 10px;
+  background: rgba(68, 164, 220, 0.1);
+  color: #a8e9ff;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 680;
+}
+.reviewMatchButton span { inline-size: 20px; block-size: 20px; display: grid; place-items: center; border: 1px solid rgba(168, 233, 255, 0.45); border-radius: 50%; font-size: 0.65rem; }
+.reviewMatchButton:hover { border-color: rgba(117, 218, 255, 0.56); background: rgba(68, 164, 220, 0.17); }
 
 .experienceScrim {
   position: absolute;
@@ -1610,6 +1647,9 @@
 
 @media (max-width: 760px) {
   .addPurchaseButton { display: none; }
+  .inboxButton { inline-size: 40px; block-size: 40px; min-block-size: 40px; justify-content: center; padding: 0; }
+  .inboxButton span { display: none; }
+  .inboxButton em { position: absolute; inset-block-start: -4px; inset-inline-end: -4px; min-inline-size: 17px; block-size: 17px; box-shadow: 0 0 0 3px #070a0f; }
   .mobileNav { grid-template-columns: repeat(4, minmax(0, 1fr)); padding-inline: calc(8px + var(--safe-left)) calc(8px + var(--safe-right)); }
   .mobileNav > .mobileCaptureButton {
     min-block-size: 64px;

@@ -81,6 +81,20 @@ export interface PurchaseEvidence {
   synthetic: true
 }
 
+export interface SmartInboxCandidate {
+  placeId: string
+  context: LocalizedText
+}
+
+export interface SmartInboxCase {
+  id: string
+  purchaseId: string
+  material: true
+  question: LocalizedText
+  rationale: LocalizedText
+  candidates: SmartInboxCandidate[]
+}
+
 export interface PlaceFeatureProperties {
   placeId: string
   merchantId: string
@@ -355,6 +369,34 @@ export const globePurchases: GlobePurchase[] = purchaseSeed.map((purchase) => ({
   paymentMode: purchase.id === 'purchase_rimon_01' ? 'cash' : purchase.paymentMode,
   items: nestedItemsByPurchaseId[purchase.id] ?? purchase.items,
 }))
+
+/**
+ * The only Phase 1 Smart Inbox case. It references the existing unresolved
+ * purchase and existing canonical places; it carries no provider score,
+ * location claim, or newly invented purchase fact.
+ */
+export const smartInboxCases: SmartInboxCase[] = [
+  {
+    id: 'inbox_case_unresolved_01',
+    purchaseId: 'purchase_unresolved_01',
+    material: true,
+    question: text('Which place should own this purchase?', 'לאיזה מקום שייכת הרכישה הזו?'),
+    rationale: text(
+      'The manual record has an amount and date, but no confirmed merchant or place. Your choice changes place history and its single canonical pin.',
+      'ברשומה הידנית יש סכום ותאריך, אך אין בית עסק או מקום מאומת. הבחירה תשנה את היסטוריית המקום ואת הסיכה הקנונית היחידה שלו.',
+    ),
+    candidates: [
+      {
+        placeId: 'place_shuk_bograshov',
+        context: text('Existing place in your synthetic history', 'מקום קיים בהיסטוריה הסינתטית שלך'),
+      },
+      {
+        placeId: 'place_nomi_dizengoff',
+        context: text('Existing place in your synthetic history', 'מקום קיים בהיסטוריה הסינתטית שלך'),
+      },
+    ],
+  },
+]
 
 function evidenceKindForPurchase(purchase: GlobePurchase): EvidenceKind {
   if (purchase.paymentMode === 'cash' || purchase.paymentMode === 'manual') return 'manual-entry'
@@ -741,7 +783,7 @@ export function purchaseForId(purchaseId: string): GlobePurchase | undefined {
 
 export function purchasesForPlace(
   placeId: string,
-  purchases: GlobePurchase[] = globePurchases,
+  purchases: readonly GlobePurchase[] = globePurchases,
 ): GlobePurchase[] {
   return purchases
     .filter((purchase) => purchase.placeId === placeId)
@@ -750,7 +792,7 @@ export function purchasesForPlace(
 
 export const canonicalSpendscapeData = {
   fixtureKind: 'synthetic' as const,
-  fixtureVersion: 'phase-1d1-v1',
+  fixtureVersion: 'phase-1d4-v1',
   profile: {
     id: 'profile_demo',
     name: text('Demo explorer', 'משתמש הדגמה'),
@@ -761,6 +803,7 @@ export const canonicalSpendscapeData = {
   places: globePlaces,
   purchases: globePurchases,
   evidence: globeEvidenceRecords,
+  smartInboxCases,
 }
 
 export function localized(value: LocalizedText, locale: LocaleCode): string {

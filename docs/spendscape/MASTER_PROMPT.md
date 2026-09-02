@@ -80,8 +80,9 @@ and principles into an original dark Spendscape experience.
 ## Current command
 
 The completed implementation checkpoint is Phase 1 through bounded Slice
-1D.1. The completed documentation-only technology-strategy approval did not
-authorize another implementation slice.
+1D.3 at `9b7aaf39e3f62510f8f6281f21b9cadb6c762541`. The latest explicit
+authorization activates only bounded Slice 1D.4 material-uncertainty Smart
+Inbox simulation + local QA; it authorizes no later product or technology work.
 
 Unless the user supplies a new exact bounded authorization:
 
@@ -93,7 +94,7 @@ Unless the user supplies a new exact bounded authorization:
 5. Do not edit application files, install, run, test, create resources,
    connect accounts, request credentials, use real data, commit, push, open a
    pull request, or deploy.
-6. Do not invent or infer Slice 1D.2 or a technology implementation approval.
+6. Do not invent or infer a later product slice or technology implementation approval.
 
 ## After an approved phase begins
 

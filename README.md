@@ -1,4 +1,4 @@
-# Spendscape — Phase 1 Slice 1D.3 checkpoint
+# Spendscape — Phase 1 Slice 1D.4 active checkpoint
 
 Spendscape is a globe-first purchase-intelligence concept. This branch currently
 implements completed Phase 1 Slices 1A–1C.1, 1D.1, 1D.2, the accepted globe
@@ -6,7 +6,9 @@ fidelity correction, and bounded Slice 1D.3 synthetic Universal
 Scanner/Capture simulation. The current foundation includes
 the Next.js shell, real MapLibre globe, canonical synthetic purchase graph,
 Purchases/history/detail, shared discovery state, and deterministic
-Analytics/Stats.
+Analytics/Stats. The currently authorized bounded Slice 1D.4 adds one
+material-uncertainty Smart Inbox simulation from that same canonical graph;
+it remains session-local, synthetic, and provider-free.
 
 Every purchase, place, amount, coordinate, and performance story in the demo is
 synthetic. The app does not connect to accounts, services, location history, or
@@ -76,6 +78,7 @@ npm run qa:globe
 npm run qa:experience
 npm run qa:analytics
 npm run qa:capture
+npm run qa:inbox
 npm run qa:load
 ```
 
@@ -83,7 +86,7 @@ The Playwright commands start the local development server when needed and write
 screenshots, recordings, and run output only to the ignored local `artifacts/`
 directory.
 
-## Implemented through the bounded Slice 1D.3 checkpoint
+## Implemented through the bounded Slice 1D.4 local checkpoint
 
 - Next.js App Router + TypeScript migration with pinned runtime dependencies
 - responsive desktop/mobile shell, dark-premium tokens, safe-area support,
@@ -125,12 +128,21 @@ directory.
 - separate in-memory session additions that update Purchases, Analytics, and
   canonical place aggregates without mutating the checked-in fixture graph;
   reload resets them and online/unresolved additions remain unpinned
+- one typed material-uncertainty Smart Inbox case linked to the existing
+  unresolved purchase and two existing canonical place candidates, with no
+  score, GPS claim, provider fact, or second fixture source
+- header badge and contextual purchase-detail entry, explicit candidate review,
+  confirm/defer, calm completion, and Undo; a decision updates Purchases,
+  Analytics, filters/timeline derivations, and the existing place pin while
+  preserving one pin per place and one mounted MapLibre instance
+- Smart Inbox decisions are intentionally in-memory only and reset to the
+  unresolved canonical fixture baseline on reload
 
 ## Intentionally not implemented
 
-Slice 1D.3 implements only a simulated, built-in Universal Scanner/Capture
-experience and session-only synthetic additions. Real camera/file input,
-barcode lookup, OCR, Gmail, product providers, Smart Inbox, AI control/actions,
+Slice 1D.4 adds only one synthetic, frontend-only material-uncertainty Smart
+Inbox story to the prior simulated Capture and purchase foundation. Real camera/file input,
+barcode lookup, OCR, Gmail, product providers, AI control/actions,
 Life Replay, privacy/sharing, backend, authentication, factual FX, deployment,
 service accounts, production credentials, paid providers, and real user data
 remain unimplemented and unauthorized.

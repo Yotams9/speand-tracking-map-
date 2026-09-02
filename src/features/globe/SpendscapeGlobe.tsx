@@ -27,7 +27,6 @@ import {
   deriveCanonicalSearchResults,
   derivedPurchaseSummary,
   filterPurchases,
-  globeEvidence,
   globeEvidenceRecords,
   globePlaces,
   globePurchases,
@@ -36,6 +35,7 @@ import {
   placeFeatureCollection,
   placeForId,
   purchasesForPlace,
+  smartInboxCases,
   synchronizeSelection,
   type CategoryFilter,
   type CanonicalSearchResult,
@@ -46,12 +46,22 @@ import {
   type LocaleCode,
   type PlaceFeatureProperties,
   type PurchaseQuery,
+  type SmartInboxCase,
 } from '@/data/spendscape-globe'
 import {
   combineSessionPurchases,
   type CaptureStep,
   type SessionCaptureRecord,
 } from '@/features/capture/capture-domain'
+import {
+  applySmartInboxDecisions,
+  caseForPurchase,
+  decisionForCase,
+  pendingSmartInboxCases,
+  removeSmartInboxDecision,
+  upsertSmartInboxDecision,
+  type SmartInboxDecision,
+} from '@/features/inbox/smart-inbox-domain'
 import { SpendscapeAnalytics } from './SpendscapeAnalytics'
 import {
   buildDevelopmentGlobeStyle,
@@ -82,6 +92,19 @@ const CaptureExperience = dynamic(
       <div className={styles.featureLoading} role="status" data-testid="capture-chunk-loading">
         <span className={styles.featureLoadingMark} aria-hidden="true" />
         <p><span lang="en">Opening Capture…</span><span lang="he">פותח את Capture…</span></p>
+      </div>
+    ),
+  },
+)
+
+const SmartInboxExperience = dynamic(
+  () => import('@/features/inbox/SmartInboxExperience').then((module) => module.SmartInboxExperience),
+  {
+    ssr: false,
+    loading: () => (
+      <div className={styles.featureLoading} role="status" data-testid="inbox-chunk-loading">
+        <span className={styles.featureLoadingMark} aria-hidden="true" />
+        <p><span lang="en">Opening Smart Inbox…</span><span lang="he">פותח את תיבת העזרה…</span></p>
       </div>
     ),
   },
@@ -204,6 +227,7 @@ interface NavigationSnapshot {
   selectedPurchaseId: string | null
   captureStep?: CaptureStep | null
   captureDepth?: number
+  inboxCaseId?: string | null
 }
 
 interface DesktopPanelBounds {
@@ -229,6 +253,11 @@ interface QaEvidence {
   selectedPurchaseId: string | null
   captureOpen: boolean
   captureStep: CaptureStep | null
+  inboxOpen: boolean
+  inboxCaseId: string | null
+  pendingInboxCount: number
+  inboxDecisionStatus: SmartInboxDecision['status'] | null
+  inboxResolvedPlaceId: string | null
   sessionPurchaseCount: number
   combinedPurchaseCount: number
   mapInstanceCount: number
@@ -413,6 +442,7 @@ const copy = {
     product: 'Spendscape', checkpoint: 'Globe checkpoint', navGlobe: 'Globe',
     navAnalytics: 'Analytics', navPurchases: 'Purchases',
     addPurchase: 'Add purchase', capture: 'Capture',
+    inbox: 'Inbox', openInbox: 'Open Smart Inbox', reviewMatch: 'Review match',
     headline: 'Your world, in purchases.',
     intro: 'Every confirmed place becomes one point in a living history.',
     search: 'Search places or cities', searchPlaceholder: 'Search your places or cities',
@@ -457,6 +487,7 @@ const copy = {
     product: 'Spendscape', checkpoint: 'נקודת ביקורת גלובוס', navGlobe: 'גלובוס',
     navAnalytics: 'ניתוחים', navPurchases: 'רכישות',
     addPurchase: 'הוספת רכישה', capture: 'קליטה',
+    inbox: 'תיבת עזרה', openInbox: 'פתיחת תיבת העזרה', reviewMatch: 'בדיקת התאמה',
     headline: 'עולם הרכישות שלך.',
     intro: 'כל מקום מאומת הופך לנקודה אחת בהיסטוריה חיה.',
     search: 'חיפוש מקומות או ערים', searchPlaceholder: 'חיפוש במקומות או בערים שלך',
@@ -683,6 +714,7 @@ function formatMonth(month: string, locale: LocaleCode): string {
 
 function navigationHash(snapshot: NavigationSnapshot): string {
   if (snapshot.captureStep) return '#capture'
+  if (snapshot.inboxCaseId) return `#inbox/${snapshot.inboxCaseId}`
   if (snapshot.selectedPurchaseId) return `#purchase/${snapshot.selectedPurchaseId}`
   if (snapshot.selectedPlaceId) return `#place/${snapshot.selectedPlaceId}`
   if (snapshot.surface === 'purchases') return '#purchases'
@@ -729,6 +761,8 @@ export function SpendscapeGlobe() {
   const [captureStep, setCaptureStep] = useState<CaptureStep | null>(null)
   const [captureDepth, setCaptureDepth] = useState(0)
   const [sessionCaptureRecords, setSessionCaptureRecords] = useState<SessionCaptureRecord[]>([])
+  const [inboxCaseId, setInboxCaseId] = useState<string | null>(null)
+  const [smartInboxDecisions, setSmartInboxDecisions] = useState<SmartInboxDecision[]>([])
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [timelineOpen, setTimelineOpen] = useState(false)
   const [stateRestored, setStateRestored] = useState(false)
@@ -789,9 +823,13 @@ export function SpendscapeGlobe() {
   })
 
   const t = copy[locale]
-  const allPurchases = useMemo(
+  const basePurchases = useMemo(
     () => combineSessionPurchases(globePurchases, sessionCaptureRecords),
     [sessionCaptureRecords],
+  )
+  const allPurchases = useMemo(
+    () => applySmartInboxDecisions(basePurchases, smartInboxCases, smartInboxDecisions),
+    [basePurchases, smartInboxDecisions],
   )
   const allEvidence = useMemo(
     () => [...globeEvidenceRecords, ...sessionCaptureRecords.map((record) => record.evidence)],
@@ -815,7 +853,38 @@ export function SpendscapeGlobe() {
     () => derivePurchaseAnalytics(visiblePurchases, allEvidence),
     [allEvidence, visiblePurchases],
   )
+  const currentGlobeCounts = useMemo(() => {
+    const features = buildPlaceFeatureCollection(globePlaces, allPurchases).features
+    const recurringPlacePurchases = allPurchases.filter(
+      (purchase) => purchase.placeId === 'place_shuk_bograshov',
+    ).length
+    return {
+      pinCount: features.length,
+      physicalConfirmedCount: allPurchases.filter(
+        (purchase) => purchase.channel === 'physical' && purchase.resolution === 'confirmed',
+      ).length,
+      onlineCount: allPurchases.filter((purchase) => purchase.channel === 'online').length,
+      unresolvedCount: allPurchases.filter((purchase) => purchase.resolution === 'unresolved').length,
+      recurringPlacePurchases,
+      recurringPlacePins: features.filter(
+        (feature) => feature.properties.placeId === 'place_shuk_bograshov',
+      ).length,
+    }
+  }, [allPurchases])
   const timelineMonths = useMemo(() => availableTimelineMonths(allPurchases), [allPurchases])
+  const pendingInbox = useMemo(
+    () => pendingSmartInboxCases(smartInboxCases, basePurchases, smartInboxDecisions),
+    [basePurchases, smartInboxDecisions],
+  )
+  const activeInboxCase = inboxCaseId
+    ? smartInboxCases.find((inboxCase) => inboxCase.id === inboxCaseId)
+    : undefined
+  const activeInboxPurchase = activeInboxCase
+    ? basePurchases.find((purchase) => purchase.id === activeInboxCase.purchaseId)
+    : undefined
+  const activeInboxDecision = activeInboxCase
+    ? decisionForCase(activeInboxCase.id, smartInboxDecisions)
+    : undefined
   const selectedFeature = useMemo(
     () => visibleData.features.find(
       (feature) => feature.properties.placeId === selectedPlaceId,
@@ -827,6 +896,9 @@ export function SpendscapeGlobe() {
     ? allPurchases.find((purchase) => purchase.id === selectedPurchaseId)
     : undefined
   const selectedMerchant = selectedPurchase ? merchantForId(selectedPurchase.merchantId) : undefined
+  const selectedPurchaseInboxCase = selectedPurchase
+    ? caseForPurchase(selectedPurchase.id, smartInboxCases)
+    : undefined
   const selectedEvidence = useMemo(
     () => selectedPurchase
       ? allEvidence.filter((record) => selectedPurchase.evidenceIds.includes(record.id))
@@ -887,6 +959,7 @@ export function SpendscapeGlobe() {
           ...historicalSnapshot,
           captureStep: null,
           captureDepth: 0,
+          inboxCaseId: null,
           selectedPurchaseId: historicalSnapshot.selectedPurchaseId?.startsWith('session_purchase_')
             ? null
             : historicalSnapshot.selectedPurchaseId,
@@ -900,6 +973,7 @@ export function SpendscapeGlobe() {
             : restored.selectedPurchaseId ?? null,
           captureStep: null,
           captureDepth: 0,
+          inboxCaseId: null,
         }
     setSelectedPurchaseId(snapshot.selectedPurchaseId)
     window.history.replaceState(snapshot, '', navigationHash(snapshot))
@@ -927,8 +1001,7 @@ export function SpendscapeGlobe() {
       marker: 'spendscape-1d1', locale, query, mode, surface,
       selectedPlaceId,
       selectedPurchaseId: selectedPurchaseId?.startsWith('session_purchase_') ? null : selectedPurchaseId,
-      captureStep: null,
-      captureDepth: 0,
+      captureStep: null, captureDepth: 0, inboxCaseId: null,
     }
     window.sessionStorage.setItem(EXPERIENCE_STORAGE_KEY, JSON.stringify(stored))
   }, [locale, mode, query, selectedPlaceId, selectedPurchaseId, stateRestored, surface])
@@ -1046,6 +1119,7 @@ export function SpendscapeGlobe() {
     setSelectedPurchaseId(snapshot.selectedPurchaseId)
     setCaptureStep(snapshot.captureStep ?? null)
     setCaptureDepth(snapshot.captureDepth ?? 0)
+    setInboxCaseId(snapshot.inboxCaseId ?? null)
     setFiltersOpen(false)
     setTimelineOpen(false)
     setMobileToolsOpen(false)
@@ -1059,13 +1133,18 @@ export function SpendscapeGlobe() {
       marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
       captureStep,
       captureDepth,
+      inboxCaseId,
       ...patch,
     }
     window.history.pushState(snapshot, '', navigationHash(snapshot))
     applyNavigation(snapshot)
-  }, [applyNavigation, captureDepth, captureStep, selectedPlaceId, selectedPurchaseId, surface])
+  }, [applyNavigation, captureDepth, captureStep, inboxCaseId, selectedPlaceId, selectedPurchaseId, surface])
 
   const closeTopLayer = useCallback(() => {
+    if (inboxCaseId) {
+      window.history.back()
+      return
+    }
     if (searchOpen) {
       setSearchOpen(false)
       setActiveSearchIndex(-1)
@@ -1099,7 +1178,7 @@ export function SpendscapeGlobe() {
         suppressSearchFocusOpenRef.current = false
       })
     }
-  }, [applyNavigation, filtersOpen, mobileToolsOpen, searchOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
+  }, [applyNavigation, filtersOpen, inboxCaseId, mobileToolsOpen, searchOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
 
   useEffect(() => {
     const restoreNavigation = (event: PopStateEvent) => {
@@ -1928,6 +2007,11 @@ export function SpendscapeGlobe() {
       selectedPurchaseId,
       captureOpen: captureStep !== null,
       captureStep,
+      inboxOpen: inboxCaseId !== null,
+      inboxCaseId,
+      pendingInboxCount: pendingInbox.length,
+      inboxDecisionStatus: activeInboxDecision?.status ?? null,
+      inboxResolvedPlaceId: activeInboxDecision?.status === 'resolved' ? activeInboxDecision.placeId : null,
       sessionPurchaseCount: sessionCaptureRecords.length,
       combinedPurchaseCount: allPurchases.length,
       mapInstanceCount: mapInstanceCountRef.current,
@@ -1936,12 +2020,12 @@ export function SpendscapeGlobe() {
       visiblePurchaseCount: visiblePurchases.length,
       visibleBaseTotalIls: visibleSummary.totalBaseAmountIls,
       visiblePinFeatures: visibleData.features.length,
-      canonicalPins: globeEvidence.pinCount,
-      physicalPurchases: globeEvidence.physicalConfirmedCount,
-      onlineExcluded: globeEvidence.onlineCount,
-      unresolvedExcluded: globeEvidence.unresolvedCount,
-      recurringPlacePurchases: globeEvidence.recurringPlacePurchaseCount,
-      recurringPlacePins: globeEvidence.recurringPlacePinCount,
+      canonicalPins: currentGlobeCounts.pinCount,
+      physicalPurchases: currentGlobeCounts.physicalConfirmedCount,
+      onlineExcluded: currentGlobeCounts.onlineCount,
+      unresolvedExcluded: currentGlobeCounts.unresolvedCount,
+      recurringPlacePurchases: currentGlobeCounts.recurringPlacePurchases,
+      recurringPlacePins: currentGlobeCounts.recurringPlacePins,
       sourcePresent: renderedEvidence.sourcePresent,
       sourceLoaded: renderedEvidence.sourceLoaded,
       canonicalGeoJsonFeatures: placeFeatureCollection.features.length,
@@ -2004,7 +2088,7 @@ export function SpendscapeGlobe() {
         topPhysicalPlaceId: visibleAnalytics.topPhysicalPlaces[0]?.placeId ?? null,
       },
     }
-  }, [allPurchases.length, autoSpin, captureStep, initializationEvidence, inputEvidence, loading, locale, mapError, mode, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sessionCaptureRecords.length, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
+  }, [activeInboxDecision, allPurchases.length, autoSpin, captureStep, currentGlobeCounts, inboxCaseId, initializationEvidence, inputEvidence, loading, locale, mapError, mode, pendingInbox.length, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sessionCaptureRecords.length, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
 
   const runCameraAction = useCallback((name: string, action: (map: MapLibreMap) => void) => {
     const map = mapRef.current
@@ -2076,6 +2160,36 @@ export function SpendscapeGlobe() {
   }, [runCameraAction, updateSelectedFilter])
 
   const clearFilters = () => setQuery(defaultPurchaseQuery)
+
+  const openInbox = (requestedCase: SmartInboxCase = pendingInbox[0] ?? smartInboxCases[0]) => {
+    if (!requestedCase) return
+    stopSpin(false)
+    const current: NavigationSnapshot = isNavigationSnapshot(window.history.state)
+      ? window.history.state
+      : { marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId }
+    const snapshot: NavigationSnapshot = {
+      ...current,
+      captureStep: null,
+      captureDepth: 0,
+      inboxCaseId: requestedCase.id,
+    }
+    window.history.pushState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+  }
+
+  const closeInbox = () => {
+    if (inboxCaseId) window.history.back()
+  }
+
+  const exitInboxThen = (action: () => void) => {
+    const snapshot: NavigationSnapshot = {
+      marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId,
+      captureStep: null, captureDepth: 0, inboxCaseId: null,
+    }
+    window.history.replaceState(snapshot, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+    window.setTimeout(action, 0)
+  }
 
   const openCapture = () => {
     captureDismissedRef.current = false
@@ -2154,6 +2268,9 @@ export function SpendscapeGlobe() {
       surface: 'purchases',
       selectedPlaceId: purchase.placeId,
       selectedPurchaseId: purchase.id,
+      captureStep: null,
+      captureDepth: 0,
+      inboxCaseId: null,
     })
   }
 
@@ -2235,15 +2352,17 @@ export function SpendscapeGlobe() {
       data-map-ready={!loading && !mapError}
       data-auto-spin={autoSpin}
       data-mode={mode}
-      data-pin-count={globeEvidence.pinCount}
-      data-online-excluded={globeEvidence.onlineCount}
-      data-unresolved-excluded={globeEvidence.unresolvedCount}
+      data-pin-count={currentGlobeCounts.pinCount}
+      data-online-excluded={currentGlobeCounts.onlineCount}
+      data-unresolved-excluded={currentGlobeCounts.unresolvedCount}
       data-frame-p95={performanceEvidence.p95FrameMs}
       data-mobile-tools={mobileToolsOpen}
       data-surface={surface}
       data-visible-purchases={visiblePurchases.length}
       data-visible-pins={visibleData.features.length}
       data-capture-open={captureStep !== null}
+      data-inbox-open={inboxCaseId !== null}
+      data-inbox-pending={pendingInbox.length}
       data-session-purchases={sessionCaptureRecords.length}
     >
       <div ref={mapNodeRef} className={styles.map} data-testid="map-canvas" />
@@ -2270,6 +2389,17 @@ export function SpendscapeGlobe() {
         <div className={styles.headerActions}>
           <button
             type="button"
+            className={styles.inboxButton}
+            onClick={() => openInbox()}
+            aria-label={`${t.openInbox}${pendingInbox.length ? ` · ${pendingInbox.length}` : ''}`}
+            data-testid="smart-inbox-open"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5zM5 14h4l1.5 2h3L15 14h4"/></svg>
+            <span>{t.inbox}</span>
+            {pendingInbox.length > 0 && <em aria-label={`${pendingInbox.length} pending`}>{pendingInbox.length}</em>}
+          </button>
+          <button
+            type="button"
             className={styles.addPurchaseButton}
             onClick={openCapture}
             data-testid="capture-open-desktop"
@@ -2293,9 +2423,9 @@ export function SpendscapeGlobe() {
         <h1 id="globe-title">{t.headline}</h1>
         <p className={styles.heroCopy}>{t.intro}</p>
         <p className={styles.heroMeta}>
-          <span><strong>{globeEvidence.pinCount}</strong> {t.placesSummary}</span>
+          <span><strong>{currentGlobeCounts.pinCount}</strong> {t.placesSummary}</span>
           <i aria-hidden="true" />
-          <span><strong>{globeEvidence.physicalConfirmedCount}</strong> {t.purchasesSummary}</span>
+          <span><strong>{currentGlobeCounts.physicalConfirmedCount}</strong> {t.purchasesSummary}</span>
         </p>
       </section>
 
@@ -2585,7 +2715,7 @@ export function SpendscapeGlobe() {
                 </button>
               ))}
             </div>
-            <p className={styles.panelTruth}>{t.synthetic} · {globeEvidence.recurringPlacePurchaseCount}:1 {locale === 'en' ? 'pin rule verified in fixtures' : 'כלל הסיכה אומת בנתונים'}</p>
+            <p className={styles.panelTruth}>{t.synthetic} · {currentGlobeCounts.recurringPlacePurchases}:1 {locale === 'en' ? 'pin rule verified in fixtures' : 'כלל הסיכה אומת בנתונים'}</p>
           </div>
         </aside>
       )}
@@ -2731,6 +2861,17 @@ export function SpendscapeGlobe() {
             <span><small>{t.sourceEvidence}</small><strong>{selectedEvidence.map((record) => localized(record.label, locale)).join(' · ')}</strong></span>
           </div>
 
+          {selectedPurchaseInboxCase && (
+            <button
+              type="button"
+              className={styles.reviewMatchButton}
+              onClick={() => openInbox(selectedPurchaseInboxCase)}
+              data-testid="review-match"
+            >
+              <span aria-hidden="true">?</span>{t.reviewMatch}
+            </button>
+          )}
+
           {selectedPurchase.placeId && (
             <button type="button" className={styles.viewPlaceButton} onClick={() => selectPlace(selectedPurchase.placeId!)}>{t.viewPlace}</button>
           )}
@@ -2789,6 +2930,27 @@ export function SpendscapeGlobe() {
           onResetSession={resetSessionCaptures}
           onViewPurchase={(purchaseId) => exitCaptureThen(() => openPurchase(purchaseId))}
           onShowOnGlobe={(placeId) => exitCaptureThen(() => selectPlace(placeId))}
+        />
+      )}
+
+      {inboxCaseId && activeInboxCase && activeInboxPurchase && (
+        <SmartInboxExperience
+          locale={locale}
+          inboxCase={activeInboxCase}
+          purchase={activeInboxPurchase}
+          purchases={basePurchases}
+          decision={activeInboxDecision}
+          onClose={closeInbox}
+          onConfirm={(decision) => {
+            setSmartInboxDecisions((current) => upsertSmartInboxDecision(current, decision))
+            setStatus(locale === 'he' ? 'החלטת ההדגמה עודכנה' : 'Demo decision updated')
+          }}
+          onUndo={() => {
+            setSmartInboxDecisions((current) => removeSmartInboxDecision(current, activeInboxCase.id))
+            setStatus(locale === 'he' ? 'החלטת ההדגמה בוטלה' : 'Demo decision undone')
+          }}
+          onOpenPurchase={(purchaseId) => exitInboxThen(() => openPurchase(purchaseId))}
+          onShowPlace={(placeId) => exitInboxThen(() => selectPlace(placeId))}
         />
       )}
 

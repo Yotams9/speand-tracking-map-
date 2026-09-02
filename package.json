@@ -19,6 +19,7 @@
     "qa:experience": "playwright test qa/spendscape-slice-1d1.spec.ts",
     "qa:analytics": "playwright test qa/spendscape-analytics.spec.ts",
     "qa:capture": "playwright test qa/spendscape-capture.spec.ts",
+    "qa:inbox": "playwright test qa/spendscape-inbox.spec.ts",
     "qa:load": "playwright test qa/spendscape-load-performance.spec.ts"
   },
   "dependencies": {
