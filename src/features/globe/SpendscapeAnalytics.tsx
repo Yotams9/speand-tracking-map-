@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import type { ChangeEvent } from 'react'
 import type { PurchaseAnalytics } from '@/data/spendscape-analytics'
+import type { AnalyticsView } from '@/features/ask/ask-spendscape-domain'
 import {
   localized,
   placeForId,
@@ -28,6 +30,7 @@ interface SpendscapeAnalyticsProps {
   onSelectCurrency: (currency: CurrencyFilter) => void
   onSelectMonth: (month: string | null) => void
   onSelectPlace: (placeId: string) => void
+  initialView: AnalyticsView | null
 }
 
 const copy = {
@@ -135,7 +138,7 @@ function chartGeometry(months: PurchaseAnalytics['months']) {
 export function SpendscapeAnalytics({
   analytics, locale, query, activeFilterCount, onClose, onSearch, onOpenFilters,
   onOpenTimeline, onReset, onOpenPurchases, onSelectCategory, onSelectChannel,
-  onSelectCurrency, onSelectMonth, onSelectPlace,
+  onSelectCurrency, onSelectMonth, onSelectPlace, initialView,
 }: SpendscapeAnalyticsProps) {
   const t = copy[locale]
   const chart = chartGeometry(analytics.months)
@@ -145,6 +148,16 @@ export function SpendscapeAnalytics({
   )
 
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => onSearch(event.target.value)
+
+  useEffect(() => {
+    if (!initialView) return
+    const frame = window.requestAnimationFrame(() => {
+      const target = document.querySelector<HTMLElement>(`[data-analytics-view="${initialView}"]`)
+      target?.scrollIntoView({ block: 'start', behavior: 'auto' })
+      target?.focus({ preventScroll: true })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [initialView])
 
   return (
     <section className={styles.panel} aria-labelledby="analytics-title" data-testid="analytics-panel">
@@ -187,7 +200,7 @@ export function SpendscapeAnalytics({
       </div>
 
       <div className={styles.scrollArea}>
-        <section className={styles.heroMetrics} aria-label={t.title} data-testid="analytics-summary">
+        <section className={styles.heroMetrics} aria-label={t.title} data-testid="analytics-summary" data-analytics-view="overview" tabIndex={-1}>
           <article className={styles.totalMetric}>
             <span>{t.total}</span>
             <strong data-testid="analytics-total">{formatMoney(analytics.totalBaseAmountIls, locale)}</strong>
@@ -214,7 +227,7 @@ export function SpendscapeAnalytics({
           </section>
         ) : (
           <>
-            <section className={`${styles.card} ${styles.timelineCard}`} aria-labelledby="analytics-time-title">
+            <section className={`${styles.card} ${styles.timelineCard}`} aria-labelledby="analytics-time-title" data-analytics-view="timeline" tabIndex={-1}>
               <div className={styles.sectionHeading}>
                 <div><h3 id="analytics-time-title">{t.timeTitle}</h3><p>{t.timeBody}</p></div>
                 {query.timelineMonth && (
@@ -263,7 +276,7 @@ export function SpendscapeAnalytics({
             </section>
 
             <div className={styles.twoColumn}>
-              <section className={styles.card} aria-labelledby="analytics-channel-title">
+              <section className={styles.card} aria-labelledby="analytics-channel-title" data-analytics-view="channels" tabIndex={-1}>
                 <div className={styles.sectionHeading}>
                   <div><h3 id="analytics-channel-title">{t.channelTitle}</h3><p>{t.channelBody}</p></div>
                 </div>
@@ -285,7 +298,7 @@ export function SpendscapeAnalytics({
                 </div>
               </section>
 
-              <section className={styles.card} aria-labelledby="analytics-category-title">
+              <section className={styles.card} aria-labelledby="analytics-category-title" data-analytics-view="categories" tabIndex={-1}>
                 <div className={styles.sectionHeading}>
                   <div><h3 id="analytics-category-title">{t.categoryTitle}</h3><p>{t.categoryBody}</p></div>
                 </div>
@@ -308,7 +321,7 @@ export function SpendscapeAnalytics({
               </section>
             </div>
 
-            <section className={styles.card} aria-labelledby="analytics-places-title">
+            <section className={styles.card} aria-labelledby="analytics-places-title" data-analytics-view="places" tabIndex={-1}>
               <div className={styles.sectionHeading}>
                 <div><h3 id="analytics-places-title">{t.placesTitle}</h3><p>{t.placesBody}</p></div>
               </div>
@@ -338,7 +351,7 @@ export function SpendscapeAnalytics({
               )}
             </section>
 
-            <section className={styles.card} aria-labelledby="analytics-provenance-title">
+            <section className={styles.card} aria-labelledby="analytics-provenance-title" data-analytics-view="currencies" tabIndex={-1}>
               <div className={styles.sectionHeading}>
                 <div><h3 id="analytics-provenance-title">{t.provenanceTitle}</h3><p>{t.provenanceBody}</p></div>
               </div>

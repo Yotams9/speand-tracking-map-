@@ -62,6 +62,11 @@ import {
   upsertSmartInboxDecision,
   type SmartInboxDecision,
 } from '@/features/inbox/smart-inbox-domain'
+import {
+  isAllowedAskActionPlan,
+  type AnalyticsView,
+  type AskContext,
+} from '@/features/ask/ask-spendscape-domain'
 import { SpendscapeAnalytics } from './SpendscapeAnalytics'
 import {
   buildDevelopmentGlobeStyle,
@@ -105,6 +110,19 @@ const SmartInboxExperience = dynamic(
       <div className={styles.featureLoading} role="status" data-testid="inbox-chunk-loading">
         <span className={styles.featureLoadingMark} aria-hidden="true" />
         <p><span lang="en">Opening Smart Inbox…</span><span lang="he">פותח את תיבת העזרה…</span></p>
+      </div>
+    ),
+  },
+)
+
+const AskSpendscapeExperience = dynamic(
+  () => import('@/features/ask/AskSpendscapeExperience').then((module) => module.AskSpendscapeExperience),
+  {
+    ssr: false,
+    loading: () => (
+      <div className={styles.featureLoading} role="status" data-testid="ask-chunk-loading">
+        <span className={styles.featureLoadingMark} aria-hidden="true" />
+        <p><span lang="en">Opening Ask Spendscape…</span><span lang="he">פותח את שאלו את Spendscape…</span></p>
       </div>
     ),
   },
@@ -228,6 +246,20 @@ interface NavigationSnapshot {
   captureStep?: CaptureStep | null
   captureDepth?: number
   inboxCaseId?: string | null
+  askOpen?: boolean
+}
+
+interface AskUndoSnapshot {
+  navigation: NavigationSnapshot
+  query: PurchaseQuery
+  mode: MapMode
+  analyticsView: AnalyticsView | null
+  camera: CameraSnapshot | null
+}
+
+interface AskExecutionFeedback {
+  summary: string
+  undone: boolean
 }
 
 interface DesktopPanelBounds {
@@ -258,6 +290,9 @@ interface QaEvidence {
   pendingInboxCount: number
   inboxDecisionStatus: SmartInboxDecision['status'] | null
   inboxResolvedPlaceId: string | null
+  askOpen: boolean
+  askUndoAvailable: boolean
+  askLastSummary: string | null
   sessionPurchaseCount: number
   combinedPurchaseCount: number
   mapInstanceCount: number
@@ -715,6 +750,7 @@ function formatMonth(month: string, locale: LocaleCode): string {
 function navigationHash(snapshot: NavigationSnapshot): string {
   if (snapshot.captureStep) return '#capture'
   if (snapshot.inboxCaseId) return `#inbox/${snapshot.inboxCaseId}`
+  if (snapshot.askOpen) return '#ask'
   if (snapshot.selectedPurchaseId) return `#purchase/${snapshot.selectedPurchaseId}`
   if (snapshot.selectedPlaceId) return `#place/${snapshot.selectedPlaceId}`
   if (snapshot.surface === 'purchases') return '#purchases'
@@ -727,6 +763,18 @@ function isNavigationSnapshot(value: unknown): value is NavigationSnapshot {
   return (value as Partial<NavigationSnapshot>).marker === 'spendscape-1d1'
 }
 
+function isAvailableFocusTarget(target: HTMLElement | null): target is HTMLElement {
+  if (!target?.isConnected || target.matches(':disabled') ||
+      target.closest('[hidden], [inert], [aria-hidden="true"], [aria-disabled="true"]')) return false
+  for (let element: HTMLElement | null = target; element; element = element.parentElement) {
+    const style = window.getComputedStyle(element)
+    if (style.visibility !== 'visible' || style.display === 'none' || Number(style.opacity) === 0) return false
+  }
+  const rect = target.getBoundingClientRect()
+  return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0 &&
+    rect.top < window.innerHeight && rect.left < window.innerWidth
+}
+
 export function SpendscapeGlobe() {
   const mapNodeRef = useRef<HTMLDivElement>(null)
   const queryDockRef = useRef<HTMLElement>(null)
@@ -735,6 +783,15 @@ export function SpendscapeGlobe() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const suppressSearchFocusOpenRef = useRef(false)
   const placeReturnFocusRef = useRef<HTMLElement | null>(null)
+  const askReturnFocusRef = useRef<HTMLElement | null>(null)
+  const askWasOpenRef = useRef(false)
+  const askFocusFrameRef = useRef<number | null>(null)
+  const askFocusIntentRef = useRef<'dismiss' | 'purchase' | 'purchases' | 'feedback' | { analytics: AnalyticsView }>('dismiss')
+  const desktopAskTriggerRef = useRef<HTMLButtonElement>(null)
+  const mobileToolsButtonRef = useRef<HTMLButtonElement>(null)
+  const purchaseDetailBackRef = useRef<HTMLButtonElement>(null)
+  const purchasesCloseRef = useRef<HTMLButtonElement>(null)
+  const askUndoButtonRef = useRef<HTMLButtonElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const spinEnabledRef = useRef(true)
   const spinTimerRef = useRef<number | null>(null)
@@ -763,6 +820,10 @@ export function SpendscapeGlobe() {
   const [sessionCaptureRecords, setSessionCaptureRecords] = useState<SessionCaptureRecord[]>([])
   const [inboxCaseId, setInboxCaseId] = useState<string | null>(null)
   const [smartInboxDecisions, setSmartInboxDecisions] = useState<SmartInboxDecision[]>([])
+  const [askOpen, setAskOpen] = useState(false)
+  const [askUndoSnapshot, setAskUndoSnapshot] = useState<AskUndoSnapshot | null>(null)
+  const [askFeedback, setAskFeedback] = useState<AskExecutionFeedback | null>(null)
+  const [analyticsView, setAnalyticsView] = useState<AnalyticsView | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [timelineOpen, setTimelineOpen] = useState(false)
   const [stateRestored, setStateRestored] = useState(false)
@@ -872,6 +933,11 @@ export function SpendscapeGlobe() {
     }
   }, [allPurchases])
   const timelineMonths = useMemo(() => availableTimelineMonths(allPurchases), [allPurchases])
+  const askContext = useMemo<AskContext>(() => ({
+    places: globePlaces,
+    purchases: allPurchases,
+    timelineMonths,
+  }), [allPurchases, timelineMonths])
   const pendingInbox = useMemo(
     () => pendingSmartInboxCases(smartInboxCases, basePurchases, smartInboxDecisions),
     [basePurchases, smartInboxDecisions],
@@ -960,6 +1026,7 @@ export function SpendscapeGlobe() {
           captureStep: null,
           captureDepth: 0,
           inboxCaseId: null,
+          askOpen: false,
           selectedPurchaseId: historicalSnapshot.selectedPurchaseId?.startsWith('session_purchase_')
             ? null
             : historicalSnapshot.selectedPurchaseId,
@@ -974,9 +1041,12 @@ export function SpendscapeGlobe() {
           captureStep: null,
           captureDepth: 0,
           inboxCaseId: null,
+          askOpen: false,
         }
     setSelectedPurchaseId(snapshot.selectedPurchaseId)
-    window.history.replaceState(snapshot, '', navigationHash(snapshot))
+    // Preserve the router-owned state installed before this mount effect. Dropping
+    // it makes Next reload the document on the first Back, destroying focus/refs.
+    window.history.replaceState({ ...window.history.state, ...snapshot }, '', navigationHash(snapshot))
     setStateRestored(true)
   }, [])
 
@@ -1002,9 +1072,41 @@ export function SpendscapeGlobe() {
       selectedPlaceId,
       selectedPurchaseId: selectedPurchaseId?.startsWith('session_purchase_') ? null : selectedPurchaseId,
       captureStep: null, captureDepth: 0, inboxCaseId: null,
+      askOpen: false,
     }
     window.sessionStorage.setItem(EXPERIENCE_STORAGE_KEY, JSON.stringify(stored))
   }, [locale, mode, query, selectedPlaceId, selectedPurchaseId, stateRestored, surface])
+
+  useEffect(() => {
+    const dismissed = askWasOpenRef.current && !askOpen
+    askWasOpenRef.current = askOpen
+    if (!dismissed) return
+    const intent = askFocusIntentRef.current
+    // Run after React has removed the Ask focus trap and committed the destination.
+    const frame = window.requestAnimationFrame(() => {
+      askFocusFrameRef.current = null
+      if (typeof intent === 'object') {
+        const section = document.querySelector<HTMLElement>(`[data-analytics-view="${intent.analytics}"]`)
+        // Analytics normally focuses itself. Do not override that focus; the fallback
+        // also covers re-opening the same view when its mount/view effect does not run.
+        if (section?.contains(document.activeElement)) return
+        section?.scrollIntoView({ block: 'start', behavior: 'auto' })
+        if (isAvailableFocusTarget(section)) section.focus({ preventScroll: true })
+        return
+      }
+      const candidates = intent === 'dismiss'
+        ? [askReturnFocusRef.current, mobileToolsButtonRef.current, desktopAskTriggerRef.current]
+        : [intent === 'purchase' ? purchaseDetailBackRef.current
+          : intent === 'purchases' ? purchasesCloseRef.current : askUndoButtonRef.current]
+      const target = candidates.find(isAvailableFocusTarget)
+      target?.focus({ preventScroll: true })
+    })
+    askFocusFrameRef.current = frame
+    return () => {
+      window.cancelAnimationFrame(frame)
+      if (askFocusFrameRef.current === frame) askFocusFrameRef.current = null
+    }
+  }, [askOpen])
 
   const clearSpinTimer = useCallback(() => {
     if (spinTimerRef.current !== null) {
@@ -1120,6 +1222,7 @@ export function SpendscapeGlobe() {
     setCaptureStep(snapshot.captureStep ?? null)
     setCaptureDepth(snapshot.captureDepth ?? 0)
     setInboxCaseId(snapshot.inboxCaseId ?? null)
+    setAskOpen(snapshot.askOpen ?? false)
     setFiltersOpen(false)
     setTimelineOpen(false)
     setMobileToolsOpen(false)
@@ -1134,13 +1237,18 @@ export function SpendscapeGlobe() {
       captureStep,
       captureDepth,
       inboxCaseId,
+      askOpen,
       ...patch,
     }
     window.history.pushState(snapshot, '', navigationHash(snapshot))
     applyNavigation(snapshot)
-  }, [applyNavigation, captureDepth, captureStep, inboxCaseId, selectedPlaceId, selectedPurchaseId, surface])
+  }, [applyNavigation, askOpen, captureDepth, captureStep, inboxCaseId, selectedPlaceId, selectedPurchaseId, surface])
 
   const closeTopLayer = useCallback(() => {
+    if (askOpen) {
+      window.history.back()
+      return
+    }
     if (inboxCaseId) {
       window.history.back()
       return
@@ -1178,7 +1286,7 @@ export function SpendscapeGlobe() {
         suppressSearchFocusOpenRef.current = false
       })
     }
-  }, [applyNavigation, filtersOpen, inboxCaseId, mobileToolsOpen, searchOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
+  }, [applyNavigation, askOpen, filtersOpen, inboxCaseId, mobileToolsOpen, searchOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
 
   useEffect(() => {
     const restoreNavigation = (event: PopStateEvent) => {
@@ -2012,6 +2120,9 @@ export function SpendscapeGlobe() {
       pendingInboxCount: pendingInbox.length,
       inboxDecisionStatus: activeInboxDecision?.status ?? null,
       inboxResolvedPlaceId: activeInboxDecision?.status === 'resolved' ? activeInboxDecision.placeId : null,
+      askOpen,
+      askUndoAvailable: askUndoSnapshot !== null,
+      askLastSummary: askFeedback?.summary ?? null,
       sessionPurchaseCount: sessionCaptureRecords.length,
       combinedPurchaseCount: allPurchases.length,
       mapInstanceCount: mapInstanceCountRef.current,
@@ -2088,7 +2199,7 @@ export function SpendscapeGlobe() {
         topPhysicalPlaceId: visibleAnalytics.topPhysicalPlaces[0]?.placeId ?? null,
       },
     }
-  }, [activeInboxDecision, allPurchases.length, autoSpin, captureStep, currentGlobeCounts, inboxCaseId, initializationEvidence, inputEvidence, loading, locale, mapError, mode, pendingInbox.length, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sessionCaptureRecords.length, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
+  }, [activeInboxDecision, allPurchases.length, askFeedback, askOpen, askUndoSnapshot, autoSpin, captureStep, currentGlobeCounts, inboxCaseId, initializationEvidence, inputEvidence, loading, locale, mapError, mode, pendingInbox.length, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sessionCaptureRecords.length, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
 
   const runCameraAction = useCallback((name: string, action: (map: MapLibreMap) => void) => {
     const map = mapRef.current
@@ -2338,6 +2449,216 @@ export function SpendscapeGlobe() {
     updateQuery({ timelineMonth: month, dateRange: 'all' })
   }
 
+  const openAsk = (trigger: HTMLElement) => {
+    if (askFocusFrameRef.current !== null) {
+      window.cancelAnimationFrame(askFocusFrameRef.current)
+      askFocusFrameRef.current = null
+    }
+    askFocusIntentRef.current = 'dismiss'
+    askReturnFocusRef.current = trigger
+    stopSpin(false)
+    setMobileToolsOpen(false)
+    setFiltersOpen(false)
+    setTimelineOpen(false)
+    setSearchOpen(false)
+    setAskFeedback(null)
+    pushNavigation({
+      askOpen: true,
+      captureStep: null,
+      captureDepth: 0,
+      inboxCaseId: null,
+    })
+  }
+
+  const closeAsk = useCallback(() => {
+    if (askOpen && isNavigationSnapshot(window.history.state) && window.history.state.askOpen) {
+      window.history.back()
+      return
+    }
+    setAskOpen(false)
+  }, [askOpen])
+
+  const executeAskActions = useCallback((actions: unknown, actionSummary: string) => {
+    // All single, confirmed-plan, and candidate paths fail closed before state or camera changes.
+    if (!isAllowedAskActionPlan(actions, askContext)) return
+    const currentNavigation: NavigationSnapshot = {
+      marker: 'spendscape-1d1',
+      surface,
+      selectedPlaceId,
+      selectedPurchaseId,
+      captureStep: null,
+      captureDepth: 0,
+      inboxCaseId: null,
+      askOpen: false,
+    }
+    const needsMap = actions.some((action) => action.type.startsWith('map.') || action.type === 'selection.openPurchase')
+    if (needsMap && (!mapRef.current || mapError || loading)) {
+      setAskFeedback({
+        summary: localeRef.current === 'he'
+          ? 'המפה אינה זמינה כרגע. יש לנסות שוב לאחר השחזור.'
+          : 'The map is unavailable. Retry after recovery.',
+        undone: false,
+      })
+      window.history.replaceState(currentNavigation, '', navigationHash(currentNavigation))
+      applyNavigation(currentNavigation)
+      return
+    }
+
+    const undoSnapshot: AskUndoSnapshot = {
+      navigation: currentNavigation,
+      query,
+      mode,
+      analyticsView,
+      camera: mapRef.current ? snapshotCamera(mapRef.current) : null,
+    }
+    let nextNavigation = { ...currentNavigation }
+    let nextQuery = { ...query }
+    let nextAnalyticsView = analyticsView
+    const cameraActions: Array<(map: MapLibreMap) => void> = []
+
+    for (const action of actions) {
+      switch (action.type) {
+        case 'map.flyToPlace': {
+          const place = placeForId(action.placeId)
+          if (!place) continue
+          nextNavigation = { ...nextNavigation, surface: 'globe', selectedPlaceId: place.id, selectedPurchaseId: null }
+          cameraActions.push((map) => map.flyTo({
+            center: place.coordinates,
+            zoom: 15.2,
+            speed: 1.6,
+            offset: window.innerWidth <= 760 ? [0, -Math.round(Math.min(180, window.innerHeight * 0.2))] : [0, 0],
+            ...(reducedMotionRef.current ? { duration: 0 } : {}),
+            essential: false,
+          }))
+          break
+        }
+        case 'map.flyToRegion': {
+          const placeIds = globePlaces.filter((place) => (
+            place[action.region.kind].en === action.region.value
+          )).map((place) => place.id)
+          if (placeIds.length === 0) continue
+          nextNavigation = { ...nextNavigation, surface: 'globe', selectedPlaceId: null, selectedPurchaseId: null }
+          cameraActions.push((map) => {
+            const bounds = new maplibregl.LngLatBounds()
+            for (const placeId of placeIds) {
+              const place = placeForId(placeId)
+              if (place) bounds.extend(place.coordinates)
+            }
+            map.fitBounds(bounds, {
+              padding: window.innerWidth <= 760 ? 58 : 150,
+              speed: 1.5,
+              maxZoom: 11,
+              ...(reducedMotionRef.current ? { duration: 0 } : {}),
+              essential: false,
+            })
+          })
+          break
+        }
+        case 'map.fitVisiblePurchases':
+          if (visibleData.features.length === 0) break
+          cameraActions.push((map) => {
+            const bounds = new maplibregl.LngLatBounds()
+            for (const feature of visibleData.features) bounds.extend(feature.geometry.coordinates as [number, number])
+            map.fitBounds(bounds, {
+              padding: window.innerWidth < 700 ? 66 : 150,
+              speed: 1.5,
+              maxZoom: 7,
+              ...(reducedMotionRef.current ? { duration: 0 } : {}),
+              essential: false,
+            })
+          })
+          break
+        case 'map.resetGlobe':
+          nextNavigation = { ...nextNavigation, surface: 'globe', selectedPlaceId: null, selectedPurchaseId: null }
+          cameraActions.push((map) => map.flyTo({
+            ...homeCamera(),
+            speed: 1.4,
+            ...(reducedMotionRef.current ? { duration: 0 } : {}),
+            essential: false,
+          }))
+          break
+        case 'filters.set':
+          nextQuery = { ...nextQuery, ...action.patch }
+          break
+        case 'filters.clear':
+          nextQuery = { ...defaultPurchaseQuery }
+          break
+        case 'timeline.setMonth':
+          nextQuery = { ...nextQuery, timelineMonth: action.month, dateRange: 'all' }
+          break
+        case 'purchases.open':
+          nextNavigation = { ...nextNavigation, surface: 'purchases', selectedPlaceId: null, selectedPurchaseId: null }
+          break
+        case 'selection.openPurchase': {
+          const purchase = allPurchases.find((candidate) => candidate.id === action.purchaseId)
+          if (!purchase) continue
+          nextNavigation = {
+            ...nextNavigation,
+            surface: 'purchases',
+            selectedPlaceId: purchase.placeId,
+            selectedPurchaseId: purchase.id,
+          }
+          if (purchase.placeId) {
+            const place = placeForId(purchase.placeId)
+            if (place) cameraActions.push((map) => map.flyTo({
+              center: place.coordinates,
+              zoom: 15.2,
+              speed: 1.6,
+              ...(reducedMotionRef.current ? { duration: 0 } : {}),
+              essential: false,
+            }))
+          }
+          break
+        }
+        case 'analytics.open':
+          nextNavigation = { ...nextNavigation, surface: 'stats', selectedPlaceId: null, selectedPurchaseId: null }
+          nextAnalyticsView = action.view
+          break
+      }
+    }
+
+    // Execution owns destination focus, not the trigger-restoration dismissal path.
+    askFocusIntentRef.current = nextNavigation.surface === 'stats' && actions.some((action) => action.type === 'analytics.open') && nextAnalyticsView
+      ? { analytics: nextAnalyticsView }
+      : nextNavigation.selectedPurchaseId && actions.some((action) => action.type === 'selection.openPurchase')
+        ? 'purchase'
+        : nextNavigation.surface === 'purchases' && actions.some((action) => action.type === 'purchases.open')
+          ? 'purchases' : 'feedback'
+    setQuery(nextQuery)
+    setAnalyticsView(nextAnalyticsView)
+    window.history.replaceState(nextNavigation, '', navigationHash(nextNavigation))
+    applyNavigation(nextNavigation)
+    updateSelectedFilter(nextNavigation.selectedPlaceId)
+    if (cameraActions.length > 0) {
+      runCameraAction(`ask-${actions.map((action) => action.type).join('+')}`, (map) => {
+        for (const cameraAction of cameraActions) cameraAction(map)
+      })
+    }
+    setAskUndoSnapshot(undoSnapshot)
+    setAskFeedback({ summary: actionSummary, undone: false })
+    setStatus(actionSummary)
+  }, [allPurchases, analyticsView, applyNavigation, askContext, loading, mapError, mode, query, runCameraAction, selectedPlaceId, selectedPurchaseId, surface, updateSelectedFilter, visibleData.features])
+
+  const undoAskAction = useCallback(() => {
+    if (!askUndoSnapshot) return
+    setQuery(askUndoSnapshot.query)
+    setMode(askUndoSnapshot.mode)
+    setAnalyticsView(askUndoSnapshot.analyticsView)
+    window.history.replaceState(askUndoSnapshot.navigation, '', navigationHash(askUndoSnapshot.navigation))
+    applyNavigation(askUndoSnapshot.navigation)
+    if (askUndoSnapshot.camera && mapRef.current) {
+      const camera = askUndoSnapshot.camera
+      runCameraAction('ask-undo', (map) => map.easeTo({
+        ...camera,
+        duration: reducedMotionRef.current ? 0 : 320,
+        essential: false,
+      }))
+    }
+    setAskUndoSnapshot(null)
+    setAskFeedback((current) => current ? { ...current, undone: true } : null)
+    setStatus(localeRef.current === 'he' ? 'פעולת ההדגמה בוטלה' : 'Demo action undone')
+  }, [applyNavigation, askUndoSnapshot, runCameraAction])
+
   const retryMap = () => {
     const url = new URL(window.location.href)
     url.searchParams.delete('mapFailure')
@@ -2364,6 +2685,7 @@ export function SpendscapeGlobe() {
       data-inbox-open={inboxCaseId !== null}
       data-inbox-pending={pendingInbox.length}
       data-session-purchases={sessionCaptureRecords.length}
+      data-ask-open={askOpen}
     >
       <div ref={mapNodeRef} className={styles.map} data-testid="map-canvas" />
       <div className={styles.vignette} aria-hidden="true" />
@@ -2531,6 +2853,15 @@ export function SpendscapeGlobe() {
           <button type="button" onClick={() => { stopSpin(false); setTimelineOpen(true) }} data-testid="timeline-open">
             {query.timelineMonth ?? t.timeline}
           </button>
+          <button
+            type="button"
+            className={styles.askButton}
+            ref={desktopAskTriggerRef}
+            onClick={(event) => openAsk(event.currentTarget)}
+            data-testid="ask-open-desktop"
+          >
+            <span aria-hidden="true">✦</span>{locale === 'he' ? 'שאלו' : 'Ask'}
+          </button>
           <output aria-live="polite">{visiblePurchases.length} {t.results} · {visibleData.features.length} {t.placesSummary}</output>
         </div>
       </section>
@@ -2571,6 +2902,17 @@ export function SpendscapeGlobe() {
           <button type="button" onClick={() => { setMobileToolsOpen(false); setFiltersOpen(true) }}>{t.filters}</button>
           <button type="button" onClick={() => { setMobileToolsOpen(false); setTimelineOpen(true) }}>{t.timeline}</button>
         </div>
+
+        <button
+          type="button"
+          className={styles.mobileAskRow}
+          onClick={(event) => openAsk(event.currentTarget)}
+          data-testid="ask-open-mobile"
+        >
+          <span aria-hidden="true">✦</span>
+          <span><strong>{locale === 'he' ? 'שאלו את Spendscape' : 'Ask Spendscape'}</strong><small>{locale === 'he' ? 'הדגמה מקומית וסינתטית' : 'Local synthetic actions'}</small></span>
+          <i aria-hidden="true">{locale === 'he' ? '←' : '→'}</i>
+        </button>
 
         <div className={styles.modeSwitch} role="group" aria-label="Visualization">
           <button type="button" aria-pressed={mode === 'pins'} onClick={() => { stopSpin(false); setMode('pins') }}>{t.pins}</button>
@@ -2635,6 +2977,7 @@ export function SpendscapeGlobe() {
         <button
           type="button"
           className={styles.mobileToolsButton}
+          ref={mobileToolsButtonRef}
           onClick={() => { stopSpin(false); setMobileToolsOpen((current) => !current) }}
           aria-expanded={mobileToolsOpen}
           aria-controls="globe-controls"
@@ -2728,7 +3071,7 @@ export function SpendscapeGlobe() {
               <h2 id="purchases-title">{t.history}</h2>
               <p>{t.historyIntro}</p>
             </div>
-            <button type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.closeHistory}>
+            <button ref={purchasesCloseRef} type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.closeHistory}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
             </button>
           </header>
@@ -2815,12 +3158,13 @@ export function SpendscapeGlobe() {
           onSelectCurrency={(currency) => { stopSpin(false); updateQuery({ currency }) }}
           onSelectMonth={setTimelineMonth}
           onSelectPlace={selectPlace}
+          initialView={analyticsView}
         />
       )}
 
       {selectedPurchase && selectedMerchant && (
         <aside className={styles.purchaseDetailPanel} aria-labelledby="purchase-title" data-testid="purchase-detail">
-          <button type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.backToHistory}>
+          <button ref={purchaseDetailBackRef} type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.backToHistory}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
           </button>
           <p className={styles.eyebrow}>{t.purchaseDetail} · {t.synthetic}</p>
@@ -2954,18 +3298,41 @@ export function SpendscapeGlobe() {
         />
       )}
 
+      {askOpen && !captureStep && !inboxCaseId && (
+        <AskSpendscapeExperience
+          locale={locale}
+          context={askContext}
+          onClose={closeAsk}
+          onExecute={executeAskActions}
+        />
+      )}
+
+      {askFeedback && !askOpen && (
+        <div className={styles.askFeedback} role="status" data-undone={askFeedback.undone} data-testid="ask-feedback">
+          <span aria-hidden="true">{askFeedback.undone ? '↶' : '✓'}</span>
+          <p><strong>{askFeedback.undone ? (locale === 'he' ? 'בוטל' : 'Undone') : (locale === 'he' ? 'בוצע מקומית' : 'Applied locally')}</strong><small>{askFeedback.summary}</small></p>
+          {!askFeedback.undone && askUndoSnapshot && <button ref={askUndoButtonRef} type="button" onClick={undoAskAction} data-testid="ask-undo">{locale === 'he' ? 'ביטול פעולה' : 'Undo'}</button>}
+          <button
+            type="button"
+            className={styles.askFeedbackClose}
+            onClick={() => { setAskFeedback(null); setAskUndoSnapshot(null) }}
+            aria-label={locale === 'he' ? 'סגירת סטטוס' : 'Dismiss status'}
+          >×</button>
+        </div>
+      )}
+
       <nav className={styles.mobileNav} aria-label="Mobile primary">
         <button type="button" data-active={surface === 'globe'} aria-current={surface === 'globe' ? 'page' : undefined} onClick={() => openSurface('globe')}>
           <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.5 4 5.5 4 9s-1.4 6.5-4 9c-2.6-2.5-4-5.5-4-9s1.4-6.5 4-9Z"/></svg></i>
           <span>{t.navGlobe}</span>
         </button>
-        <button type="button" data-active={surface === 'purchases'} aria-current={surface === 'purchases' ? 'page' : undefined} onClick={() => openSurface('purchases')}>
-          <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4.5"/></svg></i>
-          <span>{t.navPurchases}</span>
-        </button>
         <button type="button" className={styles.mobileCaptureButton} data-active={Boolean(captureStep)} aria-pressed={Boolean(captureStep)} onClick={openCapture} data-testid="capture-open-mobile">
           <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg></i>
           <span>{t.capture}</span>
+        </button>
+        <button type="button" data-active={surface === 'purchases'} aria-current={surface === 'purchases' ? 'page' : undefined} onClick={() => openSurface('purchases')}>
+          <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4.5"/></svg></i>
+          <span>{t.navPurchases}</span>
         </button>
         <button type="button" data-active={surface === 'stats'} aria-current={surface === 'stats' ? 'page' : undefined} onClick={() => openSurface('stats')}>
           <i className={styles.mobileNavIcon} aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19v-6M12 19V5M19 19v-9M3 19h18"/></svg></i>

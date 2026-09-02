@@ -24,9 +24,9 @@ full brainstorming transcript.
 - Branch: `feature/spendscape-rebuild`
 - Product: **Spendscape**
 - Delivery: responsive web/PWA only
-- Completed implementation checkpoint: Phase 1 through bounded Slice 1D.3 at `9b7aaf39e3f62510f8f6281f21b9cadb6c762541`
-- Current implementation authorization: bounded Slice 1D.4 material-uncertainty Smart Inbox simulation + local QA only
-- Latest completed checkpoint: bounded Slice 1D.3 synthetic Universal Scanner/Capture simulation + local QA
+- Completed implementation checkpoint: Phase 1 through bounded Slice 1D.4 at `58a3c4b32c26060c63eef2e89db823ca7acdfd27`
+- Current implementation authorization: bounded Slice 1D.5 synthetic AI map/UI action simulation + local QA only
+- Latest completed checkpoint: bounded Slice 1D.4 material-uncertainty Smart Inbox simulation + visible keyboard focus
 - Existing app: Next.js App Router + React + TypeScript Spendscape concept
 - Prior implementation checkpoint: `b5796c5d393d8271dd7ee1b175c2c45bfe364806`
 - Phase 1 data: synthetic only

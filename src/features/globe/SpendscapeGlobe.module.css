@@ -1297,6 +1297,51 @@
 
 .mobileQueryActions { display: none; }
 
+.mobileAskRow { display: none; }
+
+.queryActions .askButton {
+  border-color: rgba(102, 211, 255, 0.28);
+  background: rgba(66, 183, 229, 0.09);
+  color: #d6f5ff;
+}
+.queryActions .askButton > span {
+  min-inline-size: auto;
+  block-size: auto;
+  margin-inline: 0 6px;
+  background: transparent;
+  color: #69dfff;
+  font-size: 0.76rem;
+}
+
+.askFeedback {
+  position: absolute;
+  z-index: 71;
+  inset-inline-start: 50%;
+  inset-block-end: calc(82px + var(--safe-bottom));
+  transform: translateX(-50%);
+  inline-size: min(520px, calc(100vw - 32px));
+  min-block-size: 54px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 9px 8px 12px;
+  border: 1px solid rgba(118, 220, 255, 0.28);
+  border-radius: 15px;
+  background: rgba(8, 13, 20, 0.95);
+  color: #e9f4fb;
+  box-shadow: 0 22px 62px rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(20px);
+}
+[dir='rtl'] .askFeedback { transform: translateX(50%); }
+.askFeedback > span { inline-size: 28px; block-size: 28px; display: grid; place-items: center; border: 1px solid rgba(105, 223, 255, 0.35); border-radius: 50%; color: #75ddff; }
+.askFeedback p { min-inline-size: 0; display: flex; flex-direction: column; gap: 3px; margin: 0; }
+.askFeedback strong { font-size: 0.72rem; }
+.askFeedback small { overflow: hidden; color: #97a5b4; font-size: 0.64rem; text-overflow: ellipsis; white-space: nowrap; }
+.askFeedback button { min-block-size: 36px; padding-inline: 12px; border: 1px solid rgba(117, 219, 255, 0.26); border-radius: 9px; background: rgba(80, 196, 239, 0.09); color: #d9f5ff; cursor: pointer; font-size: 0.7rem; font-weight: 680; }
+.askFeedback .askFeedbackClose { inline-size: 36px; padding: 0; border-color: transparent; background: transparent; color: #8d99a6; font-size: 1rem; }
+.askFeedback[data-undone='true'] { border-color: rgba(255, 255, 255, 0.14); }
+
 .app[data-surface='purchases'] .hero,
 .app[data-surface='stats'] .hero,
 .app[data-surface='purchases'] > .controlDock,
@@ -1538,6 +1583,36 @@
   .queryActions { display: none; }
   .mobileQueryActions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; }
   .mobileQueryActions button { min-block-size: 42px; }
+  .mobileAskRow {
+    grid-column: 1 / -1;
+    min-block-size: 52px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    padding: 8px 11px;
+    border: 1px solid rgba(102, 211, 255, 0.21);
+    border-radius: 12px;
+    background: linear-gradient(90deg, rgba(66, 187, 232, 0.1), rgba(255, 255, 255, 0.025));
+    color: #dff7ff;
+    cursor: pointer;
+    text-align: start;
+  }
+  .mobileAskRow > span:first-child { inline-size: 30px; block-size: 30px; display: grid; place-items: center; border: 1px solid rgba(105, 223, 255, 0.29); border-radius: 50%; color: #70dcff; }
+  .mobileAskRow > span:nth-child(2) { min-inline-size: 0; display: flex; flex-direction: column; gap: 3px; }
+  .mobileAskRow strong { font-size: 0.74rem; }
+  .mobileAskRow small { color: #8493a3; font-size: 0.61rem; }
+  .mobileAskRow i { color: #7294a5; font-size: 0.8rem; font-style: normal; }
+  .mobileAskRow:focus-visible { outline: 2px solid #9be7ff; outline-offset: 2px; }
+
+  .askFeedback {
+    inset-inline: calc(8px + var(--safe-left)) calc(8px + var(--safe-right));
+    inset-block-end: calc(98px + var(--safe-bottom));
+    transform: none;
+    inline-size: auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+  [dir='rtl'] .askFeedback { transform: none; }
 
   .purchasesPanel,
   .purchaseDetailPanel {

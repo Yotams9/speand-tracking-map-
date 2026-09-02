@@ -84,15 +84,17 @@ AI can safely operate typed, reversible map/UI actions.
 
 - Minimal top navigation: **Globe · Analytics · Purchases**.
 - Lightweight search and profile controls.
-- Filters, Ask AI, timeline, and Add/Capture float over the live globe.
+- Filters, Ask Spendscape, timeline, and Add/Capture float over the live globe.
 - Analytics and detail open without needlessly destroying globe state.
 
 ### Mobile composition
 
 - Full-height globe remains the hero.
 - Compact top brand/search controls.
-- Bottom navigation: **Globe · Stats · AI**.
-- Universal Scanner/Add is a prominent floating action.
+- Bottom navigation: **Globe · Capture · Purchases · Stats**.
+- Universal Scanner/Capture is the second uniform primary destination.
+- Ask Spendscape remains a secondary row inside Globe Tools, never a fifth
+  mobile destination.
 - Timeline/details use reachable bottom sheets or focused full-screen flows.
 - Smart Inbox and profile/privacy remain accessible secondary destinations.
 

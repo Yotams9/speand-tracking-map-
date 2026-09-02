@@ -22,7 +22,7 @@ rejected.
 ## Current verified repository baseline
 
 The completed local implementation checkpoint is Phase 1 through bounded Slice
-1D.3 at `9b7aaf39e3f62510f8f6281f21b9cadb6c762541` on
+1D.4 at `58a3c4b32c26060c63eef2e89db823ca7acdfd27` on
 `feature/spendscape-rebuild`:
 
 - Next.js App Router `16.3.3`, React/React DOM `19.2.8`, and TypeScript `5.9.3`.
@@ -220,8 +220,9 @@ The approval integrated and reviewed this strategy only. No product or
 technology implementation was authorized by the documentation approval, and no
 implementation slice was activated by that documentation approval.
 
-The later explicit Slice 1D.4 authorization is product-scoped and provider-free;
-it does not activate any technology candidate in this strategy.
+The later explicit Slice 1D.5 authorization is product-scoped, deterministic,
+local, and provider-free; it does not activate `AIProvider` or any technology
+candidate in this strategy.
 
 ### Remaining Phase 1
 

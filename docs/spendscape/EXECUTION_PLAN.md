@@ -4,10 +4,12 @@ Every phase has a separate human gate. Later phases are context, not current
 authorization.
 
 Current completed implementation checkpoint: Phase 1 through bounded Slice
-1D.3. It includes the accepted globe-fidelity correction, deterministic
+1D.4 at `58a3c4b`. It includes the accepted globe-fidelity correction, deterministic
 Analytics/Stats, synthetic Universal Scanner/Capture simulation, bounded
-loading recovery, and canonical local search. Only bounded Slice 1D.4 is active
-for one synthetic material-uncertainty Smart Inbox case and local QA; no
+loading recovery, canonical local search, and the material-uncertainty Smart
+Inbox simulation. Only bounded Slice 1D.5 is active for deterministic local
+allowlisted map/UI action simulation, the bounded mobile navigation reorder,
+and local QA; no
 technology slice is active. Technology candidates and evaluation work nest inside these phases
 as specified in `TECHNOLOGY_STRATEGY.md`; they do not create a competing roadmap
 or authorize real ingestion.
@@ -75,14 +77,15 @@ Status: completed through the approved Slice 1C.1 visual-polish checkpoint.
 
 ### 1D — synthetic product experience
 
-Status: bounded Slices 1D.1, 1D.2, and 1D.3 are complete and checkpointed at
-`9b7aaf39`. Bounded Slice 1D.4 is active only for one material-uncertainty
-Smart Inbox simulation and local QA. Search,
+Status: bounded Slices 1D.1, 1D.2, 1D.3, and 1D.4 are complete and checkpointed
+through `58a3c4b`. Bounded Slice 1D.5 is active only for deterministic local
+allowlisted map/UI action simulation, reversible preview/Apply/Undo, the mobile
+order `Globe · Capture · Purchases · Stats`, and local QA. Search,
 filters, timeline, Purchases, place/purchase detail, shared state, nested
 receipts, cash/manual, multi-currency provenance, unresolved examples, and
 deterministic Analytics/Stats, and the synthetic frontend Universal
 Scanner/Capture simulation with session-only demo records are implemented.
-AI actions, Life Replay, privacy/share,
+Real AI/provider work, Life Replay, privacy/share,
 providers, real ingestion, and backend work remain deferred.
 
 - Search, filters, timeline, Analytics/Stats, Purchases, place/purchase detail.

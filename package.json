@@ -20,6 +20,7 @@
     "qa:analytics": "playwright test qa/spendscape-analytics.spec.ts",
     "qa:capture": "playwright test qa/spendscape-capture.spec.ts",
     "qa:inbox": "playwright test qa/spendscape-inbox.spec.ts",
+    "qa:ask": "playwright test qa/spendscape-ask.spec.ts",
     "qa:load": "playwright test qa/spendscape-load-performance.spec.ts"
   },
   "dependencies": {

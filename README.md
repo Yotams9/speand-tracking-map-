@@ -1,14 +1,15 @@
-# Spendscape — Phase 1 Slice 1D.4 active checkpoint
+# Spendscape — Phase 1 Slice 1D.5 active checkpoint
 
 Spendscape is a globe-first purchase-intelligence concept. This branch currently
 implements completed Phase 1 Slices 1A–1C.1, 1D.1, 1D.2, the accepted globe
-fidelity correction, and bounded Slice 1D.3 synthetic Universal
-Scanner/Capture simulation. The current foundation includes
+fidelity correction, bounded Slice 1D.3 synthetic Universal Scanner/Capture,
+and checkpointed Slice 1D.4 material-uncertainty Smart Inbox simulation. The current foundation includes
 the Next.js shell, real MapLibre globe, canonical synthetic purchase graph,
 Purchases/history/detail, shared discovery state, and deterministic
-Analytics/Stats. The currently authorized bounded Slice 1D.4 adds one
-material-uncertainty Smart Inbox simulation from that same canonical graph;
-it remains session-local, synthetic, and provider-free.
+Analytics/Stats and Smart Inbox. The currently authorized bounded Slice 1D.5
+adds deterministic local map/UI action simulation and the mobile order
+`Globe · Capture · Purchases · Stats`; it remains synthetic, reversible,
+provider-free, and network-free.
 
 Every purchase, place, amount, coordinate, and performance story in the demo is
 synthetic. The app does not connect to accounts, services, location history, or
@@ -79,6 +80,7 @@ npm run qa:experience
 npm run qa:analytics
 npm run qa:capture
 npm run qa:inbox
+npm run qa:ask
 npm run qa:load
 ```
 
@@ -86,7 +88,7 @@ The Playwright commands start the local development server when needed and write
 screenshots, recordings, and run output only to the ignored local `artifacts/`
 directory.
 
-## Implemented through the bounded Slice 1D.4 local checkpoint
+## Implemented through the bounded Slice 1D.5 local working checkpoint
 
 - Next.js App Router + TypeScript migration with pinned runtime dependencies
 - responsive desktop/mobile shell, dark-premium tokens, safe-area support,
@@ -137,12 +139,19 @@ directory.
   preserving one pin per place and one mounted MapLibre instance
 - Smart Inbox decisions are intentionally in-memory only and reset to the
   unresolved canonical fixture baseline on reload
+- a compact secondary Ask Spendscape surface with deterministic English/Hebrew
+  parsing, canonical ID validation, exactly ten allowlisted map/UI action
+  shapes, confirmation-gated multi-action plans, bounded ambiguity choices,
+  explicit rejection, one-step Undo, and no model or network call
+- the four equal-width mobile destinations appear in semantic, visual, and
+  keyboard order as **Globe · Capture · Purchases · Stats**; Ask Spendscape
+  remains a secondary row inside Globe Tools rather than a fifth destination
 
 ## Intentionally not implemented
 
-Slice 1D.4 adds only one synthetic, frontend-only material-uncertainty Smart
-Inbox story to the prior simulated Capture and purchase foundation. Real camera/file input,
-barcode lookup, OCR, Gmail, product providers, AI control/actions,
+Slice 1D.5 adds only deterministic, frontend-only simulated map/UI actions to
+the accepted Smart Inbox, Capture, and purchase foundation. Real camera/file input,
+barcode lookup, OCR, Gmail, product providers, real LLM/AI providers,
 Life Replay, privacy/sharing, backend, authentication, factual FX, deployment,
 service accounts, production credentials, paid providers, and real user data
 remain unimplemented and unauthorized.

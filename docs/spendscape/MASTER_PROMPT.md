@@ -80,9 +80,10 @@ and principles into an original dark Spendscape experience.
 ## Current command
 
 The completed implementation checkpoint is Phase 1 through bounded Slice
-1D.3 at `9b7aaf39e3f62510f8f6281f21b9cadb6c762541`. The latest explicit
-authorization activates only bounded Slice 1D.4 material-uncertainty Smart
-Inbox simulation + local QA; it authorizes no later product or technology work.
+1D.4 at `58a3c4b32c26060c63eef2e89db823ca7acdfd27`. The latest explicit
+authorization activates only bounded Slice 1D.5 deterministic local synthetic
+AI map/UI action simulation + local QA; it authorizes no real AI/provider,
+later product, or technology work.
 
 Unless the user supplies a new exact bounded authorization:
 

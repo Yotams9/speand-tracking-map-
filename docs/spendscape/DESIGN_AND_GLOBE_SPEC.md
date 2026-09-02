@@ -149,7 +149,7 @@ privacy settings without explicit confirmation.
 
 - Full-viewport globe with minimal top navigation and search/profile chrome.
 - Context panels collapse and never permanently hide the globe.
-- Timeline near the lower edge; Ask AI and Add/Capture float deliberately.
+- Timeline near the lower edge; Ask Spendscape and Add/Capture float deliberately.
 - Returning from analytics restores camera/filter/selection state.
 
 ### Mobile
@@ -158,8 +158,10 @@ privacy settings without explicit confirmation.
 - Bottom sheets use snap points, drag handle, clear close/back, and keyboard-safe
   layout.
 - Universal Scanner/Add remains thumb-reachable.
-- Bottom nav is Globe, Stats, AI; profile and Smart Inbox are secondary global
-  destinations.
+- Bottom nav is **Globe · Capture · Purchases · Stats** in semantic, visual,
+  keyboard, and RTL-aware order. Ask Spendscape is a secondary row inside
+  Globe Tools, never a fifth destination; profile and Smart Inbox are secondary
+  global destinations.
 
 ## Performance acceptance
 
