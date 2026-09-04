@@ -22,7 +22,7 @@ rejected.
 ## Current verified repository baseline
 
 The completed local implementation checkpoint is Phase 1 through bounded Slice
-1D.5 at `8ea8371f6863e7d40ae6fe276935926ddbadda56` on
+1D.6 at `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa` on
 `feature/spendscape-rebuild`:
 
 - Next.js App Router `16.3.3`, React/React DOM `19.2.8`, and TypeScript `5.9.3`.
@@ -220,17 +220,21 @@ The approval integrated and reviewed this strategy only. No product or
 technology implementation was authorized by the documentation approval, and no
 implementation slice was activated by that documentation approval.
 
-Slice 1D.5 is completed, including runtime/focus/history corrections. The only
-active authorization is bounded Slice 1D.6 synthetic Life Replay + local QA.
-Both are product-scoped, deterministic, local, and provider-free; neither
-activates `AIProvider` or any technology candidate in this strategy.
+Slices 1D.5 and 1D.6 are completed, including Ask runtime/focus/history
+corrections and details-first synthetic Life Replay. Ordinary Replay playback
+performs no automatic camera travel; explicit `Show place` is its only
+camera-moving action. The bounded final Phase 1E review and documentation
+reconciliation are complete with no remaining Blocker or High defect. No Phase
+1 product implementation slice or later phase is active. These product-scoped, deterministic, local, provider-free
+features do not activate `AIProvider` or any technology candidate in this
+strategy.
 
 ### Remaining Phase 1
 
 Keep the product synthetic and frontend-only. Do not add provider SDKs, real
 accounts, backend resources, OCR, AI, Gmail, factual FX, or deployment merely
-to complete the concept experience. Any additional Phase 1 slice needs its own
-explicit bounded approval after Slice 1D.1.
+to complete the concept experience. Phase 1 is complete; any additional product
+slice or later phase needs its own explicit bounded approval.
 
 ### Phase 2 — canonical backend and authentication
 

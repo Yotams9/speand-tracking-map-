@@ -24,13 +24,15 @@ full brainstorming transcript.
 - Branch: `feature/spendscape-rebuild`
 - Product: **Spendscape**
 - Delivery: responsive web/PWA only
-- Completed implementation checkpoint: Phase 1 through bounded Slice 1D.5 at `8ea8371f6863e7d40ae6fe276935926ddbadda56`
-- Current implementation authorization: bounded Slice 1D.6 synthetic Life Replay + local QA only; no commit
-- Latest completed checkpoint: synthetic Ask actions, runtime validation, focus/history corrections, and four-item mobile navigation
+- Completed implementation checkpoint: Phase 1 through bounded Slice 1D.6 at `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`
+- Phase 1E status: final critical review, production-rendered local QA, and documentation reconciliation completed with no remaining Blocker or High defect
+- Current authorization: none; no product implementation slice or later phase is active
+- Active implementation slice: none
+- Latest completed checkpoint: details-first synthetic Life Replay with no automatic camera travel and explicit `Show place` as its only camera-moving action
 - Existing app: Next.js App Router + React + TypeScript Spendscape concept
 - Prior implementation checkpoint: `b5796c5d393d8271dd7ee1b175c2c45bfe364806`
 - Phase 1 data: synthetic only
-- Backend/providers/accounts/deployment: not implemented or connected
+- Backend/authentication/providers/accounts/real data/deployment: not implemented, connected, or authorized
 
 The old root Phase 1 documents remain as historical evidence. They are not the
 Spendscape execution contract.

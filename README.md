@@ -1,4 +1,4 @@
-# Spendscape — Phase 1 Slice 1D.6 active checkpoint
+# Spendscape — Phase 1 completed checkpoint
 
 Spendscape is a globe-first purchase-intelligence concept. This branch currently
 implements completed Phase 1 Slices 1A–1C.1, 1D.1, 1D.2, the accepted globe
@@ -7,9 +7,14 @@ and checkpointed Slice 1D.4 material-uncertainty Smart Inbox simulation. The cur
 the Next.js shell, real MapLibre globe, canonical synthetic purchase graph,
 Purchases/history/detail, shared discovery state, and deterministic
 Analytics/Stats and Smart Inbox. Slice 1D.5 synthetic Ask, runtime validation,
-focus/history corrections and `Globe · Capture · Purchases · Stats` are completed
-at `8ea8371f6863e7d40ae6fe276935926ddbadda56`. Only bounded Slice 1D.6 synthetic
-Life Replay, minimal documentation and local QA are active; no commit is authorized.
+focus/history corrections and `Globe · Capture · Purchases · Stats` are
+completed. Details-first synthetic Life Replay is completed with no automatic
+camera travel and explicit `Show place` as its only camera-moving action. Phase
+1 through Slice 1D.6 is checkpointed at
+`95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`. No Phase 1 product
+implementation slice is active. The bounded Phase 1E critical review passed
+with no remaining Blocker or High defect and is recorded by the current local
+documentation checkpoint. No later phase is active.
 
 Every purchase, place, amount, coordinate, and performance story in the demo is
 synthetic. The app does not connect to accounts, services, location history, or
@@ -81,14 +86,16 @@ npm run qa:analytics
 npm run qa:capture
 npm run qa:inbox
 npm run qa:ask
+npm run qa:replay
 npm run qa:load
 ```
 
-The Playwright commands start the local development server when needed and write
-screenshots, recordings, and run output only to the ignored local `artifacts/`
-directory.
+Most Playwright commands start the configured local server when needed. Replay
+QA intentionally requires an already-built `next start` production server.
+Screenshots, recordings, and run output belong only in the ignored local
+`artifacts/` directory.
 
-## Accepted implementation through Slice 1D.5
+## Accepted implementation through Slice 1D.6
 
 - Next.js App Router + TypeScript migration with pinned runtime dependencies
 - responsive desktop/mobile shell, dark-premium tokens, safe-area support,
@@ -147,7 +154,7 @@ directory.
   keyboard order as **Globe · Capture · Purchases · Stats**; Ask Spendscape
   remains a secondary row inside Globe Tools rather than a fifth destination
 
-## Bounded Slice 1D.6 — Life Replay
+## Completed Slice 1D.6 — Life Replay
 
 Open Timeline → Life Replay; on mobile use Globe Tools → Timeline. The compact
 non-modal player opens paused over the same mounted globe. Play/Pause,
@@ -178,8 +185,9 @@ does not start development mode. Screenshots/results belong only in ignored
 
 ## Intentionally not implemented
 
-Slice 1D.5 adds only deterministic, frontend-only simulated map/UI actions to
-the accepted Smart Inbox, Capture, and purchase foundation. Real camera/file input,
+Phase 1 adds only deterministic, frontend-only simulations to the accepted
+globe, purchase, analytics, Capture, Smart Inbox, Ask, and Life Replay
+foundation. Real camera/file input,
 barcode lookup, OCR, Gmail, product providers, real LLM/AI providers,
 production Life Replay, privacy/sharing, backend, authentication, factual FX, deployment,
 service accounts, production credentials, paid providers, and real user data

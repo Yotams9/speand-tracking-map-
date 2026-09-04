@@ -80,11 +80,15 @@ and principles into an original dark Spendscape experience.
 ## Current command
 
 The completed implementation checkpoint is Phase 1 through bounded Slice
-1D.5 at `8ea8371f6863e7d40ae6fe276935926ddbadda56`. The latest explicit
-authorization activates only bounded Slice 1D.6 deterministic synthetic
-Life Replay + local QA and minimal status reconciliation, without a commit.
-The accepted Ask/runtime/focus/history/navigation work stays intact. Real AI,
-provider, later product, and technology work remain unauthorized.
+1D.6 at `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`. Life Replay is a
+details-first synthetic player: ordinary playback issues no camera commands,
+and explicit `Show place` is its sole camera-moving action. No Phase 1 product
+implementation slice is active. The bounded Phase 1E final critical review,
+production-rendered local QA, and documentation reconciliation are complete
+with no remaining Blocker or High defect and are recorded by the current local
+documentation checkpoint. Phase 2, real AI, backend, authentication, providers,
+accounts, credentials, real data, deployment, and later technology work remain
+unauthorized.
 
 Unless the user supplies a new exact bounded authorization:
 

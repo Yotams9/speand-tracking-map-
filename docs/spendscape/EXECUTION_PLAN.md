@@ -4,12 +4,16 @@ Every phase has a separate human gate. Later phases are context, not current
 authorization.
 
 Current completed implementation checkpoint: Phase 1 through bounded Slice
-1D.5 at `8ea8371f6863e7d40ae6fe276935926ddbadda56`. It includes the accepted globe-fidelity correction, deterministic
+1D.6 at `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`. It includes the accepted globe-fidelity correction, deterministic
 Analytics/Stats, synthetic Universal Scanner/Capture simulation, bounded
 loading recovery, canonical local search, and the material-uncertainty Smart
-Inbox simulation and synthetic Ask/runtime/focus/history/navigation corrections.
-Only bounded Slice 1D.6 is active for synthetic Life Replay and local QA; no
-technology slice is active. Technology candidates and evaluation work nest inside these phases
+Inbox simulation, synthetic Ask/runtime/focus/history/navigation corrections,
+and details-first synthetic Life Replay with no automatic camera travel and
+explicit `Show place` as its sole camera-moving action. No Phase 1 product
+implementation slice or technology slice is active. The bounded Phase 1E
+critical review, production-rendered local QA, and documentation reconciliation
+are complete with no remaining Blocker or High defect. No later phase is
+active. Technology candidates and evaluation work nest inside these phases
 as specified in `TECHNOLOGY_STRATEGY.md`; they do not create a competing roadmap
 or authorize real ingestion.
 
@@ -76,8 +80,8 @@ Status: completed through the approved Slice 1C.1 visual-polish checkpoint.
 
 ### 1D — synthetic product experience
 
-Status: bounded Slices 1D.1–1D.5 are complete and checkpointed through
-`8ea8371f`. Only bounded Slice 1D.6 synthetic Life Replay is active.
+Status: bounded Slices 1D.1–1D.6 are complete and checkpointed through
+`95d865f1`. No Phase 1 product implementation slice is active.
 Preserve accepted Ask preview/Apply/Undo, runtime validation, focus/history,
 and mobile order `Globe · Capture · Purchases · Stats`. Search,
 filters, timeline, Purchases, place/purchase detail, shared state, nested
@@ -89,11 +93,11 @@ providers, real ingestion, and backend work remain deferred.
 
 - Search, filters, timeline, Analytics/Stats, Purchases, place/purchase detail.
 - Universal Scanner simulation, cash/manual, nested receipt items.
-- Smart Inbox, multi-currency-ready display, AI action simulation, Life Replay,
-  and privacy/share concepts.
+- Smart Inbox, multi-currency-ready display, AI action simulation, and synthetic
+  Life Replay. Privacy/share implementation remains deferred to its later gate.
 - All numbers from one coherent synthetic fixture source.
 
-#### Active bounded Slice 1D.6 — synthetic Life Replay
+#### Completed bounded Slice 1D.6 — synthetic Life Replay
 
 - Timeline entry; compact non-modal player over the same mounted globe.
 - Explicit Play/Pause, previous/next, committed scrub, 0.5×/1×/2× speed,
@@ -108,9 +112,13 @@ providers, real ingestion, and backend work remain deferred.
 - No network code, provider, dependency, route, sharing/export/video generation.
 - Domain/timer tests, relevant regression suites, production screenshots at
   360×640, 390×844, 430×932 RTL and 1280×800. Emulation is not physical Safari.
-- Stop for `APPROVE SPENDSCAPE SLICE 1D.6 CHECKPOINT REVIEW`; no commit.
+- Completed and checkpointed at
+  `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`.
 
 ### 1E — functional and visual QA
+
+Status: completed with no remaining Blocker or High defect and recorded by the
+current local documentation checkpoint. No later phase is active.
 
 - Appropriate type/build/unit checks.
 - Every visible control exercised.
