@@ -68,6 +68,9 @@ form. It is a summary of user intent, not a verbatim transcript.
 - Material-uncertainty Smart Inbox simulation, synchronized canonical
   resolution/defer/Undo, visible keyboard focus, and local QA through bounded
   Slice 1D.4: `58a3c4b`.
+- Synthetic Ask, full runtime action validation, focus/history corrections,
+  and accepted mobile order through Slice 1D.5:
+  `8ea8371f6863e7d40ae6fe276935926ddbadda56`.
 - The app now uses Next.js App Router, MapLibre, one canonical synthetic fixture
   graph, Purchases/detail surfaces, and shared globe/search/filter/timeline
   state. Engineering and rendered QA were completed at the approved slice
@@ -88,10 +91,10 @@ correction preserves OpenFreeMap Liberty while completing RTL shaping,
 trackpad/wheel behavior, top-layer close-zoom pins, and visible Heatmap density.
 
 Scanner/Capture and the one material-uncertainty Smart Inbox case are accepted
-synthetic frontend simulations. Slice 1D.5 is authorized only for deterministic
-local allowlisted map/UI action simulation, reversible state, the bounded
-mobile navigation reorder, and directly required local QA. Real AI/LLM calls,
-Life Replay, privacy/sharing, backend,
+synthetic frontend simulations. Slice 1D.5 synthetic Ask and its bounded
+runtime/focus/history/navigation corrections are completed and checkpointed.
+Only Slice 1D.6 synthetic Life Replay and local QA are active. Real AI/LLM calls,
+production Replay, privacy/sharing, backend,
 authentication, real camera/file handling, OCR, Gmail, provider integrations,
 factual FX, accounts, deployment, and real data are not implemented or
 authorized.
@@ -100,12 +103,12 @@ authorized.
 
 The user approved Phase 1 build/QA and then bounded implementation through
 Slices 1A–1C.1, 1D.1, 1D.2, the globe-fidelity correction, bounded Slice 1D.3,
-and bounded Slice 1D.4. Those checkpoints are complete and accepted at
-`58a3c4b`. Only bounded Slice 1D.5 synthetic AI map/UI action simulation + local
-QA is active; no technology slice is active.
+and bounded Slices 1D.4 and 1D.5. Those checkpoints are complete and accepted at
+`8ea8371f6863e7d40ae6fe276935926ddbadda56`. Only bounded Slice 1D.6 synthetic
+Life Replay + local QA is active; no technology slice or commit is authorized.
 
 Do not infer AI, Supabase, Zod, any provider, real ingestion, or a later slice
-from the Slice 1D.5 authorization. Require a new exact bounded authorization.
+from the Slice 1D.6 authorization. Require a new exact bounded authorization.
 
 ## Capability facts at handoff
 

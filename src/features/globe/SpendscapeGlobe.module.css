@@ -1574,6 +1574,17 @@
 .filterGrid label { display: flex; flex-direction: column; gap: 7px; color: #9ca3b1; font-size: 0.66rem; }
 .filterGrid select { block-size: 44px; padding-inline: 10px; border: 1px solid var(--line); border-radius: 9px; background: #20242d; color: var(--cloud); font-size: 0.74rem; }
 .timelineSheet input[type='range'] { inline-size: 100%; margin-block: 28px 12px; accent-color: var(--cyan); }
+.timelineSheet .replayEntry { display: flex; align-items: center; gap: 14px; inline-size: 100%; text-align: start; margin-top: 18px; padding: 14px; border: 1px solid #577386; border-radius: 12px; background: #203344; color: #f1f6fc; font-size: 16px; }
+.replayEntry small { display: block; margin-top: 5px; font-size: 13px; color: #bccfdf; }
+.app[data-replay-open='true'] > .hero,
+.app[data-replay-open='true'] > .loadingState,
+.app[data-replay-open='true'] > .liveStatus,
+.app[data-replay-open='true'] > .emptyState { display: none; }
+@media (max-width: 760px) {
+  .app[data-replay-open='true'] > .mobilePrimary { bottom: auto; top: calc(72px + var(--safe-top)); inset-inline-start: 16px; inset-inline-end: auto; inline-size: 46px; }
+  .app[data-replay-open='true'] .mobileLatest { display: none; }
+  .app[data-replay-open='true'] > .controlDock { z-index: 24; }
+}
 .timelineLabels { display: flex; justify-content: space-between; gap: 12px; color: #8f96a4; font-size: 0.66rem; }
 
 @media (max-width: 760px) {

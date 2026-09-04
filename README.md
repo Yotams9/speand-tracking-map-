@@ -1,4 +1,4 @@
-# Spendscape — Phase 1 Slice 1D.5 active checkpoint
+# Spendscape — Phase 1 Slice 1D.6 active checkpoint
 
 Spendscape is a globe-first purchase-intelligence concept. This branch currently
 implements completed Phase 1 Slices 1A–1C.1, 1D.1, 1D.2, the accepted globe
@@ -6,10 +6,10 @@ fidelity correction, bounded Slice 1D.3 synthetic Universal Scanner/Capture,
 and checkpointed Slice 1D.4 material-uncertainty Smart Inbox simulation. The current foundation includes
 the Next.js shell, real MapLibre globe, canonical synthetic purchase graph,
 Purchases/history/detail, shared discovery state, and deterministic
-Analytics/Stats and Smart Inbox. The currently authorized bounded Slice 1D.5
-adds deterministic local map/UI action simulation and the mobile order
-`Globe · Capture · Purchases · Stats`; it remains synthetic, reversible,
-provider-free, and network-free.
+Analytics/Stats and Smart Inbox. Slice 1D.5 synthetic Ask, runtime validation,
+focus/history corrections and `Globe · Capture · Purchases · Stats` are completed
+at `8ea8371f6863e7d40ae6fe276935926ddbadda56`. Only bounded Slice 1D.6 synthetic
+Life Replay, minimal documentation and local QA are active; no commit is authorized.
 
 Every purchase, place, amount, coordinate, and performance story in the demo is
 synthetic. The app does not connect to accounts, services, location history, or
@@ -88,7 +88,7 @@ The Playwright commands start the local development server when needed and write
 screenshots, recordings, and run output only to the ignored local `artifacts/`
 directory.
 
-## Implemented through the bounded Slice 1D.5 local working checkpoint
+## Accepted implementation through Slice 1D.5
 
 - Next.js App Router + TypeScript migration with pinned runtime dependencies
 - responsive desktop/mobile shell, dark-premium tokens, safe-area support,
@@ -147,12 +147,41 @@ directory.
   keyboard order as **Globe · Capture · Purchases · Stats**; Ask Spendscape
   remains a secondary row inside Globe Tools rather than a fifth destination
 
+## Bounded Slice 1D.6 — Life Replay
+
+Open Timeline → Life Replay; on mobile use Globe Tools → Timeline. The compact
+non-modal player opens paused over the same mounted globe. Play/Pause,
+Previous/Next, committed scrubbing, date narrowing, and 0.5×/1×/2× presentation
+speeds use the already-filtered canonical graph, including session Capture and
+current Inbox decisions. Dates are inclusive UTC dates; equal timestamps use
+canonical ID ordering. Amounts remain in their original currencies.
+
+There is one story event per purchase and one pin per confirmed physical place.
+Normal playback, Previous/Next, scrubbing and date changes update purchase
+details and a temporary pin highlight without issuing any camera command.
+Online/unresolved events never create pins or expose Show place. The single
+camera-moving Replay action is an explicit Show place on a resolved physical
+purchase; it pauses playback and uses the accepted place transition (immediate
+under reduced motion). No routes, travel times or inferred stops exist. Direct
+map interaction/backgrounding pauses playback. Close/Escape/Back restore entry
+camera/query/selection/mode; Forward opens a fresh paused player at the first
+event (Replay-only dates, speed and progress are intentionally ephemeral).
+Temporary camera positions
+do not overwrite normal persistence. Reload exits Replay; the existing in-memory
+Capture/Inbox reset policy remains unchanged. Ask and Replay cannot execute
+concurrently, and Ask Undo is preserved through Replay open/close.
+
+Production QA: build, then `npm run start -- --hostname 127.0.0.1` and
+`npm run qa:replay`. The Replay config requires that production server and
+does not start development mode. Screenshots/results belong only in ignored
+`artifacts/spendscape-slice-1d6/`. Browser emulation is not physical Safari QA.
+
 ## Intentionally not implemented
 
 Slice 1D.5 adds only deterministic, frontend-only simulated map/UI actions to
 the accepted Smart Inbox, Capture, and purchase foundation. Real camera/file input,
 barcode lookup, OCR, Gmail, product providers, real LLM/AI providers,
-Life Replay, privacy/sharing, backend, authentication, factual FX, deployment,
+production Life Replay, privacy/sharing, backend, authentication, factual FX, deployment,
 service accounts, production credentials, paid providers, and real user data
 remain unimplemented and unauthorized.
 

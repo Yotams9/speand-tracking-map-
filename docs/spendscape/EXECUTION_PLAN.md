@@ -4,12 +4,11 @@ Every phase has a separate human gate. Later phases are context, not current
 authorization.
 
 Current completed implementation checkpoint: Phase 1 through bounded Slice
-1D.4 at `58a3c4b`. It includes the accepted globe-fidelity correction, deterministic
+1D.5 at `8ea8371f6863e7d40ae6fe276935926ddbadda56`. It includes the accepted globe-fidelity correction, deterministic
 Analytics/Stats, synthetic Universal Scanner/Capture simulation, bounded
 loading recovery, canonical local search, and the material-uncertainty Smart
-Inbox simulation. Only bounded Slice 1D.5 is active for deterministic local
-allowlisted map/UI action simulation, the bounded mobile navigation reorder,
-and local QA; no
+Inbox simulation and synthetic Ask/runtime/focus/history/navigation corrections.
+Only bounded Slice 1D.6 is active for synthetic Life Replay and local QA; no
 technology slice is active. Technology candidates and evaluation work nest inside these phases
 as specified in `TECHNOLOGY_STRATEGY.md`; they do not create a competing roadmap
 or authorize real ingestion.
@@ -77,15 +76,15 @@ Status: completed through the approved Slice 1C.1 visual-polish checkpoint.
 
 ### 1D — synthetic product experience
 
-Status: bounded Slices 1D.1, 1D.2, 1D.3, and 1D.4 are complete and checkpointed
-through `58a3c4b`. Bounded Slice 1D.5 is active only for deterministic local
-allowlisted map/UI action simulation, reversible preview/Apply/Undo, the mobile
-order `Globe · Capture · Purchases · Stats`, and local QA. Search,
+Status: bounded Slices 1D.1–1D.5 are complete and checkpointed through
+`8ea8371f`. Only bounded Slice 1D.6 synthetic Life Replay is active.
+Preserve accepted Ask preview/Apply/Undo, runtime validation, focus/history,
+and mobile order `Globe · Capture · Purchases · Stats`. Search,
 filters, timeline, Purchases, place/purchase detail, shared state, nested
 receipts, cash/manual, multi-currency provenance, unresolved examples, and
 deterministic Analytics/Stats, and the synthetic frontend Universal
 Scanner/Capture simulation with session-only demo records are implemented.
-Real AI/provider work, Life Replay, privacy/share,
+Real AI/provider work, production Replay, privacy/share,
 providers, real ingestion, and backend work remain deferred.
 
 - Search, filters, timeline, Analytics/Stats, Purchases, place/purchase detail.
@@ -93,6 +92,23 @@ providers, real ingestion, and backend work remain deferred.
 - Smart Inbox, multi-currency-ready display, AI action simulation, Life Replay,
   and privacy/share concepts.
 - All numbers from one coherent synthetic fixture source.
+
+#### Active bounded Slice 1D.6 — synthetic Life Replay
+
+- Timeline entry; compact non-modal player over the same mounted globe.
+- Explicit Play/Pause, previous/next, committed scrub, 0.5×/1×/2× speed,
+  date narrowing within current filters, completion, empty and single states.
+- One event per composed canonical purchase; chronological timestamp/ID order.
+- Physical places reuse pins; online/unresolved stay in the story without pins.
+- Details-first playback with no automatic camera commands; temporary pin
+  highlight/mode and one explicit Show place action; restore entry query,
+  selection and camera.
+- Interruptible playback, safe Back/Forward/reload/focus, RTL and reduced motion.
+- Preserve session Capture, Inbox decisions and Ask Undo. No new Ask actions.
+- No network code, provider, dependency, route, sharing/export/video generation.
+- Domain/timer tests, relevant regression suites, production screenshots at
+  360×640, 390×844, 430×932 RTL and 1280×800. Emulation is not physical Safari.
+- Stop for `APPROVE SPENDSCAPE SLICE 1D.6 CHECKPOINT REVIEW`; no commit.
 
 ### 1E — functional and visual QA
 
@@ -154,10 +170,13 @@ decisions, GPS-never-proof tests, and provider provenance.
 Gate: `APPROVE SPENDSCAPE PHASE 5 INTELLIGENCE + PRIVACY + QA`
 
 Add advanced analytics, habits/insights, typed AI UI tools through
-`AIProvider`, Life Replay, scoped sharing, export/deletion/retention, and
+`AIProvider`, production Life Replay, scoped sharing, export/deletion/retention, and
 privacy center. Cloudflare Workers AI/Gemma is the initial benchmark candidate;
 an optional OpenAI Responses adapter remains documented. Neither is selected
 without the approved benchmark and privacy/provider gate.
+
+The bounded frontend-only synthetic Replay in Phase 1 does not activate this
+Phase 5 gate, real data, integrations, or production Replay infrastructure.
 
 Evidence: authorization/confirmation gates, redaction, share expiry/revocation,
 reduced motion, and insight truthfulness evaluations.

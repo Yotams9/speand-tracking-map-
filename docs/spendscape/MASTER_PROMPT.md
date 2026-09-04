@@ -80,10 +80,11 @@ and principles into an original dark Spendscape experience.
 ## Current command
 
 The completed implementation checkpoint is Phase 1 through bounded Slice
-1D.4 at `58a3c4b32c26060c63eef2e89db823ca7acdfd27`. The latest explicit
-authorization activates only bounded Slice 1D.5 deterministic local synthetic
-AI map/UI action simulation + local QA; it authorizes no real AI/provider,
-later product, or technology work.
+1D.5 at `8ea8371f6863e7d40ae6fe276935926ddbadda56`. The latest explicit
+authorization activates only bounded Slice 1D.6 deterministic synthetic
+Life Replay + local QA and minimal status reconciliation, without a commit.
+The accepted Ask/runtime/focus/history/navigation work stays intact. Real AI,
+provider, later product, and technology work remain unauthorized.
 
 Unless the user supplies a new exact bounded authorization:
 

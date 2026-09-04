@@ -43,6 +43,7 @@ import {
   type CurrencyCode,
   type CurrencyFilter,
   type DateRangeFilter,
+  type GlobePurchase,
   type LocaleCode,
   type PlaceFeatureProperties,
   type PurchaseQuery,
@@ -68,6 +69,8 @@ import {
   type AskContext,
 } from '@/features/ask/ask-spendscape-domain'
 import { SpendscapeAnalytics } from './SpendscapeAnalytics'
+import { LifeReplayExperience, type ReplayController } from '../replay/LifeReplayExperience'
+import { replayPlace } from '../replay/life-replay-domain'
 import {
   buildDevelopmentGlobeStyle,
   HEATMAP_COLOR_EXPRESSION,
@@ -247,6 +250,13 @@ interface NavigationSnapshot {
   captureDepth?: number
   inboxCaseId?: string | null
   askOpen?: boolean
+  replay?: ReplaySession | null
+}
+
+interface ReplaySession {
+  id: number
+  entry: AskUndoSnapshot
+  purchaseIds: string[]
 }
 
 interface AskUndoSnapshot {
@@ -312,6 +322,10 @@ interface QaEvidence {
   canonicalGeoJsonFeatures: number
   sourceDatasetFeatures: number
   sourceUpdates: number
+  replayAutomaticCameraCommands: number
+  replayExplicitCameraCommands: number
+  replayEventPresentations: number
+  replaySourceUpdatesAtOpen: number | null
   rendererQueryFeatures: number
   rendererQueryClusters: number
   rendererQueryPlaces: number
@@ -748,6 +762,7 @@ function formatMonth(month: string, locale: LocaleCode): string {
 }
 
 function navigationHash(snapshot: NavigationSnapshot): string {
+  if (snapshot.replay) return '#replay'
   if (snapshot.captureStep) return '#capture'
   if (snapshot.inboxCaseId) return `#inbox/${snapshot.inboxCaseId}`
   if (snapshot.askOpen) return '#ask'
@@ -789,6 +804,28 @@ export function SpendscapeGlobe() {
   const askFocusIntentRef = useRef<'dismiss' | 'purchase' | 'purchases' | 'feedback' | { analytics: AnalyticsView }>('dismiss')
   const desktopAskTriggerRef = useRef<HTMLButtonElement>(null)
   const mobileToolsButtonRef = useRef<HTMLButtonElement>(null)
+  const desktopTimelineRef = useRef<HTMLButtonElement>(null)
+  const timelineReturnFocusRef = useRef<HTMLElement | null>(null)
+  const replayReturnFocusRef = useRef<HTMLElement | null>(null)
+  const replayFocusFrameRef = useRef<number | null>(null)
+  const replayRestoreFocusRef = useRef(false)
+  const replayWasOpenRef = useRef(false)
+  const replaySessionRef = useRef<ReplaySession | null>(null)
+  const replayControllerRef = useRef<ReplayController | null>(null)
+  const replayLastPlaceRef = useRef<string | null>(null)
+  const replaySequenceRef = useRef(0)
+  const replaySessionsRef = useRef(new Set<number>())
+  const replayMapAvailableRef = useRef(false)
+  const replayAutomaticCameraCommandsRef = useRef(0)
+  const replayExplicitCameraCommandsRef = useRef(0)
+  const replayEventPresentationsRef = useRef(0)
+  const replaySourceUpdatesAtOpenRef = useRef<number | null>(null)
+  const exitReplayRef = useRef<(action: (entry: NavigationSnapshot | null) => void) => void>((action) => action(null))
+  const pendingReplayNavigationRef = useRef<{ entry: NavigationSnapshot; action: (entry: NavigationSnapshot | null) => void } | null>(null)
+  const rendererHealthRef = useRef<'ready' | 'lost' | 'restoring'>('ready')
+  const rendererGenerationRef = useRef(0)
+  const cameraGenerationRef = useRef(0)
+  const selectedPlaceRef = useRef<string | null>(null)
   const purchaseDetailBackRef = useRef<HTMLButtonElement>(null)
   const purchasesCloseRef = useRef<HTMLButtonElement>(null)
   const askUndoButtonRef = useRef<HTMLButtonElement>(null)
@@ -821,6 +858,7 @@ export function SpendscapeGlobe() {
   const [inboxCaseId, setInboxCaseId] = useState<string | null>(null)
   const [smartInboxDecisions, setSmartInboxDecisions] = useState<SmartInboxDecision[]>([])
   const [askOpen, setAskOpen] = useState(false)
+  const [replay, setReplay] = useState<ReplaySession | null>(null)
   const [askUndoSnapshot, setAskUndoSnapshot] = useState<AskUndoSnapshot | null>(null)
   const [askFeedback, setAskFeedback] = useState<AskExecutionFeedback | null>(null)
   const [analyticsView, setAnalyticsView] = useState<AnalyticsView | null>(null)
@@ -830,6 +868,9 @@ export function SpendscapeGlobe() {
   const [mapAttempt, setMapAttempt] = useState(0)
   const [loading, setLoading] = useState(true)
   const [mapError, setMapError] = useState<string | null>(null)
+  const [rendererHealth, setRendererHealth] = useState<'ready' | 'lost' | 'restoring'>('ready')
+  const mapAvailable = !loading && !mapError && rendererHealth === 'ready'
+  replayMapAvailableRef.current = mapAvailable
   const [autoSpin, setAutoSpin] = useState(true)
   const [reducedMotion, setReducedMotion] = useState(false)
   const [status, setStatus] = useState<string>(copy.en.loading)
@@ -905,6 +946,8 @@ export function SpendscapeGlobe() {
     [query.search, searchScopePurchases],
   )
   const visiblePurchases = useMemo(() => filterPurchases(query, allPurchases), [allPurchases, query])
+  const replayPurchases = useMemo(() => replay
+    ? allPurchases.filter((purchase) => replay.purchaseIds.includes(purchase.id)) : [], [allPurchases, replay])
   const visibleData = useMemo(
     () => buildPlaceFeatureCollection(globePlaces, visiblePurchases),
     [visiblePurchases],
@@ -990,9 +1033,10 @@ export function SpendscapeGlobe() {
   reducedMotionRef.current = reducedMotion
   localeRef.current = locale
   modeRef.current = mode
+  selectedPlaceRef.current = selectedPlaceId
 
   const updateQuery = useCallback((patch: Partial<PurchaseQuery>) => {
-    setQuery((current) => ({ ...current, ...patch }))
+    exitReplayRef.current(() => setQuery((current) => ({ ...current, ...patch })))
   }, [])
 
   useEffect(() => {
@@ -1018,7 +1062,7 @@ export function SpendscapeGlobe() {
     }
 
     const historicalSnapshot: NavigationSnapshot | null = isNavigationSnapshot(window.history.state)
-      ? window.history.state
+      ? window.history.state.replay?.entry.navigation ?? window.history.state
       : null
     const snapshot: NavigationSnapshot = historicalSnapshot
       ? {
@@ -1027,6 +1071,7 @@ export function SpendscapeGlobe() {
           captureDepth: 0,
           inboxCaseId: null,
           askOpen: false,
+          replay: null,
           selectedPurchaseId: historicalSnapshot.selectedPurchaseId?.startsWith('session_purchase_')
             ? null
             : historicalSnapshot.selectedPurchaseId,
@@ -1042,6 +1087,7 @@ export function SpendscapeGlobe() {
           captureDepth: 0,
           inboxCaseId: null,
           askOpen: false,
+          replay: null,
         }
     setSelectedPurchaseId(snapshot.selectedPurchaseId)
     // Preserve the router-owned state installed before this mount effect. Dropping
@@ -1067,12 +1113,14 @@ export function SpendscapeGlobe() {
 
   useEffect(() => {
     if (!stateRestored) return
+    const entry = replaySessionRef.current?.entry
     const stored: StoredExperienceState = {
       marker: 'spendscape-1d1', locale, query, mode, surface,
       selectedPlaceId,
       selectedPurchaseId: selectedPurchaseId?.startsWith('session_purchase_') ? null : selectedPurchaseId,
       captureStep: null, captureDepth: 0, inboxCaseId: null,
       askOpen: false,
+      ...(entry ? { ...entry.navigation, query: entry.query, mode: entry.mode, replay: null } : {}),
     }
     window.sessionStorage.setItem(EXPERIENCE_STORAGE_KEY, JSON.stringify(stored))
   }, [locale, mode, query, selectedPlaceId, selectedPurchaseId, stateRestored, surface])
@@ -1108,6 +1156,42 @@ export function SpendscapeGlobe() {
     }
   }, [askOpen])
 
+  useEffect(() => {
+    const dismissed = replayWasOpenRef.current && !replay
+    replayWasOpenRef.current = Boolean(replay)
+    if (!dismissed || !replayRestoreFocusRef.current) return
+    let cancelled = false
+    const stopWatchingInput = () => {
+      document.removeEventListener('pointerdown', cancel, true)
+      document.removeEventListener('keydown', cancel, true)
+    }
+    const cancel = () => { cancelled = true; stopWatchingInput() }
+    document.addEventListener('pointerdown', cancel, true)
+    document.addEventListener('keydown', cancel, true)
+    const restore = () => {
+      stopWatchingInput()
+      if (cancelled || !replayRestoreFocusRef.current || replaySessionRef.current) return
+      const target = [replayReturnFocusRef.current, timelineReturnFocusRef.current,
+        document.querySelector<HTMLElement>('[data-testid="analytics-timeline"]'),
+        document.querySelector<HTMLElement>('[data-testid="history-timeline"]'),
+        mobileToolsButtonRef.current, desktopTimelineRef.current,
+        purchasesCloseRef.current].find(isAvailableFocusTarget)
+      target?.focus({ preventScroll: true })
+    }
+    const frame = window.requestAnimationFrame(() => {
+      replayFocusFrameRef.current = null
+      // Restored Purchases/Stats mount at opacity 0. Wait for their actual entry
+      // animation, not a timeout, before requiring a visible focus target.
+      const animations = ['[data-testid="purchases-panel"]', '[data-testid="analytics-panel"]']
+        .flatMap((selector) => document.querySelector(selector)?.getAnimations() ?? [])
+        .filter((animation) => animation.playState === 'running' || animation.pending)
+      if (animations.length) void Promise.allSettled(animations.map((animation) => animation.finished)).then(restore)
+      else restore()
+    })
+    replayFocusFrameRef.current = frame
+    return () => { cancel(); window.cancelAnimationFrame(frame); replayFocusFrameRef.current = null }
+  }, [replay, surface])
+
   const clearSpinTimer = useCallback(() => {
     if (spinTimerRef.current !== null) {
       window.clearTimeout(spinTimerRef.current)
@@ -1116,6 +1200,7 @@ export function SpendscapeGlobe() {
   }, [])
 
   const stopSpin = useCallback((announce = true) => {
+    cameraGenerationRef.current += 1
     const shouldStopCamera = spinEnabledRef.current || programmaticCameraRef.current
     spinEnabledRef.current = false
     programmaticCameraRef.current = false
@@ -1190,7 +1275,7 @@ export function SpendscapeGlobe() {
   }, [clearSpinTimer])
 
   const resumeSpin = useCallback(() => {
-    if (reducedMotionRef.current) return
+    if (reducedMotionRef.current || rendererHealthRef.current !== 'ready') return
     spinEnabledRef.current = true
     setAutoSpin(true)
     setStatus(copy[localeRef.current].orbiting)
@@ -1200,7 +1285,7 @@ export function SpendscapeGlobe() {
   const resumeAfterCapture = useCallback(() => {
     if (!captureResumeSpinRef.current) return
     captureResumeSpinRef.current = false
-    if (reducedMotionRef.current) return
+    if (reducedMotionRef.current || rendererHealthRef.current !== 'ready') return
     spinEnabledRef.current = true
     queueSpin()
   }, [queueSpin])
@@ -1215,7 +1300,69 @@ export function SpendscapeGlobe() {
     }
   }, [])
 
+  const releaseReplay = useCallback((restoreFocus = true) => {
+    const session = replaySessionRef.current
+    if (!session) return null
+    replayControllerRef.current?.pause()
+    stopSpin(false)
+    const entry = session.entry
+    setQuery(entry.query)
+    setMode(entry.mode)
+    modeRef.current = entry.mode
+    setAnalyticsView(entry.analyticsView)
+    setSurface(entry.navigation.surface)
+    setSelectedPlaceId(entry.navigation.selectedPlaceId)
+    selectedPlaceRef.current = entry.navigation.selectedPlaceId
+    setSelectedPurchaseId(entry.navigation.selectedPurchaseId)
+    updateSelectedFilter(entry.navigation.selectedPlaceId)
+    if (entry.camera) {
+      mapRef.current?.jumpTo(entry.camera)
+      window.sessionStorage.setItem(CAMERA_STORAGE_KEY, JSON.stringify(entry.camera))
+    }
+    replaySessionRef.current = null
+    replayLastPlaceRef.current = null
+    replayRestoreFocusRef.current = restoreFocus
+    setReplay(null)
+    return entry.navigation
+  }, [stopSpin, updateSelectedFilter])
+
+  const exitReplayForNavigation = useCallback((action: (entry: NavigationSnapshot | null) => void) => {
+    // A newer destination supersedes a pending one without another traversal.
+    if (pendingReplayNavigationRef.current) {
+      pendingReplayNavigationRef.current.action = action
+      return
+    }
+    const entry = releaseReplay(false)
+    replayRestoreFocusRef.current = false
+    if (replayFocusFrameRef.current !== null) {
+      window.cancelAnimationFrame(replayFocusFrameRef.current)
+      replayFocusFrameRef.current = null
+    }
+    if (!entry) { action(null); return }
+    // Traverse the actual opening entry. Replacing Replay with origin would
+    // leave adjacent origins when Capture/Ask/etc subsequently push a destination.
+    pendingReplayNavigationRef.current = { entry, action }
+    window.history.back()
+  }, [releaseReplay])
+  exitReplayRef.current = exitReplayForNavigation
+
   const applyNavigation = useCallback((snapshot: NavigationSnapshot) => {
+    // A reload clears the ephemeral player. Old forward entries must not revive it.
+    if (snapshot.replay && !replaySessionsRef.current.has(snapshot.replay.id)) {
+      snapshot = { ...snapshot.replay.entry.navigation, replay: null }
+      window.history.replaceState({ ...window.history.state, ...snapshot }, '', navigationHash(snapshot))
+    }
+    if (replaySessionRef.current && snapshot.replay?.id !== replaySessionRef.current.id) releaseReplay()
+    if (snapshot.replay && !replaySessionRef.current) {
+      replaySessionRef.current = snapshot.replay
+      replayLastPlaceRef.current = null
+      replayRestoreFocusRef.current = false
+      if (replayFocusFrameRef.current !== null) window.cancelAnimationFrame(replayFocusFrameRef.current)
+      stopSpin(false)
+      setReplay(snapshot.replay)
+      setQuery(snapshot.replay.entry.query)
+      setMode('pins')
+    }
     setSurface(snapshot.surface)
     setSelectedPlaceId(snapshot.selectedPlaceId)
     setSelectedPurchaseId(snapshot.selectedPurchaseId)
@@ -1228,8 +1375,8 @@ export function SpendscapeGlobe() {
     setMobileToolsOpen(false)
     setSearchOpen(false)
     setActiveSearchIndex(-1)
-    updateSelectedFilter(snapshot.selectedPlaceId)
-  }, [updateSelectedFilter])
+    updateSelectedFilter(snapshot.replay ? null : snapshot.selectedPlaceId)
+  }, [releaseReplay, stopSpin, updateSelectedFilter])
 
   const pushNavigation = useCallback((patch: Partial<NavigationSnapshot>) => {
     const snapshot: NavigationSnapshot = {
@@ -1240,11 +1387,16 @@ export function SpendscapeGlobe() {
       askOpen,
       ...patch,
     }
-    window.history.pushState(snapshot, '', navigationHash(snapshot))
+    window.history.pushState({ ...window.history.state, ...snapshot, replay: null }, '', navigationHash(snapshot))
     applyNavigation(snapshot)
   }, [applyNavigation, askOpen, captureDepth, captureStep, inboxCaseId, selectedPlaceId, selectedPurchaseId, surface])
 
   const closeTopLayer = useCallback(() => {
+    if (replaySessionRef.current) {
+      replayControllerRef.current?.pause()
+      window.history.back()
+      return
+    }
     if (askOpen) {
       window.history.back()
       return
@@ -1291,11 +1443,17 @@ export function SpendscapeGlobe() {
   useEffect(() => {
     const restoreNavigation = (event: PopStateEvent) => {
       if (!isNavigationSnapshot(event.state)) return
+      const pendingReplay = pendingReplayNavigationRef.current
+      pendingReplayNavigationRef.current = null
       if (event.state.captureStep && captureDismissedRef.current) {
         window.history.go(-Math.max(1, event.state.captureDepth ?? 1))
         return
       }
       applyNavigation(event.state)
+      if (pendingReplay) {
+        pendingReplay.action(pendingReplay.entry)
+        return
+      }
       if (!event.state.captureStep) resumeAfterCapture()
       if (!event.state.captureStep && pendingCaptureExitRef.current) {
         const pending = pendingCaptureExitRef.current
@@ -1307,7 +1465,13 @@ export function SpendscapeGlobe() {
     return () => window.removeEventListener('popstate', restoreNavigation)
   }, [applyNavigation, resumeAfterCapture])
 
+  useEffect(() => () => { pendingReplayNavigationRef.current = null }, [])
+
   const selectPlace = useCallback((placeId: string, shouldFly = true, recordHistory = true) => {
+    if (replaySessionRef.current) {
+      replayControllerRef.current?.inspectPlace(placeId)
+      return
+    }
     const map = mapRef.current
     const place = placeForId(placeId)
     if (!place) return
@@ -1330,7 +1494,7 @@ export function SpendscapeGlobe() {
     }
     const activeLocale = localeRef.current
     setStatus(`${localized(place.name, activeLocale)} · ${copy[activeLocale].ready}`)
-    if (shouldFly && map) {
+    if (shouldFly && map && rendererHealthRef.current === 'ready') {
       const started = performance.now()
       programmaticCameraRef.current = true
       map.once('moveend', () => {
@@ -1404,6 +1568,8 @@ export function SpendscapeGlobe() {
     // MapLibre's global dispatcher, including deterministic failure states.
     maplibregl.setWorkerUrl('/maplibre-gl-worker.mjs')
     setLoading(true)
+    rendererHealthRef.current = 'ready'
+    setRendererHealth('ready')
     setMapError(null)
     setStatus(copy[localeRef.current].loading)
     setInitializationEvidence({
@@ -1431,6 +1597,7 @@ export function SpendscapeGlobe() {
     let attemptMap: MapLibreMap | null = null
     let mapReadyTimer: number | null = null
     let detachInteractionListeners = () => {}
+    let detachRendererListeners = () => {}
     loadStartRef.current = performance.now()
 
     const removeAttemptMap = () => {
@@ -1447,6 +1614,7 @@ export function SpendscapeGlobe() {
       if (mapReadyTimer !== null) window.clearTimeout(mapReadyTimer)
       controller.abort()
       detachInteractionListeners()
+      detachRendererListeners()
       removeAttemptMap()
       const failure = error instanceof InitializationError
         ? error
@@ -1566,6 +1734,84 @@ export function SpendscapeGlobe() {
         map.on('error', (event) => {
           console.error('[Spendscape MapLibre]', event.error?.message ?? 'Unknown map error')
         })
+        // Optional tile/sprite errors are not renderer failure. MapLibre destroys
+        // and restores its style on real context loss, but keeps this Map instance.
+        let recoverySource: GeoJSONSource | undefined
+        let recoveryData: typeof filteredRef.current | null = null
+        let recoverySyncing = false
+        const recoveryIsCurrent = (generation: number) => !disposed && !attemptFailed
+          && mapRef.current === map && rendererGenerationRef.current === generation
+          && rendererHealthRef.current === 'restoring'
+        const syncRecoveredStyle = () => {
+          if (rendererHealthRef.current !== 'restoring' || recoverySyncing || !map.isStyleLoaded()) return
+          const source = map.getSource(SOURCE_ID) as GeoJSONSource | undefined
+          if (!source || !map.getLayer(PIN_LAYER)) return
+          const data = filteredRef.current
+          if (recoverySource === source && recoveryData === data) return
+          const generation = rendererGenerationRef.current
+          recoverySyncing = true
+          void source.setData(data).then(() => {
+            if (!recoveryIsCurrent(generation)) return
+            recoverySyncing = false
+            recoverySource = source
+            recoveryData = data
+            // The renderer's saved style may predate a Replay exit or navigation.
+            // Reconcile from current canonical/UI ownership, never the stale style.
+            applyGlobeMode(map, modeRef.current)
+            map.setLayoutProperty(LABEL_LAYER, 'text-field', placeLabelExpression(localeRef.current))
+            updateSelectedFilter(replaySessionRef.current ? replayLastPlaceRef.current : selectedPlaceRef.current)
+            setSourceUpdates((current) => current + 1)
+            map.triggerRepaint()
+          }).catch(() => {
+            if (!recoveryIsCurrent(generation)) return
+            recoverySyncing = false
+            // Stay honestly unavailable. A later renderer event may retry; never
+            // remount the map or resume playback as a side effect of recovery.
+          })
+        }
+        const confirmRecoveredRender = () => {
+          if (rendererHealthRef.current !== 'restoring') return
+          syncRecoveredStyle()
+          if (recoverySyncing || recoveryData !== filteredRef.current || !recoverySource
+            || !map.loaded() || map.getCanvas().getContext('webgl2')?.isContextLost() !== false) return
+          rendererHealthRef.current = 'ready'
+          mapReadyRef.current = true
+          setRendererHealth('ready')
+          setStatus(copy[localeRef.current].ready)
+          // No Play, resumeSpin, or camera callback here: recovery stays paused.
+        }
+        const contextLost = () => {
+          rendererGenerationRef.current += 1
+          rendererHealthRef.current = 'lost'
+          replayMapAvailableRef.current = false
+          mapReadyRef.current = false
+          recoverySource = undefined
+          recoveryData = null
+          recoverySyncing = false
+          replayControllerRef.current?.pause()
+          stopSpin(false)
+          map.stop()
+          setRendererHealth('lost')
+          setStatus(copy[localeRef.current].mapFailed)
+        }
+        const contextRestored = () => {
+          rendererHealthRef.current = 'restoring'
+          setRendererHealth('restoring')
+          syncRecoveredStyle()
+        }
+        map.on('webglcontextlost', contextLost)
+        map.on('webglcontextrestored', contextRestored)
+        map.on('style.load', syncRecoveredStyle)
+        map.on('render', confirmRecoveredRender)
+        map.on('idle', confirmRecoveredRender)
+        detachRendererListeners = () => {
+          rendererGenerationRef.current += 1
+          map.off('webglcontextlost', contextLost)
+          map.off('webglcontextrestored', contextRestored)
+          map.off('style.load', syncRecoveredStyle)
+          map.off('render', confirmRecoveredRender)
+          map.off('idle', confirmRecoveredRender)
+        }
         map.setMissingStyleImageResolver((id) => {
           if (id !== 'circle-11' || map.hasImage(id)) return
           const size = 11
@@ -1606,12 +1852,12 @@ export function SpendscapeGlobe() {
         map.on('moveend', () => {
           if (!mapRef.current) return
           const snapshot = snapshotCamera(map)
-          window.sessionStorage.setItem(CAMERA_STORAGE_KEY, JSON.stringify(snapshot))
+          if (!replaySessionRef.current) window.sessionStorage.setItem(CAMERA_STORAGE_KEY, JSON.stringify(snapshot))
           if (window.__SPENDSCAPE_QA__) window.__SPENDSCAPE_QA__.camera = snapshot
           if (spinEnabledRef.current) queueSpin()
         })
 
-        const interrupt = () => stopSpin(true)
+        const interrupt = () => { replayLastPlaceRef.current = null; replayControllerRef.current?.pause(); stopSpin(true) }
         const captureWheel = (event: WheelEvent) => {
           interrupt()
           setInputEvidence((current) => ({
@@ -1834,9 +2080,13 @@ export function SpendscapeGlobe() {
             const feature = event.features?.[0]
             const clusterId = Number(feature?.properties?.cluster_id)
             const source = map.getSource(SOURCE_ID) as GeoJSONSource
-            if (!Number.isFinite(clusterId)) return
+            if (!Number.isFinite(clusterId) || !source || rendererHealthRef.current !== 'ready') return
             stopSpin(false)
-            const zoom = await source.getClusterExpansionZoom(clusterId)
+            const generation = cameraGenerationRef.current
+            let zoom: number
+            try { zoom = await source.getClusterExpansionZoom(clusterId) } catch { return }
+            if (disposed || mapRef.current !== map || rendererHealthRef.current !== 'ready'
+              || generation !== cameraGenerationRef.current) return
             const coordinates = (feature?.geometry as Point).coordinates as [number, number]
             const started = performance.now()
             programmaticCameraRef.current = true
@@ -1865,6 +2115,7 @@ export function SpendscapeGlobe() {
           const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 16 })
           let hoveredFeatureId: string | number | null = null
           map.on('mouseenter', PIN_LAYER, (event) => {
+            if (replaySessionRef.current) return
             map.getCanvas().style.cursor = 'pointer'
             const feature = event.features?.[0]
             if (!feature) return
@@ -1899,6 +2150,7 @@ export function SpendscapeGlobe() {
           map.on('mouseenter', CLUSTER_LAYER, () => { map.getCanvas().style.cursor = 'pointer' })
           map.on('mouseleave', CLUSTER_LAYER, () => { map.getCanvas().style.cursor = '' })
           map.on('click', (event: MapMouseEvent) => {
+            if (replaySessionRef.current) return
             const hit = map.queryRenderedFeatures(event.point, { layers: [CLUSTER_LAYER, PIN_LAYER] })
             if (hit.length === 0) {
               setSelectedPlaceId(null)
@@ -1918,6 +2170,7 @@ export function SpendscapeGlobe() {
           const startOrbitWhenSourceIsReady = () => {
             if (
               orbitStarted
+              || rendererHealthRef.current !== 'ready'
               || reducedMotionRef.current
               || !spinEnabledRef.current
               || !map.isSourceLoaded(SOURCE_ID)
@@ -2067,6 +2320,7 @@ export function SpendscapeGlobe() {
       if (mapReadyTimer !== null) window.clearTimeout(mapReadyTimer)
       clearSpinTimer()
       detachInteractionListeners()
+      detachRendererListeners()
       if (actionTimerRef.current !== null) window.clearTimeout(actionTimerRef.current)
       mapReadyRef.current = false
       programmaticCameraRef.current = false
@@ -2076,11 +2330,15 @@ export function SpendscapeGlobe() {
   }, [clearSpinTimer, mapAttempt, queueSpin, selectPlace, stopSpin, updateSelectedFilter])
 
   useEffect(() => {
-    const canonicalSource = mapRef.current?.getSource(SOURCE_ID) as GeoJSONSource | undefined
-    if (canonicalSource) {
+    const map = mapRef.current
+    const generation = rendererGenerationRef.current
+    const canonicalSource = map?.getSource(SOURCE_ID) as GeoJSONSource | undefined
+    if (canonicalSource && rendererHealthRef.current === 'ready') {
       void canonicalSource.setData(visibleData).then(() => {
+        if (mapRef.current !== map || rendererGenerationRef.current !== generation) return
         setSourceUpdates((current) => current + 1)
       }).catch((error: unknown) => {
+        if (mapRef.current !== map || rendererGenerationRef.current !== generation) return
         setMapError(error instanceof Error ? error.message : 'Canonical place source update failed')
       })
     }
@@ -2102,9 +2360,9 @@ export function SpendscapeGlobe() {
   }, [locale, mode])
 
   useEffect(() => {
-    const evidenceMap = !loading && !mapError && mapReadyRef.current ? mapRef.current : null
+    const evidenceMap = mapAvailable && mapReadyRef.current ? mapRef.current : null
     window.__SPENDSCAPE_QA__ = {
-      ready: !loading && !mapError,
+      ready: mapAvailable,
       locale,
       reducedMotion,
       autoSpin,
@@ -2142,6 +2400,10 @@ export function SpendscapeGlobe() {
       canonicalGeoJsonFeatures: placeFeatureCollection.features.length,
       sourceDatasetFeatures: visibleData.features.length,
       sourceUpdates,
+      replayAutomaticCameraCommands: replayAutomaticCameraCommandsRef.current,
+      replayExplicitCameraCommands: replayExplicitCameraCommandsRef.current,
+      replayEventPresentations: replayEventPresentationsRef.current,
+      replaySourceUpdatesAtOpen: replaySourceUpdatesAtOpenRef.current,
       rendererQueryFeatures: renderedEvidence.rendererQueryFeatures,
       rendererQueryClusters: renderedEvidence.rendererQueryClusters,
       rendererQueryPlaces: renderedEvidence.rendererQueryPlaces,
@@ -2199,11 +2461,11 @@ export function SpendscapeGlobe() {
         topPhysicalPlaceId: visibleAnalytics.topPhysicalPlaces[0]?.placeId ?? null,
       },
     }
-  }, [activeInboxDecision, allPurchases.length, askFeedback, askOpen, askUndoSnapshot, autoSpin, captureStep, currentGlobeCounts, inboxCaseId, initializationEvidence, inputEvidence, loading, locale, mapError, mode, pendingInbox.length, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sessionCaptureRecords.length, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
+  }, [activeInboxDecision, allPurchases.length, askFeedback, askOpen, askUndoSnapshot, autoSpin, captureStep, currentGlobeCounts, inboxCaseId, initializationEvidence, inputEvidence, loading, locale, mapAvailable, mapError, mode, pendingInbox.length, performanceEvidence, query, reducedMotion, renderedEvidence, selectedPlaceId, selectedPurchaseId, sessionCaptureRecords.length, sourceUpdates, surface, visibleAnalytics, visibleData.features.length, visiblePurchases.length, visibleSummary.totalBaseAmountIls])
 
   const runCameraAction = useCallback((name: string, action: (map: MapLibreMap) => void) => {
     const map = mapRef.current
-    if (!map) return
+    if (!map || rendererHealthRef.current !== 'ready') return
     stopSpin(false)
     const started = performance.now()
     let completed = false
@@ -2270,9 +2532,9 @@ export function SpendscapeGlobe() {
     }))
   }, [runCameraAction, updateSelectedFilter])
 
-  const clearFilters = () => setQuery(defaultPurchaseQuery)
+  const clearFilters = () => exitReplayForNavigation(() => setQuery(defaultPurchaseQuery))
 
-  const openInbox = (requestedCase: SmartInboxCase = pendingInbox[0] ?? smartInboxCases[0]) => {
+  const openInbox = (requestedCase: SmartInboxCase = pendingInbox[0] ?? smartInboxCases[0]) => exitReplayForNavigation(() => {
     if (!requestedCase) return
     stopSpin(false)
     const current: NavigationSnapshot = isNavigationSnapshot(window.history.state)
@@ -2286,7 +2548,7 @@ export function SpendscapeGlobe() {
     }
     window.history.pushState(snapshot, '', navigationHash(snapshot))
     applyNavigation(snapshot)
-  }
+  })
 
   const closeInbox = () => {
     if (inboxCaseId) window.history.back()
@@ -2302,7 +2564,7 @@ export function SpendscapeGlobe() {
     window.setTimeout(action, 0)
   }
 
-  const openCapture = () => {
+  const openCapture = () => exitReplayForNavigation(() => {
     captureDismissedRef.current = false
     captureResumeSpinRef.current = spinEnabledRef.current
     spinEnabledRef.current = false
@@ -2320,7 +2582,7 @@ export function SpendscapeGlobe() {
     }
     window.history.pushState(snapshot, '', navigationHash(snapshot))
     applyNavigation(snapshot)
-  }
+  })
 
   const navigateCapture = useCallback((nextStep: CaptureStep, mode: 'push' | 'replace' = 'push') => {
     const snapshot: NavigationSnapshot = {
@@ -2361,21 +2623,23 @@ export function SpendscapeGlobe() {
     window.setTimeout(action, 0)
   }, [applyNavigation, resumeAfterCapture, selectedPlaceId, selectedPurchaseId, surface])
 
-  const openSurface = (nextSurface: ProductSurface) => {
+  const openSurface = (nextSurface: ProductSurface) => exitReplayForNavigation((entry) => {
     stopSpin(false)
     pushNavigation({
+      ...entry,
       surface: nextSurface,
       selectedPurchaseId: null,
-      selectedPlaceId: nextSurface === 'globe' ? selectedPlaceId : null,
+      selectedPlaceId: nextSurface === 'globe' ? (entry ? entry.selectedPlaceId : selectedPlaceId) : null,
     })
-  }
+  })
 
-  const openPurchase = (purchaseId: string) => {
+  const openPurchase = (purchaseId: string) => exitReplayForNavigation((entry) => {
     const purchase = allPurchases.find((candidate) => candidate.id === purchaseId)
     if (!purchase) return
     stopSpin(false)
     if (purchase.placeId) selectPlace(purchase.placeId, true, false)
     pushNavigation({
+      ...entry,
       surface: 'purchases',
       selectedPlaceId: purchase.placeId,
       selectedPurchaseId: purchase.id,
@@ -2383,9 +2647,13 @@ export function SpendscapeGlobe() {
       captureDepth: 0,
       inboxCaseId: null,
     })
-  }
+  })
 
   const selectSearchResult = (result: CanonicalSearchResult) => {
+    if (replaySessionRef.current || pendingReplayNavigationRef.current) {
+      exitReplayForNavigation(() => selectSearchResult(result))
+      return
+    }
     setSearchOpen(false)
     setActiveSearchIndex(-1)
     searchInputRef.current?.blur()
@@ -2449,7 +2717,7 @@ export function SpendscapeGlobe() {
     updateQuery({ timelineMonth: month, dateRange: 'all' })
   }
 
-  const openAsk = (trigger: HTMLElement) => {
+  const openAsk = (trigger: HTMLElement) => exitReplayForNavigation((replayEntry) => {
     if (askFocusFrameRef.current !== null) {
       window.cancelAnimationFrame(askFocusFrameRef.current)
       askFocusFrameRef.current = null
@@ -2463,12 +2731,13 @@ export function SpendscapeGlobe() {
     setSearchOpen(false)
     setAskFeedback(null)
     pushNavigation({
+      ...replayEntry,
       askOpen: true,
       captureStep: null,
       captureDepth: 0,
       inboxCaseId: null,
     })
-  }
+  })
 
   const closeAsk = useCallback(() => {
     if (askOpen && isNavigationSnapshot(window.history.state) && window.history.state.askOpen) {
@@ -2479,6 +2748,7 @@ export function SpendscapeGlobe() {
   }, [askOpen])
 
   const executeAskActions = useCallback((actions: unknown, actionSummary: string) => {
+    if (replaySessionRef.current) return
     // All single, confirmed-plan, and candidate paths fail closed before state or camera changes.
     if (!isAllowedAskActionPlan(actions, askContext)) return
     const currentNavigation: NavigationSnapshot = {
@@ -2492,7 +2762,7 @@ export function SpendscapeGlobe() {
       askOpen: false,
     }
     const needsMap = actions.some((action) => action.type.startsWith('map.') || action.type === 'selection.openPurchase')
-    if (needsMap && (!mapRef.current || mapError || loading)) {
+    if (needsMap && (!mapRef.current || !mapAvailable)) {
       setAskFeedback({
         summary: localeRef.current === 'he'
           ? 'המפה אינה זמינה כרגע. יש לנסות שוב לאחר השחזור.'
@@ -2637,9 +2907,9 @@ export function SpendscapeGlobe() {
     setAskUndoSnapshot(undoSnapshot)
     setAskFeedback({ summary: actionSummary, undone: false })
     setStatus(actionSummary)
-  }, [allPurchases, analyticsView, applyNavigation, askContext, loading, mapError, mode, query, runCameraAction, selectedPlaceId, selectedPurchaseId, surface, updateSelectedFilter, visibleData.features])
+  }, [allPurchases, analyticsView, applyNavigation, askContext, mapAvailable, mode, query, runCameraAction, selectedPlaceId, selectedPurchaseId, surface, updateSelectedFilter, visibleData.features])
 
-  const undoAskAction = useCallback(() => {
+  const undoAskAction = useCallback(() => exitReplayForNavigation(() => {
     if (!askUndoSnapshot) return
     setQuery(askUndoSnapshot.query)
     setMode(askUndoSnapshot.mode)
@@ -2657,7 +2927,7 @@ export function SpendscapeGlobe() {
     setAskUndoSnapshot(null)
     setAskFeedback((current) => current ? { ...current, undone: true } : null)
     setStatus(localeRef.current === 'he' ? 'פעולת ההדגמה בוטלה' : 'Demo action undone')
-  }, [applyNavigation, askUndoSnapshot, runCameraAction])
+  }), [applyNavigation, askUndoSnapshot, exitReplayForNavigation, runCameraAction])
 
   const retryMap = () => {
     const url = new URL(window.location.href)
@@ -2666,11 +2936,88 @@ export function SpendscapeGlobe() {
     setMapAttempt((current) => current + 1)
   }
 
+  const openTimeline = () => {
+    timelineReturnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    exitReplayForNavigation(() => {
+      stopSpin(false)
+      setMobileToolsOpen(false)
+      setTimelineOpen(true)
+    })
+  }
+
+  const openFilters = () => exitReplayForNavigation(() => {
+    stopSpin(false)
+    setMobileToolsOpen(false)
+    setFiltersOpen(true)
+  })
+
+  const openReplay = (trigger: HTMLElement) => {
+    if (replaySessionRef.current || askOpen || captureStep || inboxCaseId) return
+    replayReturnFocusRef.current = trigger
+    const navigation: NavigationSnapshot = { marker: 'spendscape-1d1', surface, selectedPlaceId, selectedPurchaseId, replay: null }
+    const session: ReplaySession = {
+      id: ++replaySequenceRef.current,
+      entry: { navigation, query: { ...query }, mode, analyticsView, camera: mapRef.current ? snapshotCamera(mapRef.current) : getStoredCamera() },
+      purchaseIds: visiblePurchases.map((purchase) => purchase.id),
+    }
+    // Own persistence before stopping a flight, which synchronously emits moveend.
+    replaySessionRef.current = session
+    replaySessionsRef.current.add(session.id)
+    replayLastPlaceRef.current = null
+    replayAutomaticCameraCommandsRef.current = 0
+    replayExplicitCameraCommandsRef.current = 0
+    replayEventPresentationsRef.current = 0
+    replaySourceUpdatesAtOpenRef.current = sourceUpdates
+    stopSpin(false)
+    if (session.entry.camera) window.sessionStorage.setItem(CAMERA_STORAGE_KEY, JSON.stringify(session.entry.camera))
+    setReplay(session)
+    setMode('pins')
+    const snapshot: NavigationSnapshot = { ...navigation, surface: 'globe', replay: session }
+    window.history.pushState({ ...window.history.state, ...snapshot }, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+  }
+
+  const presentReplayPurchase = useCallback((purchase: GlobePurchase | undefined, intent: 'details' | 'show-place' = 'details') => {
+    if (!replaySessionRef.current) return
+    replayEventPresentationsRef.current += 1
+    if (window.__SPENDSCAPE_QA__) {
+      window.__SPENDSCAPE_QA__.replayEventPresentations = replayEventPresentationsRef.current
+    }
+    const place = replayPlace(purchase)
+    updateSelectedFilter(place?.id ?? null)
+    replayLastPlaceRef.current = place?.id ?? null
+    // Playback owns only event details and a temporary pin highlight. It never
+    // owns the camera. This branch intentionally returns before any map method.
+    if (intent !== 'show-place') return
+    const map = mapRef.current
+    if (!place || !map || !replayMapAvailableRef.current) return
+    const playerTop = document.querySelector('[data-testid="replay-player"]')?.getBoundingClientRect().top ?? window.innerHeight / 2
+    // Frame the pin in the exposed map, including the short-phone player height.
+    const offset: [number, number] = window.innerWidth <= 760
+      ? [0, (60 + playerTop) / 2 - window.innerHeight / 2]
+      : [0, -80]
+    // This explicit, user-invoked action is Replay's sole camera command.
+    replayExplicitCameraCommandsRef.current += 1
+    if (window.__SPENDSCAPE_QA__) {
+      window.__SPENDSCAPE_QA__.replayExplicitCameraCommands = replayExplicitCameraCommandsRef.current
+    }
+    programmaticCameraRef.current = true
+    map.once('moveend', () => { programmaticCameraRef.current = false })
+    const repositionWithoutMotion = reducedMotionRef.current
+    map.flyTo({ center: place.coordinates, zoom: 15.2, speed: 1.6,
+      offset, ...(repositionWithoutMotion ? { duration: 0 } : {}),
+      // MapLibre otherwise converts a reduced-motion flyTo to jumpTo and drops
+      // its offset. A zero-duration essential transition keeps the explicit pin
+      // in the exposed map without introducing animated motion.
+      essential: repositionWithoutMotion })
+  }, [updateSelectedFilter])
+
   return (
     <main
       className={styles.app}
       data-locale={locale}
-      data-map-ready={!loading && !mapError}
+      data-map-ready={mapAvailable}
+      data-renderer-health={rendererHealth}
       data-auto-spin={autoSpin}
       data-mode={mode}
       data-pin-count={currentGlobeCounts.pinCount}
@@ -2686,6 +3033,7 @@ export function SpendscapeGlobe() {
       data-inbox-pending={pendingInbox.length}
       data-session-purchases={sessionCaptureRecords.length}
       data-ask-open={askOpen}
+      data-replay-open={Boolean(replay)}
     >
       <div ref={mapNodeRef} className={styles.map} data-testid="map-canvas" />
       <div className={styles.vignette} aria-hidden="true" />
@@ -2847,10 +3195,10 @@ export function SpendscapeGlobe() {
           ))}
         </div>
         <div className={styles.queryActions}>
-          <button type="button" onClick={() => { stopSpin(false); setFiltersOpen(true) }} data-testid="filters-open">
+          <button type="button" onClick={openFilters} data-testid="filters-open">
             {t.filters}{activeFilterCount > 0 && <span>{activeFilterCount}</span>}
           </button>
-          <button type="button" onClick={() => { stopSpin(false); setTimelineOpen(true) }} data-testid="timeline-open">
+          <button type="button" ref={desktopTimelineRef} onClick={openTimeline} data-testid="timeline-open">
             {query.timelineMonth ?? t.timeline}
           </button>
           <button
@@ -2876,7 +3224,8 @@ export function SpendscapeGlobe() {
       )}
 
       {(!compactViewport || mobileToolsOpen) && (
-      <section ref={controlDockRef} className={styles.controlDock} id="globe-controls" aria-label="Globe controls" data-testid="globe-tools">
+      <section ref={controlDockRef} className={styles.controlDock} id="globe-controls" aria-label="Globe controls" data-testid="globe-tools"
+        onPointerDownCapture={() => replayControllerRef.current?.pause()} onKeyDownCapture={() => replayControllerRef.current?.pause()}>
         <div className={styles.mobileControlsHeader}>
           <span>{t.tools}</span>
           <button type="button" onClick={() => setMobileToolsOpen(false)} aria-label={t.closeTools}>
@@ -2899,8 +3248,8 @@ export function SpendscapeGlobe() {
         </div>
 
         <div className={styles.mobileQueryActions}>
-          <button type="button" onClick={() => { setMobileToolsOpen(false); setFiltersOpen(true) }}>{t.filters}</button>
-          <button type="button" onClick={() => { setMobileToolsOpen(false); setTimelineOpen(true) }}>{t.timeline}</button>
+          <button type="button" onClick={openFilters}>{t.filters}</button>
+          <button type="button" onClick={openTimeline}>{t.timeline}</button>
         </div>
 
         <button
@@ -2915,13 +3264,14 @@ export function SpendscapeGlobe() {
         </button>
 
         <div className={styles.modeSwitch} role="group" aria-label="Visualization">
-          <button type="button" aria-pressed={mode === 'pins'} onClick={() => { stopSpin(false); setMode('pins') }}>{t.pins}</button>
-          <button type="button" aria-pressed={mode === 'heatmap'} onClick={() => { stopSpin(false); setMode('heatmap') }}>{t.heatmap}</button>
+          <button type="button" disabled={Boolean(replay) || rendererHealth !== 'ready'} aria-pressed={mode === 'pins'} onClick={() => { stopSpin(false); setMode('pins') }}>{t.pins}</button>
+          <button type="button" disabled={Boolean(replay) || rendererHealth !== 'ready'} aria-pressed={mode === 'heatmap'} onClick={() => { stopSpin(false); setMode('heatmap') }}>{t.heatmap}</button>
         </div>
 
         <label className={styles.placeSelect}>
           <span className={styles.srOnly}>{t.jump}</span>
           <select
+            disabled={rendererHealth !== 'ready'}
             value={selectedPlaceId ?? ''}
             onChange={(event) => { if (event.target.value) selectPlace(event.target.value) }}
             aria-label={t.jump}
@@ -2938,13 +3288,13 @@ export function SpendscapeGlobe() {
         </label>
 
         <div className={styles.cameraButtons}>
-          <button type="button" onClick={fitVisible} aria-label={t.fit} title={t.fit}>
+          <button type="button" disabled={rendererHealth !== 'ready'} onClick={fitVisible} aria-label={t.fit} title={t.fit}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></svg>
           </button>
-          <button type="button" onClick={() => selectPlace('place_shuk_bograshov')} aria-label={t.latest} title={t.latest}>
+          <button type="button" disabled={rendererHealth !== 'ready'} onClick={() => selectPlace('place_shuk_bograshov')} aria-label={t.latest} title={t.latest}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg>
           </button>
-          <button type="button" onClick={resetGlobe} aria-label={t.reset} title={t.reset}>
+          <button type="button" disabled={rendererHealth !== 'ready'} onClick={resetGlobe} aria-label={t.reset} title={t.reset}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a8 8 0 1 0 2-5.3M4 4v7h7"/></svg>
           </button>
           <button
@@ -2952,7 +3302,7 @@ export function SpendscapeGlobe() {
             onClick={() => autoSpin ? stopSpin(false) : resumeSpin()}
             aria-label={autoSpin ? t.pause : t.resume}
             title={autoSpin ? t.pause : t.resume}
-            disabled={reducedMotion}
+            disabled={reducedMotion || Boolean(replay) || rendererHealth !== 'ready'}
           >
             {autoSpin ? (
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7v10M15 7v10"/></svg>
@@ -2961,8 +3311,8 @@ export function SpendscapeGlobe() {
             )}
           </button>
           <span className={styles.zoomGroup}>
-            <button type="button" onClick={() => { stopSpin(false); mapRef.current?.zoomOut({ duration: reducedMotion ? 0 : 350 }) }} aria-label={t.zoomOut}>−</button>
-            <button type="button" onClick={() => { stopSpin(false); mapRef.current?.zoomIn({ duration: reducedMotion ? 0 : 350 }) }} aria-label={t.zoomIn}>+</button>
+            <button type="button" disabled={rendererHealth !== 'ready'} onClick={() => { stopSpin(false); mapRef.current?.zoomOut({ duration: reducedMotion ? 0 : 350 }) }} aria-label={t.zoomOut}>−</button>
+            <button type="button" disabled={rendererHealth !== 'ready'} onClick={() => { stopSpin(false); mapRef.current?.zoomIn({ duration: reducedMotion ? 0 : 350 }) }} aria-label={t.zoomIn}>+</button>
           </span>
         </div>
         <p className={styles.keyboardHint}>{t.keyboard}</p>
@@ -2970,7 +3320,7 @@ export function SpendscapeGlobe() {
       )}
 
       <div className={styles.mobilePrimary} aria-label="Primary globe actions">
-        <button type="button" className={styles.mobileLatest} onClick={() => selectPlace('place_shuk_bograshov')}>
+        <button type="button" disabled={rendererHealth !== 'ready'} className={styles.mobileLatest} onClick={() => selectPlace('place_shuk_bograshov')}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg>
           <span>{t.latest}</span>
         </button>
@@ -3001,7 +3351,7 @@ export function SpendscapeGlobe() {
         </div>
       )}
 
-      {mapError && surface === 'globe' && !captureStep && (
+      {mapError && surface === 'globe' && !captureStep && !replay && (
         <div className={styles.failureState} role="alert" data-testid="map-failure">
           <span className={styles.failureIcon} aria-hidden="true">!</span>
           <p className={styles.eyebrow}>{t.checkpoint}</p>
@@ -3012,7 +3362,15 @@ export function SpendscapeGlobe() {
         </div>
       )}
 
-      {!loading && !mapError && visibleData.features.length === 0 && (
+      {rendererHealth !== 'ready' && surface === 'globe' && !captureStep && !replay && !askOpen && (
+        <div className={styles.failureState} role="status" data-testid="renderer-unavailable">
+          <span className={styles.failureIcon} aria-hidden="true">!</span>
+          <h2>{t.mapFailed}</h2>
+          <p>{locale === 'he' ? 'המפה ממתינה לשחזור. היסטוריית הרכישות נשארת זמינה.' : 'Waiting for the map to recover. Purchase history remains available.'}</p>
+        </div>
+      )}
+
+      {mapAvailable && visibleData.features.length === 0 && (
         <div className={styles.emptyState} role="status" data-testid="map-empty">
           <p className={styles.eyebrow}>{t.synthetic}</p>
           <h2>{t.noPlaces}</h2>
@@ -3021,7 +3379,7 @@ export function SpendscapeGlobe() {
         </div>
       )}
 
-      {selectedFeature && selectedPlace && !selectedPurchase && surface === 'globe' && (
+      {!replay && selectedFeature && selectedPlace && !selectedPurchase && surface === 'globe' && (
         <aside
           className={styles.placePanel}
           style={placePanelStyle}
@@ -3090,7 +3448,7 @@ export function SpendscapeGlobe() {
 
           <div className={styles.historyActions}>
             <button type="button" data-testid="history-filters" onClick={() => setFiltersOpen(true)}>{t.filters}{activeFilterCount > 0 && <span>{activeFilterCount}</span>}</button>
-            <button type="button" data-testid="history-timeline" onClick={() => setTimelineOpen(true)}>{query.timelineMonth ? formatMonth(query.timelineMonth, locale) : t.timeline}</button>
+            <button type="button" data-testid="history-timeline" onClick={openTimeline}>{query.timelineMonth ? formatMonth(query.timelineMonth, locale) : t.timeline}</button>
             {(query.search || query.category !== 'all' || activeFilterCount > 0) && (
               <button type="button" data-testid="history-reset" onClick={clearFilters}>{t.resetQuery}</button>
             )}
@@ -3149,8 +3507,8 @@ export function SpendscapeGlobe() {
           activeFilterCount={activeFilterCount}
           onClose={closeTopLayer}
           onSearch={(search) => { stopSpin(false); updateQuery({ search }) }}
-          onOpenFilters={() => { stopSpin(false); setFiltersOpen(true) }}
-          onOpenTimeline={() => { stopSpin(false); setTimelineOpen(true) }}
+          onOpenFilters={openFilters}
+          onOpenTimeline={openTimeline}
           onReset={clearFilters}
           onOpenPurchases={() => openSurface('purchases')}
           onSelectCategory={(category) => { stopSpin(false); updateQuery({ category }) }}
@@ -3162,7 +3520,7 @@ export function SpendscapeGlobe() {
         />
       )}
 
-      {selectedPurchase && selectedMerchant && (
+      {!replay && selectedPurchase && selectedMerchant && (
         <aside className={styles.purchaseDetailPanel} aria-labelledby="purchase-title" data-testid="purchase-detail">
           <button ref={purchaseDetailBackRef} type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.backToHistory}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
@@ -3254,6 +3612,9 @@ export function SpendscapeGlobe() {
             />
             <div className={styles.timelineLabels}><span>{t.allHistory}</span><span>{formatMonth(timelineMonths[timelineMonths.length - 1], locale)}</span><span>{formatMonth(timelineMonths[0], locale)}</span></div>
             <footer><button type="button" onClick={() => setTimelineMonth(null)}>{t.clearTimeline}</button><output>{visiblePurchases.length} {t.results} · {visibleData.features.length} {t.placesSummary}</output></footer>
+            <button className={styles.replayEntry} type="button" onClick={(event) => openReplay(event.currentTarget)} data-testid="replay-open">
+              <span aria-hidden="true">▶</span><span>{locale === 'he' ? 'הרכישות לאורך הזמן' : 'Life Replay'}<small>{locale === 'he' ? 'ניגון תוצאות הרכישות הנוכחיות' : 'Play your current purchase results'}</small></span>
+            </button>
           </aside>
         </>
       )}
@@ -3307,7 +3668,12 @@ export function SpendscapeGlobe() {
         />
       )}
 
-      {askFeedback && !askOpen && (
+      {replay && <LifeReplayExperience key={replay.id} purchases={replayPurchases} locale={locale}
+        reducedMotion={reducedMotion} mapAvailable={mapAvailable} rendererUnavailable={rendererHealth !== 'ready'} controllerRef={replayControllerRef}
+        onRetryMap={mapError ? retryMap : undefined}
+        onPresent={presentReplayPurchase} onClose={closeTopLayer} />}
+
+      {askFeedback && !askOpen && !replay && (
         <div className={styles.askFeedback} role="status" data-undone={askFeedback.undone} data-testid="ask-feedback">
           <span aria-hidden="true">{askFeedback.undone ? '↶' : '✓'}</span>
           <p><strong>{askFeedback.undone ? (locale === 'he' ? 'בוטל' : 'Undone') : (locale === 'he' ? 'בוצע מקומית' : 'Applied locally')}</strong><small>{askFeedback.summary}</small></p>

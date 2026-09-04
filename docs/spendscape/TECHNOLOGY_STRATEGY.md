@@ -22,7 +22,7 @@ rejected.
 ## Current verified repository baseline
 
 The completed local implementation checkpoint is Phase 1 through bounded Slice
-1D.4 at `58a3c4b32c26060c63eef2e89db823ca7acdfd27` on
+1D.5 at `8ea8371f6863e7d40ae6fe276935926ddbadda56` on
 `feature/spendscape-rebuild`:
 
 - Next.js App Router `16.3.3`, React/React DOM `19.2.8`, and TypeScript `5.9.3`.
@@ -220,9 +220,10 @@ The approval integrated and reviewed this strategy only. No product or
 technology implementation was authorized by the documentation approval, and no
 implementation slice was activated by that documentation approval.
 
-The later explicit Slice 1D.5 authorization is product-scoped, deterministic,
-local, and provider-free; it does not activate `AIProvider` or any technology
-candidate in this strategy.
+Slice 1D.5 is completed, including runtime/focus/history corrections. The only
+active authorization is bounded Slice 1D.6 synthetic Life Replay + local QA.
+Both are product-scoped, deterministic, local, and provider-free; neither
+activates `AIProvider` or any technology candidate in this strategy.
 
 ### Remaining Phase 1
 
@@ -257,7 +258,9 @@ states.
 Build deterministic analytics first. Evaluate Cloudflare/Gemma and the
 optional OpenAI Responses adapter through `AIProvider` before enabling typed AI
 actions. Local browser models require their own measured spike. Privacy,
-sharing, deletion, export, and Life Replay retain the existing Phase 5 gate.
+sharing, deletion, export, and production Life Replay retain the existing
+Phase 5 gate. Phase 1's separately authorized synthetic purchase player does
+not activate Phase 5 or change provider/technology decisions.
 
 ### Phase 6 — production hardening and deployment
 
