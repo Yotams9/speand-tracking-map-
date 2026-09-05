@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react'
-import { localized, merchantForId, type GlobePurchase, type LocaleCode } from '../../data/spendscape-globe'
+import {
+  localized,
+  merchantForId,
+  type GlobePurchase,
+  type LocaleCode,
+  type Merchant,
+  type Place,
+} from '../../data/spendscape-globe'
 import { deriveReplayEvents, emptyReplayRange, initialReplayState, isReplayRange, ReplayClock, replayPlace, replayReducer, type ReplayAction, type ReplayRange } from './life-replay-domain'
 import styles from './LifeReplayExperience.module.css'
 
 export interface ReplayController { pause: () => void; inspectPlace: (placeId: string) => void }
 interface Props {
   purchases: readonly GlobePurchase[]
+  places: readonly Place[]
+  merchants: readonly Merchant[]
   locale: LocaleCode
   mapAvailable: boolean
   rendererUnavailable: boolean
@@ -16,7 +25,7 @@ interface Props {
   onRetryMap?: () => void
 }
 
-export function LifeReplayExperience({ purchases, locale, mapAvailable, rendererUnavailable, reducedMotion, controllerRef, onPresent, onClose, onRetryMap }: Props) {
+export function LifeReplayExperience({ purchases, places, merchants, locale, mapAvailable, rendererUnavailable, reducedMotion, controllerRef, onPresent, onClose, onRetryMap }: Props) {
   const he = locale === 'he'
   const [range, setRange] = useState<ReplayRange>(emptyReplayRange)
   const [draftRange, setDraftRange] = useState<ReplayRange>(emptyReplayRange)
@@ -32,11 +41,11 @@ export function LifeReplayExperience({ purchases, locale, mapAvailable, renderer
   const eventsRef = useRef(events)
   eventsRef.current = events
   const event = events[scrub ?? state.index]
-  const place = replayPlace(event)
+  const place = replayPlace(event, places)
   const formatDate = (timestamp: string) => new Intl.DateTimeFormat(he ? 'he-IL' : 'en-GB', {
     day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
   }).format(new Date(timestamp))
-  const merchant = event ? merchantForId(event.merchantId) : undefined
+  const merchant = event ? merchantForId(event.merchantId, merchants) : undefined
   const eventName = merchant ? localized(merchant.name, locale) : ''
   const progress = event ? `${(scrub ?? state.index) + 1} / ${events.length}` : `0 / 0`
   const paymentContext = event ? {
@@ -58,14 +67,14 @@ export function LifeReplayExperience({ purchases, locale, mapAvailable, renderer
   }, [])
   useImperativeHandle(controllerRef, () => ({ pause, inspectPlace: (placeId) => {
     pause()
-    const index = eventsRef.current.findIndex((purchase) => replayPlace(purchase)?.id === placeId)
+    const index = eventsRef.current.findIndex((purchase) => replayPlace(purchase, places)?.id === placeId)
     if (index < 0) return
     const next = replayReducer(stateRef.current, { type: 'seek', index }, eventsRef.current.length)
     stateRef.current = next
     setState(next)
     setScrub(null)
     onPresent(eventsRef.current[index])
-  } }), [onPresent, pause])
+  } }), [onPresent, pause, places])
 
   useEffect(() => {
     (eventsRef.current.length && !playRef.current?.disabled ? playRef : closeRef).current?.focus({ preventScroll: true })

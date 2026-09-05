@@ -3,7 +3,7 @@
 Every phase has a separate human gate. Later phases are context, not current
 authorization.
 
-Current completed implementation checkpoint: Phase 1 through bounded Slice
+Prior implementation checkpoint: Phase 1 through bounded Slice
 1D.6 at `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`. It includes the accepted globe-fidelity correction, deterministic
 Analytics/Stats, synthetic Universal Scanner/Capture simulation, bounded
 loading recovery, canonical local search, and the material-uncertainty Smart
@@ -12,8 +12,9 @@ and details-first synthetic Life Replay with no automatic camera travel and
 explicit `Show place` as its sole camera-moving action. No Phase 1 product
 implementation slice or technology slice is active. The bounded Phase 1E
 critical review, production-rendered local QA, and documentation reconciliation
-are complete with no remaining Blocker or High defect. No later phase is
-active. Technology candidates and evaluation work nest inside these phases
+are complete with no remaining Blocker or High defect. Bounded Phase 2A.1 is
+complete and recorded by this local checkpoint; no later slice is authorized.
+Technology candidates and evaluation work nest inside these phases
 as specified in `TECHNOLOGY_STRATEGY.md`; they do not create a competing roadmap
 or authorize real ingestion.
 
@@ -118,7 +119,8 @@ providers, real ingestion, and backend work remain deferred.
 ### 1E — functional and visual QA
 
 Status: completed with no remaining Blocker or High defect and recorded by the
-current local documentation checkpoint. No later phase is active.
+Phase 1E documentation checkpoint. Bounded Phase 2A.1 is also complete;
+no later slice is authorized.
 
 - Appropriate type/build/unit checks.
 - Every visible control exercised.
@@ -132,11 +134,45 @@ functional/visual matrix, baseline-versus-final summary, dependency/provider
 rationale, known limitations, and “Not implemented yet”.
 
 Hard stop: no additional product slice, real backend, accounts, real data,
-deployment, commit/push, or Phase 2 without separate authorization.
+deployment, commit/push, or Phase 2 work beyond separately authorized 2A.1.
 
 ## Phase 2 — Supabase foundation and canonical data
 
 Gate: `APPROVE SPENDSCAPE PHASE 2 BACKEND + AUTH + QA`
+
+### Bounded 2A.1 — local data contract boundary + fixture adapter QA
+
+Gate received: `APPROVE SPENDSCAPE PHASE 2A.1 — LOCAL DATA CONTRACT BOUNDARY + FIXTURE ADAPTER QA`
+
+Status: implementation, bounded correction, and checkpoint review passed;
+separate checkpoint commit approval received on 2026-09-05 and consumed by this
+local checkpoint. No later slice is authorized. Scope remains limited
+to a provider-neutral serializable read snapshot, a
+server-side repository interface, an adapter over the existing
+canonical synthetic fixture graph, deterministic contract tests, minimal
+status reconciliation, and local behavior-parity QA. The fixture graph remains
+the single data source.
+
+Acceptance evidence: referential integrity, stable IDs/order, nested totals,
+fixed synthetic FX provenance, one-place/one-pin and online/unresolved pin
+exclusion parity; typecheck, unit tests, production build, and representative
+production-rendered navigation/state checks with one mounted MapLibre instance.
+
+Correction evidence (2026-09-05): the P2 Ask latest-purchase summary now reads
+merchants only from the supplied context. Fixture-backed defaults were removed
+from Ask, Inbox, Replay, search, pin, lookup, summary, and Analytics operations.
+The unchanged graph moved to `src/data/spendscape-fixtures.ts`, consumed at
+runtime only by the fixture adapter. A transitive dependency test guards the
+feature boundary. Typecheck, 104 unit tests, production build, 16 boundary/Ask
+browser tests, 4 focused Replay/composition checks, and `git diff --check`
+passed. No remaining Blocker or High defect. Original Ledgerline files are
+unreachable from the active Next.js routes and remain unchanged. Local evidence
+and the complete apparent-exception ledger are in
+`artifacts/spendscape-phase-2a1/correction/CORRECTION_REPORT.md`.
+
+Hard stop: no Supabase package or CLI, schema/SQL/migration, Auth/RLS/storage,
+resource/account/credential, provider or network-calling data implementation,
+new dependency, real data, deployment, commit/push, or broader Phase 2 work.
 
 Implement the approved canonical backend/auth boundary, migrations, RLS,
 private storage policy, and server data access using synthetic data. Supabase is

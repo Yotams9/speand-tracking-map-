@@ -1,5 +1,11 @@
+import { globePurchases, smartInboxCases, globePlaces, globeMerchants } from '../../data/spendscape-fixtures'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { buildPlaceFeatureCollection, defaultPurchaseQuery, filterPurchases, globePurchases, smartInboxCases, type GlobePurchase } from '../../data/spendscape-globe'
+import {
+  buildPlaceFeatureCollection,
+  defaultPurchaseQuery,
+  filterPurchases,
+  type GlobePurchase,
+} from '../../data/spendscape-globe'
 import { combineSessionPurchases, createSessionCaptureRecord, demoDraftForSource } from '../capture/capture-domain'
 import { applySmartInboxDecisions } from '../inbox/smart-inbox-domain'
 import { deriveReplayEvents, initialReplayState, isReplayRange, ReplayClock, replayPlace, replayReducer } from './life-replay-domain'
@@ -11,18 +17,18 @@ describe('canonical Replay projection', () => {
     const record = createSessionCaptureRecord(demoDraftForSource('receipt')!, 1)
     const composed = applySmartInboxDecisions(combineSessionPurchases(globePurchases, [record]), smartInboxCases, [
       { caseId: smartInboxCases[0].id, status: 'resolved', placeId: 'place_shuk_bograshov' },
-    ])
+    ], globePlaces)
     const before = JSON.stringify(composed)
     const events = deriveReplayEvents(composed)
     expect(events.map((purchase) => purchase.id).sort()).toEqual(composed.map((purchase) => purchase.id).sort())
     expect(events.filter((purchase) => purchase.id === record.purchase.id)).toHaveLength(1)
-    expect(replayPlace(events.find((purchase) => purchase.id === smartInboxCases[0].purchaseId))?.id).toBe('place_shuk_bograshov')
-    expect(buildPlaceFeatureCollection(undefined, events).features).toHaveLength(12)
+    expect(replayPlace(events.find((purchase) => purchase.id === smartInboxCases[0].purchaseId), globePlaces)?.id).toBe('place_shuk_bograshov')
+    expect(buildPlaceFeatureCollection(globePlaces, events).features).toHaveLength(12)
     expect(JSON.stringify(composed)).toBe(before)
   })
   it('contains exactly the shared-filter purchase IDs, without mutating the graph', () => {
     for (const query of [defaultPurchaseQuery, { ...defaultPurchaseQuery, channel: 'online' as const }, { ...defaultPurchaseQuery, search: 'Tokyo' }]) {
-      const scope = filterPurchases(query)
+      const scope = filterPurchases(query, globePurchases, globePlaces, globeMerchants)
       const before = JSON.stringify(scope)
       expect(deriveReplayEvents(scope).map((p) => p.id).sort()).toEqual(scope.map((p) => p.id).sort())
       expect(JSON.stringify(scope)).toBe(before)
@@ -52,13 +58,13 @@ describe('canonical Replay projection', () => {
     expect(events).toHaveLength(globePurchases.length)
     for (const purchase of events) {
       expect(purchase).toBe(globePurchases.find((p) => p.id === purchase.id))
-      if (purchase.channel !== 'physical' || purchase.resolution !== 'confirmed') expect(replayPlace(purchase)).toBeUndefined()
+      if (purchase.channel !== 'physical' || purchase.resolution !== 'confirmed') expect(replayPlace(purchase, globePlaces)).toBeUndefined()
     }
     const repeated = events.filter((p) => p.placeId === 'place_shuk_bograshov')
     expect(repeated.length).toBeGreaterThan(1)
-    expect(buildPlaceFeatureCollection(undefined, repeated).features).toHaveLength(1)
-    expect(new Set(repeated.map((p) => replayPlace(p)?.id)).size).toBe(1)
-    expect(replayPlace({ ...events[0], placeId: 'missing' } as GlobePurchase)).toBeUndefined()
+    expect(buildPlaceFeatureCollection(globePlaces, repeated).features).toHaveLength(1)
+    expect(new Set(repeated.map((p) => replayPlace(p, globePlaces)?.id)).size).toBe(1)
+    expect(replayPlace({ ...events[0], placeId: 'missing' } as GlobePurchase, globePlaces)).toBeUndefined()
   })
 })
 

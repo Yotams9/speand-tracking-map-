@@ -1,9 +1,6 @@
+import { globePurchases, globePlaces } from '../../data/spendscape-fixtures'
 import { describe, expect, it } from 'vitest'
-import {
-  buildPlaceFeatureCollection,
-  globePurchases,
-  nestedItemTotal,
-} from '../../data/spendscape-globe'
+import { buildPlaceFeatureCollection, nestedItemTotal } from '../../data/spendscape-globe'
 import {
   canConfirmDraft,
   captureReducer,
@@ -94,10 +91,10 @@ describe('Slice 1D.3 deterministic Capture domain', () => {
   })
 
   it('aggregates an existing physical place into its one canonical pin', () => {
-    const before = buildPlaceFeatureCollection(undefined, globePurchases)
+    const before = buildPlaceFeatureCollection(globePlaces, globePurchases)
     const receipt = createSessionCaptureRecord(demoDraftForSource('receipt')!, 1)
     const combined = combineSessionPurchases(globePurchases, [receipt])
-    const after = buildPlaceFeatureCollection(undefined, combined)
+    const after = buildPlaceFeatureCollection(globePlaces, combined)
     const beforeShuk = before.features.find((feature) => feature.properties.placeId === 'place_shuk_bograshov')!
     const afterShuk = after.features.find((feature) => feature.properties.placeId === 'place_shuk_bograshov')!
 
@@ -112,12 +109,12 @@ describe('Slice 1D.3 deterministic Capture domain', () => {
       merchantId: 'merchant_unresolved', placeId: null, amount: '41', currency: 'ILS',
       timestamp: '2026-08-29T17:45', category: 'retail', paymentMode: 'cash', channel: 'unknown',
     }), 2)
-    const baselinePins = buildPlaceFeatureCollection(undefined, globePurchases).features.length
+    const baselinePins = buildPlaceFeatureCollection(globePlaces, globePurchases).features.length
     const combined = combineSessionPurchases(globePurchases, [online, unresolved])
 
     expect(online.purchase.placeId).toBeNull()
     expect(unresolved.purchase.placeId).toBeNull()
-    expect(buildPlaceFeatureCollection(undefined, combined).features).toHaveLength(baselinePins)
+    expect(buildPlaceFeatureCollection(globePlaces, combined).features).toHaveLength(baselinePins)
   })
 
   it('does not allow product or barcode recognition alone to confirm a purchase or retain a photo', () => {

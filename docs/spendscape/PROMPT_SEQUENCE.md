@@ -12,13 +12,37 @@ Before responding, read AGENTS.md and every file under docs/spendscape/ complete
 
 This task inherits the durable product decisions, completed Slice 1D.6 and globe-fidelity checkpoints, technology-candidate strategy, reference findings, architecture, phase plan, approval gates, and source manifest from those files. Do not ask the user to repeat decisions already recorded there. If a current external fact is needed, verify it from the primary source and state what was verified.
 
-Current completed implementation checkpoint is Phase 1 through bounded Slice 1D.6 at 95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa. Life Replay is details-first: ordinary playback never moves the camera, and explicit Show place is its sole camera-moving action. The bounded Phase 1E critical review and documentation checkpoint are complete with no remaining Blocker or High defect. No product implementation slice or later phase is active. Remain read-only: do not create or modify files, install packages, start the app, run builds/tests/linters, take local-app screenshots, connect accounts, create resources, use credentials or real data, commit, push, open a PR, or deploy without a new exact authorization.
+Prior implementation checkpoint is Phase 1 through bounded Slice 1D.6 at 95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa. Life Replay is details-first: ordinary playback never moves the camera, and explicit Show place is its sole camera-moving action. The bounded Phase 1E critical review and documentation checkpoint are complete with no remaining Blocker or High defect. Bounded Phase 2A.1 completed a local provider-neutral data read contract, fixture adapter, Ask boundary correction, contract tests, status reconciliation, and local QA. Its separate checkpoint commit approval was received on 2026-09-05 and is consumed by this local checkpoint. No implementation slice is active. Supabase, SQL/migrations, authentication, providers, accounts, credentials, network-calling data code, dependencies, real data, deployment, further commits, push, and broader Phase 2 work require separate authorization.
 
 Report the current checkpoint or execute only the latest expressly approved bounded task. Treat docs/spendscape/TECHNOLOGY_STRATEGY.md as subordinate implementation guidance that never authorizes a dependency, provider, account, backend, migration, billing action, private-data transfer, or deployment by itself. Stop at the applicable hard gate and never infer a later slice.
 ```
 
 The original Phase 0 readiness prompt is complete and superseded by this
 current-state handoff. Historical Phase 0 evidence remains in Git history.
+
+## Prompt 2A.1 — Local data contract boundary + fixture adapter QA
+
+```text
+APPROVE SPENDSCAPE PHASE 2A.1 — LOCAL DATA CONTRACT BOUNDARY + FIXTURE ADAPTER QA
+```
+
+This authorizes only the local repository/read-snapshot boundary, the adapter
+over the existing canonical synthetic fixture graph, deterministic contract
+tests, minimal status documentation, and local behavior-parity QA. It does not
+authorize a commit or any backend/provider/dependency/resource/network work.
+
+## Phase 2A.1 checkpoint commit
+
+```text
+APPROVE SPENDSCAPE PHASE 2A.1 CHECKPOINT COMMIT
+```
+
+Status: supplied on 2026-09-05 and consumed by this local checkpoint. The
+bounded correction and checkpoint review passed. The checkpoint is based on
+`ac8801c19459c3cb4e000a3f49666ee9ee0df2e1`. This separate token authorizes
+only the reviewed local Phase 2A.1 checkpoint commit after final branch, diff,
+QA-cleanup, and main-preservation checks. It does not authorize push, upstream,
+PR, deployment, providers, dependencies, accounts, real data, or a later slice.
 
 ## Prompt 1 — Approve Phase 1 build and local QA
 

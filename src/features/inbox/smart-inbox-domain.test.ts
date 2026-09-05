@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest'
-import { derivePurchaseAnalytics } from '../../data/spendscape-analytics'
 import {
-  buildPlaceFeatureCollection,
   globeEvidenceRecords,
   globePlaces,
   globePurchases,
   smartInboxCases,
-} from '../../data/spendscape-globe'
+} from '../../data/spendscape-fixtures'
+import { describe, expect, it } from 'vitest'
+import { derivePurchaseAnalytics } from '../../data/spendscape-analytics'
+import { buildPlaceFeatureCollection } from '../../data/spendscape-globe'
 import {
   applySmartInboxDecisions,
   caseForPurchase,
@@ -46,7 +46,7 @@ describe('material-uncertainty Smart Inbox domain', () => {
       status: 'resolved',
       placeId: 'place_shuk_bograshov',
     }]
-    const resolved = applySmartInboxDecisions(globePurchases, smartInboxCases, decisions)
+    const resolved = applySmartInboxDecisions(globePurchases, smartInboxCases, decisions, globePlaces)
       .find((purchase) => purchase.id === baseline.id)!
 
     expect(resolved).toMatchObject({
@@ -80,7 +80,7 @@ describe('material-uncertainty Smart Inbox domain', () => {
       caseId: caseFixture.id,
       status: 'resolved',
       placeId: 'place_rimon_park',
-    }]).find((purchase) => purchase.id === baseline.id)
+    }], globePlaces).find((purchase) => purchase.id === baseline.id)
     expect(invalid).toBe(baseline)
   })
 
@@ -91,7 +91,7 @@ describe('material-uncertainty Smart Inbox domain', () => {
       caseId: caseFixture.id,
       status: 'resolved',
       placeId: 'place_shuk_bograshov',
-    }])
+    }], globePlaces)
     const resolvedPins = buildPlaceFeatureCollection(globePlaces, resolvedPurchases)
     const resolvedAnalytics = derivePurchaseAnalytics(resolvedPurchases, globeEvidenceRecords)
     const shuk = resolvedPins.features.find((feature) => feature.properties.placeId === 'place_shuk_bograshov')
@@ -109,10 +109,10 @@ describe('material-uncertainty Smart Inbox domain', () => {
   it('supports explicit defer and exact undo back to fixture baseline', () => {
     const deferred = upsertSmartInboxDecision([], { caseId: caseFixture.id, status: 'deferred' })
     expect(pendingSmartInboxCases(smartInboxCases, globePurchases, deferred)).toEqual([])
-    expect(applySmartInboxDecisions(globePurchases, smartInboxCases, deferred)).toEqual(globePurchases)
+    expect(applySmartInboxDecisions(globePurchases, smartInboxCases, deferred, globePlaces)).toEqual(globePurchases)
 
     const undone = removeSmartInboxDecision(deferred, caseFixture.id)
     expect(pendingSmartInboxCases(smartInboxCases, globePurchases, undone)).toEqual([caseFixture])
-    expect(applySmartInboxDecisions(globePurchases, smartInboxCases, undone)).toEqual(globePurchases)
+    expect(applySmartInboxDecisions(globePurchases, smartInboxCases, undone, globePlaces)).toEqual(globePurchases)
   })
 })

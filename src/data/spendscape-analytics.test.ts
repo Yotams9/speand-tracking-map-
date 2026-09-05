@@ -1,14 +1,11 @@
+import { globePurchases, globeEvidenceRecords, globePlaces, globeMerchants } from './spendscape-fixtures'
 import { describe, expect, it } from 'vitest'
 import { derivePurchaseAnalytics } from './spendscape-analytics'
-import {
-  defaultPurchaseQuery,
-  filterPurchases,
-  globePurchases,
-} from './spendscape-globe'
+import { defaultPurchaseQuery, filterPurchases } from './spendscape-globe'
 
 describe('Spendscape deterministic analytics', () => {
   it('reconciles headline metrics and channel totals to the canonical fixture graph', () => {
-    const analytics = derivePurchaseAnalytics()
+    const analytics = derivePurchaseAnalytics(globePurchases, globeEvidenceRecords)
 
     expect(analytics.purchaseCount).toBe(42)
     expect(analytics.totalBaseAmountIls).toBe(6777.38)
@@ -23,7 +20,7 @@ describe('Spendscape deterministic analytics', () => {
   })
 
   it('derives category, time, place, currency, and evidence views without a second fixture source', () => {
-    const analytics = derivePurchaseAnalytics(globePurchases)
+    const analytics = derivePurchaseAnalytics(globePurchases, globeEvidenceRecords)
 
     expect(analytics.categories.reduce((sum, item) => sum + item.purchaseCount, 0)).toBe(42)
     expect(analytics.categories.reduce((sum, item) => sum + item.totalBaseAmountIls, 0)).toBeCloseTo(6777.38, 2)
@@ -49,26 +46,26 @@ describe('Spendscape deterministic analytics', () => {
   })
 
   it('uses the same filtered purchase set as Globe, Timeline, and Purchases', () => {
-    const retailPurchases = filterPurchases({ ...defaultPurchaseQuery, category: 'retail' })
-    const augustPurchases = filterPurchases({ ...defaultPurchaseQuery, timelineMonth: '2026-08' })
-    const onlinePurchases = filterPurchases({ ...defaultPurchaseQuery, channel: 'online' })
-    const tokyoPurchases = filterPurchases({ ...defaultPurchaseQuery, search: 'Tokyo' })
+    const retailPurchases = filterPurchases({ ...defaultPurchaseQuery, category: 'retail' }, globePurchases, globePlaces, globeMerchants)
+    const augustPurchases = filterPurchases({ ...defaultPurchaseQuery, timelineMonth: '2026-08' }, globePurchases, globePlaces, globeMerchants)
+    const onlinePurchases = filterPurchases({ ...defaultPurchaseQuery, channel: 'online' }, globePurchases, globePlaces, globeMerchants)
+    const tokyoPurchases = filterPurchases({ ...defaultPurchaseQuery, search: 'Tokyo' }, globePurchases, globePlaces, globeMerchants)
 
-    expect(derivePurchaseAnalytics(retailPurchases).purchaseCount).toBe(8)
-    expect(derivePurchaseAnalytics(augustPurchases).purchaseCount).toBe(10)
-    expect(derivePurchaseAnalytics(onlinePurchases).channels).toEqual([
+    expect(derivePurchaseAnalytics(retailPurchases, globeEvidenceRecords).purchaseCount).toBe(8)
+    expect(derivePurchaseAnalytics(augustPurchases, globeEvidenceRecords).purchaseCount).toBe(10)
+    expect(derivePurchaseAnalytics(onlinePurchases, globeEvidenceRecords).channels).toEqual([
       { key: 'physical', purchaseCount: 0, totalBaseAmountIls: 0, shareOfSpend: 0 },
       { key: 'online', purchaseCount: 2, totalBaseAmountIls: 329.4, shareOfSpend: 1 },
       { key: 'unresolved', purchaseCount: 0, totalBaseAmountIls: 0, shareOfSpend: 0 },
     ])
-    expect(derivePurchaseAnalytics(onlinePurchases).topPhysicalPlaces).toHaveLength(0)
-    expect(derivePurchaseAnalytics(tokyoPurchases).topPhysicalPlaces.map((item) => item.placeId)).toEqual([
+    expect(derivePurchaseAnalytics(onlinePurchases, globeEvidenceRecords).topPhysicalPlaces).toHaveLength(0)
+    expect(derivePurchaseAnalytics(tokyoPurchases, globeEvidenceRecords).topPhysicalPlaces.map((item) => item.placeId)).toEqual([
       'place_kumo_shibuya',
     ])
   })
 
   it('returns stable zero-state analytics for an empty shared result set', () => {
-    expect(derivePurchaseAnalytics([])).toEqual({
+    expect(derivePurchaseAnalytics([], globeEvidenceRecords)).toEqual({
       purchaseCount: 0,
       totalBaseAmountIls: 0,
       averageBaseAmountIls: 0,

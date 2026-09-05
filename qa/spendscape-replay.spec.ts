@@ -1,7 +1,8 @@
+import { globePurchases, globePlaces, globeMerchants } from '../src/data/spendscape-fixtures'
 import { expect, test, type Page } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
-import { defaultPurchaseQuery, filterPurchases, globePurchases } from '../src/data/spendscape-globe'
+import { defaultPurchaseQuery, filterPurchases } from '../src/data/spendscape-globe'
 import { deriveReplayEvents } from '../src/features/replay/life-replay-domain'
 
 const artifacts = path.join(process.cwd(), 'artifacts/spendscape-slice-1d6')
@@ -220,7 +221,7 @@ test('shared filters remain intact and reload discards temporary Replay camera a
   await page.getByTestId('timeline-open').click()
   const before = await evidence(page)
   await page.getByTestId('replay-open').click()
-  const food = filterPurchases({ ...defaultPurchaseQuery, category: 'food' })
+  const food = filterPurchases({ ...defaultPurchaseQuery, category: 'food' }, globePurchases, globePlaces, globeMerchants)
   await expect(page.getByTestId('replay-player')).toHaveAttribute('data-count', String(food.length))
   await page.getByTestId('replay-show-place').click()
   await expect.poll(async () => (await evidence(page)).camera?.zoom).toBe(15.2)

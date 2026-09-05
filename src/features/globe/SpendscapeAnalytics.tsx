@@ -9,6 +9,7 @@ import {
   type ChannelFilter,
   type CurrencyFilter,
   type LocaleCode,
+  type Place,
   type PurchaseCategory,
   type PurchaseQuery,
 } from '@/data/spendscape-globe'
@@ -16,6 +17,7 @@ import styles from './SpendscapeAnalytics.module.css'
 
 interface SpendscapeAnalyticsProps {
   analytics: PurchaseAnalytics
+  places: readonly Place[]
   locale: LocaleCode
   query: PurchaseQuery
   activeFilterCount: number
@@ -136,7 +138,7 @@ function chartGeometry(months: PurchaseAnalytics['months']) {
 }
 
 export function SpendscapeAnalytics({
-  analytics, locale, query, activeFilterCount, onClose, onSearch, onOpenFilters,
+  analytics, places, locale, query, activeFilterCount, onClose, onSearch, onOpenFilters,
   onOpenTimeline, onReset, onOpenPurchases, onSelectCategory, onSelectChannel,
   onSelectCurrency, onSelectMonth, onSelectPlace, initialView,
 }: SpendscapeAnalyticsProps) {
@@ -328,7 +330,7 @@ export function SpendscapeAnalytics({
               {analytics.topPhysicalPlaces.length === 0 ? <p className={styles.noPlaces}>{t.noPlaces}</p> : (
                 <ol className={styles.placeList}>
                   {analytics.topPhysicalPlaces.slice(0, 5).map((placeAnalytics, index) => {
-                    const place = placeForId(placeAnalytics.placeId)
+                    const place = placeForId(placeAnalytics.placeId, places)
                     if (!place) return null
                     return (
                       <li key={placeAnalytics.placeId}>

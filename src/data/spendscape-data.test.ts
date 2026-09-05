@@ -1,16 +1,18 @@
-import { describe, expect, it } from 'vitest'
 import {
-  baseAmountIlsForPurchase,
-  buildPlaceFeatureCollection,
   canonicalSpendscapeData,
-  defaultPurchaseQuery,
-  deriveCanonicalSearchResults,
-  derivedPurchaseSummary,
-  filterPurchases,
   globeEvidenceRecords,
   globeMerchants,
   globePlaces,
   globePurchases,
+} from './spendscape-fixtures'
+import { describe, expect, it } from 'vitest'
+import {
+  baseAmountIlsForPurchase,
+  buildPlaceFeatureCollection,
+  defaultPurchaseQuery,
+  deriveCanonicalSearchResults,
+  derivedPurchaseSummary,
+  filterPurchases,
   nestedItemTotal,
   synchronizeSelection,
 } from './spendscape-globe'
@@ -61,9 +63,9 @@ describe('Spendscape canonical synthetic data', () => {
   })
 
   it('keeps online and unresolved records in history but outside the pin source', () => {
-    const allPins = buildPlaceFeatureCollection()
-    const online = filterPurchases({ ...defaultPurchaseQuery, channel: 'online' })
-    const unresolved = filterPurchases({ ...defaultPurchaseQuery, channel: 'unresolved' })
+    const allPins = buildPlaceFeatureCollection(globePlaces, globePurchases)
+    const online = filterPurchases({ ...defaultPurchaseQuery, channel: 'online' }, globePurchases, globePlaces, globeMerchants)
+    const unresolved = filterPurchases({ ...defaultPurchaseQuery, channel: 'unresolved' }, globePurchases, globePlaces, globeMerchants)
 
     expect(online).toHaveLength(2)
     expect(unresolved).toHaveLength(1)
@@ -73,13 +75,13 @@ describe('Spendscape canonical synthetic data', () => {
   })
 
   it('derives search, category, currency, channel, date, and timeline results consistently', () => {
-    const itemSearch = filterPurchases({ ...defaultPurchaseQuery, search: 'sourdough' })
-    const yen = filterPurchases({ ...defaultPurchaseQuery, currency: 'JPY' })
-    const manual = filterPurchases({ ...defaultPurchaseQuery, channel: 'cash-manual' })
-    const retail = filterPurchases({ ...defaultPurchaseQuery, category: 'retail' })
-    const august = filterPurchases({ ...defaultPurchaseQuery, timelineMonth: '2026-08' })
-    const recent = filterPurchases({ ...defaultPurchaseQuery, dateRange: '30d' })
-    const normalizedCity = filterPurchases({ ...defaultPurchaseQuery, search: '  TEL   AVIV  ' })
+    const itemSearch = filterPurchases({ ...defaultPurchaseQuery, search: 'sourdough' }, globePurchases, globePlaces, globeMerchants)
+    const yen = filterPurchases({ ...defaultPurchaseQuery, currency: 'JPY' }, globePurchases, globePlaces, globeMerchants)
+    const manual = filterPurchases({ ...defaultPurchaseQuery, channel: 'cash-manual' }, globePurchases, globePlaces, globeMerchants)
+    const retail = filterPurchases({ ...defaultPurchaseQuery, category: 'retail' }, globePurchases, globePlaces, globeMerchants)
+    const august = filterPurchases({ ...defaultPurchaseQuery, timelineMonth: '2026-08' }, globePurchases, globePlaces, globeMerchants)
+    const recent = filterPurchases({ ...defaultPurchaseQuery, dateRange: '30d' }, globePurchases, globePlaces, globeMerchants)
+    const normalizedCity = filterPurchases({ ...defaultPurchaseQuery, search: '  TEL   AVIV  ' }, globePurchases, globePlaces, globeMerchants)
 
     expect(itemSearch.map((purchase) => purchase.id)).toEqual(['purchase_shuk_01'])
     expect(yen).toHaveLength(2)
@@ -89,11 +91,11 @@ describe('Spendscape canonical synthetic data', () => {
     expect(august).toHaveLength(10)
     expect(recent.every((purchase) => purchase.timestamp >= '2026-07-31')).toBe(true)
     expect(normalizedCity).toHaveLength(20)
-    expect(derivedPurchaseSummary(onlineOnly()).pinCount).toBe(0)
+    expect(derivedPurchaseSummary(onlineOnly(), globePlaces).pinCount).toBe(0)
   })
 
   it('derives deduplicated bilingual place, city, item, and online search results', () => {
-    const telAviv = deriveCanonicalSearchResults('  Tel   Aviv ')
+    const telAviv = deriveCanonicalSearchResults('  Tel   Aviv ', globePurchases, globePlaces, globeMerchants)
     const city = telAviv.find((result) => result.kind === 'city' && result.city.en === 'Tel Aviv')
     expect(city).toMatchObject({
       kind: 'city',
@@ -102,17 +104,17 @@ describe('Spendscape canonical synthetic data', () => {
       placeIds: ['place_shuk_bograshov', 'place_nomi_dizengoff'],
     })
 
-    const shuk = deriveCanonicalSearchResults('shuk express')
+    const shuk = deriveCanonicalSearchResults('shuk express', globePurchases, globePlaces, globeMerchants)
     expect(shuk.filter((result) => result.kind === 'place')).toEqual([
       expect.objectContaining({ kind: 'place', purchaseCount: 14 }),
     ])
 
-    const hebrew = deriveCanonicalSearchResults('לחם מחמצת')
+    const hebrew = deriveCanonicalSearchResults('לחם מחמצת', globePurchases, globePlaces, globeMerchants)
     expect(hebrew).toEqual([
       expect.objectContaining({ kind: 'purchase', id: 'purchase:purchase_shuk_01' }),
     ])
 
-    const online = deriveCanonicalSearchResults('Serein Online')
+    const online = deriveCanonicalSearchResults('Serein Online', globePurchases, globePlaces, globeMerchants)
     expect(online.some((result) => result.kind === 'place')).toBe(false)
     expect(online).toEqual([
       expect.objectContaining({
@@ -127,21 +129,21 @@ describe('Spendscape canonical synthetic data', () => {
     expect(synchronizeSelection(globePurchases, {
       selectedPlaceId: null,
       selectedPurchaseId: 'purchase_shuk_01',
-    })).toEqual({ selectedPlaceId: 'place_shuk_bograshov', selectedPurchaseId: 'purchase_shuk_01' })
+    }, globePlaces)).toEqual({ selectedPlaceId: 'place_shuk_bograshov', selectedPurchaseId: 'purchase_shuk_01' })
 
     expect(synchronizeSelection(onlineOnly(), {
       selectedPlaceId: 'place_shuk_bograshov',
       selectedPurchaseId: 'purchase_online_01',
-    })).toEqual({ selectedPlaceId: null, selectedPurchaseId: 'purchase_online_01' })
+    }, globePlaces)).toEqual({ selectedPlaceId: null, selectedPurchaseId: 'purchase_online_01' })
 
-    const groceries = filterPurchases({ ...defaultPurchaseQuery, category: 'groceries' })
+    const groceries = filterPurchases({ ...defaultPurchaseQuery, category: 'groceries' }, globePurchases, globePlaces, globeMerchants)
     expect(synchronizeSelection(groceries, {
       selectedPlaceId: 'place_kumo_shibuya',
       selectedPurchaseId: 'purchase_kumo_01',
-    })).toEqual({ selectedPlaceId: null, selectedPurchaseId: null })
+    }, globePlaces)).toEqual({ selectedPlaceId: null, selectedPurchaseId: null })
   })
 })
 
 function onlineOnly() {
-  return filterPurchases({ ...defaultPurchaseQuery, channel: 'online' })
+  return filterPurchases({ ...defaultPurchaseQuery, channel: 'online' }, globePurchases, globePlaces, globeMerchants)
 }

@@ -1,6 +1,7 @@
+import { globePurchases } from '../src/data/spendscape-fixtures'
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import { deriveReplayEvents } from '../src/features/replay/life-replay-domain'
-import { globePurchases } from '../src/data/spendscape-globe'
+
 
 test.use({ viewport: { width: 1280, height: 800 } })
 

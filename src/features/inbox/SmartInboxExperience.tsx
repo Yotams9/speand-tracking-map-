@@ -8,6 +8,8 @@ import {
   purchasesForPlace,
   type GlobePurchase,
   type LocaleCode,
+  type Merchant,
+  type Place,
   type SmartInboxCase,
 } from '@/data/spendscape-globe'
 import type { SmartInboxDecision } from './smart-inbox-domain'
@@ -15,6 +17,8 @@ import styles from './SmartInboxExperience.module.css'
 
 interface SmartInboxExperienceProps {
   locale: LocaleCode
+  places: readonly Place[]
+  merchants: readonly Merchant[]
   inboxCase: SmartInboxCase
   purchase: GlobePurchase
   purchases: readonly GlobePurchase[]
@@ -67,6 +71,8 @@ function formatDate(timestamp: string, locale: LocaleCode): string {
 
 export function SmartInboxExperience({
   locale,
+  places,
+  merchants,
   inboxCase,
   purchase,
   purchases,
@@ -109,18 +115,22 @@ export function SmartInboxExperience({
     }
   }, [])
 
-  const selectedPlace = selectedChoice && selectedChoice !== 'defer' ? placeForId(selectedChoice) : undefined
-  const resolvedPlace = decision?.status === 'resolved' ? placeForId(decision.placeId) : undefined
+  const selectedPlace = selectedChoice && selectedChoice !== 'defer'
+    ? placeForId(selectedChoice, places)
+    : undefined
+  const resolvedPlace = decision?.status === 'resolved'
+    ? placeForId(decision.placeId, places)
+    : undefined
   const candidateRows = useMemo(() => inboxCase.candidates.map((candidate) => {
-    const place = placeForId(candidate.placeId)
+    const place = placeForId(candidate.placeId, places)
     if (!place) return null
     return {
       candidate,
       place,
-      merchant: merchantForId(place.merchantId),
+      merchant: merchantForId(place.merchantId, merchants),
       visitCount: purchasesForPlace(place.id, purchases).length,
     }
-  }).filter((row): row is NonNullable<typeof row> => row !== null), [inboxCase.candidates, purchases])
+  }).filter((row): row is NonNullable<typeof row> => row !== null), [inboxCase.candidates, merchants, places, purchases])
 
   const confirm = () => {
     if (!selectedChoice) return

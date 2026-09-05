@@ -1,4 +1,4 @@
-import { globePlaces, type GlobePurchase, type Place } from '../../data/spendscape-globe'
+import type { GlobePurchase, Place } from '../../data/spendscape-globe'
 
 export interface ReplayRange { start: string; end: string }
 export type ReplaySpeed = 0.5 | 1 | 2
@@ -33,7 +33,7 @@ export function deriveReplayEvents(purchases: readonly GlobePurchase[], range: R
   }).sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
 }
 
-export function replayPlace(purchase: GlobePurchase | undefined, places: readonly Place[] = globePlaces) {
+export function replayPlace(purchase: GlobePurchase | undefined, places: readonly Place[]) {
   if (!purchase || purchase.channel !== 'physical' || purchase.resolution !== 'confirmed') return undefined
   return places.find((place) => place.id === purchase.placeId)
 }

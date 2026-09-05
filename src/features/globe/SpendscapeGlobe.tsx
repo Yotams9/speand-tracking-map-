@@ -19,6 +19,7 @@ import type {
 } from 'maplibre-gl'
 import type { Point } from 'geojson'
 import { derivePurchaseAnalytics } from '@/data/spendscape-analytics'
+import type { SpendscapeDataSnapshot } from '@/data/spendscape-repository'
 import {
   availableTimelineMonths,
   baseAmountIlsForPurchase,
@@ -27,15 +28,10 @@ import {
   deriveCanonicalSearchResults,
   derivedPurchaseSummary,
   filterPurchases,
-  globeEvidenceRecords,
-  globePlaces,
-  globePurchases,
   localized,
   merchantForId,
-  placeFeatureCollection,
   placeForId,
   purchasesForPlace,
-  smartInboxCases,
   synchronizeSelection,
   type CategoryFilter,
   type CanonicalSearchResult,
@@ -285,6 +281,9 @@ interface StoredExperienceState extends NavigationSnapshot {
 
 interface QaEvidence {
   ready: boolean
+  repositoryAdapter: SpendscapeDataSnapshot['source']['adapter']
+  dataClassification: SpendscapeDataSnapshot['source']['classification']
+  dataVersion: string
   locale: LocaleCode
   reducedMotion: boolean
   autoSpin: boolean
@@ -790,7 +789,22 @@ function isAvailableFocusTarget(target: HTMLElement | null): target is HTMLEleme
     rect.top < window.innerHeight && rect.left < window.innerWidth
 }
 
-export function SpendscapeGlobe() {
+interface SpendscapeGlobeProps {
+  initialData: SpendscapeDataSnapshot
+}
+
+export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
+  const {
+    merchants: globeMerchants,
+    places: globePlaces,
+    purchases: globePurchases,
+    evidence: globeEvidenceRecords,
+    smartInboxCases,
+  } = initialData
+  const placeFeatureCollection = useMemo(
+    () => buildPlaceFeatureCollection(globePlaces, globePurchases),
+    [globePlaces, globePurchases],
+  )
   const mapNodeRef = useRef<HTMLDivElement>(null)
   const queryDockRef = useRef<HTMLElement>(null)
   const controlDockRef = useRef<HTMLElement>(null)
@@ -930,29 +944,40 @@ export function SpendscapeGlobe() {
     [sessionCaptureRecords],
   )
   const allPurchases = useMemo(
-    () => applySmartInboxDecisions(basePurchases, smartInboxCases, smartInboxDecisions),
-    [basePurchases, smartInboxDecisions],
+    () => applySmartInboxDecisions(basePurchases, smartInboxCases, smartInboxDecisions, globePlaces),
+    [basePurchases, globePlaces, smartInboxCases, smartInboxDecisions],
   )
   const allEvidence = useMemo(
     () => [...globeEvidenceRecords, ...sessionCaptureRecords.map((record) => record.evidence)],
     [sessionCaptureRecords],
   )
   const searchScopePurchases = useMemo(
-    () => filterPurchases({ ...query, search: '' }, allPurchases),
-    [allPurchases, query],
+    () => filterPurchases({ ...query, search: '' }, allPurchases, globePlaces, globeMerchants),
+    [allPurchases, globeMerchants, globePlaces, query],
   )
   const searchResults = useMemo(
-    () => deriveCanonicalSearchResults(query.search, searchScopePurchases),
-    [query.search, searchScopePurchases],
+    () => deriveCanonicalSearchResults(
+      query.search,
+      searchScopePurchases,
+      globePlaces,
+      globeMerchants,
+    ),
+    [globeMerchants, globePlaces, query.search, searchScopePurchases],
   )
-  const visiblePurchases = useMemo(() => filterPurchases(query, allPurchases), [allPurchases, query])
+  const visiblePurchases = useMemo(
+    () => filterPurchases(query, allPurchases, globePlaces, globeMerchants),
+    [allPurchases, globeMerchants, globePlaces, query],
+  )
   const replayPurchases = useMemo(() => replay
     ? allPurchases.filter((purchase) => replay.purchaseIds.includes(purchase.id)) : [], [allPurchases, replay])
   const visibleData = useMemo(
     () => buildPlaceFeatureCollection(globePlaces, visiblePurchases),
     [visiblePurchases],
   )
-  const visibleSummary = useMemo(() => derivedPurchaseSummary(visiblePurchases), [visiblePurchases])
+  const visibleSummary = useMemo(
+    () => derivedPurchaseSummary(visiblePurchases, globePlaces),
+    [globePlaces, visiblePurchases],
+  )
   const visibleAnalytics = useMemo(
     () => derivePurchaseAnalytics(visiblePurchases, allEvidence),
     [allEvidence, visiblePurchases],
@@ -977,10 +1002,11 @@ export function SpendscapeGlobe() {
   }, [allPurchases])
   const timelineMonths = useMemo(() => availableTimelineMonths(allPurchases), [allPurchases])
   const askContext = useMemo<AskContext>(() => ({
+    merchants: globeMerchants,
     places: globePlaces,
     purchases: allPurchases,
     timelineMonths,
-  }), [allPurchases, timelineMonths])
+  }), [allPurchases, globeMerchants, globePlaces, timelineMonths])
   const pendingInbox = useMemo(
     () => pendingSmartInboxCases(smartInboxCases, basePurchases, smartInboxDecisions),
     [basePurchases, smartInboxDecisions],
@@ -1000,11 +1026,13 @@ export function SpendscapeGlobe() {
     ) ?? null,
     [selectedPlaceId, visibleData.features],
   )
-  const selectedPlace = selectedPlaceId ? placeForId(selectedPlaceId) : undefined
+  const selectedPlace = selectedPlaceId ? placeForId(selectedPlaceId, globePlaces) : undefined
   const selectedPurchase = selectedPurchaseId
     ? allPurchases.find((purchase) => purchase.id === selectedPurchaseId)
     : undefined
-  const selectedMerchant = selectedPurchase ? merchantForId(selectedPurchase.merchantId) : undefined
+  const selectedMerchant = selectedPurchase
+    ? merchantForId(selectedPurchase.merchantId, globeMerchants)
+    : undefined
   const selectedPurchaseInboxCase = selectedPurchase
     ? caseForPurchase(selectedPurchase.id, smartInboxCases)
     : undefined
@@ -1473,7 +1501,7 @@ export function SpendscapeGlobe() {
       return
     }
     const map = mapRef.current
-    const place = placeForId(placeId)
+    const place = placeForId(placeId, globePlaces)
     if (!place) return
     const activeElement = document.activeElement
     if (activeElement instanceof HTMLElement && activeElement !== document.body) {
@@ -2261,7 +2289,7 @@ export function SpendscapeGlobe() {
               return [coordinate.lng, coordinate.lat]
             },
             renderedPlaceIdsAt: (placeId) => {
-              const place = placeForId(placeId)
+              const place = placeForId(placeId, globePlaces)
               if (!place || !map.getLayer(PIN_LAYER)) return []
               const point = map.project(place.coordinates)
               return map.queryRenderedFeatures(point, { layers: [PIN_LAYER] })
@@ -2342,7 +2370,11 @@ export function SpendscapeGlobe() {
         setMapError(error instanceof Error ? error.message : 'Canonical place source update failed')
       })
     }
-    const synchronized = synchronizeSelection(visiblePurchases, { selectedPlaceId, selectedPurchaseId })
+    const synchronized = synchronizeSelection(
+      visiblePurchases,
+      { selectedPlaceId, selectedPurchaseId },
+      globePlaces,
+    )
     if (synchronized.selectedPlaceId !== selectedPlaceId) {
       setSelectedPlaceId(synchronized.selectedPlaceId)
       updateSelectedFilter(synchronized.selectedPlaceId)
@@ -2363,6 +2395,9 @@ export function SpendscapeGlobe() {
     const evidenceMap = mapAvailable && mapReadyRef.current ? mapRef.current : null
     window.__SPENDSCAPE_QA__ = {
       ready: mapAvailable,
+      repositoryAdapter: initialData.source.adapter,
+      dataClassification: initialData.source.classification,
+      dataVersion: initialData.source.version,
       locale,
       reducedMotion,
       autoSpin,
@@ -2504,7 +2539,9 @@ export function SpendscapeGlobe() {
   }, [runCameraAction, visibleData.features])
 
   const fitPlaceIds = useCallback((placeIds: string[]) => {
-    const places = placeIds.map(placeForId).filter((place): place is NonNullable<typeof place> => Boolean(place))
+    const places = placeIds
+      .map((placeId) => placeForId(placeId, globePlaces))
+      .filter((place): place is NonNullable<typeof place> => Boolean(place))
     if (places.length === 0) return
     runCameraAction('search-city-fit', (map) => {
       const bounds = new maplibregl.LngLatBounds()
@@ -2789,7 +2826,7 @@ export function SpendscapeGlobe() {
     for (const action of actions) {
       switch (action.type) {
         case 'map.flyToPlace': {
-          const place = placeForId(action.placeId)
+          const place = placeForId(action.placeId, globePlaces)
           if (!place) continue
           nextNavigation = { ...nextNavigation, surface: 'globe', selectedPlaceId: place.id, selectedPurchaseId: null }
           cameraActions.push((map) => map.flyTo({
@@ -2811,7 +2848,7 @@ export function SpendscapeGlobe() {
           cameraActions.push((map) => {
             const bounds = new maplibregl.LngLatBounds()
             for (const placeId of placeIds) {
-              const place = placeForId(placeId)
+              const place = placeForId(placeId, globePlaces)
               if (place) bounds.extend(place.coordinates)
             }
             map.fitBounds(bounds, {
@@ -2869,7 +2906,7 @@ export function SpendscapeGlobe() {
             selectedPurchaseId: purchase.id,
           }
           if (purchase.placeId) {
-            const place = placeForId(purchase.placeId)
+            const place = placeForId(purchase.placeId, globePlaces)
             if (place) cameraActions.push((map) => map.flyTo({
               center: place.coordinates,
               zoom: 15.2,
@@ -2983,7 +3020,7 @@ export function SpendscapeGlobe() {
     if (window.__SPENDSCAPE_QA__) {
       window.__SPENDSCAPE_QA__.replayEventPresentations = replayEventPresentationsRef.current
     }
-    const place = replayPlace(purchase)
+    const place = replayPlace(purchase, globePlaces)
     updateSelectedFilter(place?.id ?? null)
     replayLastPlaceRef.current = place?.id ?? null
     // Playback owns only event details and a temporary pin highlight. It never
@@ -3034,6 +3071,9 @@ export function SpendscapeGlobe() {
       data-session-purchases={sessionCaptureRecords.length}
       data-ask-open={askOpen}
       data-replay-open={Boolean(replay)}
+      data-repository-adapter={initialData.source.adapter}
+      data-data-classification={initialData.source.classification}
+      data-data-version={initialData.source.version}
     >
       <div ref={mapNodeRef} className={styles.map} data-testid="map-canvas" />
       <div className={styles.vignette} aria-hidden="true" />
@@ -3463,8 +3503,8 @@ export function SpendscapeGlobe() {
           ) : (
             <div className={styles.purchaseList}>
               {visiblePurchases.map((purchase) => {
-                const merchant = merchantForId(purchase.merchantId)
-                const place = purchase.placeId ? placeForId(purchase.placeId) : undefined
+                const merchant = merchantForId(purchase.merchantId, globeMerchants)
+                const place = purchase.placeId ? placeForId(purchase.placeId, globePlaces) : undefined
                 const typeLabel = purchase.resolution === 'unresolved'
                   ? t.unresolvedNoPin
                   : purchase.channel === 'online'
@@ -3502,6 +3542,7 @@ export function SpendscapeGlobe() {
       {surface === 'stats' && (
         <SpendscapeAnalytics
           analytics={visibleAnalytics}
+          places={globePlaces}
           locale={locale}
           query={query}
           activeFilterCount={activeFilterCount}
@@ -3529,7 +3570,7 @@ export function SpendscapeGlobe() {
           <h2 id="purchase-title">{localized(selectedMerchant.name, locale)}</h2>
           <p className={styles.panelLocation}>
             {selectedPurchase.placeId
-              ? `${localized(placeForId(selectedPurchase.placeId)!.branch, locale)} · ${localized(placeForId(selectedPurchase.placeId)!.city, locale)}`
+              ? `${localized(placeForId(selectedPurchase.placeId, globePlaces)!.branch, locale)} · ${localized(placeForId(selectedPurchase.placeId, globePlaces)!.city, locale)}`
               : selectedPurchase.resolution === 'unresolved' ? t.unresolvedNoPin : t.onlineNoPin}
           </p>
 
@@ -3622,6 +3663,8 @@ export function SpendscapeGlobe() {
       {captureStep && (
         <CaptureExperience
           locale={locale}
+          places={globePlaces}
+          merchants={globeMerchants}
           step={captureStep}
           reducedMotion={reducedMotion}
           sessionRecords={sessionCaptureRecords}
@@ -3641,6 +3684,8 @@ export function SpendscapeGlobe() {
       {inboxCaseId && activeInboxCase && activeInboxPurchase && (
         <SmartInboxExperience
           locale={locale}
+          places={globePlaces}
+          merchants={globeMerchants}
           inboxCase={activeInboxCase}
           purchase={activeInboxPurchase}
           purchases={basePurchases}
@@ -3668,7 +3713,8 @@ export function SpendscapeGlobe() {
         />
       )}
 
-      {replay && <LifeReplayExperience key={replay.id} purchases={replayPurchases} locale={locale}
+      {replay && <LifeReplayExperience key={replay.id} purchases={replayPurchases}
+        places={globePlaces} merchants={globeMerchants} locale={locale}
         reducedMotion={reducedMotion} mapAvailable={mapAvailable} rendererUnavailable={rendererHealth !== 'ready'} controllerRef={replayControllerRef}
         onRetryMap={mapError ? retryMap : undefined}
         onPresent={presentReplayPurchase} onClose={closeTopLayer} />}

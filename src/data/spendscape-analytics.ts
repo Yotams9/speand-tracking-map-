@@ -1,10 +1,9 @@
 import {
   baseAmountIlsForPurchase,
-  globeEvidenceRecords,
-  globePurchases,
   type CurrencyCode,
   type EvidenceKind,
   type GlobePurchase,
+  type PurchaseEvidence,
   type PurchaseCategory,
 } from './spendscape-globe'
 
@@ -63,7 +62,7 @@ function shareOf(total: number, value: number): number {
 
 function summarize<Key extends string>(
   keys: readonly Key[],
-  purchases: GlobePurchase[],
+  purchases: readonly GlobePurchase[],
   matches: (purchase: GlobePurchase, key: Key) => boolean,
   totalBaseAmountIls: number,
 ): Array<AnalyticsSegment<Key>> {
@@ -83,8 +82,8 @@ function summarize<Key extends string>(
 }
 
 export function derivePurchaseAnalytics(
-  purchases: GlobePurchase[] = globePurchases,
-  evidenceRecords = globeEvidenceRecords,
+  purchases: readonly GlobePurchase[],
+  evidenceRecords: readonly PurchaseEvidence[],
 ): PurchaseAnalytics {
   const totalBaseAmountIls = roundMoney(purchases.reduce(
     (sum, purchase) => sum + baseAmountIlsForPurchase(purchase),

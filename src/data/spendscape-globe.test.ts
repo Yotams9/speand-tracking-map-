@@ -1,25 +1,20 @@
+import { globeEvidence, globePlaces, globePurchases, placeFeatureCollection } from './spendscape-fixtures'
 import { describe, expect, it } from 'vitest'
-import {
-  buildPlaceFeatureCollection,
-  globeEvidence,
-  globePlaces,
-  globePurchases,
-  placeFeatureCollection,
-} from './spendscape-globe'
+import { buildPlaceFeatureCollection } from './spendscape-globe'
 
 describe('Spendscape canonical pin contract', () => {
   it('creates exactly one feature for a physical place with many purchases', () => {
     expect(globeEvidence.recurringPlacePurchaseCount).toBe(14)
     expect(globeEvidence.recurringPlacePinCount).toBe(1)
 
-    const feature = buildPlaceFeatureCollection().features.find(
+    const feature = buildPlaceFeatureCollection(globePlaces, globePurchases).features.find(
       (candidate) => candidate.properties.placeId === 'place_shuk_bograshov',
     )
     expect(feature?.properties.visitCount).toBe(14)
   })
 
   it('never turns online or unresolved purchases into pins', () => {
-    const featureCollection = buildPlaceFeatureCollection()
+    const featureCollection = buildPlaceFeatureCollection(globePlaces, globePurchases)
     const pinnedPlaceIds = new Set(
       featureCollection.features.map((feature) => feature.properties.placeId),
     )
@@ -62,7 +57,7 @@ describe('Spendscape canonical pin contract', () => {
   })
 
   it('keeps derived counts and normalized totals internally consistent', () => {
-    const featureCollection = buildPlaceFeatureCollection()
+    const featureCollection = buildPlaceFeatureCollection(globePlaces, globePurchases)
     const visitSum = featureCollection.features.reduce(
       (sum, feature) => sum + feature.properties.visitCount,
       0,

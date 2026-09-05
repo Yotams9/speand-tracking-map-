@@ -24,15 +24,17 @@ full brainstorming transcript.
 - Branch: `feature/spendscape-rebuild`
 - Product: **Spendscape**
 - Delivery: responsive web/PWA only
-- Completed implementation checkpoint: Phase 1 through bounded Slice 1D.6 at `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`
+- Completed implementation checkpoint: bounded Phase 2A.1 local data contract boundary, fixture adapter, and Ask boundary correction, recorded by this local checkpoint
 - Phase 1E status: final critical review, production-rendered local QA, and documentation reconciliation completed with no remaining Blocker or High defect
-- Current authorization: none; no product implementation slice or later phase is active
-- Active implementation slice: none
-- Latest completed checkpoint: details-first synthetic Life Replay with no automatic camera travel and explicit `Show place` as its only camera-moving action
+- Current authorization: separate local Phase 2A.1 checkpoint commit approval received on 2026-09-05; no later slice authorized
+- Active implementation slice: none; Phase 2A.1 correction and checkpoint review passed
+- Preserved interaction checkpoint: details-first synthetic Life Replay with no automatic camera travel and explicit `Show place` as its only camera-moving action
 - Existing app: Next.js App Router + React + TypeScript Spendscape concept
 - Prior implementation checkpoint: `b5796c5d393d8271dd7ee1b175c2c45bfe364806`
 - Phase 1 data: synthetic only
-- Backend/authentication/providers/accounts/real data/deployment: not implemented, connected, or authorized
+- Backend/authentication/Supabase/SQL/providers/accounts/real data/deployment: not implemented, connected, or authorized
+- Phase 2A.1 boundary: provider-neutral serializable read snapshot + fixture adapter over the unchanged canonical synthetic graph; no transport or mutation API
+- Phase 2A.1 correction: Ask merchant lookup and all active feature/domain fixture fallbacks removed; 104 unit tests, 16 boundary/Ask browser tests, and 4 focused Replay/composition checks passed
 
 The old root Phase 1 documents remain as historical evidence. They are not the
 Spendscape execution contract.

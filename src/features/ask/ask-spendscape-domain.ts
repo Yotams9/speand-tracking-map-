@@ -1,7 +1,4 @@
 import {
-  availableTimelineMonths,
-  globePlaces,
-  globePurchases,
   localized,
   merchantForId,
   type CategoryFilter,
@@ -10,6 +7,7 @@ import {
   type DateRangeFilter,
   type GlobePurchase,
   type LocaleCode,
+  type Merchant,
   type Place,
 } from '../../data/spendscape-globe'
 
@@ -51,15 +49,10 @@ export type AskParseResult =
   | { kind: 'unsupported'; summary: string }
 
 export interface AskContext {
-  places: Place[]
-  purchases: GlobePurchase[]
-  timelineMonths: string[]
-}
-
-const defaultContext: AskContext = {
-  places: globePlaces,
-  purchases: globePurchases,
-  timelineMonths: availableTimelineMonths(globePurchases),
+  merchants: readonly Merchant[]
+  places: readonly Place[]
+  purchases: readonly GlobePurchase[]
+  timelineMonths: readonly string[]
 }
 
 const currencyCodes = ['ILS', 'EUR', 'GBP', 'USD', 'JPY', 'AUD', 'MXN', 'ZAR'] as const
@@ -102,7 +95,7 @@ function summary(locale: LocaleCode, en: string, he: string): string {
   return locale === 'he' ? he : en
 }
 
-function regionMatches(target: string, places: Place[], kind: AskRegion['kind']) {
+function regionMatches(target: string, places: readonly Place[], kind: AskRegion['kind']) {
   const key = kind === 'city' ? 'city' : 'country'
   const normalizedTarget = normalize(target)
   const unique = new Map<string, { value: string; label: string; placeIds: string[] }>()
@@ -118,7 +111,7 @@ function regionMatches(target: string, places: Place[], kind: AskRegion['kind'])
   return [...unique.values()]
 }
 
-function placeMatches(target: string, places: Place[]) {
+function placeMatches(target: string, places: readonly Place[]) {
   const normalizedTarget = normalize(target)
   return places.filter((place) => {
     const labels = [
@@ -239,7 +232,7 @@ function analyticsResult(input: string, locale: LocaleCode): AskParseResult | nu
   return { kind: 'single', action: { type: 'analytics.open', view }, summary: summary(locale, `Open analytics · ${view}`, `פתיחת ניתוחים · ${analyticsViewLabelsHe[view]}`) }
 }
 
-export function parseAskCommand(rawInput: string, locale: LocaleCode, context: AskContext = defaultContext): AskParseResult {
+export function parseAskCommand(rawInput: string, locale: LocaleCode, context: AskContext): AskParseResult {
   const input = rawInput.trim()
   if (!input) return { kind: 'empty' }
 
@@ -270,7 +263,7 @@ export function parseAskCommand(rawInput: string, locale: LocaleCode, context: A
     ? [...context.purchases].sort((a, b) => b.timestamp.localeCompare(a.timestamp))[0]
     : undefined
   if (latestPurchase) {
-    const merchant = merchantForId(latestPurchase.merchantId)
+    const merchant = merchantForId(latestPurchase.merchantId, context.merchants)
     return {
       kind: 'single',
       action: { type: 'selection.openPurchase', purchaseId: latestPurchase.id },
@@ -333,17 +326,23 @@ export function parseAskCommand(rawInput: string, locale: LocaleCode, context: A
   }
 }
 
-export function describeAskAction(action: AskAction, locale: LocaleCode): string {
+export function describeAskAction(
+  action: AskAction,
+  locale: LocaleCode,
+  context: AskContext,
+): string {
   const isHebrew = locale === 'he'
   switch (action.type) {
     case 'map.flyToPlace': {
-      const place = globePlaces.find((candidate) => candidate.id === action.placeId)
+      const place = context.places.find((candidate) => candidate.id === action.placeId)
       return place
         ? (isHebrew ? `טיסה אל ${place.name.he} · ${place.branch.he}` : `Fly to ${place.name.en} · ${place.branch.en}`)
         : action.placeId
     }
     case 'map.flyToRegion': {
-      const place = globePlaces.find((candidate) => candidate[action.region.kind].en === action.region.value)
+      const place = context.places.find(
+        (candidate) => candidate[action.region.kind].en === action.region.value,
+      )
       const regionLabel = place ? localizedPair(place[action.region.kind], locale) : action.region.value
       return isHebrew ? `התמקדות באזור ${regionLabel}` : `Frame ${regionLabel}`
     }
@@ -377,7 +376,7 @@ function hasOnlyKeys(record: Record<string, unknown>, allowed: readonly string[]
     && keys.every((key) => typeof key === 'string' && allowed.includes(key))
 }
 
-export function isAllowedAskAction(value: unknown, context: AskContext = defaultContext): value is AskAction {
+export function isAllowedAskAction(value: unknown, context: AskContext): value is AskAction {
   try {
     if (!isPlainRecord(value) || typeof value.type !== 'string') return false
 
@@ -429,7 +428,7 @@ export function isAllowedAskAction(value: unknown, context: AskContext = default
   }
 }
 
-export function isAllowedAskActionPlan(value: unknown, context: AskContext = defaultContext): value is AskAction[] {
+export function isAllowedAskActionPlan(value: unknown, context: AskContext): value is AskAction[] {
   try {
     if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length === 0) return false
     if (Reflect.ownKeys(value).length !== value.length + 1) return false

@@ -101,7 +101,7 @@ details-first, ordinary playback never moves the camera, and explicit `Show
 place` is the only Replay action that does. No Phase 1 product implementation
 slice is active. The final Phase 1E critical review passed with no remaining
 Blocker or High defect and is recorded by the current documentation checkpoint.
-No later phase is active. Real AI/LLM calls, production Replay,
+Bounded Phase 2A.1 is complete; no later slice is authorized. Real AI/LLM calls, production Replay,
 privacy/sharing, backend,
 authentication, real camera/file handling, OCR, Gmail, provider integrations,
 factual FX, accounts, deployment, and real data are not implemented or
@@ -113,12 +113,20 @@ The user approved Phase 1 build/QA and then bounded implementation through
 Slices 1A–1C.1, 1D.1, 1D.2, the globe-fidelity correction, and bounded Slices
 1D.3–1D.6. Those checkpoints are complete and accepted at
 `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`. The final bounded Phase 1E
-critical review is complete and its documentation is recorded by the current
-local checkpoint. No product implementation slice, technology slice, or Phase
-2 work is active or authorized.
+critical review is complete and its documentation is recorded by the
+Phase 1E documentation checkpoint. Bounded Phase 2A.1 is complete:
+provider-neutral local data read contract, unchanged-fixture adapter, contract
+tests, and local QA. The checkpoint-review P2 Ask merchant lookup is corrected:
+active features and domain operations require supplied snapshot data, and the
+unchanged fixture graph is confined to the adapter and related tests. The
+correction and focused review passed with no remaining Blocker or High defect;
+the separate checkpoint commit approval was received on 2026-09-05 and is
+consumed by this local checkpoint, based on
+`ac8801c19459c3cb4e000a3f49666ee9ee0df2e1`. No later slice is authorized.
 
-Do not infer AI, Supabase, Zod, any provider, real ingestion, backend,
-authentication, deployment, or a later slice from the Phase 1 checkpoint.
+Do not infer AI, Supabase, SQL/migrations, Zod, any provider, real ingestion,
+backend resources, authentication, deployment, or a later slice from Phase
+2A.1.
 Require a new exact bounded authorization.
 
 ## Capability facts at handoff

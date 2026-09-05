@@ -162,7 +162,7 @@ export function AskSpendscapeExperience({ locale, context, onClose, onExecute }:
             <section className={styles.plan} data-testid="ask-plan-preview">
               <p>{t.preview}</p>
               <ol>
-                {result.actions.map((action, index) => <li key={`${action.type}-${index}`}>{describeAskAction(action, locale)}</li>)}
+                {result.actions.map((action, index) => <li key={`${action.type}-${index}`}>{describeAskAction(action, locale, context)}</li>)}
               </ol>
               <div>
                 <button type="button" className={styles.apply} onClick={() => onExecute(result.actions, result.summary)} data-testid="ask-apply-plan">{t.apply}</button>

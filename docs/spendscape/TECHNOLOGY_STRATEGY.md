@@ -21,7 +21,7 @@ rejected.
 
 ## Current verified repository baseline
 
-The completed local implementation checkpoint is Phase 1 through bounded Slice
+The prior local implementation checkpoint is Phase 1 through bounded Slice
 1D.6 at `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa` on
 `feature/spendscape-rebuild`:
 
@@ -31,8 +31,12 @@ The completed local implementation checkpoint is Phase 1 through bounded Slice
 - One canonical synthetic fixture graph and derived purchase/globe state.
 - OpenFreeMap's no-key public development style is the only current external
   runtime source.
-- No backend, authentication, account-backed product/provider API, factual FX,
-  OCR, Gmail, LLM, deployment, provider account, production credential, or real
+- Bounded Phase 2A.1 is complete: a provider-neutral serializable local read
+  snapshot, an unchanged-fixture adapter, the Ask boundary correction, contract
+  tests, and local QA, recorded by this separately approved local checkpoint.
+- No Supabase/SQL/migration, backend resource, authentication, account-backed
+  product/provider API, network-calling data implementation, factual FX, OCR,
+  Gmail, LLM, deployment, provider account, production credential, or real
   user data.
 
 Exact versions are repository facts, not permanent future pins. Re-read the
@@ -225,9 +229,11 @@ corrections and details-first synthetic Life Replay. Ordinary Replay playback
 performs no automatic camera travel; explicit `Show place` is its only
 camera-moving action. The bounded final Phase 1E review and documentation
 reconciliation are complete with no remaining Blocker or High defect. No Phase
-1 product implementation slice or later phase is active. These product-scoped, deterministic, local, provider-free
-features do not activate `AIProvider` or any technology candidate in this
-strategy.
+1 product implementation slice is active. Bounded Phase 2A.1 completed the
+local read-contract and fixture-adapter work described below; no later slice
+is authorized. The completed
+Phase 1 features do not activate `AIProvider` or any technology candidate in
+this strategy.
 
 ### Remaining Phase 1
 
@@ -238,7 +244,9 @@ slice or later phase needs its own explicit bounded approval.
 
 ### Phase 2 — canonical backend and authentication
 
-After the Phase 2 gate, validate boundaries and implement the approved local
+Bounded Phase 2A.1 validates only the local provider-neutral read contract and
+fixture adapter; it does not select or install a backend technology. After the
+broader Phase 2 gate, validate boundaries and implement the approved local
 schema, migrations, RLS, storage policy, and server access. Creating or
 connecting a real Supabase project/environment remains a separately named
 provider-resource action. Start with synthetic data and a reviewed rollback.

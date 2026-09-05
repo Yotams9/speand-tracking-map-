@@ -1,5 +1,4 @@
 import {
-  globePlaces,
   type GlobePurchase,
   type Place,
   type SmartInboxCase,
@@ -44,7 +43,7 @@ export function applySmartInboxDecisions(
   purchases: readonly GlobePurchase[],
   cases: readonly SmartInboxCase[],
   decisions: readonly SmartInboxDecision[],
-  places: readonly Place[] = globePlaces,
+  places: readonly Place[],
 ): GlobePurchase[] {
   const caseById = new Map(cases.map((inboxCase) => [inboxCase.id, inboxCase]))
   const placeById = new Map(places.map((place) => [place.id, place]))

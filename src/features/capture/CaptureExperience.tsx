@@ -7,13 +7,14 @@ import {
   useState,
 } from 'react'
 import {
-  globePlaces,
   localized,
   merchantForId,
   placeForId,
   type CurrencyCode,
   type LocaleCode,
+  type Merchant,
   type PaymentMode,
+  type Place,
   type PurchaseCategory,
 } from '@/data/spendscape-globe'
 import {
@@ -35,6 +36,8 @@ import styles from './CaptureExperience.module.css'
 
 interface CaptureExperienceProps {
   locale: LocaleCode
+  places: readonly Place[]
+  merchants: readonly Merchant[]
   step: CaptureStep
   reducedMotion: boolean
   sessionRecords: readonly SessionCaptureRecord[]
@@ -164,6 +167,8 @@ function formatDate(value: string, locale: LocaleCode): string {
 
 export function CaptureExperience({
   locale,
+  places,
+  merchants,
   step,
   reducedMotion,
   sessionRecords,
@@ -295,8 +300,10 @@ export function CaptureExperience({
     ? sessionRecords.find((record) => record.purchase.id === state.lastPurchaseId)
     : undefined
   const arithmetic = state.draft ? receiptArithmetic(state.draft) : null
-  const reviewPlace = state.draft?.placeId ? placeForId(state.draft.placeId) : undefined
-  const reviewMerchant = state.draft?.merchantId ? merchantForId(state.draft.merchantId) : undefined
+  const reviewPlace = state.draft?.placeId ? placeForId(state.draft.placeId, places) : undefined
+  const reviewMerchant = state.draft?.merchantId
+    ? merchantForId(state.draft.merchantId, merchants)
+    : undefined
   const showBack = step !== 'scanner' && step !== 'success'
 
   const dialogTitle = step === 'scanner'
@@ -426,13 +433,13 @@ export function CaptureExperience({
                     <select
                       value={state.draft.placeId ?? ''}
                       onChange={(event) => {
-                        const place = placeForId(event.target.value)
+                        const place = placeForId(event.target.value, places)
                         updateDraft({ placeId: place?.id ?? null, merchantId: place?.merchantId ?? null })
                       }}
                       data-testid="product-place"
                     >
                       <option value="">{t.required}</option>
-                      {globePlaces.slice(0, 3).map((place) => <option key={place.id} value={place.id}>{localized(place.name, locale)} · {localized(place.city, locale)}</option>)}
+                      {places.slice(0, 3).map((place) => <option key={place.id} value={place.id}>{localized(place.name, locale)} · {localized(place.city, locale)}</option>)}
                     </select>
                   </label>
                   <label>{t.amount}
@@ -518,7 +525,7 @@ export function CaptureExperience({
                   <select
                     value={manualInput.placeId ?? ''}
                     onChange={(event) => {
-                      const place = placeForId(event.target.value)
+                      const place = placeForId(event.target.value, places)
                       updateManual('placeId', place?.id ?? null)
                       if (place) updateManual('merchantId', place.merchantId)
                     }}
@@ -526,7 +533,7 @@ export function CaptureExperience({
                     aria-describedby={manualErrors.placeId ? 'manual-place-error' : undefined}
                     data-testid="manual-place"
                   >
-                    {globePlaces.map((place) => <option key={place.id} value={place.id}>{localized(place.name, locale)} · {localized(place.city, locale)}</option>)}
+                    {places.map((place) => <option key={place.id} value={place.id}>{localized(place.name, locale)} · {localized(place.city, locale)}</option>)}
                   </select>
                   {manualErrors.placeId && <small id="manual-place-error" className={styles.fieldError}>{manualErrors.placeId}</small>}
                 </label>
