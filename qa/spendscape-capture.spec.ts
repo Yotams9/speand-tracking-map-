@@ -369,7 +369,7 @@ test('large-phone Hebrew RTL and reduced motion keep Capture readable and still'
   await page.getByTestId('capture-open-mobile').click()
   await expect(page.getByTestId('capture-dialog')).toContainText('אין גישה למצלמה')
   await expect(page.getByTestId('capture-layer')).toHaveAttribute('data-reduced-motion', 'true')
-  const scanAnimation = await page.locator('[class*="scanLine"]').evaluate((element) => getComputedStyle(element).animationName)
+  const scanAnimation = await page.getByTestId('capture-camera-video').evaluate((element) => getComputedStyle(element).animationName)
   expect(scanAnimation).toBe('none')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.screenshot({ path: path.join(artifactDir, 'mobile-large-capture-rtl-reduced-430x932.png'), fullPage: true })

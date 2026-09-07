@@ -32,6 +32,7 @@ import {
   type ManualCaptureInput,
   type SessionCaptureRecord,
 } from './capture-domain'
+import { CaptureCamera } from './CaptureCamera'
 import styles from './CaptureExperience.module.css'
 
 interface CaptureExperienceProps {
@@ -82,9 +83,7 @@ const sourceCopy = {
 const copy = {
   en: {
     close: 'Close Capture', back: 'Back', eyebrow: 'Universal Capture · simulated',
-    scannerTitle: 'Point at a receipt, product, barcode, or document',
-    scannerBody: 'A camera-first concept using only built-in synthetic examples. No camera is accessed.',
-    simulated: 'Demo scanner', scan: 'Scan demo receipt', other: 'Choose another source',
+    simulated: 'Demo scanner', other: 'Choose another source',
     sourceTitle: 'How would you like to add it?', sourceBody: 'Every option below is a working simulation or clearly marked future connection.',
     processing: 'Reading the synthetic example…', processingBody: 'Nothing is uploaded, retained, or sent to a provider.',
     review: 'We found this — does it look right?', reviewBody: 'Confirm the essentials. Advanced matching stays out of the way.',
@@ -114,9 +113,7 @@ const copy = {
   },
   he: {
     close: 'סגירת Capture', back: 'חזרה', eyebrow: 'קליטה אוניברסלית · הדמיה',
-    scannerTitle: 'כוונו אל קבלה, מוצר, ברקוד או מסמך',
-    scannerBody: 'קונספט ממוקד־מצלמה המשתמש רק בדוגמאות סינתטיות מובנות. אין גישה למצלמה.',
-    simulated: 'סורק הדגמה', scan: 'סריקת קבלת הדגמה', other: 'בחירת מקור אחר',
+    simulated: 'סורק הדגמה', other: 'בחירת מקור אחר',
     sourceTitle: 'איך תרצו להוסיף את הרכישה?', sourceBody: 'כל אפשרות היא הדמיה פעילה או חיבור עתידי המסומן בבירור.',
     processing: 'קוראים את הדוגמה הסינתטית…', processingBody: 'דבר לא עולה, נשמר או נשלח לספק.',
     review: 'זה מה שמצאנו — הכול נראה נכון?', reviewBody: 'מאשרים רק את הפרטים החשובים. התאמות מתקדמות נשארות ברקע.',
@@ -306,9 +303,7 @@ export function CaptureExperience({
     : undefined
   const showBack = step !== 'scanner' && step !== 'success'
 
-  const dialogTitle = step === 'scanner'
-    ? t.scannerTitle
-    : step === 'sources'
+  const dialogTitle = step === 'sources'
       ? t.sourceTitle
       : step === 'processing'
         ? t.processing
@@ -337,7 +332,7 @@ export function CaptureExperience({
         <header className={styles.header}>
           <div className={styles.headerLead}>
             {showBack && <button type="button" className={styles.back} onClick={onBack} aria-label={t.back}>←</button>}
-            <div><p>{t.eyebrow}</p><strong>Spendscape</strong></div>
+            <div><p>{step === 'scanner' ? (locale === 'he' ? 'Capture · מצלמה והדגמות' : 'Capture · camera & demos') : t.eyebrow}</p><strong>Spendscape</strong></div>
           </div>
           <button ref={closeRef} type="button" className={styles.close} onClick={onClose} aria-label={t.close}>×</button>
         </header>
@@ -345,26 +340,12 @@ export function CaptureExperience({
         <div className={styles.live} role="status" aria-live="polite">{announce}</div>
 
         {step === 'scanner' && (
-          <div className={styles.scannerStage} data-testid="capture-scanner">
-            <div className={styles.viewfinder} aria-hidden="true">
-              <span className={styles.scanLine} />
-              <span className={styles.focusMark} data-corner="one" />
-              <span className={styles.focusMark} data-corner="two" />
-              <span className={styles.focusMark} data-corner="three" />
-              <span className={styles.focusMark} data-corner="four" />
-              <div className={styles.receiptGlyph}><i /><i /><i /><i /></div>
-              <small>{t.simulated}</small>
-            </div>
-            <div className={styles.stageCopy}>
-              <p className={styles.kicker}>{t.simulated}</p>
-              <h2 id="capture-title">{dialogTitle}</h2>
-              <p id="capture-description">{t.scannerBody}</p>
-            </div>
-            <div className={styles.actions}>
-              <button type="button" className={styles.primary} onClick={() => chooseSource('receipt')} data-testid="capture-scan">{t.scan}</button>
-              <button type="button" className={styles.secondary} onClick={() => onNavigate('sources', 'push')} data-testid="capture-sources-open">{t.other}</button>
-            </div>
-          </div>
+          <CaptureCamera
+            locale={locale}
+            onDemo={() => chooseSource('receipt')}
+            onSources={() => onNavigate('sources', 'push')}
+            onManual={() => chooseSource('manual')}
+          />
         )}
 
         {step === 'sources' && (

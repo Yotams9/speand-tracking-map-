@@ -26,8 +26,8 @@ full brainstorming transcript.
 - Delivery: responsive web/PWA only
 - Completed implementation checkpoint: bounded Phase 2A.1 local data contract boundary, fixture adapter, and Ask boundary correction, recorded by this local checkpoint
 - Phase 1E status: final critical review, production-rendered local QA, and documentation reconciliation completed with no remaining Blocker or High defect
-- Current authorization: separate local Phase 2A.1 checkpoint commit approval received on 2026-09-05; no later slice authorized
-- Active implementation slice: none; Phase 2A.1 correction and checkpoint review passed
+- Current authorization: `APPROVE SPENDSCAPE SCANNER A CHECKPOINT REVIEW — PHYSICAL IPHONE QA PENDING HTTPS PREVIEW`; review only, with no implementation expansion or commit authority
+- Active implementation slice: none; Scanner A checkpoint review passed and is ready for separate local commit approval. Physical iPhone Safari QA remains pending an explicitly authorized HTTPS Preview deployment. See [SCANNER_A_CHECKPOINT_REVIEW.md](SCANNER_A_CHECKPOINT_REVIEW.md).
 - Preserved interaction checkpoint: details-first synthetic Life Replay with no automatic camera travel and explicit `Show place` as its only camera-moving action
 - Existing app: Next.js App Router + React + TypeScript Spendscape concept
 - Prior implementation checkpoint: `b5796c5d393d8271dd7ee1b175c2c45bfe364806`
@@ -38,3 +38,11 @@ full brainstorming transcript.
 
 The old root Phase 1 documents remain as historical evidence. They are not the
 Spendscape execution contract.
+
+The latest user decision replaces planned local Supabase Phase 2A.2 with a
+college demo using the fixture baseline and session-only additions. No Docker,
+Colima, Supabase, database, authentication or hosted storage is authorized.
+Scanner A permits explicit-user-action native camera preview only; existing
+manual and simulated Capture paths remain unchanged. Later Scanner slices and
+checkpoint commits retain separate gates. Older handoff statements excluding
+camera access describe the pre-Scanner-A checkpoint.
