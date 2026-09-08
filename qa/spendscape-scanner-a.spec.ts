@@ -203,7 +203,7 @@ test('keyboard trap includes camera and fallback controls in Hebrew', async ({ p
   await page.keyboard.press('Shift+Tab')
   await expect(close).toBeFocused()
   await page.keyboard.press('Shift+Tab')
-  await expect(page.getByTestId('capture-sources-open')).toBeFocused()
+  await expect(page.getByTestId('barcode-demo')).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(close).toBeFocused()
 })

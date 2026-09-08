@@ -237,3 +237,27 @@
   .cameraStage .stageCopy h2 { font-size: 1.35rem; }
   .cameraStage .stageCopy > p { margin-block-start: 6px; font-size: .72rem; }
 }
+
+/* The guide is also the exact source region cropped for local barcode decoding. */
+.barcodeTarget { position: absolute; inset: 20% 7%; border: 2px solid #b9eaff; border-radius: 9px; pointer-events: none; box-shadow: 0 0 0 100vmax rgba(0,0,0,.16); }
+.barcodePanel { inline-size: 100%; flex: none; padding-block: 8px; border-block-start: 1px solid rgba(255,255,255,.12); }
+.barcodePanel > p { margin: 0 0 10px; color: #b9eaff; font-size: .76rem; line-height: 1.5; }
+.barcodeActions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.barcodeActions button { min-inline-size: 0; padding: 9px; line-height: 1.35; }
+.barcodePanel label { display: grid; gap: 6px; color: #b8c1d0; font-size: .75rem; }
+.barcodePanel input, .barcodePanel select { box-sizing: border-box; inline-size: 100%; min-inline-size: 0; min-block-size: 44px; padding: 10px; border: 1px solid #596374; border-radius: 8px; background: #10151e; color: #f3f6fb; font: inherit; font-size: .94rem; }
+.barcodePanel :focus-visible { outline: 3px solid #9ee6ff; outline-offset: 3px; }
+.barcodeForm { display: grid; gap: 12px; padding-block: 16px 4px; }
+.barcodeResult { margin-block-end: 14px; padding: 14px; background: rgba(110,180,230,.08); border-radius: 14px; }
+.barcodeResult strong { color: #b9eaff; font-size: .78rem; }
+.barcodeResult p { color: #bbc3d0; font-size: .76rem; line-height: 1.5; overflow-wrap: anywhere; }
+@media (max-height: 500px) and (min-width: 600px) { .barcodePanel { grid-column: 2; } }
+.cameraStage[data-has-candidate='true'] .cameraViewfinder,
+.cameraStage[data-has-candidate='true'] .cameraActions,
+.cameraStage[data-has-candidate='true'] .cameraStatus { display: none; }
+@media (max-height: 500px) and (min-width: 600px) {
+  .cameraStage[data-has-candidate='true'] { display: flex; }
+}
+@media (min-width: 761px) and (min-height: 501px) and (max-height: 850px) {
+  .cameraViewfinder { max-block-size: 24dvh; }
+}

@@ -178,6 +178,7 @@ export function CaptureExperience({
   onShowOnGlobe,
 }: CaptureExperienceProps) {
   const [state, dispatch] = useReducer(captureReducer, initialCaptureState)
+  const [scannerGeneration, setScannerGeneration] = useState(0)
   const [manualInput, setManualInput] = useState<ManualCaptureInput>({
     merchantId: 'merchant_shuk',
     placeId: 'place_shuk_bograshov',
@@ -341,6 +342,7 @@ export function CaptureExperience({
 
         {step === 'scanner' && (
           <CaptureCamera
+            key={scannerGeneration}
             locale={locale}
             onDemo={() => chooseSource('receipt')}
             onSources={() => onNavigate('sources', 'push')}
@@ -603,7 +605,7 @@ export function CaptureExperience({
         {sessionRecords.length > 0 && step !== 'success' && (
           <footer className={styles.sessionFooter}>
             <span>{sessionRecords.length} {t.sessionCount}</span>
-            <button type="button" onClick={onResetSession}>{t.reset}</button>
+            <button type="button" onClick={() => { setScannerGeneration((n) => n + 1); onResetSession(); closeRef.current?.focus() }}>{t.reset}</button>
           </footer>
         )}
       </section>

@@ -1,13 +1,17 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
+import { CaptureBarcode } from './CaptureBarcode'
+import { useCaptureBarcode } from './useCaptureBarcode'
 import type { LocaleCode } from '@/data/spendscape-globe'
 import { useCaptureCamera } from './useCaptureCamera'
 import styles from './CaptureExperience.module.css'
 
 const copy = {
   en: {
-    title: 'Try the camera, or explore a demo', label: 'Camera preview',
-    body: 'Preview only. Barcode and receipt recognition are not available yet. No photos are recorded, saved or uploaded.',
+    reviewTitle: 'Review the product', reviewBody: 'A local identification candidate. Nothing has been added.',
+    title: 'Find a product by barcode', label: 'Camera preview',
+    body: 'Read a barcode locally, or explore a demo. Frames stay temporary on this device. Receipt recognition is not available yet.',
     start: 'Start camera', stop: 'Stop camera', cancel: 'Cancel camera request', retry: 'Try camera again',
     demo: 'Scan demo receipt', sources: 'Choose another source', manual: 'Manual / cash',
     idle: 'No camera is accessed until you choose Start camera.',
@@ -24,8 +28,9 @@ const copy = {
     error: 'The camera could not start. Try again or use manual entry.',
   },
   he: {
-    title: 'נסו את המצלמה, או גלו את ההדגמה', label: 'תצוגת מצלמה',
-    body: 'תצוגה בלבד. זיהוי ברקודים וקבלות עדיין אינו זמין. לא מתבצעים צילום, שמירה או העלאה של תמונות.',
+    reviewTitle: 'בדיקת זיהוי המוצר', reviewBody: 'מועמד לזיהוי מקומי. דבר לא נוסף לרכישות.',
+    title: 'זיהוי מוצר באמצעות ברקוד', label: 'תצוגת מצלמה',
+    body: 'קראו ברקוד מקומית, או גלו את ההדגמה. התמונות זמניות ונשארות במכשיר. זיהוי קבלות עדיין אינו זמין.',
     start: 'הפעלת מצלמה', stop: 'עצירת מצלמה', cancel: 'ביטול בקשת מצלמה', retry: 'ניסיון מצלמה נוסף',
     demo: 'סריקת קבלת הדגמה', sources: 'בחירת מקור אחר', manual: 'ידני / מזומן',
     idle: 'אין גישה למצלמה עד לבחירה בהפעלת מצלמה.',
@@ -50,24 +55,35 @@ export function CaptureCamera({ locale, onDemo, onSources, onManual }: {
   onManual: () => void
 }) {
   const { videoRef, state, start, stop } = useCaptureCamera()
+  const targetRef = useRef<HTMLDivElement>(null)
+  const barcode = useCaptureBarcode(videoRef, targetRef, state, stop)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const hadResult = useRef(false)
+  useEffect(() => {
+    if (barcode.identity) stageRef.current?.scrollTo({ top: 0 })
+    if (hadResult.current && !barcode.identity && barcode.state === 'idle') toggleRef.current?.focus()
+    hadResult.current = Boolean(barcode.identity)
+  }, [barcode.identity, barcode.state])
   const t = copy[locale]
   const running = state === 'live' || state === 'requesting'
-  const leave = (navigate: () => void) => { stop(); navigate() }
+  const leave = (navigate: () => void) => { barcode.cancel(); navigate() }
   return (
-    <div className={`${styles.scannerStage} ${styles.cameraStage}`} data-testid="capture-scanner" data-camera-state={state}>
+    <div ref={stageRef} className={`${styles.scannerStage} ${styles.cameraStage}`} data-testid="capture-scanner" data-camera-state={state} data-has-candidate={Boolean(barcode.identity)}>
       <div className={`${styles.viewfinder} ${styles.cameraViewfinder}`}>
         <video ref={videoRef} muted playsInline disablePictureInPicture aria-label={t.label}
           className={styles.cameraVideo} data-live={state === 'live'} data-testid="capture-camera-video" />
         {state !== 'live' && <div className={styles.receiptGlyph} aria-hidden="true"><i /><i /><i /><i /></div>}
+        <div ref={targetRef} className={styles.barcodeTarget} aria-hidden="true" data-testid="barcode-target" />
         <small>{t.label}</small>
       </div>
       <div className={styles.stageCopy}>
-        <h2 id="capture-title">{t.title}</h2>
-        <p id="capture-description">{t.body}</p>
+        <h2 id="capture-title">{barcode.identity ? t.reviewTitle : t.title}</h2>
+        <p id="capture-description">{barcode.identity ? t.reviewBody : t.body}</p>
         <p className={styles.cameraStatus} role="status" aria-live="polite" aria-atomic="true" data-testid="capture-camera-status">{t[state]}</p>
       </div>
       <div className={`${styles.actions} ${styles.cameraActions}`}>
-        <button type="button" className={styles.primary} data-testid="capture-camera-toggle" onClick={running ? stop : start}>
+        <button type="button" ref={toggleRef} className={styles.primary} data-testid="capture-camera-toggle" onClick={running ? barcode.cancel : start}>
           {state === 'requesting' ? t.cancel : state === 'live' ? t.stop
             : ['idle', 'stopped', 'interrupted'].includes(state) ? t.start : t.retry}
         </button>
@@ -75,6 +91,10 @@ export function CaptureCamera({ locale, onDemo, onSources, onManual }: {
         <button type="button" className={styles.secondary} onClick={() => leave(onManual)} data-testid="capture-camera-manual">{t.manual}</button>
         <button type="button" className={styles.secondary} onClick={() => leave(onSources)} data-testid="capture-sources-open">{t.sources}</button>
       </div>
+      <CaptureBarcode locale={locale} state={barcode.state} identity={barcode.identity}
+        onManual={barcode.manual} onCancel={barcode.cancel}
+        onRetry={() => { barcode.retry(); if (state !== 'live') start() }}
+        onReset={() => { barcode.cancel(); barcode.retry() }} />
     </div>
   )
 }
