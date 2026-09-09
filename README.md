@@ -1,4 +1,4 @@
-# Spendscape — Phase 1 completed checkpoint
+# Spendscape — college demo and completed Scanner A/B
 
 Spendscape is a globe-first purchase-intelligence concept. This branch currently
 implements completed Phase 1 Slices 1A–1C.1, 1D.1, 1D.2, the accepted globe
@@ -16,9 +16,23 @@ implementation slice is active. The bounded Phase 1E critical review passed
 with no remaining Blocker or High defect and is recorded by the current local
 documentation checkpoint. No later phase is active.
 
-Every purchase, place, amount, coordinate, and performance story in the demo is
-synthetic. The app does not connect to accounts, services, location history, or
-real user data.
+The canonical purchase graph remains synthetic. Scanner A provides explicit
+video-only camera access; Scanner B identifies a local barcode/product candidate
+without creating or saving a purchase. Both slices are completed, reviewed,
+committed and pushed; latest checkpoint: `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`.
+
+The existing [college demo](https://spendscape-college-demo.vercel.app) is active
+in SkDev / sk-dev3 on Vercel Hobby. Its Production label is the separately
+approved first-deployment bootstrap, not a general commercial release. Physical
+iPhone 17 Pro / iOS 26.6.1 Safari Scanner A/B smoke testing has a **user-reported
+pass**, not an independently instrumented device test. See
+[the current handoff](docs/spendscape/CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation)
+for exact evidence, deployment identity and the minor “Try demo product” clarity
+issue. The action loads Demo Oats for candidate review only.
+
+No implementation slice is active. Scanner D, Scanner E, optional Scanner C,
+backend, database, application authentication and real provider integrations
+remain separately gated. No location history or financial account is connected.
 
 ## Local requirements
 
@@ -35,6 +49,10 @@ npm run dev
 Open <http://localhost:3000>.
 
 ### Test from a phone on the same network
+
+These LAN instructions are for local display checks. Camera access on an iPhone
+requires a trusted HTTPS origin; the existing college-demo URL above is the
+recorded physical scanner smoke-test target.
 
 The installed Next.js 16.3.3 CLI defaults both `next dev` and `next start` to
 `0.0.0.0`; the explicit mobile scripts make that LAN binding visible and
@@ -187,11 +205,12 @@ does not start development mode. Screenshots/results belong only in ignored
 
 Phase 1 adds only deterministic, frontend-only simulations to the accepted
 globe, purchase, analytics, Capture, Smart Inbox, Ask, and Life Replay
-foundation. Real camera/file input,
-barcode lookup, OCR, Gmail, product providers, real LLM/AI providers,
-production Life Replay, privacy/sharing, backend, authentication, factual FX, deployment,
-service accounts, production credentials, paid providers, and real user data
-remain unimplemented and unauthorized.
+foundation. The later completed Scanner A/B camera and local barcode slices,
+and the existing bounded Vercel demo, are the explicit exceptions described
+above. File ingestion, external barcode lookup, OCR, Gmail, real product/LLM/AI
+providers, production Life Replay, privacy/sharing, backend, authentication,
+factual FX, paid services and real financial-data integration remain deferred.
+Further deployment and resource changes require separate approval.
 
 The basemap uses OpenFreeMap only as a free development style. It needs no API
 key and carries no production availability commitment in this checkpoint.

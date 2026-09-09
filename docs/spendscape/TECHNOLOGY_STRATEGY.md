@@ -19,7 +19,20 @@ particular, their self-authority claims, replacement phase numbering, blanket
 implementation permission, and mandatory provider/model selections are
 rejected.
 
-## Current verified repository baseline
+## Current scanner/demo status
+
+Scanner A/B are completed, reviewed, committed and pushed; the latest checkpoint
+is `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`. Scanner B uses exactly
+`zxing-wasm@3.1.3`, reader-only, with vendored application-origin WASM and a
+synthetic catalog; it identifies candidates without creating purchases. The
+older `@zxing/browser` candidate table below is historical, not the selected
+Scanner B dependency. The existing SkDev / sk-dev3 Hobby Vercel college demo is
+active. Physical iPhone 17 Pro / iOS 26.6.1 Safari smoke testing has a user-reported
+pass, subject to [the handoff's evidence limits](CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation).
+No implementation slice is active. Scanner D/E, optional C, backend, database,
+authentication, real providers and further resource/deployment actions remain gated.
+
+## Historical repository baseline through Phase 2A.1
 
 The prior local implementation checkpoint is Phase 1 through bounded Slice
 1D.6 at `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa` on
@@ -139,7 +152,10 @@ Queues are added only with a concrete ingestion workload.
 
 ### Vercel
 
-Vercel remains a deployment candidate for the approved Next.js application.
+Vercel now hosts only the separately approved existing college demo described in
+[the current handoff](CONVERSATION_HANDOFF.md#existing-vercel-college-demo-deployment).
+The first-deployment Production label does not promote it to a general
+commercial release or authorize further deployment/resource changes.
 Vercel Hobby is limited to development or private noncommercial demonstration
 unless current terms expressly permit the intended use. A commercial release
 requires an approved suitable plan or another host after cost, limits, privacy,
@@ -230,8 +246,8 @@ performs no automatic camera travel; explicit `Show place` is its only
 camera-moving action. The bounded final Phase 1E review and documentation
 reconciliation are complete with no remaining Blocker or High defect. No Phase
 1 product implementation slice is active. Bounded Phase 2A.1 completed the
-local read-contract and fixture-adapter work described below; no later slice
-is authorized. The completed
+local read-contract and fixture-adapter work described below; that approval did
+not authorize later slices. See the current scanner/demo status above. The completed
 Phase 1 features do not activate `AIProvider` or any technology candidate in
 this strategy.
 

@@ -13,7 +13,17 @@ explicit `Show place` as its sole camera-moving action. No Phase 1 product
 implementation slice or technology slice is active. The bounded Phase 1E
 critical review, production-rendered local QA, and documentation reconciliation
 are complete with no remaining Blocker or High defect. Bounded Phase 2A.1 is
-complete and recorded by this local checkpoint; no later slice is authorized.
+complete. Subsequent separately approved Scanner A/B are completed, reviewed,
+committed and pushed; Scanner B at `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`
+remains identification-only, with no purchase creation. The existing SkDev /
+sk-dev3 Hobby Vercel college demo is active. iPhone 17 Pro, iOS 26.6.1 Safari
+has a user-reported Scanner A/B smoke-test pass, not independently instrumented
+or exhaustive device QA. See [the reconciled handoff](CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation)
+for the exact checkpoints, deployment, evidence limits and deferred demo-action
+clarity issue. No implementation slice is currently active. Scanner D, Scanner E,
+optional Scanner C, backend, database, authentication and real providers retain
+separate gates. The college-demo replan supersedes local Supabase Phase 2A.2 for
+this demonstration; the backend roadmap below remains future context.
 Technology candidates and evaluation work nest inside these phases
 as specified in `TECHNOLOGY_STRATEGY.md`; they do not create a competing roadmap
 or authorize real ingestion.
@@ -119,8 +129,9 @@ providers, real ingestion, and backend work remain deferred.
 ### 1E — functional and visual QA
 
 Status: completed with no remaining Blocker or High defect and recorded by the
-Phase 1E documentation checkpoint. Bounded Phase 2A.1 is also complete;
-no later slice is authorized.
+Phase 1E documentation checkpoint. Bounded Phase 2A.1 is also complete.
+These historical approvals did not authorize later slices; see the current
+scanner/demo status above for subsequently consumed approvals.
 
 - Appropriate type/build/unit checks.
 - Every visible control exercised.
@@ -146,7 +157,7 @@ Gate received: `APPROVE SPENDSCAPE PHASE 2A.1 — LOCAL DATA CONTRACT BOUNDARY +
 
 Status: implementation, bounded correction, and checkpoint review passed;
 separate checkpoint commit approval received on 2026-09-05 and consumed by this
-local checkpoint. No later slice is authorized. Scope remains limited
+local checkpoint. That approval did not authorize later slices. Its scope was limited
 to a provider-neutral serializable read snapshot, a
 server-side repository interface, an adapter over the existing
 canonical synthetic fixture graph, deterministic contract tests, minimal
@@ -226,6 +237,10 @@ Evidence: authorization/confirmation gates, redaction, share expiry/revocation,
 reduced motion, and insight truthfulness evaluations.
 
 ## Phase 6 — production hardening and deployment
+
+The existing bounded college-demo Production bootstrap is a separately approved
+exception, documented in the current handoff. It does not complete or activate
+this broader release phase, or authorize further deployments.
 
 Gate: `APPROVE SPENDSCAPE PHASE 6 DEPLOYMENT + RELEASE QA`
 

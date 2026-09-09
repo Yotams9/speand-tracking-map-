@@ -174,7 +174,28 @@ the applicable approved slice:
   documented duplicate/quality limitations. Evaluate bounded regions only.
 - Frankfurter is an open factual-rate candidate; no production SLA is assumed.
 
-## Capability inventory
+## Current bounded college-demo exception
+
+Scanner A/B are completed, reviewed, committed and pushed; current source is
+`33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`. The existing standalone Vercel
+project `spendscape-college-demo` in SkDev / sk-dev3 (Hobby) is active at
+https://spendscape-college-demo.vercel.app, deployment
+`dpl_5Q3n79vhoHTxv6R7WYdE3FPkSQfC`. Its separately approved first-deployment
+Production label is for the bounded college demonstration only. CLI `59.12.0`
+was invoked temporarily, not added as an application dependency.
+
+Physical iPhone 17 Pro, iOS 26.6.1 Safari Scanner A/B smoke testing has a
+user-reported pass; [the handoff](CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation)
+records the exact checks and limits. Scanner B identifies candidates only.
+No implementation slice is active. No GitHub deployment integration, database,
+storage service, application authentication, real provider, environment-variable
+configuration or paid service is authorized by this documentation task. Do not
+record or request credentials. Later scanner/resource actions remain gated.
+
+## Historical capability inventory at Phase 2A.1
+
+This inventory predates the branch pushes, Scanner A/B and Vercel demo above;
+it is not a claim that the existing Vercel project or authorized CLI login is absent.
 
 Available now:
 

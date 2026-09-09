@@ -53,8 +53,9 @@ form. It is a summary of user intent, not a verbatim transcript.
 - A permanent sibling worktree was created on
   `feature/spendscape-rebuild`.
 - The local `main` checkout remained clean and unchanged.
-- The feature branch currently has no upstream, preventing accidental push to
-  `main`; it has not been published to GitHub.
+- At worktree creation the feature branch had no upstream. After separate push
+  approvals it now tracks `origin/feature/spendscape-rebuild`; this is distinct
+  from a GitHub deployment integration, which was not connected.
 - Planning/authority checkpoint: `7dfc330`.
 - Next.js migration, globe, PWA, tests, and Slice 1C.1 checkpoint: `cee5418`.
 - Canonical purchase experience through bounded Slice 1D.1: `56670045`.
@@ -101,11 +102,10 @@ details-first, ordinary playback never moves the camera, and explicit `Show
 place` is the only Replay action that does. No Phase 1 product implementation
 slice is active. The final Phase 1E critical review passed with no remaining
 Blocker or High defect and is recorded by the current documentation checkpoint.
-Bounded Phase 2A.1 is complete; no later slice is authorized. Real AI/LLM calls, production Replay,
-privacy/sharing, backend,
-authentication, real camera/file handling, OCR, Gmail, provider integrations,
-factual FX, accounts, deployment, and real data are not implemented or
-authorized.
+Bounded Phase 2A.1 is complete. Later Scanner A/B and the bounded Vercel demo
+were separately approved and completed as recorded below. Real AI/LLM calls,
+production Replay, privacy/sharing, backend, application authentication, file
+ingestion, OCR, Gmail, real provider integrations and factual FX remain deferred.
 
 ## Current authority
 
@@ -122,14 +122,119 @@ unchanged fixture graph is confined to the adapter and related tests. The
 correction and focused review passed with no remaining Blocker or High defect;
 the separate checkpoint commit approval was received on 2026-09-05 and is
 consumed by this local checkpoint, based on
-`ac8801c19459c3cb4e000a3f49666ee9ee0df2e1`. No later slice is authorized.
+`ac8801c19459c3cb4e000a3f49666ee9ee0df2e1`. Later scanner and demo approvals
+are recorded below; none activates a further implementation slice.
 
 Do not infer AI, Supabase, SQL/migrations, Zod, any provider, real ingestion,
 backend resources, authentication, deployment, or a later slice from Phase
 2A.1.
 Require a new exact bounded authorization.
 
-## Capability facts at handoff
+## Scanner A/B and college-demo reconciliation
+
+Recorded on 2026-09-09 under
+`APPROVE SPENDSCAPE DOCUMENTATION-ONLY IPHONE SCANNER A+B AND VERCEL DEMO RECONCILIATION`.
+This updates current status while preserving the original checkpoint reports.
+No implementation slice is currently active.
+
+### Completed checkpoints and Git
+
+- Scanner A: completed, reviewed, committed and pushed at
+  `23683efcfea1151b96d940e420eafd19760626c6`.
+- Scanner B, including bounded transient invalid-frame recovery: completed,
+  reviewed, committed and pushed at
+  `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`.
+- Live local Git verification for this reconciliation: branch
+  `feature/spendscape-rebuild`, upstream `origin/feature/spendscape-rebuild`,
+  both refs at the Scanner B commit. Local `main` and `origin/main` remain
+  `eee0d26b55e5061f87ac664938df0c195800b74f`. Index empty; the only initial
+  working-tree drift was `next-env.d.ts`, preserved exactly and excluded from
+  this documentation change. No remote write is part of this task.
+
+### Physical device QA — user-reported smoke-test pass
+
+Source: the user's explicit report in this reconciliation request, recorded
+on 2026-09-09; the exact device test time was not supplied.
+
+- Device: **iPhone 17 Pro**.
+- OS: **iOS 26.6.1**; browser: **Safari on that iOS version**.
+- Target: [the existing college demo](https://spendscape-college-demo.vercel.app).
+- The user successfully opened Capture on the physical iPhone.
+- A real product barcode scanned successfully, and the decoded digits matched
+  the barcode printed on the physical product.
+- Manual barcode entry worked.
+- The user reported that the remaining previously requested Scanner A/B
+  controls worked; no independently recorded per-control device matrix was supplied.
+
+This is a **user-reported physical-device smoke test**, not a Codex-operated or
+independently instrumented device test. No independent device logs, screenshots,
+recordings, performance measurements, autofocus benchmarks, glare tolerance,
+distance/rotation coverage, Android coverage or exhaustive Safari compatibility
+are established by this report. Prior synthetic browser tests remain separate
+evidence. The basic iPhone smoke test is no longer entirely pending; broader
+physical-device and performance coverage remains unverified.
+
+### Demo candidate behavior and deferred clarity issue
+
+“Try Demo Product” (current English label: “Try demo product”) intentionally
+loads the deterministic **Demo Oats** candidate (displayed as “Demo oats”) and
+demo EAN-13 `2000000000015` without using the camera. It is a fictional catalog
+example. Scanner B performs **identification only**: scanning, manual entry,
+loading or editing this candidate does not create or save a purchase.
+
+Repeatedly pressing the demo action while the same candidate is already loaded
+currently produces no visible change. Record this as **Low — minor UX clarity**,
+not a Scanner B functional failure. Optional improvement is deferred to Scanner E
+or another separately approved UI-polish slice: rename it “Load demo product”;
+disable or hide it after loading; show “Demo product loaded — review only”; and
+clarify that purchase creation requires a later approved review/save flow. None
+of those changes is implemented or authorized by this documentation task.
+Existing manual/synthetic Capture purchase flows remain separate from Scanner B.
+
+### Existing Vercel college-demo deployment
+
+- Project: `spendscape-college-demo`; account/team: **SkDev / sk-dev3**; **Hobby**.
+- Stable URL: https://spendscape-college-demo.vercel.app
+- Immutable URL: https://spendscape-college-demo-7eqcwgglo-sk-dev3.vercel.app
+- Deployment ID: `dpl_5Q3n79vhoHTxv6R7WYdE3FPkSQfC`.
+- Deployed commit: `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`.
+- Status: active; READY was verified during the separately authorized deployment.
+  This documentation-only task does not repeat deployment or browser QA.
+- Label: **Production**, under the explicit first-production-bootstrap approval
+  because of Vercel's first-deployment behavior. Its purpose remains the bounded,
+  temporary non-commercial college demonstration and physical iPhone Scanner A/B
+  QA; this is not general production-release approval.
+
+The earlier Preview-only attempt was removed after Vercel assigned it Production.
+The later, separately approved Production bootstrap above is the retained demo.
+Its prior verification established valid HTTPS, HTTP 200 at the stable root,
+rendered Spendscape and application-origin reader WASM matching the approved
+SHA-256. The immutable URL required Vercel sign-in; the stable URL was accessible
+without sign-in. Platform Deployment Protection is not application authentication.
+No new verification of those hosted facts is claimed in this documentation task.
+
+The recorded deployment state has no GitHub deployment integration, configured
+environment variables or real provider integration. No database, storage service,
+application authentication or paid service was added. Analytics/Speed Insights
+metadata remained unchanged, with no activation performed. Vercel's normal
+framework hosting and automatically assigned platform domains are the existing
+hosting exception, not new backend or custom-domain authority. No tokens, OIDC
+values, credentials or personal IP addresses belong in durable documentation.
+
+### Remaining gates and next action
+
+Scanner D, Scanner E, optional Scanner C, backend, database, authentication,
+real providers, further accounts/resources and deployment changes remain
+separately gated. No implementation slice is active. This task authorizes only
+documentation reconciliation and consistency checks, followed by a separate
+documentation checkpoint review. It does not authorize staging, commit, push,
+PR, merge, application/browser QA or any deployment/resource change.
+
+## Capability facts at the earlier Phase 2A.1 handoff
+
+The following inventory is historical; Scanner A/B, branch publication and the
+existing Vercel demo are the later exceptions recorded above. Reverify other
+capabilities when an approved task needs them.
 
 - Git, Node 22.14.0, npm 10.9.2, Corepack, and macOS command-line tools are
   available. Current installed application versions are recorded in

@@ -12,13 +12,34 @@ Before responding, read AGENTS.md and every file under docs/spendscape/ complete
 
 This task inherits the durable product decisions, completed Slice 1D.6 and globe-fidelity checkpoints, technology-candidate strategy, reference findings, architecture, phase plan, approval gates, and source manifest from those files. Do not ask the user to repeat decisions already recorded there. If a current external fact is needed, verify it from the primary source and state what was verified.
 
-Prior implementation checkpoint is Phase 1 through bounded Slice 1D.6 at 95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa. Life Replay is details-first: ordinary playback never moves the camera, and explicit Show place is its sole camera-moving action. The bounded Phase 1E critical review and documentation checkpoint are complete with no remaining Blocker or High defect. Bounded Phase 2A.1 completed a local provider-neutral data read contract, fixture adapter, Ask boundary correction, contract tests, status reconciliation, and local QA. Its separate checkpoint commit approval was received on 2026-09-05 and is consumed by this local checkpoint. No implementation slice is active. Supabase, SQL/migrations, authentication, providers, accounts, credentials, network-calling data code, dependencies, real data, deployment, further commits, push, and broader Phase 2 work require separate authorization.
+Prior implementation checkpoint is Phase 1 through bounded Slice 1D.6 at 95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa. Life Replay is details-first: ordinary playback never moves the camera, and explicit Show place is its sole camera-moving action. The bounded Phase 1E critical review and documentation checkpoint are complete with no remaining Blocker or High defect. Bounded Phase 2A.1 completed a local provider-neutral data read contract, fixture adapter, Ask boundary correction, contract tests, status reconciliation, and local QA. Its separate checkpoint commit approval was received on 2026-09-05 and is consumed by this local checkpoint. Subsequent Scanner A/B are completed, reviewed, committed and pushed; latest source is 33a34afb2668f58b89431e3cb7bc5f3c292ebb8d. Scanner B identifies candidates only and does not create purchases. The existing SkDev / sk-dev3 Hobby Vercel college demo is active. Physical iPhone 17 Pro, iOS 26.6.1 Safari smoke testing has a user-reported pass, with evidence limits in CONVERSATION_HANDOFF.md. No implementation slice is active. Scanner D, Scanner E, optional Scanner C, backend, database, authentication, real providers, further resources/deployments, commits and pushes require separate authorization.
 
 Report the current checkpoint or execute only the latest expressly approved bounded task. Treat docs/spendscape/TECHNOLOGY_STRATEGY.md as subordinate implementation guidance that never authorizes a dependency, provider, account, backend, migration, billing action, private-data transfer, or deployment by itself. Stop at the applicable hard gate and never infer a later slice.
 ```
 
 The original Phase 0 readiness prompt is complete and superseded by this
 current-state handoff. Historical Phase 0 evidence remains in Git history.
+
+## Scanner A/B and college-demo documentation checkpoint
+
+The Scanner A/B review, commit and push approvals and the single retained
+first-production-bootstrap approval have been consumed. Their exact commits,
+deployment and user-reported device evidence are recorded in
+[CONVERSATION_HANDOFF.md](CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation).
+The current documentation-only reconciliation does not reactivate those approvals
+or start an implementation slice. Scanner D/E, optional C and real integrations
+remain separately gated.
+
+Next separate authorization, after the documentation handoff:
+
+```text
+APPROVE SPENDSCAPE IPHONE SCANNER A+B AND VERCEL DEMO DOCUMENTATION CHECKPOINT REVIEW
+```
+
+This token authorizes review of the documentation diff and its evidence only.
+It does not authorize application/browser QA, implementation, stage, commit,
+push, deployment or resource changes. A documentation commit needs a subsequent
+separate approval after that review.
 
 ## Prompt 2A.1 — Local data contract boundary + fixture adapter QA
 

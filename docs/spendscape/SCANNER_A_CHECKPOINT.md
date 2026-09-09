@@ -1,14 +1,34 @@
 # Scanner A — camera shell and local QA
 
+## Current status reconciliation — 2026-09-09
+
+Scanner A is completed, reviewed, committed and pushed at
+`23683efcfea1151b96d940e420eafd19760626c6`. Scanner B is also completed,
+reviewed, committed and pushed at `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`;
+it identifies candidates only and does not create purchases. The existing Vercel
+college demo is active. Physical Scanner A/B smoke testing has a user-reported
+pass on iPhone 17 Pro, iOS 26.6.1 Safari, not an independently instrumented test.
+See [the current handoff](CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation)
+for the exact report, limitations, deployment and deferred demo-action clarity
+issue. No implementation slice is active; Scanner D/E, optional C and real
+integrations remain separately gated.
+
+## Original implementation and review history
+
+The following records the original Scanner A scope, tests and gates; its pending
+phone/deployment and next-commit statements describe that checkpoint, not current
+status. Its no-frame-extraction description concerns Scanner A alone; Scanner B
+later added transient local worker frames under separate approval.
+
 Authorization: `APPROVE SPENDSCAPE SCANNER A CAMERA SHELL + LOCAL QA`.
 Work remains on `feature/spendscape-rebuild`, based on
 `c17595c3e1d00138c278a389367731da8f3bf644`. No commit or publication is authorized.
 
 Subsequent bounded checkpoint review passed on 2026-09-07. See
-[SCANNER_A_CHECKPOINT_REVIEW.md](SCANNER_A_CHECKPOINT_REVIEW.md) for the latest
-verification, exact future commit allowlist and separate commit approval token.
-Physical iPhone Safari QA is explicitly deferred until an authorized HTTPS
-Preview deployment exists; this does not block the reviewed local checkpoint.
+[SCANNER_A_CHECKPOINT_REVIEW.md](SCANNER_A_CHECKPOINT_REVIEW.md) for that review
+verification, original commit allowlist and separate commit approval token.
+At that checkpoint, physical iPhone Safari QA was deferred until an authorized
+HTTPS Preview existed; the later demo and user-reported smoke pass are recorded above.
 
 ## Delivered behavior
 
@@ -95,7 +115,8 @@ landscape, denied-camera recovery and reduced motion. The initial layout issue
 was fixed and re-inspected. No Blocker/High defect was found in the verified local
 scope. This is not physical-phone or Safari acceptance evidence.
 
-Physical iPhone Safari and Android Chrome checks are still required: real
+At the original checkpoint, physical iPhone Safari and Android Chrome checks
+were still required: real
 permission UI, rear-camera selection, hardware focus, busy-camera behavior,
 orientation, lock/background camera indicator, repeated lifecycle stability,
 VoiceOver/TalkBack and real-device performance. No phone or already-approved
@@ -104,14 +125,14 @@ tunnel or deployment was created. The installed Playwright cache has no WebKit
 runtime; none was downloaded. Headless Chrome viewport tests do not prove Safari.
 
 Trusted HTTPS is required on the phone; the Mac's LAN HTTP address does not
-qualify as the phone's localhost. The latest user instruction keeps physical
-iPhone QA pending a separately authorized HTTPS Preview deployment. This slice
+qualify as the phone's localhost. The instruction at that checkpoint kept physical
+iPhone QA pending a separately authorized HTTPS Preview deployment. That slice
 does not authorize certificates, tunnels, Vercel connections or deployment.
 See [MDN getUserMedia](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia).
 Track muting means temporary inability to supply media; lifecycle handling uses
 events, with new tracks allowed to initialize. See [MDN track muted](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/muted).
 
-## Cleanup and hard stop
+## Original cleanup and hard stop (historical)
 
 Before this work, `next-env.d.ts` already had uncommitted `.next/dev/types/`
 imports. Its exact pre-existing contents were restored and verified with `cmp`.

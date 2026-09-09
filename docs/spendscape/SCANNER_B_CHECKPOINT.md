@@ -1,6 +1,31 @@
 # Scanner B — local barcode and demo catalog checkpoint
 
-## Authority and baseline
+## Current status reconciliation — 2026-09-09
+
+Scanner B, including the transient invalid-frame correction, is completed,
+reviewed, committed and pushed at `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`.
+Scanner A is completed, reviewed, committed and pushed at
+`23683efcfea1151b96d940e420eafd19760626c6`. The existing Vercel college demo is
+active. Physical Scanner A/B smoke testing has a **user-reported pass** on iPhone
+17 Pro, iOS 26.6.1 Safari. It is not a Codex-operated or independently
+instrumented device test. See [the current handoff](CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation)
+for the exact deployment, reported checks and evidence limits.
+
+Scanner B remains **identification only**: it does not create or save purchases.
+“Try demo product” loads deterministic Demo Oats and demo barcode `2000000000015`
+without a camera. Repeating it with the same candidate loaded produces no visible
+change: **Low — minor UX clarity**, not a Scanner B functional failure. The
+optional “Load demo product” label, disabling/hiding after loading, “Demo product
+loaded — review only” feedback and later review/save-flow explanation are
+recorded in the handoff for Scanner E or separately approved UI polish; none is
+implemented here. No implementation slice is active. Scanner D/E, optional C,
+backend, database, authentication and real providers remain separately gated.
+
+## Original authority and baseline
+
+The implementation/correction evidence and Git/next-gate record below describe
+the pre-commit checkpoint. Later review, commit and push approvals are consumed;
+old uncommitted/pending statements are historical, not the current worktree state.
 
 The user authorized `APPROVE SPENDSCAPE SCANNER B LOCAL BARCODE + DEMO CATALOG + QA`
 on 2026-09-07. Work continued into 2026-09-08, only in
@@ -9,8 +34,8 @@ checkpoint review, commit, push, deployment and later scanners remain separate.
 
 Following checkpoint review, the user separately authorized
 `APPROVE SPENDSCAPE SCANNER B — BOUNDED TRANSIENT INVALID-FRAME CORRECTION + LOCAL QA`.
-That correction is included below. It requires a new checkpoint review; it does
-not authorize a commit or carry the prior review verdict onto changed code.
+That correction is included below. It required a new checkpoint review before
+commit; the later approval and completed checkpoint are recorded above.
 
 The attached approval repeats `c17595c3e1d00138c278a389367731da8f3bf644` as
 Scanner A. Live Git disproved that recorded value: HEAD, upstream and the actual
@@ -318,18 +343,21 @@ effect finished closing it. The test now waits for that closure before reopening
 the form. No UI implementation or validation assertion was changed for this.
 
 The historical review's Medium finding is corrected in source and covered by
-the deterministic tests above. This revised checkpoint requires a new review;
-no known Blocker, High or Medium finding remains from this correction's QA.
-physical iPhone autofocus, glare, distance, orientation and scanning performance
+the deterministic tests above. At this handoff the revised checkpoint required
+a new review; the completed later checkpoint is recorded above. No known Blocker,
+High or Medium finding remained from this correction's QA.
+Physical iPhone autofocus, glare, distance, orientation and scanning performance
 remain unverified. The existing upstream-license final blank line is retained.
 The prior Globe wheel-threshold variability is unchanged; no map behavior was
 modified and no broader map rerun was necessary for this branch-only correction.
 
 ## Limitations and deferred work
 
-- Physical iPhone Safari barcode QA is explicitly deferred until a separately
-  authorized HTTPS Preview exists. No physical camera, iPhone acceptance,
-  real-world barcode success rate, autofocus or device performance claim is made.
+- Physical iPhone Scanner A/B smoke testing now has the user-reported pass
+  described above, on the existing HTTPS college demo. The original automated
+  QA did not operate a physical camera. No independently instrumented device
+  test, real-world success rate, autofocus benchmark, glare/distance/rotation
+  coverage, Android coverage or exhaustive Safari/performance claim is made.
 - Synthetic browser frames and a test-only symbol generator are used for QA.
   The reader itself is real; no writer package is used even for these fixtures.
 - Offline proof covers decoding in an already loaded active reader. It does not
@@ -340,7 +368,7 @@ modified and no broader map rerun was necessary for this branch-only correction.
 - Scanner E purchase/session integration and Scanners C/D remain unstarted.
 - A six-product demo catalog is not a global product service; unknown stays unknown.
 
-## Git safety and next gate
+## Original Git safety and next gate (historical)
 
 Final local verification on 2026-09-08:
 
@@ -371,7 +399,7 @@ the earlier root artifact manifest remains the original reviewed snapshot.
 No canonical fixture, repository,
 purchase-domain or MapLibre module is part of the change.
 
-Next approval, only after this implementation handoff:
+Original next approval at this implementation handoff (subsequently consumed):
 `APPROVE SPENDSCAPE SCANNER B CHECKPOINT REVIEW`
 
 That review token does not authorize commit, push, deployment, accounts or any

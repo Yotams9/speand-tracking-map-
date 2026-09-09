@@ -1,11 +1,30 @@
 # Scanner A checkpoint review — 2026-09-07
 
+## Current status reconciliation — 2026-09-09
+
+Scanner A is completed, reviewed, committed and pushed at
+`23683efcfea1151b96d940e420eafd19760626c6`. Scanner B is likewise completed,
+reviewed, committed and pushed at `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`.
+The existing Vercel college demo is active. Physical Scanner A/B smoke testing
+has a user-reported pass on iPhone 17 Pro, iOS 26.6.1 Safari; this adds no
+independently instrumented device evidence to the original review below. See
+[the current handoff](CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation)
+for the reported checks, limitations and deferred Low demo-button clarity issue.
+Scanner B remains identification-only. No implementation slice is active.
+
+## Original review record
+
+The verdict, severity table, pending device coverage, Git state, commit allowlist
+and approval token below are retained as the 2026-09-07 review history. The
+separate commit/push and deployment approvals were received later; the old token
+is consumed, not a request to commit again.
+
 Authorization: `APPROVE SPENDSCAPE SCANNER A CHECKPOINT REVIEW — PHYSICAL IPHONE QA PENDING HTTPS PREVIEW`.
 
 Verdict: **ready for a separately approved local checkpoint commit**. No
 production implementation or tracked test was changed during this review.
-Physical iPhone Safari QA remains pending an explicitly authorized HTTPS Preview
-deployment. This is not physical-device, Safari, deployment or production approval.
+Physical iPhone Safari QA was pending an explicitly authorized HTTPS Preview
+at that review. That review did not grant device, deployment or production approval.
 
 ## Findings by severity
 
@@ -15,7 +34,7 @@ deployment. This is not physical-device, Safari, deployment or production approv
 | High | None |
 | Medium | None |
 | Low | None |
-| Informational | Physical iPhone Safari testing is explicitly deferred by the user. Android physical testing is also not established by this review. |
+| Informational | At this review, physical iPhone Safari testing was explicitly deferred. Android physical testing was not established; see the later smoke-test record above. |
 | Commit exclusion | Pre-existing generated `next-env.d.ts` drift and all generated artifacts must remain outside the checkpoint diff. |
 
 ## Requirements and evidence
@@ -100,7 +119,7 @@ If any reviewed implementation changes before commit, review that change first.
 - This review adds/updates only review documentation and ignored QA evidence.
   Runtime and tracked test hashes are unchanged from the start of review.
 
-## Separate approval required
+## Original separate approval gate (subsequently consumed)
 
 ```text
 APPROVE SPENDSCAPE SCANNER A CHECKPOINT COMMIT

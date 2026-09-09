@@ -90,10 +90,20 @@ Phase 1E documentation checkpoint. Bounded Phase 2A.1 completed a local
 provider-neutral data read contract, an adapter over the existing canonical
 synthetic fixtures, the Ask boundary correction, contract tests, and local QA.
 Its separate checkpoint commit approval was received on 2026-09-05 and is
-consumed by this local checkpoint. No later slice is authorized. Supabase, SQL,
-migrations, real AI, backend resources, authentication, providers, accounts,
-credentials, network-calling data code, new dependencies, real data,
-deployment, and all later technology work remain unauthorized.
+consumed by that checkpoint. Subsequent Scanner A and Scanner B are completed,
+reviewed, committed and pushed at `23683efcfea1151b96d940e420eafd19760626c6`
+and `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`. Scanner B identifies candidates
+only and cannot create or save purchases. The separately approved Vercel
+college demo is active on SkDev / sk-dev3 Hobby. Physical iPhone Scanner A/B
+smoke testing has a user-reported pass on iPhone 17 Pro, iOS 26.6.1 Safari;
+independent device/performance coverage is not established. The exact deployment,
+evidence limits and minor demo-action clarity issue are in
+[CONVERSATION_HANDOFF.md](CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation).
+No implementation slice is currently active. Scanner D, Scanner E, optional
+Scanner C, Supabase/SQL, backend, authentication, real providers and further
+resource/deployment changes remain separately gated. The current task permits
+only documentation reconciliation, followed by a separate documentation review;
+commit and push remain separately gated.
 
 Unless the user supplies a new exact bounded authorization:
 

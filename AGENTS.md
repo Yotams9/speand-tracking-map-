@@ -64,11 +64,31 @@ provider-neutral read contract, a local adapter over the existing canonical
 synthetic graph, deterministic contract tests, and local QA. It does
 not authorize Supabase, SQL/migrations, authentication, providers, accounts,
 credentials, network-calling data code, new dependencies, real data, or
-deployment.
+deployment by itself.
+
+Subsequent separately approved Scanner A and Scanner B are completed, reviewed,
+committed and pushed at `23683efcfea1151b96d940e420eafd19760626c6` and
+`33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`, respectively. Scanner B identifies
+an ephemeral product candidate only; it does not create or save purchases.
+The existing Vercel `spendscape-college-demo` deployment in SkDev / sk-dev3
+(Hobby) is active for the bounded college demo. Its Production label reflects
+the separately approved first-deployment bootstrap, not a general release gate.
+Physical Scanner A/B smoke testing has a **user-reported pass** on iPhone 17 Pro,
+iOS 26.6.1 Safari; it is not a Codex-operated or independently instrumented
+device test. See `docs/spendscape/CONVERSATION_HANDOFF.md` for the exact deployment,
+reported checks, evidence limits and deferred demo-button clarity issue.
+No implementation slice is currently active. Only documentation reconciliation
+is authorized now; its review, commit and push require separate approvals.
+Scanner D, Scanner E, optional Scanner C, backend, database, authentication and
+real providers remain separately gated. Existing scanner/deployment approvals
+are consumed and do not authorize further deployment or resource changes.
+
 Preserve `Globe · Capture · Purchases · Stats`, accepted Ask and Replay
 behavior, and the single MapLibre instance. A real LLM, `AIProvider`, network
 call, provider, GPS evidence, backend, authentication, account, credential,
-real data, dependency, deployment, push, or pull request remains unauthorized.
+real-data integration, new dependency, further deployment, push, or pull request
+requires a new bounded authorization. The completed local camera/barcode slices
+and existing demo deployment are the explicit exceptions recorded above.
 Existing MapLibre tile requests remain allowed and unchanged. Each later
 product phase retains its gate in `docs/spendscape/PROMPT_SEQUENCE.md`.
 
@@ -100,6 +120,8 @@ authorize that slice by itself. Cloudflare Workers AI/Gemma, OpenAI Responses,
 Supabase, Vercel, Geoapify, Google Places, OpenFreeMap, Tesseract.js, Gmail, and
 all other external systems remain gated candidates until the required phase,
 provider, account, billing, privacy, and deployment approvals are supplied.
+Vercel's existing bounded college-demo deployment is the recorded hosting
+exception; it does not promote the other technology candidates.
 
 ---
 
