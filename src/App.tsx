@@ -10,6 +10,7 @@ import { PurchaseDetail } from '@/screens/PurchaseDetail'
 import { MerchantDetail } from '@/screens/MerchantDetail'
 import { Compare } from '@/screens/Compare'
 import { LikelyNeeded } from '@/screens/LikelyNeeded'
+import { CameraCapture } from './components/CameraCapture';
 
 /** Navigating to a new screen should land at its top, not mid-scroll. */
 function ScrollReset() {

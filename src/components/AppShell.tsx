@@ -2,24 +2,18 @@ import type { ReactNode } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useLocale } from '@/i18n'
 import { useApp } from '@/state/AppState'
+import exifr from 'exifr'
 import {
   IconArrowBack, IconGlobe, IconInbox, IconMap, IconPerson, IconPlus, IconSpark,
 } from './Icons'
 import styles from './AppShell.module.css'
 
-/**
- * The frame every screen sits in.
- *
- * On phones the navigation is a bottom bar with Capture raised above it. On
- * desktop the same five destinations become a left rail — a different shape for
- * a different hand, not the phone layout stretched sideways.
- */
 export function AppShell() {
   const { t } = useLocale()
   const { openCases } = useApp()
   const { pathname } = useLocation()
+  const navigate = useNavigate()
 
-  // The map owns its own viewport; every other screen scrolls normally.
   const fill = pathname === '/'
 
   const tabs = [
@@ -30,60 +24,103 @@ export function AppShell() {
     { to: '/profile', label: t('nav.profile'), Icon: IconPerson, end: false },
   ]
 
+  const handleCameraChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const gpsData = await exifr.gps(file)
+      if (gpsData?.latitude && gpsData?.longitude) {
+        const usePhoto = window.confirm("נמצא מיקום מדויק בתמונה! האם להשתמש בו?")
+        if (usePhoto) {
+          const name = window.prompt("הכנס שם לקנייה:", "קנייה מתמונה") || "הוצאה חדשה"
+          alert(`"${name}" נוספה במיקום: ${gpsData.latitude.toFixed(4)}, ${gpsData.longitude.toFixed(4)}`)
+          navigate('/')
+          return
+        }
+      }
+      askAlternatives()
+    } catch (error) {
+      askAlternatives()
+    }
+    event.target.value = ''
+  }
+
+  const askAlternatives = () => {
+    const useGPS = window.confirm("לא זוהה מיקום. האם להשתמש במיקום ה-GPS הנוכחי שלך?")
+    if (useGPS) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const name = window.prompt("הכנס שם לקנייה:", "מיקום נוכחי") || "הוצאה חדשה"
+        alert(`"${name}" נוספה במיקום: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`)
+        navigate('/')
+      }, () => {
+        alert("לא הצלחנו לאתר את מיקומך. מעביר למפה לבחירה ידנית.")
+        navigate('/')
+      })
+    } else {
+      alert("מעביר למפה לבחירה ידנית.")
+      navigate('/')
+    }
+  }
+
   return (
-    <div className={styles.shell}>
-      <main className={styles.main} data-fill={fill} id="main">
-        <Outlet />
-      </main>
+    <div className={styles.wrap}>
 
-      <nav className={styles.nav} aria-label={t('app.name')}>
-        <div className={styles.brand}>
-          <span className={styles.brandMark}><IconGlobe size={18} /></span>
-          <span>
-            <span className="heading" style={{ display: 'block' }}>{t('app.name')}</span>
-            <span className="caption">{t('demo.badge')}</span>
-          </span>
-        </div>
+      {/* אינפוט נסתר של המצלמה */}
+      <input
+        id="hidden-camera-input"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleCameraChange}
+      />
 
-        {tabs.map(({ to, label, Icon, end, capture, badge }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={capture ? `${styles.tab} ${styles.captureTab}` : styles.tab}
-          >
-            {capture ? (
-              <>
+      <div className={styles.shell}>
+        <main className={styles.main} data-fill={fill} id="main">
+          <Outlet />
+        </main>
+
+        <nav className={styles.nav} aria-label={t('app.name')}>
+          <div className={styles.brand}>
+            <span className={styles.brandMark}><IconGlobe size={18} /></span>
+            <span>
+              <span className="heading" style={{ display: 'block' }}>{t('app.name')}</span>
+              <span className="caption">{t('demo.badge')}</span>
+            </span>
+          </div>
+
+          {tabs.map(({ to, label, Icon, end, capture, badge }) => (
+            capture ? (
+              <button
+                key="capture-btn"
+                className={`${styles.tab} ${styles.captureTab}`}
+                onClick={(e) => {
+                  e.preventDefault()
+                  document.getElementById('hidden-camera-input')?.click()
+                }}
+              >
                 <span className={styles.captureButton}><Icon size={24} /></span>
                 <span className={styles.captureSpacer} aria-hidden="true" />
                 <span className={styles.tabLabel}>{label}</span>
-              </>
+              </button>
             ) : (
-              <>
+              <NavLink key={to} to={to} end={end} className={styles.tab}>
                 <span className={styles.tabIconWrap}>
                   <Icon size={22} />
                   {badge && <span className={styles.dot} aria-hidden="true" />}
                 </span>
                 <span className={styles.tabLabel}>{label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
+              </NavLink>
+            )
+          ))}
+        </nav>
+      </div>
     </div>
   )
 }
 
-/** Standard page wrapper for the scrolling screens. */
-export function Page({
-  title, subtitle, back, action, children,
-}: {
-  title?: string
-  subtitle?: string
-  back?: boolean
-  action?: ReactNode
-  children: ReactNode
-}) {
+export function Page({ title, subtitle, back, action, children }: any) {
   const navigate = useNavigate()
   const { t } = useLocale()
 
@@ -92,12 +129,7 @@ export function Page({
       {(title || back) && (
         <header className={styles.header}>
           {back && (
-            <button
-              type="button"
-              className={styles.backBtn}
-              onClick={() => navigate(-1)}
-              aria-label={t('common.back')}
-            >
+            <button type="button" className={styles.backBtn} onClick={() => navigate(-1)} aria-label={t('common.back')}>
               <IconArrowBack />
             </button>
           )}

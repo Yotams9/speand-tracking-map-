@@ -35,6 +35,7 @@ interface State {
 }
 
 type Action =
+  | { type: 'addCustomReceipt'; merchantName: string; total: number; source: CaptureSource }
   | { type: 'addPurchase'; purchase: Purchase }
   | { type: 'resolveCase'; caseId: string; merchantId: string }
   | { type: 'unresolveCase'; caseId: string }
@@ -52,6 +53,20 @@ function reducer(state: State, action: Action): State {
     case 'addPurchase':
       return { ...state, added: [...state.added, action.purchase] }
 
+    case 'addCustomReceipt': {
+      // יצירת מזהה ייחודי לרכישה ולסוחר המזדמן
+      const merchantId = `mer_custom_${Date.now()}`
+      const purchase: Purchase = {
+        id: nextId(),
+        merchantId,
+        timestamp: `${fixtures.demoToday}T12:00`,
+        captureSource: action.source,
+        matchState: 'confirmed',
+        flatTotal: action.total,
+        items: [{ title: 'קבלה ידנית / סניף מותאם', price: action.total, qty: 1 }],
+      }
+      return { ...state, added: [...state.added, purchase] }
+    }
     case 'resolveCase':
       return {
         ...state,

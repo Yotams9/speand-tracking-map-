@@ -9,35 +9,97 @@ import { categoryColor } from '@/components/categories'
 import { IconCheck, IconClose } from '@/components/Icons'
 import styles from './Inbox.module.css'
 
-/**
- * Smart Inbox.
- *
- * The design constraint is restraint. This screen may only hold cases where an
- * answer changes an outcome, it must resolve in one tap, and its normal state
- * is empty. A task list would be a failure of the product, not a feature of it.
- */
 export function Inbox() {
   const { t, L, money, relativeDay, time } = useLocale()
-  const { openCases, resolveCase, unresolveCase, lastResolved, dismissLastResolved } = useApp()
+  const { openCases, resolveCase, unresolveCase, lastResolved, dismissLastResolved, addPurchase } = useApp()
 
   const [resolving, setResolving] = useState<string | null>(null)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [receiptUrl, setReceiptUrl] = useState('')
+  const [merchantQuery, setMerchantQuery] = useState('')
+  const [receiptTotal, setReceiptTotal] = useState('')
+
   const timer = useRef<number | null>(null)
 
   useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current) }, [])
 
   const choose = (caseId: string, merchantId: string) => {
     setResolving(caseId)
-    // A short beat so the change of state is perceivable rather than a flicker.
     timer.current = window.setTimeout(() => {
       resolveCase(caseId, merchantId)
       setResolving(null)
     }, 420)
   }
 
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!merchantQuery || !receiptTotal) return
+
+    addPurchase({
+      merchantId: `mer_${Date.now()}`,
+      flatTotal: parseFloat(receiptTotal) || 0,
+      source: 'upload',
+      items: [{ title: receiptUrl ? `קבלה: ${receiptUrl}` : 'קבלה פיזית', price: parseFloat(receiptTotal) || 0, qty: 1 }]
+    })
+
+    setReceiptUrl('')
+    setMerchantQuery('')
+    setReceiptTotal('')
+    setShowAddModal(false)
+  }
+
   const resolvedMerchant = lastResolved ? getMerchant(lastResolved.merchantId) : null
 
   return (
     <Page title={t('inbox.title')}>
+
+      {/* כפתור הוספת קבלה / לינק חדש */}
+      <div style={{ marginBlockEnd: 'var(--s-4)' }}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => setShowAddModal(true)}
+        >
+          + הוסף קבלה / לינק חדש
+        </button>
+      </div>
+
+      {/* מודל / טופס הוספה */}
+      {showAddModal && (
+        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBlockEnd: 'var(--s-5)' }}>
+          <h3 style={{ marginBlockEnd: '12px', fontSize: '16px', fontWeight: 'bold' }}>העלאת קבלה או לינק (Pairzon)</h3>
+          <form onSubmit={handleManualSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <input
+              type="text"
+              placeholder="הדבק לינק קבלה (למשל https://public.pairzon.com/...)"
+              value={receiptUrl}
+              onChange={(e) => setReceiptUrl(e.target.value)}
+              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+            />
+            <input
+              type="text"
+              placeholder="מאיפה בוצעה הקנייה? (למשל: אושר עד סניף בני ברק)"
+              value={merchantQuery}
+              onChange={(e) => setMerchantQuery(e.target.value)}
+              required
+              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+            />
+            <input
+              type="number"
+              placeholder="סכום כולל בשקלים (למשל 150)"
+              value={receiptTotal}
+              onChange={(e) => setReceiptTotal(e.target.value)}
+              required
+              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+            />
+            <div style={{ display: 'flex', gap: '8px', marginBlockStart: '6px' }}>
+              <button type="submit" className="btn btn-primary">שמור והוסף לתיבה</button>
+              <button type="button" className="btn btn-quiet" onClick={() => setShowAddModal(false)}>ביטול</button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {lastResolved && resolvedMerchant && (
         <div className={styles.resolved} role="status">
           <IconCheck size={20} />
@@ -62,7 +124,7 @@ export function Inbox() {
         </div>
       )}
 
-      {openCases.length === 0 && (
+      {openCases.length === 0 && !showAddModal && (
         <div style={{ marginBlockStart: lastResolved ? 'var(--s-5)' : 0 }}>
           <EmptyState
             icon={<IconCheck size={26} />}
@@ -127,8 +189,6 @@ export function Inbox() {
                     })}
                   </div>
 
-                  {/* The reasoning is available, but it is not the default view.
-                      Ordinary use should never require reading it. */}
                   <details className={styles.why}>
                     <summary className={styles.whySummary}>{t('inbox.whyAsking')}</summary>
                     <p className={styles.whyBody}>{t('inbox.whyBody')}</p>
