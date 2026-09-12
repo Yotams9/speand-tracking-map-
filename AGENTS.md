@@ -77,8 +77,13 @@ Physical Scanner A/B smoke testing has a **user-reported pass** on iPhone 17 Pro
 iOS 26.6.1 Safari; it is not a Codex-operated or independently instrumented
 device test. See `docs/spendscape/CONVERSATION_HANDOFF.md` for the exact deployment,
 reported checks, evidence limits and deferred demo-button clarity issue.
-No implementation slice is currently active. Only documentation reconciliation
-is authorized now; its review, commit and push require separate approvals.
+The separately authorized Scanner D1 synthetic local OCR benchmark is complete
+in the working tree and awaits checkpoint review; see
+`docs/spendscape/SCANNER_D1_CHECKPOINT.md`. Its current configuration failed
+Hebrew/mixed accuracy and guaranteed public-API initialization cleanup, so it
+is not ready for D2. No further implementation slice is active. Review, commit
+and push require separate approvals; D2/D3 and any internal worker adapter
+also require new bounded authorization.
 Scanner D, Scanner E, optional Scanner C, backend, database, authentication and
 real providers remain separately gated. Existing scanner/deployment approvals
 are consumed and do not authorize further deployment or resource changes.

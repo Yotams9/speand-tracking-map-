@@ -3,6 +3,21 @@
 This file transfers the relevant decisions and workspace history into a durable
 form. It is a summary of user intent, not a verbatim transcript.
 
+## Latest gate — Scanner D1 benchmark, 2026-09-10
+
+The iPhone/Vercel documentation checkpoint was committed and pushed as
+`591a9e9ffe09114713040c72cf88eb09369fc335`. The user subsequently authorized
+only a synthetic, local Scanner D1 OCR benchmark with Tesseract.js/core 7.0.0.
+That working-tree benchmark and bounded QA are complete; checkpoint review is
+pending. [SCANNER_D1_CHECKPOINT.md](SCANNER_D1_CHECKPOINT.md) records exact
+assets/dependencies, measured failures, privacy limits, regressions and Git state.
+The current configuration is rejected for D2 integration because clean
+Hebrew/mixed accuracy and guaranteed initialization cleanup did not pass.
+No consumer code, camera/gallery integration, structured receipt parser or
+deployment changed. D2, D3, E, C and any internal worker adapter remain gated.
+Physical iPhone OCR is untested; the earlier A/B user-reported pass is separate.
+Next token: `APPROVE SPENDSCAPE SCANNER D1 CHECKPOINT REVIEW`.
+
 ## Origin
 
 - Referenced ChatGPT conversation: `הכנת פרומפט לCodex`
