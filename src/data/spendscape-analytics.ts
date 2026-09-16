@@ -33,7 +33,8 @@ export interface AnalyticsCurrency {
   originalAmountTotal: number
   totalBaseAmountIls: number
   syntheticRatesToBase: number[]
-  provenance: 'synthetic-fixture-rate'
+  provenance: 'synthetic-fixture-rate' | 'mixed-session'
+  reportedPurchaseCount: number
 }
 
 export interface PurchaseAnalytics {
@@ -165,10 +166,11 @@ export function derivePurchaseAnalytics(
         (sum, purchase) => sum + baseAmountIlsForPurchase(purchase),
         0,
       )),
-      syntheticRatesToBase: [...new Set(matching.map((purchase) => purchase.fx.rateToBase))].sort(
+      syntheticRatesToBase: [...new Set(matching.filter(p => p.fx.source === 'synthetic-fixture-rate').map((purchase) => purchase.fx.rateToBase))].sort(
         (left, right) => left - right,
       ),
-      provenance: 'synthetic-fixture-rate' as const,
+      provenance: matching.some(p => p.provenance === 'user-reviewed-session') ? 'mixed-session' as const : 'synthetic-fixture-rate' as const,
+      reportedPurchaseCount: matching.filter(p => p.provenance === 'user-reviewed-session').length,
     }))
     .sort((left, right) =>
       right.totalBaseAmountIls - left.totalBaseAmountIls || left.currency.localeCompare(right.currency),

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import type { PurchaseReviewInput } from './session-purchase-domain'
 import { CaptureBarcode } from './CaptureBarcode'
 import { useCaptureBarcode } from './useCaptureBarcode'
 import type { LocaleCode } from '@/data/spendscape-globe'
@@ -48,11 +49,12 @@ const copy = {
   },
 } as const
 
-export function CaptureCamera({ locale, onDemo, onSources, onManual }: {
+export function CaptureCamera({ locale, onDemo, onSources, onManual, onCandidate }: {
   locale: LocaleCode
   onDemo: () => void
   onSources: () => void
   onManual: () => void
+  onCandidate: (candidate: { name: string; identification: NonNullable<PurchaseReviewInput['identification']> }) => void
 }) {
   const { videoRef, state, start, stop } = useCaptureCamera()
   const targetRef = useRef<HTMLDivElement>(null)
@@ -60,11 +62,13 @@ export function CaptureCamera({ locale, onDemo, onSources, onManual }: {
   const stageRef = useRef<HTMLDivElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
   const hadResult = useRef(false)
+  const method = useRef<'camera' | 'manual' | 'demo'>('camera')
   useEffect(() => {
     if (barcode.identity) stageRef.current?.scrollTo({ top: 0 })
     if (hadResult.current && !barcode.identity && barcode.state === 'idle') toggleRef.current?.focus()
     hadResult.current = Boolean(barcode.identity)
   }, [barcode.identity, barcode.state])
+  const startCamera = () => { method.current = 'camera'; start() }
   const t = copy[locale]
   const running = state === 'live' || state === 'requesting'
   const leave = (navigate: () => void) => { barcode.cancel(); navigate() }
@@ -83,7 +87,7 @@ export function CaptureCamera({ locale, onDemo, onSources, onManual }: {
         <p className={styles.cameraStatus} role="status" aria-live="polite" aria-atomic="true" data-testid="capture-camera-status">{t[state]}</p>
       </div>
       <div className={`${styles.actions} ${styles.cameraActions}`}>
-        <button type="button" ref={toggleRef} className={styles.primary} data-testid="capture-camera-toggle" onClick={running ? barcode.cancel : start}>
+        <button type="button" ref={toggleRef} className={styles.primary} data-testid="capture-camera-toggle" onClick={running ? barcode.cancel : startCamera}>
           {state === 'requesting' ? t.cancel : state === 'live' ? t.stop
             : ['idle', 'stopped', 'interrupted'].includes(state) ? t.start : t.retry}
         </button>
@@ -92,9 +96,11 @@ export function CaptureCamera({ locale, onDemo, onSources, onManual }: {
         <button type="button" className={styles.secondary} onClick={() => leave(onSources)} data-testid="capture-sources-open">{t.sources}</button>
       </div>
       <CaptureBarcode locale={locale} state={barcode.state} identity={barcode.identity}
-        onManual={barcode.manual} onCancel={barcode.cancel}
-        onRetry={() => { barcode.retry(); if (state !== 'live') start() }}
-        onReset={() => { barcode.cancel(); barcode.retry() }} />
+        onManual={(code, format) => { method.current = 'manual'; barcode.manual(code, format) }}
+        onDemo={(code, format) => { method.current = 'demo'; barcode.manual(code, format) }}
+        onCandidate={(name, syntheticCatalog) => { if (barcode.identity) { const identity = { ...barcode.identity }; leave(() => onCandidate({ name, identification: { identity, method: method.current, syntheticCatalog } })) } }} onCancel={barcode.cancel}
+        onRetry={() => { method.current = 'camera'; barcode.retry(); if (state !== 'live') startCamera() }}
+        onReset={() => { method.current = 'camera'; barcode.cancel(); barcode.retry() }} />
     </div>
   )
 }

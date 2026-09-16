@@ -6,32 +6,10 @@ import {
   useRef,
   useState,
 } from 'react'
-import {
-  localized,
-  merchantForId,
-  placeForId,
-  type CurrencyCode,
-  type LocaleCode,
-  type Merchant,
-  type PaymentMode,
-  type Place,
-  type PurchaseCategory,
-} from '@/data/spendscape-globe'
-import {
-  canConfirmDraft,
-  captureReducer,
-  createSessionCaptureRecord,
-  demoDraftForSource,
-  initialCaptureState,
-  manualDraft,
-  receiptArithmetic,
-  validateManualCapture,
-  type CaptureDraft,
-  type CaptureSource,
-  type CaptureStep,
-  type ManualCaptureInput,
-  type SessionCaptureRecord,
-} from './capture-domain'
+import { type LocaleCode, type Merchant, type Place } from '@/data/spendscape-globe'
+import { captureReducer, demoDraftForSource, initialCaptureState, type CaptureSource, type CaptureStep, type SessionCaptureRecord } from './capture-domain'
+import { allocateReviewOperationId, blankReview, reviewFromDemo, type PurchaseReviewInput, type SaveReviewResult } from './session-purchase-domain'
+import { PurchaseReview } from './PurchaseReview'
 import { CaptureCamera } from './CaptureCamera'
 import styles from './CaptureExperience.module.css'
 
@@ -45,7 +23,9 @@ interface CaptureExperienceProps {
   onNavigate: (step: CaptureStep, mode?: 'push' | 'replace') => void
   onBack: () => void
   onClose: () => void
-  onConfirm: (record: SessionCaptureRecord) => void
+  onConfirm: (operationId: string, input: PurchaseReviewInput, allowDuplicate: boolean) => SaveReviewResult
+  onUndo: () => void
+  canUndo: boolean
   onResetSession: () => void
   onViewPurchase: (purchaseId: string) => void
   onShowOnGlobe: (placeId: string) => void
@@ -103,13 +83,13 @@ const copy = {
     understood: 'Back to sources', failureTitle: 'We could not read that demo',
     failureBody: 'The synthetic example was intentionally unclear. Try again or choose another method.',
     retry: 'Retry demo', successTitle: 'Purchase added for this session',
-    successBody: 'The canonical fixtures stayed unchanged. Reloading resets demo additions.',
+    successBody: 'Stored only in this tab. Reloading removes session additions.',
     viewPurchase: 'View purchase', showGlobe: 'Show on globe', done: 'Done',
     reset: 'Reset demo additions', sessionCount: 'session additions',
     provenance: 'Built-in synthetic demo · fixed illustrative FX',
     csvPreview: '3 synthetic rows previewed · only this row is added after confirmation.',
-    statusProcessing: 'Simulated scan in progress', statusReady: 'Synthetic purchase ready to review',
-    statusSuccess: 'Synthetic purchase added', required: 'Required', noPhoto: 'No image or photo value is retained.',
+    statusProcessing: 'Simulated scan in progress', statusReady: 'Purchase ready to review',
+    statusSuccess: 'Purchase added for this session', required: 'Required', noPhoto: 'No image or photo value is retained.',
   },
   he: {
     close: 'סגירת Capture', back: 'חזרה', eyebrow: 'קליטה אוניברסלית · הדמיה',
@@ -133,33 +113,20 @@ const copy = {
     understood: 'חזרה למקורות', failureTitle: 'לא הצלחנו לקרוא את ההדגמה',
     failureBody: 'הדוגמה הסינתטית הוגדרה בכוונה כלא ברורה. אפשר לנסות שוב או לבחור שיטה אחרת.',
     retry: 'ניסיון הדגמה נוסף', successTitle: 'הרכישה נוספה להפעלה הזו',
-    successBody: 'נתוני הבסיס הקנוניים לא השתנו. טעינה מחדש מאפסת את תוספות ההדגמה.',
+    successBody: 'נשמר בלשונית הזו בלבד. טעינה מחדש מסירה את התוספות להפעלה.',
     viewPurchase: 'הצגת הרכישה', showGlobe: 'הצגה בגלובוס', done: 'סיום',
     reset: 'איפוס תוספות הדגמה', sessionCount: 'תוספות להפעלה',
     provenance: 'הדגמה סינתטית מובנית · שער המחשה קבוע',
     csvPreview: '3 שורות סינתטיות הוצגו · רק שורה זו תתווסף לאחר אישור.',
-    statusProcessing: 'סריקת ההדגמה מתבצעת', statusReady: 'הרכישה הסינתטית מוכנה לבדיקה',
-    statusSuccess: 'הרכישה הסינתטית נוספה', required: 'שדה חובה', noPhoto: 'לא נשמר ערך של תמונה או צילום.',
+    statusProcessing: 'סריקת ההדגמה מתבצעת', statusReady: 'הרכישה מוכנה לבדיקה',
+    statusSuccess: 'הרכישה נוספה להפעלה', required: 'שדה חובה', noPhoto: 'לא נשמר ערך של תמונה או צילום.',
   },
 } as const
 
-const currencyOptions: CurrencyCode[] = ['ILS', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'MXN', 'ZAR']
-const categoryOptions: PurchaseCategory[] = ['groceries', 'food', 'retail', 'travel']
-const categoryNames = {
-  en: { groceries: 'Groceries', food: 'Food', retail: 'Retail', travel: 'Travel' },
-  he: { groceries: 'מכולת', food: 'אוכל', retail: 'קמעונאות', travel: 'נסיעות' },
-} as const
-
-function formatAmount(value: number, currency: CurrencyCode, locale: LocaleCode): string {
+function formatAmount(value: number, currency: string, locale: LocaleCode): string {
   return new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-GB', {
     style: 'currency', currency, maximumFractionDigits: currency === 'JPY' ? 0 : 2,
   }).format(value)
-}
-
-function formatDate(value: string, locale: LocaleCode): string {
-  return new Intl.DateTimeFormat(locale === 'he' ? 'he-IL' : 'en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
-  }).format(new Date(value))
 }
 
 export function CaptureExperience({
@@ -173,23 +140,17 @@ export function CaptureExperience({
   onBack,
   onClose,
   onConfirm,
+  onUndo,
+  canUndo,
   onResetSession,
   onViewPurchase,
   onShowOnGlobe,
 }: CaptureExperienceProps) {
   const [state, dispatch] = useReducer(captureReducer, initialCaptureState)
   const [scannerGeneration, setScannerGeneration] = useState(0)
-  const [manualInput, setManualInput] = useState<ManualCaptureInput>({
-    merchantId: 'merchant_shuk',
-    placeId: 'place_shuk_bograshov',
-    amount: '',
-    currency: 'ILS',
-    timestamp: '2026-08-29T17:45',
-    category: 'groceries',
-    paymentMode: 'cash',
-    channel: 'physical',
-  })
-  const [manualErrors, setManualErrors] = useState<ReturnType<typeof validateManualCapture>>({})
+  const [reviewInput, setReviewInput] = useState<PurchaseReviewInput | null>(null)
+  const [operationId, setOperationId] = useState('')
+  const prepareReview = (input: PurchaseReviewInput) => { setOperationId(allocateReviewOperationId()); setReviewInput(input) }
   const dialogRef = useRef<HTMLElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
@@ -235,11 +196,12 @@ export function CaptureExperience({
     const timer = window.setTimeout(() => {
       const draft = demoDraftForSource(state.source!)
       if (!draft) return
+      prepareReview(reviewFromDemo(draft, locale))
       dispatch({ type: 'draft-ready', draft })
       onNavigate('review', 'replace')
     }, reducedMotion ? 90 : 720)
     return () => window.clearTimeout(timer)
-  }, [onNavigate, reducedMotion, state.source, step])
+  }, [onNavigate, reducedMotion, state.source, step, locale])
 
   const announce = step === 'processing'
     ? t.statusProcessing
@@ -250,6 +212,8 @@ export function CaptureExperience({
         : ''
 
   const chooseSource = (source: CaptureSource) => {
+    if (source === 'manual') prepareReview(blankReview())
+    else setReviewInput(null)
     dispatch({ type: 'choose-source', source })
     const nextStep: CaptureStep = source === 'manual'
       ? 'manual'
@@ -261,46 +225,17 @@ export function CaptureExperience({
     onNavigate(nextStep, 'push')
   }
 
-  const updateDraft = (patch: Partial<CaptureDraft>) => {
-    if (!state.draft) return
-    const merged = { ...state.draft, ...patch }
-    if (merged.productCandidateOnly) {
-      merged.contextConfirmed = Boolean(
-        merged.placeId && merged.merchantId && merged.originalAmount && merged.originalAmount > 0,
-      )
+  const saveReview = (input: PurchaseReviewInput, allowDuplicate: boolean): SaveReviewResult => {
+    const result = onConfirm(operationId, input, allowDuplicate)
+    if (result.code === 'saved') {
+      dispatch({ type: 'confirm', purchaseId: result.purchaseId })
+      onNavigate('success', 'replace')
     }
-    dispatch({ type: 'update-draft', patch: merged })
-  }
-
-  const confirmDraft = (draft: CaptureDraft) => {
-    if (!canConfirmDraft(draft)) return
-    const record = createSessionCaptureRecord(draft, sessionRecords.length + 1)
-    onConfirm(record)
-    dispatch({ type: 'confirm', purchaseId: record.purchase.id })
-    onNavigate('success', 'push')
-  }
-
-  const submitManual = () => {
-    const errors = validateManualCapture(manualInput, locale)
-    setManualErrors(errors)
-    if (Object.keys(errors).length > 0) return
-    const draft = manualDraft(manualInput)
-    dispatch({ type: 'draft-ready', draft })
-    onNavigate('review', 'push')
-  }
-
-  const updateManual = <Key extends keyof ManualCaptureInput>(key: Key, value: ManualCaptureInput[Key]) => {
-    setManualInput((current) => ({ ...current, [key]: value }))
-    setManualErrors((current) => ({ ...current, [key]: undefined }))
+    return result
   }
 
   const lastRecord = state.lastPurchaseId
     ? sessionRecords.find((record) => record.purchase.id === state.lastPurchaseId)
-    : undefined
-  const arithmetic = state.draft ? receiptArithmetic(state.draft) : null
-  const reviewPlace = state.draft?.placeId ? placeForId(state.draft.placeId, places) : undefined
-  const reviewMerchant = state.draft?.merchantId
-    ? merchantForId(state.draft.merchantId, merchants)
     : undefined
   const showBack = step !== 'scanner' && step !== 'success'
 
@@ -333,7 +268,7 @@ export function CaptureExperience({
         <header className={styles.header}>
           <div className={styles.headerLead}>
             {showBack && <button type="button" className={styles.back} onClick={onBack} aria-label={t.back}>←</button>}
-            <div><p>{step === 'scanner' ? (locale === 'he' ? 'Capture · מצלמה והדגמות' : 'Capture · camera & demos') : t.eyebrow}</p><strong>Spendscape</strong></div>
+            <div><p>{step === 'scanner' ? (locale === 'he' ? 'Capture · מצלמה והדגמות' : 'Capture · camera & demos') : reviewInput?.provenance === 'user-reviewed' ? (locale === 'he' ? 'Capture · להפעלה בלבד' : 'Capture · session only') : t.eyebrow}</p><strong>Spendscape</strong></div>
           </div>
           <button ref={closeRef} type="button" className={styles.close} onClick={onClose} aria-label={t.close}>×</button>
         </header>
@@ -347,6 +282,12 @@ export function CaptureExperience({
             onDemo={() => chooseSource('receipt')}
             onSources={() => onNavigate('sources', 'push')}
             onManual={() => chooseSource('manual')}
+            onCandidate={(candidate) => {
+              prepareReview({ ...blankReview(), source: 'barcode', identification: candidate.identification,
+                provenance: 'user-reviewed',
+                lines: [{ name: candidate.name, quantity: '', price: '', unit: 'item' }] })
+              onNavigate('review', 'push')
+            }}
           />
         )}
 
@@ -385,177 +326,13 @@ export function CaptureExperience({
           </div>
         )}
 
-        {step === 'review' && state.draft && (
-          <div className={styles.review} data-testid="capture-review">
-            <div className={styles.stageCopy}>
-              <p className={styles.kicker}>{t.simulated}</p>
-              <h2 id="capture-title">{dialogTitle}</h2>
-              <p id="capture-description">{t.reviewBody}</p>
-            </div>
-
-            {state.draft.productCandidateOnly && (
-              <div className={styles.truthCallout} data-testid="product-proof-boundary">
-                <strong>{t.editContext}</strong><p>{t.productTruth}</p><small>{t.noPhoto}</small>
-              </div>
-            )}
-
-            <div className={styles.reviewCard}>
-              <div className={styles.merchantLine}>
-                <span className={styles.merchantMark} data-category={state.draft.category} aria-hidden="true" />
-                <span>
-                  <small>{reviewPlace ? t.placeSuggestion : state.draft.channel === 'online' ? t.online : t.merchant}</small>
-                  <strong>{reviewPlace ? localized(reviewPlace.name, locale) : reviewMerchant ? localized(reviewMerchant.name, locale) : sourceCopy[locale][state.draft.source][0]}</strong>
-                  {reviewPlace && <em>{localized(reviewPlace.branch, locale)} · {localized(reviewPlace.city, locale)}</em>}
-                </span>
-                {state.draft.originalAmount !== null && <b>{formatAmount(state.draft.originalAmount, state.draft.originalCurrency, locale)}</b>}
-              </div>
-
-              {state.draft.productCandidateOnly && (
-                <div className={styles.contextFields}>
-                  <label>{t.selectPlace}
-                    <select
-                      value={state.draft.placeId ?? ''}
-                      onChange={(event) => {
-                        const place = placeForId(event.target.value, places)
-                        updateDraft({ placeId: place?.id ?? null, merchantId: place?.merchantId ?? null })
-                      }}
-                      data-testid="product-place"
-                    >
-                      <option value="">{t.required}</option>
-                      {places.slice(0, 3).map((place) => <option key={place.id} value={place.id}>{localized(place.name, locale)} · {localized(place.city, locale)}</option>)}
-                    </select>
-                  </label>
-                  <label>{t.amount}
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      min="0.01"
-                      step="0.01"
-                      value={state.draft.originalAmount ?? ''}
-                      onChange={(event) => updateDraft({ originalAmount: event.target.value ? Number(event.target.value) : null })}
-                      data-testid="product-amount"
-                    />
-                  </label>
-                </div>
-              )}
-
-              <dl className={styles.essentials}>
-                <div><dt>{t.date}</dt><dd>{formatDate(state.draft.timestamp, locale)}</dd></div>
-                <div><dt>{t.payment}</dt><dd>{t[state.draft.paymentMode]}</dd></div>
-                <div><dt>{t.channel}</dt><dd>{state.draft.channel === 'physical' ? t.physical : state.draft.channel === 'online' ? t.online : t.unknown}</dd></div>
-              </dl>
-
-              {state.draft.items.length > 0 && (
-                <details className={styles.items} open={!state.draft.productCandidateOnly}>
-                  <summary>{t.nested}<span>{state.draft.items.length}</span></summary>
-                  <ul>
-                    {state.draft.items.map((entry) => (
-                      <li key={entry.id}>
-                        <span>{localized(entry.label, locale)}<small>{entry.quantity} × {formatAmount(entry.unitPrice, state.draft!.originalCurrency, locale)}</small></span>
-                        <strong>{formatAmount(entry.lineTotal, state.draft!.originalCurrency, locale)}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                  {arithmetic && arithmetic.itemTotal > 0 && (
-                    <p className={styles.reconciled} data-reconciles={arithmetic.reconciles}>
-                      <span>{t.total}</span><strong>{formatAmount(arithmetic.itemTotal, state.draft.originalCurrency, locale)}</strong>
-                    </p>
-                  )}
-                </details>
-              )}
-
-              <div className={styles.provenance}>
-                <span>{t.provenance}</span>
-                <p>{reviewPlace ? t.placeTruth : state.draft.channel === 'online' ? t.onlineTruth : t.unresolvedTruth}</p>
-                {state.draft.csvPreviewCount && <p>{t.csvPreview}</p>}
-              </div>
-            </div>
-
-            <div className={`${styles.actions} ${styles.stickyActions}`}>
-              <button type="button" className={styles.primary} disabled={!canConfirmDraft(state.draft)} onClick={() => confirmDraft(state.draft!)} data-testid="capture-confirm">{t.add}</button>
-              <button type="button" className={styles.secondary} onClick={() => onNavigate('sources', 'push')}>{t.other}</button>
-            </div>
-          </div>
+        {(step === 'review' || step === 'manual') && reviewInput && (
+          <PurchaseReview key={operationId} initial={reviewInput} locale={locale} context={{ places, merchants }}
+            manualStep={step === 'manual'} onReviewed={() => onNavigate('review', 'push')}
+            onSave={saveReview} onOther={() => { setReviewInput(null); onNavigate('sources', 'push') }} />
         )}
-
-        {step === 'manual' && (
-          <div className={styles.manualFlow} data-testid="capture-manual">
-            <div className={styles.stageCopy}>
-              <p className={styles.kicker}>{t.simulated}</p>
-              <h2 id="capture-title">{dialogTitle}</h2>
-              <p id="capture-description">{t.manualBody}</p>
-            </div>
-            <div className={styles.formGrid}>
-              <label>{t.channel}
-                <select
-                  value={manualInput.channel}
-                  onChange={(event) => {
-                    const channel = event.target.value as ManualCaptureInput['channel']
-                    setManualInput((current) => ({
-                      ...current,
-                      channel,
-                      placeId: channel === 'physical' ? current.placeId ?? 'place_shuk_bograshov' : null,
-                      merchantId: channel === 'online' ? 'merchant_serein' : channel === 'unknown' ? 'merchant_unresolved' : 'merchant_shuk',
-                    }))
-                  }}
-                  data-testid="manual-channel"
-                >
-                  <option value="physical">{t.physical}</option><option value="online">{t.online}</option><option value="unknown">{t.unknown}</option>
-                </select>
-              </label>
-              {manualInput.channel === 'physical' && (
-                <label className={styles.fullField}>{t.selectPlace}
-                  <select
-                    value={manualInput.placeId ?? ''}
-                    onChange={(event) => {
-                      const place = placeForId(event.target.value, places)
-                      updateManual('placeId', place?.id ?? null)
-                      if (place) updateManual('merchantId', place.merchantId)
-                    }}
-                    aria-invalid={Boolean(manualErrors.placeId)}
-                    aria-describedby={manualErrors.placeId ? 'manual-place-error' : undefined}
-                    data-testid="manual-place"
-                  >
-                    {places.map((place) => <option key={place.id} value={place.id}>{localized(place.name, locale)} · {localized(place.city, locale)}</option>)}
-                  </select>
-                  {manualErrors.placeId && <small id="manual-place-error" className={styles.fieldError}>{manualErrors.placeId}</small>}
-                </label>
-              )}
-              <label>{t.amount}
-                <input
-                  type="number" inputMode="decimal" min="0.01" step="0.01"
-                  value={manualInput.amount}
-                  onChange={(event) => updateManual('amount', event.target.value)}
-                  aria-invalid={Boolean(manualErrors.amount)}
-                  aria-describedby={manualErrors.amount ? 'manual-amount-error' : undefined}
-                  data-testid="manual-amount"
-                />
-                {manualErrors.amount && <small id="manual-amount-error" className={styles.fieldError}>{manualErrors.amount}</small>}
-              </label>
-              <label>{t.currency}
-                <select value={manualInput.currency} onChange={(event) => updateManual('currency', event.target.value as CurrencyCode)}>
-                  {currencyOptions.map((currency) => <option key={currency}>{currency}</option>)}
-                </select>
-              </label>
-              <label>{t.date}
-                <input type="datetime-local" value={manualInput.timestamp} onChange={(event) => updateManual('timestamp', event.target.value)} aria-invalid={Boolean(manualErrors.timestamp)} />
-              </label>
-              <label>{t.category}
-                <select value={manualInput.category} onChange={(event) => updateManual('category', event.target.value as PurchaseCategory)}>
-                  {categoryOptions.map((category) => <option key={category} value={category}>{categoryNames[locale][category]}</option>)}
-                </select>
-              </label>
-              <label>{t.payment}
-                <select value={manualInput.paymentMode} onChange={(event) => updateManual('paymentMode', event.target.value as PaymentMode)}>
-                  <option value="cash">{t.cash}</option><option value="card">{t.card}</option><option value="manual">{t.manual}</option>
-                </select>
-              </label>
-            </div>
-            <div className={`${styles.actions} ${styles.stickyActions}`}>
-              <button type="button" className={styles.primary} onClick={submitManual} data-testid="manual-review">{t.saveReview}</button>
-              <button type="button" className={styles.secondary} onClick={onBack}>{t.cancel}</button>
-            </div>
-          </div>
+        {(step === 'review' || step === 'manual' || step === 'success') && !reviewInput && !lastRecord && (
+          <div className={styles.messageState}><h2 id="capture-title">{t.sourceTitle}</h2><p id="capture-description">{locale === 'he' ? 'הטיוטה אינה זמינה. התחילו רכישה חדשה.' : 'This draft is no longer available. Start a new purchase.'}</p><button type="button" className={styles.primary} onClick={() => onNavigate('sources', 'replace')}>{t.other}</button></div>
         )}
 
         {step === 'gmail' && (
@@ -585,11 +362,12 @@ export function CaptureExperience({
         )}
 
         {step === 'success' && lastRecord && (
-          <div className={styles.messageState} data-testid="capture-success">
+          <div className={`${styles.messageState} ${styles.successState}`} data-testid="capture-success">
             <span className={`${styles.messageIcon} ${styles.successIcon}`} aria-hidden="true">✓</span>
-            <p className={styles.kicker}>{t.simulated}</p>
+            <p className={styles.kicker}>{lastRecord.synthetic ? t.simulated : (locale === 'he' ? 'פרטים שנבדקו על ידך' : 'Details reviewed by you')}</p>
             <h2 id="capture-title">{dialogTitle}</h2>
             <p id="capture-description">{t.successBody}</p>
+            <p>{locale === 'he' ? 'מסננים קיימים עשויים להסתיר את הרכישה. אפשר לפתוח אותה במפורש.' : 'Existing filters may hide this purchase. You can open it explicitly.'}</p>
             <div className={styles.successSummary}>
               <strong>{formatAmount(lastRecord.purchase.originalAmount, lastRecord.purchase.originalCurrency, locale)}</strong>
               <span>{lastRecord.purchase.placeId ? t.physical : lastRecord.purchase.channel === 'online' ? t.onlineTruth : t.unresolvedTruth}</span>
@@ -597,15 +375,16 @@ export function CaptureExperience({
             <div className={styles.actions}>
               <button type="button" className={styles.primary} onClick={() => onViewPurchase(lastRecord.purchase.id)} data-testid="capture-view-purchase">{t.viewPurchase}</button>
               {lastRecord.purchase.placeId && <button type="button" className={styles.secondary} onClick={() => onShowOnGlobe(lastRecord.purchase.placeId!)}>{t.showGlobe}</button>}
-              <button type="button" className={styles.secondary} onClick={onClose}>{t.done}</button>
+              <button type="button" className={styles.secondary} data-testid="capture-done" onClick={onClose}>{t.done}</button>
             </div>
           </div>
         )}
 
-        {sessionRecords.length > 0 && step !== 'success' && (
+        {sessionRecords.length > 0 && (
           <footer className={styles.sessionFooter}>
             <span>{sessionRecords.length} {t.sessionCount}</span>
-            <button type="button" onClick={() => { setScannerGeneration((n) => n + 1); onResetSession(); closeRef.current?.focus() }}>{t.reset}</button>
+            {canUndo && <button type="button" data-testid="capture-undo" onClick={() => { onUndo(); setReviewInput(null); onNavigate('sources', 'replace') }}>{locale === 'he' ? 'ביטול ההוספה האחרונה' : 'Undo last addition'}</button>}
+            <button type="button" onClick={() => { setScannerGeneration((n) => n + 1); setReviewInput(null); onResetSession(); onNavigate('scanner', 'replace'); closeRef.current?.focus() }}>{t.reset}</button>
           </footer>
         )}
       </section>

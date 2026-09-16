@@ -46,11 +46,13 @@ export interface FxProvenance {
   baseCurrency: 'ILS'
   rateToBase: number
   effectiveAt: string
-  source: 'synthetic-fixture-rate'
+  source: 'synthetic-fixture-rate' | 'identity' | 'user-reported-conversion'
+  reportedBaseAmountIls?: number
   label: LocalizedText
 }
 
 export interface GlobePurchase {
+  provenance?: 'user-reviewed-session'
   id: string
   merchantId: string
   timestamp: string
@@ -72,7 +74,7 @@ export interface PurchaseEvidence {
   kind: EvidenceKind
   observedAt: string
   label: LocalizedText
-  synthetic: true
+  synthetic: boolean
 }
 
 export interface SmartInboxCandidate {
@@ -139,6 +141,7 @@ export function nestedItemTotal(purchase: GlobePurchase): number {
 }
 
 export function baseAmountIlsForPurchase(purchase: GlobePurchase): number {
+  if (purchase.fx.source === 'user-reported-conversion') return purchase.fx.reportedBaseAmountIls!
   return Math.round(purchase.originalAmount * purchase.fx.rateToBase * 100) / 100
 }
 

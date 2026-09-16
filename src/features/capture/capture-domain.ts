@@ -53,7 +53,8 @@ export interface SessionCaptureRecord {
   purchase: GlobePurchase
   evidence: PurchaseEvidence
   source: CaptureDraft['source']
-  synthetic: true
+  synthetic: boolean
+  identification?: { identity: import('./barcode-domain').BarcodeIdentity; method: 'camera' | 'manual' | 'demo'; syntheticCatalog: boolean }
 }
 
 export interface CaptureState {

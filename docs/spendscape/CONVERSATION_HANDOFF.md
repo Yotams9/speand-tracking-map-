@@ -3,7 +3,40 @@
 This file transfers the relevant decisions and workspace history into a durable
 form. It is a summary of user intent, not a verbatim transcript.
 
-## Latest gate — Scanner D1 benchmark, 2026-09-10
+## Latest gate — Scanner E Replay history correction, 2026-09-15
+
+The user authorized `APPROVE SPENDSCAPE SCANNER E — SESSION-ONLY REVIEWED PURCHASE INTEGRATION + LOCAL QA`.
+The completed working-tree slice connects Scanner B identification, demo candidates,
+synthetic receipts and manual/cash/online input to explicit reviewed session
+additions. One ledger feeds the existing composed graph, including Undo. No
+fixture mutation, persistence, provider, OCR integration or deployment is added.
+[SCANNER_E_CHECKPOINT.md](SCANNER_E_CHECKPOINT.md) records implementation and QA.
+The first checkpoint review found one High provenance/FX defect and two Medium
+search-persistence/insecure-context defects. The user separately authorized
+`APPROVE SPENDSCAPE SCANNER E — PROVENANCE, PRIVACY AND INSECURE-CONTEXT CORRECTION + LOCAL QA`.
+Those bounded corrections are complete; the fresh final-state combined production
+suite passed 77/77 with no flaky results, skips or timeouts. The checkpoint
+document records the focused tests and preserves the original review findings.
+The following checkpoint review reproduced a remaining Medium browser-history
+privacy defect: Replay retained purchase-derived search in a forward entry after
+reload. The user authorized `APPROVE SPENDSCAPE SCANNER E — REPLAY HISTORY PRIVACY CORRECTION + LOCAL QA`.
+Full Replay snapshots now stay in runtime memory; history contains only an opaque
+session reference and navigation flags. Legacy query payloads are discarded when
+visited, and obsolete sessions cannot reactivate after reload. The fresh complete
+combined suite passed 81/81, including four new EN/HE history regressions.
+The checkpoint document records targeted navigation QA and the legacy-history
+cleanup limitation. No checkpoint review pass or commit is implied.
+The next separate gate is a new `APPROVE SPENDSCAPE SCANNER E CHECKPOINT REVIEW`.
+No further implementation slice is active. No commit or push is authorized. Physical iPhone Scanner E QA is pending a
+separately approved deployment; the existing A/B smoke pass does not cover E.
+
+Scanner D1's bounded numeric-evidence correction and checkpoint were separately
+reviewed, committed and pushed at `96ef57d8ecd8de2d1f6a43a71a461fae662ccb3a`.
+Its negative D2 recommendation and benchmark evidence remain unchanged. The D1
+section below preserves the original pre-review handoff; its pending gate was
+subsequently consumed by those explicit approvals.
+
+## Historical gate — Scanner D1 benchmark, 2026-09-10
 
 The iPhone/Vercel documentation checkpoint was committed and pushed as
 `591a9e9ffe09114713040c72cf88eb09369fc335`. The user subsequently authorized
@@ -149,8 +182,8 @@ Require a new exact bounded authorization.
 
 Recorded on 2026-09-09 under
 `APPROVE SPENDSCAPE DOCUMENTATION-ONLY IPHONE SCANNER A+B AND VERCEL DEMO RECONCILIATION`.
-This updates current status while preserving the original checkpoint reports.
-No implementation slice is currently active.
+This section records the status at that documentation checkpoint.
+No implementation slice was active then; the latest Scanner E gate is above.
 
 ### Completed checkpoints and Git
 
@@ -191,20 +224,24 @@ physical-device and performance coverage remains unverified.
 
 ### Demo candidate behavior and deferred clarity issue
 
-“Try Demo Product” (current English label: “Try demo product”) intentionally
+At the deployed Scanner B checkpoint, “Try Demo Product” (English label:
+“Try demo product”) intentionally
 loads the deterministic **Demo Oats** candidate (displayed as “Demo oats”) and
 demo EAN-13 `2000000000015` without using the camera. It is a fictional catalog
 example. Scanner B performs **identification only**: scanning, manual entry,
 loading or editing this candidate does not create or save a purchase.
 
 Repeatedly pressing the demo action while the same candidate is already loaded
-currently produces no visible change. Record this as **Low — minor UX clarity**,
-not a Scanner B functional failure. Optional improvement is deferred to Scanner E
-or another separately approved UI-polish slice: rename it “Load demo product”;
+produced no visible change at that checkpoint. It was recorded as **Low — minor UX clarity**,
+not a Scanner B functional failure. Optional improvement was then deferred
+to Scanner E or another separately approved UI-polish slice: rename it “Load demo product”;
 disable or hide it after loading; show “Demo product loaded — review only”; and
 clarify that purchase creation requires a later approved review/save flow. None
 of those changes is implemented or authorized by this documentation task.
-Existing manual/synthetic Capture purchase flows remain separate from Scanner B.
+Existing manual/synthetic Capture purchase flows remained separate from Scanner B.
+The later local Scanner E working tree implements the approved demo-action
+clarity changes and explicit reviewed save flow. The deployed Scanner B demo
+remains unchanged; Scanner E has not been deployed.
 
 ### Existing Vercel college-demo deployment
 
@@ -236,11 +273,11 @@ framework hosting and automatically assigned platform domains are the existing
 hosting exception, not new backend or custom-domain authority. No tokens, OIDC
 values, credentials or personal IP addresses belong in durable documentation.
 
-### Remaining gates and next action
+### Remaining gates at the documentation checkpoint
 
-Scanner D, Scanner E, optional Scanner C, backend, database, authentication,
+At that checkpoint, Scanner D, Scanner E, optional Scanner C, backend, database, authentication,
 real providers, further accounts/resources and deployment changes remain
-separately gated. No implementation slice is active. This task authorizes only
+separately gated. No implementation slice was active. That task authorized only
 documentation reconciliation and consistency checks, followed by a separate
 documentation checkpoint review. It does not authorize staging, commit, push,
 PR, merge, application/browser QA or any deployment/resource change.

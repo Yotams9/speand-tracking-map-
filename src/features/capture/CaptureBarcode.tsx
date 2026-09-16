@@ -17,7 +17,7 @@ const copy = {
     'decode-error': 'The barcode could not be read. Retry, enter the code or explore a demo.',
     cancelled: 'Barcode scanning cancelled. You can enter a code or start the camera again.',
     manual: 'Enter barcode', format: 'Barcode format', code: 'Barcode digits', identify: 'Check barcode',
-    demo: 'Try demo product', provenance: 'Synthetic demo catalog · fictional product',
+    demo: 'Load demo product for review', loaded: 'Demo product loaded — review only', continue: 'Continue to purchase details', provenance: 'Synthetic demo catalog · fictional product',
     unknown: 'Unknown barcode', unknownBody: 'The code is valid, but is not in this small demo catalog. No real product lookup was made.',
     name: 'Product name for review', note: 'Identification only. Nothing is added to your purchases. Price, merchant, date and place are unknown.',
     retry: 'Retry barcode scan', reset: 'Clear result', original: 'Scanned code', normalized: 'Equivalent GTIN',
@@ -31,15 +31,16 @@ const copy = {
     'decode-error': 'לא ניתן לקרוא את הברקוד. נסו שוב, הזינו קוד או פתחו הדגמה.',
     cancelled: 'סריקת הברקוד בוטלה. אפשר להזין קוד או להפעיל שוב את המצלמה.',
     manual: 'הזנת ברקוד', format: 'סוג ברקוד', code: 'ספרות הברקוד', identify: 'בדיקת ברקוד',
-    demo: 'ניסיון מוצר הדגמה', provenance: 'קטלוג הדגמה סינתטי · מוצר בדיוני',
+    demo: 'טעינת מוצר הדגמה לבדיקה', loaded: 'מוצר ההדגמה נטען — לבדיקה בלבד', continue: 'המשך לפרטי רכישה', provenance: 'קטלוג הדגמה סינתטי · מוצר בדיוני',
     unknown: 'ברקוד לא מוכר', unknownBody: 'הקוד תקין, אך אינו בקטלוג ההדגמה הקטן. לא בוצע חיפוש מוצר אמיתי.',
     name: 'שם מוצר לבדיקה', note: 'זיהוי בלבד. דבר לא נוסף לרכישות. המחיר, בית העסק, התאריך והמקום אינם ידועים.',
     retry: 'ניסיון סריקה נוסף', reset: 'ניקוי תוצאה', original: 'הקוד שנסרק', normalized: 'GTIN מקביל',
   },
 } as const
 
-export function CaptureBarcode({ locale, state, identity, onManual, onCancel, onRetry, onReset }: {
+export function CaptureBarcode({ locale, state, identity, onManual, onDemo, onCandidate, onCancel, onRetry, onReset }: {
   locale: LocaleCode; state: DecoderState; identity: BarcodeIdentity | null
+  onDemo: (code: string, format: string) => void; onCandidate: (name: string, syntheticCatalog: boolean) => void
   onManual: (code: string, format: string) => void; onCancel: () => void; onRetry: () => void; onReset: () => void
 }) {
   const t = copy[locale]
@@ -47,10 +48,12 @@ export function CaptureBarcode({ locale, state, identity, onManual, onCancel, on
   const [code, setCode] = useState('')
   const [format, setFormat] = useState<BarcodeFormat>('EAN13')
   const [name, setName] = useState('')
+  const [demoLoaded, setDemoLoaded] = useState(false)
   const input = useRef<HTMLInputElement>(null)
   const result = useRef<HTMLDivElement>(null)
   const product = identity ? lookupDemoProduct(identity) : undefined
-  useEffect(() => { setName(product?.name[locale] ?? '') }, [product, locale, identity])
+  // Locale changes must not overwrite a name the user edited.
+  useEffect(() => { setName(product?.name[locale] ?? ''); setDemoLoaded(false) }, [identity, product])
   useEffect(() => {
     if (identity) {
       setEditing(false)
@@ -70,10 +73,12 @@ export function CaptureBarcode({ locale, state, identity, onManual, onCancel, on
       <p>{t.original}: <bdi dir="ltr" data-testid="barcode-original">{identity.original}</bdi> · {identity.format}</p>
       <p>{t.normalized}: <bdi dir="ltr" data-testid="barcode-normalized">{identity.gtin14}</bdi></p>
       <p>{t.note}</p>
+      <button type="button" className={styles.primary} data-testid="barcode-review-purchase" onClick={() => onCandidate(name, Boolean(product))}>{t.continue}</button>
     </div>}
+    {(demoLoaded || product?.id === barcodeDemoCatalog[0].id) && <p role="status" data-testid="barcode-demo-loaded">{t.loaded}</p>}
     <div className={styles.barcodeActions}>
       <button type="button" className={styles.secondary} data-testid="barcode-manual-open" aria-expanded={editing} onClick={() => { onCancel(); setEditing((value) => !value) }}>{t.manual}</button>
-      <button type="button" className={styles.secondary} data-testid="barcode-demo" onClick={() => { const demo = barcodeDemoCatalog[0]; onManual(demo.barcode, demo.format) }}>{t.demo}</button>
+      <button type="button" className={styles.secondary} data-testid="barcode-demo" disabled={product?.id === barcodeDemoCatalog[0].id} onClick={() => { const demo = barcodeDemoCatalog[0]; onDemo(demo.barcode, demo.format); setDemoLoaded(true) }}>{t.demo}</button>
       {['empty', 'invalid', 'load-error', 'decode-error', 'found'].includes(state) && <button type="button" className={styles.secondary} data-testid="barcode-retry" onClick={onRetry}>{t.retry}</button>}
       {identity && <button type="button" className={styles.secondary} data-testid="barcode-reset" onClick={() => { onReset(); setCode(''); setName(''); setEditing(false) }}>{t.reset}</button>}
     </div>

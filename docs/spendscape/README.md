@@ -28,7 +28,8 @@ full brainstorming transcript.
 - Phase 1E status: final critical review, production-rendered local QA, and documentation reconciliation completed with no remaining Blocker or High defect
 - Latest committed and pushed Scanner A checkpoint: `23683efcfea1151b96d940e420eafd19760626c6`.
 - Latest completed, reviewed, committed and pushed Scanner B checkpoint: `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`, including the bounded transient invalid-frame correction. Scanner A is also completed and reviewed at the checkpoint above.
-- Current gate: the separately authorized Scanner D1 synthetic local OCR benchmark is complete in the working tree and awaits checkpoint review. Its current configuration is not ready for D2: Hebrew/mixed accuracy and public-API initialization cleanup failed acceptance. See [SCANNER_D1_CHECKPOINT.md](SCANNER_D1_CHECKPOINT.md). No further implementation slice is active; review, commit, push and deployment remain separate gates.
+- Current gate: Scanner E session-only reviewed purchase integration and its separately authorized provenance, privacy, insecure-context and Replay browser-history corrections are complete in the working tree; the fresh combined production suite passed 81/81. The next separate gate is a new checkpoint review. No further implementation slice is active. See [SCANNER_E_CHECKPOINT.md](SCANNER_E_CHECKPOINT.md). No commit, push or deployment is authorized.
+- Scanner D1 and its numeric-evidence correction are reviewed, committed and pushed at `96ef57d8ecd8de2d1f6a43a71a461fae662ccb3a`. Its negative recommendation remains unchanged: Hebrew/mixed accuracy and public-API initialization cleanup failed acceptance. [SCANNER_D1_CHECKPOINT.md](SCANNER_D1_CHECKPOINT.md) preserves the benchmark evidence.
 - Active college demo: [spendscape-college-demo](https://spendscape-college-demo.vercel.app), SkDev / sk-dev3, Hobby; its separately approved first deployment is labelled Production.
 - Physical iPhone evidence: **user-reported smoke-test pass** on iPhone 17 Pro, iOS 26.6.1 Safari. See [the current handoff](CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation) for the exact deployment, reported checks, evidence limitations and minor demo-button UX issue. This is not independently instrumented device QA.
 - Scanner B identifies candidates only and does not create or save purchases. [SCANNER_B_CHECKPOINT.md](SCANNER_B_CHECKPOINT.md) preserves the implementation and correction history.
@@ -48,8 +49,9 @@ college demo using the fixture baseline and session-only additions. No Docker,
 Colima, Supabase, database, authentication or hosted storage is authorized.
 Scanner A owns the explicit-user-action native camera preview. Scanner B adds
 local reader-only barcode decoding and six synthetic product candidates, with
-no scanned purchase mutation. Existing manual and simulated Capture paths remain
-unchanged. Scanner D, Scanner E, optional Scanner C, further deployment and
-resource changes retain separate gates. Historical checkpoint statements
+no scanned purchase mutation. Scanner E adds a shared explicit review/save boundary for barcode, manual and
+synthetic Capture inputs, with session-only Undo and no persistent storage.
+D2/D3, optional Scanner C, further deployment and resource changes retain
+separate gates. Historical checkpoint statements
 excluding camera access or awaiting device QA describe their original scope;
 the current handoff records the later user-reported smoke test.

@@ -77,15 +77,21 @@ Physical Scanner A/B smoke testing has a **user-reported pass** on iPhone 17 Pro
 iOS 26.6.1 Safari; it is not a Codex-operated or independently instrumented
 device test. See `docs/spendscape/CONVERSATION_HANDOFF.md` for the exact deployment,
 reported checks, evidence limits and deferred demo-button clarity issue.
-The separately authorized Scanner D1 synthetic local OCR benchmark is complete
-in the working tree and awaits checkpoint review; see
-`docs/spendscape/SCANNER_D1_CHECKPOINT.md`. Its current configuration failed
-Hebrew/mixed accuracy and guaranteed public-API initialization cleanup, so it
-is not ready for D2. No further implementation slice is active. Review, commit
-and push require separate approvals; D2/D3 and any internal worker adapter
-also require new bounded authorization.
-Scanner D, Scanner E, optional Scanner C, backend, database, authentication and
-real providers remain separately gated. Existing scanner/deployment approvals
+Scanner D1, including the numeric-evidence correction, is reviewed, committed
+and pushed at `96ef57d8ecd8de2d1f6a43a71a461fae662ccb3a`. Its negative OCR
+recommendation remains unchanged: the current configuration is not ready for D2.
+See `docs/spendscape/SCANNER_D1_CHECKPOINT.md` for the original benchmark evidence.
+The separately authorized Scanner E session-only reviewed purchase integration
+and its separately approved provenance, privacy, insecure-context and Replay
+browser-history privacy corrections
+are complete in the working tree and await a new separate checkpoint review.
+The fresh final-state combined production-browser suite passed 81/81. It
+connects explicit review to an in-memory addition without changing the fixture repository. Scanner
+B itself still identifies only. See `docs/spendscape/SCANNER_E_CHECKPOINT.md`.
+No further implementation slice is active. Its next gate is a separate Scanner E
+checkpoint review; commit and push are not authorized. D2/D3, any internal OCR worker adapter, optional Scanner C,
+backend, database, authentication and real providers remain separately gated.
+Existing scanner/deployment approvals
 are consumed and do not authorize further deployment or resource changes.
 
 Preserve `Globe · Capture · Purchases · Stats`, accepted Ask and Replay

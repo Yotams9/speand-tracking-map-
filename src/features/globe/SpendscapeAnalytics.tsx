@@ -165,7 +165,7 @@ export function SpendscapeAnalytics({
     <section className={styles.panel} aria-labelledby="analytics-title" data-testid="analytics-panel">
       <header className={styles.header}>
         <div>
-          <p>{t.eyebrow}</p>
+          <p>{analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הדגמה + תוספות להפעלה' : 'Demo + session additions') : t.eyebrow}</p>
           <h2 id="analytics-title">{t.title}</h2>
           <span>{t.intro}</span>
         </div>
@@ -206,7 +206,7 @@ export function SpendscapeAnalytics({
           <article className={styles.totalMetric}>
             <span>{t.total}</span>
             <strong data-testid="analytics-total">{formatMoney(analytics.totalBaseAmountIls, locale)}</strong>
-            <small>{t.normalizedNote}</small>
+            <small>{analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הסיכום משלב נתוני הדגמה ותוספות שלך. המרות לתוספות דווחו על ידך ולא אומתו.' : 'Totals combine demo data and your session additions. Conversions for your additions are user-reported, not verified.') : t.normalizedNote}</small>
           </article>
           <article>
             <span>{t.purchases}</span>
@@ -369,8 +369,8 @@ export function SpendscapeAnalytics({
                     >
                       <strong>{currency.currency}</strong>
                       <span>{formatMoney(currency.originalAmountTotal, locale, currency.currency)} <small>{t.original}</small></span>
-                      <span>{formatMoney(currency.totalBaseAmountIls, locale)} <small>{t.base}</small></span>
-                      <em>{t.fixedRate} · {currency.syntheticRatesToBase.join(', ')}</em>
+                      <span>{formatMoney(currency.totalBaseAmountIls, locale)} <small>{currency.reportedPurchaseCount > 0 ? (locale === 'he' ? 'סיכום בש״ח' : 'ILS total') : t.base}</small></span>
+                      <em>{currency.syntheticRatesToBase.length > 0 && <>{t.fixedRate} · {currency.syntheticRatesToBase.join(', ')}</>}{currency.reportedPurchaseCount > 0 && <span> · {currency.reportedPurchaseCount} {locale === 'he' ? 'רכישות בדיווח שלך' : 'user-reported purchases'}</span>}</em>
                     </button>
                   ))}
                 </div>
