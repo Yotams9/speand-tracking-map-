@@ -3,7 +3,7 @@ import { canonicalSpendscapeData } from '../../data/spendscape-fixtures'
 import { availableTimelineMonths, baseAmountIlsForPurchase, buildPlaceFeatureCollection, defaultPurchaseQuery, filterPurchases } from '../../data/spendscape-globe'
 import { derivePurchaseAnalytics } from '../../data/spendscape-analytics'
 import { demoDraftForSource, combineSessionPurchases } from './capture-domain'
-import { allocateReviewOperationId, blankReview, emptySessionLedger, lineMinorTotal, minorAmount, resetSessionPurchases, reviewFromDemo, reviewedRecord, saveReviewedPurchase, undoSessionPurchase, validateReview } from './session-purchase-domain'
+import { allocateReviewOperationId, blankReview, emptySessionLedger, expireSessionPurchaseUndo, lineMinorTotal, minorAmount, resetSessionPurchases, reviewFromDemo, reviewedRecord, saveReviewedPurchase, undoSessionPurchase, validateReview } from './session-purchase-domain'
 const context = canonicalSpendscapeData
 const manual = () => ({ ...blankReview(), merchantId: context.merchants[0].id, channel: 'online' as const, date: '2026-09-12T14:35', currency: 'ILS' as const, payment: 'cash' as const, category: 'retail' as const, amount: '12.50' })
 const receipt = () => reviewFromDemo(demoDraftForSource('receipt')!, 'en')
@@ -60,6 +60,15 @@ describe('Scanner E reviewed session integration', () => {
       const again = saveReviewedPurchase(ledger, 'op-1', manual(), context, context.purchases, true)
       expect(again.result.code).toBe('consumed'); expect(again.ledger).toBe(ledger)
     }
+  })
+  it('expires only the matching Undo window without deleting the saved purchase', () => {
+    const first = saveReviewedPurchase(emptySessionLedger(), 'expiry-1', manual(), context, context.purchases).ledger
+    const staleExpiry = expireSessionPurchaseUndo(first, 'another-purchase')
+    expect(staleExpiry).toBe(first)
+    const expired = expireSessionPurchaseUndo(first, first.undoId!)
+    expect(expired.records).toEqual(first.records)
+    expect(expired.consumed).toEqual(first.consumed)
+    expect(expired.undoId).toBeNull()
   })
   it('warns on identical separate purchases but permits explicit confirmation', () => {
     const first = saveReviewedPurchase(emptySessionLedger(), 'a', manual(), context, context.purchases)

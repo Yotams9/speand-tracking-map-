@@ -122,4 +122,7 @@ export function saveReviewedPurchase(ledger: SessionPurchaseLedger, operationId:
 export function undoSessionPurchase(ledger: SessionPurchaseLedger): SessionPurchaseLedger {
   return { ...ledger, records: ledger.records.filter(r => r.purchase.id !== ledger.undoId), undoId: null }
 }
+export function expireSessionPurchaseUndo(ledger: SessionPurchaseLedger, expectedId: string): SessionPurchaseLedger {
+  return ledger.undoId === expectedId ? { ...ledger, undoId: null } : ledger
+}
 export function resetSessionPurchases(ledger: SessionPurchaseLedger): SessionPurchaseLedger { return { ...ledger, records: [], undoId: null } }

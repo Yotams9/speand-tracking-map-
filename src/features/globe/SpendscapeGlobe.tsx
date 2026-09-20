@@ -49,7 +49,7 @@ import {
   combineSessionPurchases,
   type CaptureStep,
 } from '@/features/capture/capture-domain'
-import { emptySessionLedger, saveReviewedPurchase, undoSessionPurchase, resetSessionPurchases } from '@/features/capture/session-purchase-domain'
+import { emptySessionLedger, expireSessionPurchaseUndo, saveReviewedPurchase, undoSessionPurchase, resetSessionPurchases } from '@/features/capture/session-purchase-domain'
 import {
   applySmartInboxDecisions,
   caseForPurchase,
@@ -864,6 +864,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const filteredRef = useRef(placeFeatureCollection)
   const mapReadyRef = useRef(false)
   const actionTimerRef = useRef<number | null>(null)
+  const sessionUndoDeadlineRef = useRef(0)
+  const [undoSeconds, setUndoSeconds] = useState(0)
   const loadStartRef = useRef(0)
   const localeRef = useRef<LocaleCode>('en')
   const modeRef = useRef<MapMode>('pins')
@@ -1142,6 +1144,24 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   useEffect(() => {
     setActiveSearchIndex(-1)
   }, [query.search, searchResults.length])
+
+  useEffect(() => {
+    const undoId = sessionLedger.undoId
+    if (!undoId) { setUndoSeconds(0); return }
+    const update = () => {
+      const remaining = Math.max(0, sessionUndoDeadlineRef.current - performance.now())
+      setUndoSeconds(Math.ceil(remaining / 1000))
+      if (remaining > 0) return
+      const expired = expireSessionPurchaseUndo(sessionLedgerRef.current, undoId)
+      if (expired === sessionLedgerRef.current) return
+      sessionLedgerRef.current = expired
+      setSessionLedger(expired)
+    }
+    update()
+    const interval = window.setInterval(update, 100)
+    const timeout = window.setTimeout(update, Math.max(0, sessionUndoDeadlineRef.current - performance.now()))
+    return () => { window.clearInterval(interval); window.clearTimeout(timeout) }
+  }, [sessionLedger.undoId])
 
   useEffect(() => {
     const dismissSearch = (event: PointerEvent) => {
@@ -2763,6 +2783,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const undoLastSessionPurchase = () => {
     const removedId = sessionLedgerRef.current.undoId
     if (!removedId) return
+    if (performance.now() >= sessionUndoDeadlineRef.current) {
+      sessionLedgerRef.current = expireSessionPurchaseUndo(sessionLedgerRef.current, removedId)
+      setSessionLedger(sessionLedgerRef.current)
+      return
+    }
     sessionLedgerRef.current = undoSessionPurchase(sessionLedgerRef.current)
     setSessionLedger(sessionLedgerRef.current)
     if (selectedPurchaseId === removedId) setSelectedPurchaseId(null)
@@ -3700,8 +3725,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       )}
 
       {!captureStep && !askOpen && !inboxCaseId && !replay && sessionLedger.undoId && (
-        <button type="button" className={styles.sessionUndo} data-testid="session-undo" onClick={undoLastSessionPurchase}>
-          {locale === 'he' ? 'ביטול ההוספה האחרונה' : 'Undo last addition'}
+        <button type="button" className={styles.sessionUndo} data-testid="session-undo" onClick={undoLastSessionPurchase} aria-label={locale === 'he' ? `ביטול ההוספה האחרונה, נותרו ${undoSeconds} שניות` : `Undo last addition, ${undoSeconds} seconds remaining`}>
+          {locale === 'he' ? 'ביטול ההוספה האחרונה' : 'Undo last addition'} <span aria-hidden="true">{undoSeconds}{locale === 'he' ? ' שנ׳' : 's'}</span>
         </button>
       )}
       {captureStep && (
@@ -3718,6 +3743,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           onConfirm={(operationId, input, allowDuplicate) => {
             const saved = saveReviewedPurchase(sessionLedgerRef.current, operationId, input, { merchants: globeMerchants, places: globePlaces }, globePurchases, allowDuplicate)
             if (saved.result.code === 'saved') {
+              sessionUndoDeadlineRef.current = performance.now() + 8_000
+              setUndoSeconds(8)
               sessionLedgerRef.current = saved.ledger
               setSessionLedger(saved.ledger)
               setStatus(locale === 'he' ? 'הרכישה נוספה להפעלה הזו' : 'Purchase added for this session')
@@ -3726,6 +3753,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           }}
           onUndo={undoLastSessionPurchase}
           canUndo={sessionLedger.undoId !== null}
+          undoSeconds={undoSeconds}
           onResetSession={resetSessionCaptures}
           onViewPurchase={(purchaseId) => exitCaptureThen(() => openPurchase(purchaseId))}
           onShowOnGlobe={(placeId) => exitCaptureThen(() => selectPlace(placeId))}

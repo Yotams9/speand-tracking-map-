@@ -26,6 +26,7 @@ interface CaptureExperienceProps {
   onConfirm: (operationId: string, input: PurchaseReviewInput, allowDuplicate: boolean) => SaveReviewResult
   onUndo: () => void
   canUndo: boolean
+  undoSeconds: number
   onResetSession: () => void
   onViewPurchase: (purchaseId: string) => void
   onShowOnGlobe: (placeId: string) => void
@@ -142,6 +143,7 @@ export function CaptureExperience({
   onConfirm,
   onUndo,
   canUndo,
+  undoSeconds,
   onResetSession,
   onViewPurchase,
   onShowOnGlobe,
@@ -383,7 +385,7 @@ export function CaptureExperience({
         {sessionRecords.length > 0 && (
           <footer className={styles.sessionFooter}>
             <span>{sessionRecords.length} {t.sessionCount}</span>
-            {canUndo && <button type="button" data-testid="capture-undo" onClick={() => { onUndo(); setReviewInput(null); onNavigate('sources', 'replace') }}>{locale === 'he' ? 'ביטול ההוספה האחרונה' : 'Undo last addition'}</button>}
+            {canUndo && <button type="button" data-testid="capture-undo" aria-label={locale === 'he' ? `ביטול ההוספה האחרונה, נותרו ${undoSeconds} שניות` : `Undo last addition, ${undoSeconds} seconds remaining`} onClick={() => { onUndo(); setReviewInput(null); onNavigate('sources', 'replace') }}>{locale === 'he' ? 'ביטול ההוספה האחרונה' : 'Undo last addition'} <span aria-hidden="true">{undoSeconds}{locale === 'he' ? ' שנ׳' : 's'}</span></button>}
             <button type="button" onClick={() => { setScannerGeneration((n) => n + 1); setReviewInput(null); onResetSession(); onNavigate('scanner', 'replace'); closeRef.current?.focus() }}>{t.reset}</button>
           </footer>
         )}
