@@ -1,0 +1,175 @@
+{
+  "ingested_at": "2026-09-22T14:57:54.844480+00:00",
+  "downloaded_at": null,
+  "timestamp_note": "NP0 did not retain exact download timestamps; not invented.",
+  "files": [
+    {
+      "file": "Stores7290027600007-000-20260922-025.gz",
+      "status": "normalized",
+      "rows": 2,
+      "gtin_rows": 0,
+      "eligible_rows": 0,
+      "missing_package_count": 0
+    },
+    {
+      "file": "Price7290027600007-001-001-20260921-020000.gz",
+      "status": "normalized",
+      "rows": 9,
+      "gtin_rows": 9,
+      "eligible_rows": 0,
+      "missing_package_count": 1
+    },
+    {
+      "file": "PriceFull7290027600007-001-001-20260922-030000.gz",
+      "status": "normalized",
+      "rows": 6587,
+      "gtin_rows": 6505,
+      "eligible_rows": 0,
+      "missing_package_count": 2311
+    },
+    {
+      "file": "Promo7290027600007-001-001-20260922-020000.gz",
+      "status": "normalized",
+      "rows": 22,
+      "gtin_rows": 0,
+      "eligible_rows": 0,
+      "missing_package_count": 0
+    },
+    {
+      "file": "PromoFull7290027600007-001-001-20260922-030000.gz",
+      "status": "normalized",
+      "rows": 1302,
+      "gtin_rows": 0,
+      "eligible_rows": 0,
+      "missing_package_count": 0
+    },
+    {
+      "file": "Price7290027600007-001-002-20260921-020000.gz",
+      "status": "normalized",
+      "rows": 10,
+      "gtin_rows": 10,
+      "eligible_rows": 0,
+      "missing_package_count": 3
+    },
+    {
+      "file": "PriceFull7290027600007-001-002-20260922-030000.gz",
+      "status": "normalized",
+      "rows": 7550,
+      "gtin_rows": 7465,
+      "eligible_rows": 0,
+      "missing_package_count": 2635
+    },
+    {
+      "file": "Promo7290027600007-001-002-20260922-020000.gz",
+      "status": "normalized",
+      "rows": 24,
+      "gtin_rows": 0,
+      "eligible_rows": 0,
+      "missing_package_count": 0
+    },
+    {
+      "file": "PromoFull7290027600007-001-002-20260922-030000.gz",
+      "status": "normalized",
+      "rows": 1404,
+      "gtin_rows": 0,
+      "eligible_rows": 0,
+      "missing_package_count": 0
+    }
+  ],
+  "replay": [
+    {
+      "kind": "Stores",
+      "partition": [
+        "7290027600007"
+      ],
+      "result": "applied"
+    },
+    {
+      "kind": "PriceFull",
+      "partition": [
+        "7290027600007",
+        "1",
+        "1"
+      ],
+      "result": "applied"
+    },
+    {
+      "kind": "PromoFull",
+      "partition": [
+        "7290027600007",
+        "1",
+        "1"
+      ],
+      "result": "applied"
+    },
+    {
+      "kind": "PriceFull",
+      "partition": [
+        "7290027600007",
+        "1",
+        "2"
+      ],
+      "result": "applied"
+    },
+    {
+      "kind": "PromoFull",
+      "partition": [
+        "7290027600007",
+        "1",
+        "2"
+      ],
+      "result": "applied"
+    },
+    {
+      "kind": "Price",
+      "partition": [
+        "7290027600007",
+        "1",
+        "1"
+      ],
+      "result": "historical_only"
+    },
+    {
+      "kind": "Price",
+      "partition": [
+        "7290027600007",
+        "1",
+        "2"
+      ],
+      "result": "historical_only"
+    },
+    {
+      "kind": "Promo",
+      "partition": [
+        "7290027600007",
+        "1",
+        "1"
+      ],
+      "result": "historical_only"
+    },
+    {
+      "kind": "Promo",
+      "partition": [
+        "7290027600007",
+        "1",
+        "2"
+      ],
+      "result": "historical_only"
+    }
+  ],
+  "repeat_results": [
+    "duplicate",
+    "duplicate",
+    "duplicate",
+    "duplicate",
+    "duplicate",
+    "duplicate",
+    "duplicate",
+    "duplicate",
+    "duplicate"
+  ],
+  "observations": 16910,
+  "source_files": 9,
+  "unique_contents": 9,
+  "network_attempts": 0
+}
