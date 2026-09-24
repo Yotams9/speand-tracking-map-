@@ -54,6 +54,7 @@ export interface SessionCaptureRecord {
   evidence: PurchaseEvidence
   source: CaptureDraft['source']
   synthetic: boolean
+  demoProductIds?: readonly (string | null)[]
   identification?: { identity: import('./barcode-domain').BarcodeIdentity; method: 'camera' | 'manual' | 'demo'; syntheticCatalog: boolean }
 }
 

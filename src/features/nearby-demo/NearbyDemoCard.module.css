@@ -1,0 +1,22 @@
+.card { inline-size: 100%; padding: 14px 16px; border: 1px solid #486758; border-radius: 16px; background: #101e1a; color: #e6eee9; text-align: start; font-size: .8rem; line-height: 1.55; overflow-wrap: anywhere; }
+.card header { display: flex; align-items: center; gap: 8px; color: #a6c9b7; font-size: .7rem; }
+.card header span { flex: 1; }
+.card button { flex: none; min-inline-size: 44px; min-block-size: 44px; border-radius: 9px; background: #25372f; color: #fff; font-size: 1.2rem; cursor: pointer; }
+.card p { margin: 8px 0; }
+.card .saving { font-size: 1.05rem; font-weight: 650; color: #acedd0; }
+.card .context { color: #b0bfb8; font-size: .72rem; }
+.card summary { min-block-size: 44px; padding-block: 10px; cursor: pointer; }
+.card ul { list-style: none; padding: 0; margin: 0; }
+.card li { display: grid; gap: 3px; padding-block: 9px; border-block-start: 1px solid #32453b; }
+.card :focus-visible { outline: 3px solid #9ee6ff; outline-offset: 2px; }
+.floating { position: absolute; z-index: 73; inset-inline-end: 18px; inset-block-start: 90px; inline-size: min(370px, calc(100% - 36px)); max-block-size: calc(100% - 250px); overflow-y: auto; box-shadow: 0 8px 25px #0006; }
+@media (max-width: 760px) { .floating { inset-block-start: calc(76px + var(--safe-top)); inset-inline-end: 12px; inline-size: min(350px, calc(100% - 24px)); max-block-size: calc(100% - 280px - var(--safe-bottom)); } }
+
+.mobileSummary, .mobileSaving { display: none; }
+@media (max-width: 760px) {
+  .floating { padding: 8px 12px; }
+  .floating .fullSummary { display: none; }
+  .floating .mobileSummary { display: block; }
+  .floating .mobileSaving { display: block; color: #acedd0; font-size: 1rem; }
+  .floating .mobileSummary p { margin: 4px 0; font-size: .75rem; }
+}

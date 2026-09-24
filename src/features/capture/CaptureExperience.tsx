@@ -11,6 +11,8 @@ import { captureReducer, demoDraftForSource, initialCaptureState, type CaptureSo
 import { allocateReviewOperationId, blankReview, reviewFromDemo, type PurchaseReviewInput, type SaveReviewResult } from './session-purchase-domain'
 import { PurchaseReview } from './PurchaseReview'
 import { CaptureCamera } from './CaptureCamera'
+import { NearbyDemoCard } from '../nearby-demo/NearbyDemoCard'
+import type { DemoComparison } from '../nearby-demo/comparison'
 import styles from './CaptureExperience.module.css'
 
 interface CaptureExperienceProps {
@@ -20,6 +22,8 @@ interface CaptureExperienceProps {
   step: CaptureStep
   reducedMotion: boolean
   sessionRecords: readonly SessionCaptureRecord[]
+  comparison: DemoComparison | null
+  onDismissComparison: () => void
   onNavigate: (step: CaptureStep, mode?: 'push' | 'replace') => void
   onBack: () => void
   onClose: () => void
@@ -137,6 +141,8 @@ export function CaptureExperience({
   step,
   reducedMotion,
   sessionRecords,
+  comparison,
+  onDismissComparison,
   onNavigate,
   onBack,
   onClose,
@@ -374,6 +380,7 @@ export function CaptureExperience({
               <strong>{formatAmount(lastRecord.purchase.originalAmount, lastRecord.purchase.originalCurrency, locale)}</strong>
               <span>{lastRecord.purchase.placeId ? t.physical : lastRecord.purchase.channel === 'online' ? t.onlineTruth : t.unresolvedTruth}</span>
             </div>
+            {comparison?.purchaseId === lastRecord.purchase.id && <NearbyDemoCard comparison={comparison} locale={locale} onDismiss={() => { onDismissComparison(); closeRef.current?.focus({ preventScroll: true }) }} />}
             <div className={styles.actions}>
               <button type="button" className={styles.primary} onClick={() => onViewPurchase(lastRecord.purchase.id)} data-testid="capture-view-purchase">{t.viewPurchase}</button>
               {lastRecord.purchase.placeId && <button type="button" className={styles.secondary} onClick={() => onShowOnGlobe(lastRecord.purchase.placeId!)}>{t.showGlobe}</button>}

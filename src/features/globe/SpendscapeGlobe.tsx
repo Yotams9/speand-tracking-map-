@@ -49,6 +49,8 @@ import {
   combineSessionPurchases,
   type CaptureStep,
 } from '@/features/capture/capture-domain'
+import { NearbyDemoCard } from '@/features/nearby-demo/NearbyDemoCard'
+import { demoComparison } from '@/features/nearby-demo/comparison'
 import { emptySessionLedger, expireSessionPurchaseUndo, saveReviewedPurchase, undoSessionPurchase, resetSessionPurchases } from '@/features/capture/session-purchase-domain'
 import {
   applySmartInboxDecisions,
@@ -886,6 +888,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const [sessionLedger, setSessionLedger] = useState(emptySessionLedger)
   const sessionLedgerRef = useRef(sessionLedger)
   const sessionCaptureRecords = sessionLedger.records
+  const [comparisonReadyId, setComparisonReadyId] = useState<string | null>(null)
+  const nearbyComparison = useMemo(() => demoComparison(sessionCaptureRecords, comparisonReadyId, sessionLedger.undoId, globePlaces), [sessionCaptureRecords, comparisonReadyId, sessionLedger.undoId, globePlaces])
   const [inboxCaseId, setInboxCaseId] = useState<string | null>(null)
   const [smartInboxDecisions, setSmartInboxDecisions] = useState<SmartInboxDecision[]>([])
   const [askOpen, setAskOpen] = useState(false)
@@ -1156,6 +1160,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       if (expired === sessionLedgerRef.current) return
       sessionLedgerRef.current = expired
       setSessionLedger(expired)
+      setComparisonReadyId(undoId)
     }
     update()
     const interval = window.setInterval(update, 100)
@@ -2786,8 +2791,10 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     if (performance.now() >= sessionUndoDeadlineRef.current) {
       sessionLedgerRef.current = expireSessionPurchaseUndo(sessionLedgerRef.current, removedId)
       setSessionLedger(sessionLedgerRef.current)
+      setComparisonReadyId(removedId)
       return
     }
+    setComparisonReadyId(null)
     sessionLedgerRef.current = undoSessionPurchase(sessionLedgerRef.current)
     setSessionLedger(sessionLedgerRef.current)
     if (selectedPurchaseId === removedId) setSelectedPurchaseId(null)
@@ -2800,6 +2807,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   }
 
   const resetSessionCaptures = () => {
+    setComparisonReadyId(null)
     sessionLedgerRef.current = resetSessionPurchases(sessionLedgerRef.current)
     setSessionLedger(sessionLedgerRef.current)
     if (selectedPurchaseId?.startsWith('session_purchase_')) {
@@ -3729,6 +3737,13 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           {locale === 'he' ? 'ביטול ההוספה האחרונה' : 'Undo last addition'} <span aria-hidden="true">{undoSeconds}{locale === 'he' ? ' שנ׳' : 's'}</span>
         </button>
       )}
+      {!captureStep && !askOpen && !inboxCaseId && !replay && !selectedPurchaseId && !selectedPlaceId && surface === 'globe' && nearbyComparison && (
+        <NearbyDemoCard comparison={nearbyComparison} locale={locale} floating onDismiss={() => {
+          setComparisonReadyId(null)
+          const buttons = document.querySelectorAll<HTMLElement>('[data-testid="capture-open-desktop"], [data-testid="capture-open-mobile"]')
+          Array.from(buttons).find(button => button.offsetParent !== null)?.focus({ preventScroll: true })
+        }} />
+      )}
       {captureStep && (
         <CaptureExperience
           locale={locale}
@@ -3737,12 +3752,15 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           step={captureStep}
           reducedMotion={reducedMotion}
           sessionRecords={sessionCaptureRecords}
+          comparison={nearbyComparison}
+          onDismissComparison={() => setComparisonReadyId(null)}
           onNavigate={navigateCapture}
           onBack={() => window.history.back()}
           onClose={closeCapture}
           onConfirm={(operationId, input, allowDuplicate) => {
             const saved = saveReviewedPurchase(sessionLedgerRef.current, operationId, input, { merchants: globeMerchants, places: globePlaces }, globePurchases, allowDuplicate)
             if (saved.result.code === 'saved') {
+              setComparisonReadyId(null)
               sessionUndoDeadlineRef.current = performance.now() + 8_000
               setUndoSeconds(8)
               sessionLedgerRef.current = saved.ledger

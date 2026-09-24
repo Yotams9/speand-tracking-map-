@@ -4,7 +4,7 @@ import { validateBarcode, type BarcodeIdentity } from './barcode-domain'
 
 export const reviewCurrencies: CurrencyCode[] = ['ILS', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'MXN', 'ZAR']
 export const reviewCategories: PurchaseCategory[] = ['groceries', 'food', 'retail', 'travel']
-export interface ReviewLine { name: string; quantity: string; unit: 'item' | 'kg'; price: string; originalLabel?: { en: string; he: string } }
+export interface ReviewLine { demoProductId?: string; name: string; quantity: string; unit: 'item' | 'kg'; price: string; originalLabel?: { en: string; he: string } }
 export interface PurchaseReviewInput {
   source: CaptureDraft['source']
   provenance: 'synthetic-demo' | 'user-reviewed'
@@ -25,7 +25,7 @@ export function blankReview(): PurchaseReviewInput {
   return { source: 'manual', provenance: 'user-reviewed', merchantId: '', placeId: '', channel: '', date: '', currency: '', payment: '', category: '', amount: '', baseAmount: '', lines: [] }
 }
 export function reviewFromDemo(draft: CaptureDraft, locale: 'en' | 'he'): PurchaseReviewInput {
-  return { source: draft.source, provenance: 'synthetic-demo', merchantId: draft.merchantId ?? '', placeId: draft.placeId ?? '', channel: draft.channel, date: draft.timestamp.slice(0, 16), currency: draft.originalCurrency, payment: draft.paymentMode, category: draft.category, amount: draft.originalAmount?.toFixed(draft.originalCurrency === 'JPY' ? 0 : 2) ?? '', baseAmount: '', lines: draft.items.map(item => ({ name: item.label[locale], originalLabel: { ...item.label }, quantity: String(item.quantity), unit: item.unit, price: String(item.unitPrice) })) }
+  return { source: draft.source, provenance: 'synthetic-demo', merchantId: draft.merchantId ?? '', placeId: draft.placeId ?? '', channel: draft.channel, date: draft.timestamp.slice(0, 16), currency: draft.originalCurrency, payment: draft.paymentMode, category: draft.category, amount: draft.originalAmount?.toFixed(draft.originalCurrency === 'JPY' ? 0 : 2) ?? '', baseAmount: '', lines: draft.items.map(item => ({ demoProductId: item.id, name: item.label[locale], originalLabel: { ...item.label }, quantity: String(item.quantity), unit: item.unit, price: String(item.unitPrice) })) }
 }
 // Plain decimal input only. No exponents, sign repair, currency inference or float tolerance.
 export function minorAmount(value: string, currency: string): number | null {
@@ -101,6 +101,13 @@ export function reviewedRecord(input: PurchaseReviewInput, sequence: number, con
     record.evidence.synthetic = false
     record.evidence.kind = 'manual-entry'
     record.evidence.label = { en: 'Purchase details reviewed by you · session only', he: 'פרטי רכישה שנבדקו על ידך · להפעלה בלבד' }
+  }
+  // Demo identity survives only unchanged built-in receipt labels. Never infer
+  // product equivalence from user-entered names or a barcode candidate.
+  if (input.source === 'receipt' && input.provenance === 'synthetic-demo') {
+    record.demoProductIds = input.lines.map(line => line.originalLabel &&
+      [line.originalLabel.en, line.originalLabel.he].includes(line.name)
+      ? line.demoProductId ?? null : null)
   }
   if (input.identification) record.identification = { method: input.identification.method, syntheticCatalog: input.identification.syntheticCatalog === true, identity: { original: input.identification.identity.original, format: input.identification.identity.format, gtin14: input.identification.identity.gtin14 } }
   return record
