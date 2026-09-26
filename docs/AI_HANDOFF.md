@@ -1,6 +1,6 @@
 # Spendscape — AI handoff
 
-Updated against the local worktree on 2026-09-25. This is a quick orientation, not a replacement for `AGENTS.md` and the authority files in `docs/spendscape/`; read those before acting. Recheck Git and external services because they can change.
+Updated against the local worktree on 2026-09-26. This is a quick orientation, not a replacement for `AGENTS.md` and the authority files in `docs/spendscape/`; read those before acting. Recheck Git and external services because they can change.
 
 ## 1. Project overview
 
@@ -39,7 +39,7 @@ Core TypeScript model: `SpendscapeDataSnapshot` (`profile`, `merchants`, `places
 
 ## 5. Current state and risks
 
-Current local HEAD is `6fa7a60b9fadf15e09aecc50697f549cbbfa5177`, including the reviewed synthetic Nearby Comparison checkpoint. The local origin feature ref remains `66fb420` (ahead 2, behind 0; not refreshed); main/origin-main remain `eee0d26`. College P1 implementation and local QA are authorized and remain uncommitted; see section 9 for its checkpoint state. Earlier section 8 Git/QA statements are historical snapshots, not current status. This handoff is tracked. No publication or subsequent slice is authorized.
+Current local HEAD is `399fce8e8209f0ffbeb8893903a28b43d537f8aa`: College P1 is reviewed and committed locally. The local origin feature ref remains `66fb420` (ahead 3, behind 0; not refreshed); main/origin-main remain `eee0d26`. P2A offline receipt benchmark foundation is complete and uncommitted; see section 10. Earlier Git/QA statements are historical snapshots. No push, deployment, provider call or subsequent implementation is authorized.
 
 For a **factual retailer-price claim**, the immediate blocker is authoritative mapping of the regulated shekel/agora price field to the current Shufersal XML `ItemPrice` tag. NP2G stopped before fresh PriceFull downloads. The nearby coordinates are public address points, not surveyed entrances or route distances. Currency, current price overlap, source freshness/coverage, stock and dataset reuse still need proof before a factual savings claim. This does not block a clearly labelled synthetic college demo. Carrefour verification returned HTTP 403; the reviewed Osher Ad adapter uses authenticated FTP. Do not route around access controls. The scraper/parser packages have a custom noncommercial licence with attribution; retailer data rights are separate. Scanner D1 OCR missed Hebrew/mixed accuracy targets and has a worker cleanup limitation; receipt-photo OCR is not ready. Physical iPhone Scanner A/B testing is user-reported; do not label it independently instrumented QA. Some older general status documents lag recent commits: use Git and the latest checkpoint reports for current facts.
 
@@ -237,8 +237,8 @@ new Undo/comparison window. Cross-tab revision checks prevent stale writes.
 
 See [COLLEGE_P1_CHECKPOINT.md](spendscape/COLLEGE_P1_CHECKPOINT.md) for the
 implementation, privacy boundary, exact QA evidence, limitations and manifest.
-This is a local-only checkpoint awaiting separate review, not a claim that the
-finished college product is complete. The required receipt-photo-to-itemized-
+This checkpoint passed re-review and was committed locally at `399fce8` on
+2026-09-26; it does not mean the finished college product is complete. The required receipt-photo-to-itemized-
 draft journey in section 7 remains separately gated; D1's negative result is
 unchanged. No backend, provider, dependency, push or deployment was added.
 
@@ -252,4 +252,85 @@ capacity rejection from persisted corruption and invalidates obsolete Capture
 view completions while retaining exactly-once durable save. Existing purchases
 remain accessible at capacity; the draft is retained, with EN/HE feedback.
 The checkpoint report records focused QA and the unchanged 17-file manifest.
-A new separate P1 checkpoint review is required; commit/publication remain gated.
+The separate re-review passed: 199/199 unit tests, 32/32 combined production
+browser tests, typecheck/build and whitespace checks. Its separate commit approval
+was consumed by `399fce8`; push/deployment remain gated. Physical iPhone
+persistence and power-loss durability are not established.
+
+
+## 10. College P2A — offline receipt benchmark, 2026-09-26
+
+Approved foundation completed in `qa/receipt-p2a/`: four fictional PNG receipts
+with exact structured truth/hashes, including 25 mixed Hebrew/English items,
+repeats, quantities, discounts and an intentionally unreadable name. The offline
+evaluator checks per-row facts, arithmetic, omissions and correction burden.
+Constructed controls are evaluator evidence only: **zero OCR/model runs**.
+See [COLLEGE_P2A_RECEIPT_BENCHMARK.md](spendscape/COLLEGE_P2A_RECEIPT_BENCHMARK.md)
+for commands, measured controls, acceptance targets and the mobile state spec.
+D1's negative recommendation remains. P1 has no explicit discount representation;
+a later reviewed integration must resolve that without silently rewriting prices.
+No consumer UI, IndexedDB schema, dependency, provider, account or deployment change.
+The finished-product receipt-photo goal in section 7 remains unmet.
+
+Next single approval: `APPROVE SPENDSCAPE COLLEGE P2B — BOUNDED SYNTHETIC RECEIPT PROVIDER BENCHMARK READINESS`.
+This selects/verifies a concrete provider/model, privacy terms and hard budget
+for at most 12 synthetic calls; it does not itself authorize calls, credentials
+or billing. No provider is currently selected. Google AI Pro is not API authority.
+
+### P2B execution preparation
+
+The user separately authorized Gemini `gemini-3.8-flash`, maximum 12 synthetic
+calls, Free tier only, $0, and reported an unbilled Free project with 5 RPM /
+250K TPM / 20 RPD. Key remains in the user's terminal; never request it in chat.
+`qa/receipt-p2b/` now contains the bounded runner and mock tests; 17 combined
+P2A/P2B offline tests passed. **Codex made no live API calls; the user subsequently launched the runner.**
+The run stopped at 3/12 (two scored responses, then HTTP 503). Read its README and inspect
+ignored `artifacts/receipt-p2b-run/` before any continuation; never rerun or
+remove the journal to reset the 12-call allowance. No model result or promotion
+is claimed. Billing status is user-reported, not independently API-verified.
+
+
+### P2B partial live result — stopped at 3/12
+
+User-run attempts 1/2 scored 6/6 exact rows each (English 4.257 s, Hebrew
+22.392 s, zero correction fields). Attempt 3, mixed 25-item receipt, returned
+HTTP 503 after 15.604 s; no extraction result. Offline rescoring matched stored
+scores. Nine slots remain, with the failed third slot permanently consumed.
+No rerun, journal reset or automatic retry is authorized at this stop.
+See [COLLEGE_P2B_PARTIAL_RESULTS.md](spendscape/COLLEGE_P2B_PARTIAL_RESULTS.md).
+Long-receipt accuracy and repeated/degraded behavior remain unproved; no model
+promotion or integration. Preserve ignored run evidence before any recovery.
+
+The user subsequently approved the remaining-nine recovery. The runner's
+`--resume-after-3 --free-tier-confirmed` preserves slots 1–3 and appends at most
+4–12 once, guarded by a permanent exclusive recovery lock. 20 offline/mock tests
+pass; no live recovery call made during preparation. User terminal execution is
+pending. Inspect actual journal/summary before reporting current call count.
+
+
+P2B recovery subsequently stopped at **5/12**: attempt 4 degraded 25-item
+receipt scored in 26.787 s, attempt 5 returned HTTP 503 in 24.447 s. All
+25 numeric rows and total match; unreadable name correctly unresolved. The
+24 readable labels differ only in word order (same token multisets), so strict
+25-line correction burden is not proof of 25 actual user edits. Original scorer
+and scores remain intact. Seven slots unused; no further rerun authorized.
+The subsequently approved offline review and diagnostic correction are complete.
+The supplementary `reviewed-two-run-labels-v1` metric recognizes the 24 intact
+Hebrew/Latin run exchanges on the reviewed corpus only, leaving one unreadable
+name for review. Strict scores remain unchanged (1/25 exact, 25 correction
+fields); these counts are not measured human editing effort. All three saved
+successes were rescored offline with exact original-score equality; 42/42
+offline/mock tests passed. No additional calls, app changes or promotion. The
+26.787-second long result and two 503 failures remain unresolved. Preserve the
+consumed recovery lock and journal. See the partial-results report for evidence
+and limits. Correction is complete and awaits separate checkpoint review; no
+new API execution, integration, commit, push or deployment is authorized.
+
+
+The complete P2A/P2B review subsequently found that offline runner tests depended
+on the pre-commit HEAD and empty index. The separately authorized correction
+separates Git-independent fixture/request preparation from the unchanged live
+Git gate. Fresh offline/mock QA is **44/44 passed**, including Git/network-forbidden
+offline execution and wrong-branch/HEAD/staged-index rejection. The 21-file
+package awaits complete checkpoint re-review. Still stopped at 5/12 calls;
+no additional provider execution, integration, stage, commit or deployment.
