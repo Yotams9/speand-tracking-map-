@@ -104,7 +104,7 @@ test('manual cash unresolved saves only after review and repeated identical draf
   await page.getByTestId('session-undo').click(); await expect.poll(async () => (await qa(page)).sessionPurchaseCount).toBe(1)
   await expect(page.getByTestId('session-undo')).toHaveCount(0)
 })
-test('synthetic receipt review edits preserve arithmetic; cancellation and reload leave no additions', async ({ page }) => {
+test('synthetic receipt review edits preserve arithmetic; cancellation discards drafts and reload retains saved purchases', async ({ page }) => {
   await open(page); await page.getByTestId('capture-scan').click(); await expect(page.getByTestId('capture-review')).toBeVisible()
   await page.getByTestId('review-quantity-0').fill('2'); await page.getByTestId('capture-confirm').click()
   expect((await qa(page)).sessionPurchaseCount).toBe(0)
@@ -114,7 +114,7 @@ test('synthetic receipt review edits preserve arithmetic; cancellation and reloa
   await page.keyboard.press('Escape'); await page.getByTestId('capture-open-desktop').click(); await page.getByTestId('capture-camera-manual').click()
   await details(page, 'online', 'JPY', false); await page.keyboard.press('Escape')
   expect((await qa(page)).sessionPurchaseCount).toBe(1)
-  await page.reload(); await expect.poll(async () => (await qa(page))?.sessionPurchaseCount).toBe(0)
+  await page.reload(); await expect.poll(async () => (await qa(page))?.sessionPurchaseCount).toBe(1)
 })
 test('Undo countdown expires after eight seconds while preserving the session addition', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -133,7 +133,7 @@ test('Undo countdown expires after eight seconds while preserving the session ad
   await page.getByTestId('capture-done').click()
   await expect(page.getByTestId('session-undo')).toHaveCount(0)
 })
-test('real pinned barcode reader from synthetic camera hands off once; no OCR, outgoing payload, storage or image retention', async ({ page, context }) => {
+test('real pinned barcode reader from synthetic camera hands off once; no OCR, outgoing payload or image retention', async ({ page, context }) => {
   const writes: number[] = [], ocr: number[] = [], errors: number[] = []
   page.on('request', request => { if (!['GET','HEAD'].includes(request.method())) writes.push(1); if (/tesseract|traineddata|scanner-d1/.test(request.url())) ocr.push(1) })
   page.on('pageerror', () => errors.push(1))
@@ -318,7 +318,8 @@ for (const he of [false, true]) {
     expect(await page.evaluate(() => (window as any).__historyPrivacyProbe.writes.some(Boolean))).toBe(false)
     await page.reload()
     await page.waitForFunction(() => (window as any).__SPENDSCAPE_QA__?.ready)
-    expect(await qa(page)).toMatchObject({ combinedPurchaseCount: 42, canonicalPins: 12, analytics: { totalBaseAmountIls: 6777.38 } })
+    await expect.poll(async () => (await qa(page))?.combinedPurchaseCount).toBe(43)
+    expect(await qa(page)).toMatchObject({ combinedPurchaseCount: 43, canonicalPins: 12, analytics: { totalBaseAmountIls: 6802.38 } })
     await page.goForward()
     await expect.poll(() => page.evaluate(() => (window as any).__historyPrivacyProbe.traversals.length)).toBeGreaterThan(0)
     await expect(page.getByTestId('replay-player')).toHaveCount(0)
@@ -412,10 +413,15 @@ test('a newer addition replaces the deadline; Undo and Reset dismiss it immediat
   await page.getByTestId('capture-undo').click()
   await expect(page.getByTestId('capture-undo')).toHaveCount(0)
   expect((await qa(page)).sessionPurchaseCount).toBe(1)
-  await page.getByRole('button', { name: 'Reset demo additions' }).click()
+  await page.keyboard.press('Escape')
+  await page.getByTestId('capture-open-desktop').click()
   await add('27.00')
-  await page.getByRole('button', { name: 'Reset demo additions' }).click()
-  await expect(page.getByTestId('capture-undo')).toHaveCount(0)
-  await page.clock.runFor(8000)
-  expect((await qa(page)).combinedPurchaseCount).toBe(42)
+  await expect(page.getByTestId('capture-undo')).toContainText('8s')
+  await page.getByRole('button', { name: 'Manage local data' }).click()
+  await page.getByTestId('local-erase').click()
+  await page.clock.resume()
+  await Promise.all([page.waitForEvent('load'), page.getByTestId('local-erase-confirm').click()])
+  await expect.poll(async () => (await qa(page))?.combinedPurchaseCount).toBe(42)
+  await expect(page.locator('main')).toHaveAttribute('data-local-state', 'ready')
+  await expect(page.getByTestId('session-undo')).toHaveCount(0)
 })

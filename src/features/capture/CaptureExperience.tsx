@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useLayoutEffect,
   useReducer,
   useRef,
   useState,
@@ -27,11 +28,11 @@ interface CaptureExperienceProps {
   onNavigate: (step: CaptureStep, mode?: 'push' | 'replace') => void
   onBack: () => void
   onClose: () => void
-  onConfirm: (operationId: string, input: PurchaseReviewInput, allowDuplicate: boolean) => SaveReviewResult
-  onUndo: () => void
+  onConfirm: (operationId: string, input: PurchaseReviewInput, allowDuplicate: boolean) => Promise<SaveReviewResult>
+  onUndo: () => Promise<boolean>
   canUndo: boolean
   undoSeconds: number
-  onResetSession: () => void
+  onResetSession: () => Promise<boolean>
   onViewPurchase: (purchaseId: string) => void
   onShowOnGlobe: (placeId: string) => void
 }
@@ -87,14 +88,14 @@ const copy = {
     gmailBody: 'A later approved phase can add connection and consent. No email is accessed, no account is connected, and no permission is requested now.',
     understood: 'Back to sources', failureTitle: 'We could not read that demo',
     failureBody: 'The synthetic example was intentionally unclear. Try again or choose another method.',
-    retry: 'Retry demo', successTitle: 'Purchase added for this session',
-    successBody: 'Stored only in this tab. Reloading removes session additions.',
+    retry: 'Retry demo', successTitle: 'Purchase saved on this device',
+    successBody: 'Saved in this browser on this device. Reload keeps this purchase. No cloud backup.',
     viewPurchase: 'View purchase', showGlobe: 'Show on globe', done: 'Done',
-    reset: 'Reset demo additions', sessionCount: 'session additions',
+    reset: 'Manage local data', sessionCount: 'local purchases',
     provenance: 'Built-in synthetic demo · fixed illustrative FX',
     csvPreview: '3 synthetic rows previewed · only this row is added after confirmation.',
     statusProcessing: 'Simulated scan in progress', statusReady: 'Purchase ready to review',
-    statusSuccess: 'Purchase added for this session', required: 'Required', noPhoto: 'No image or photo value is retained.',
+    statusSuccess: 'Purchase saved on this device', required: 'Required', noPhoto: 'No image or photo value is retained.',
   },
   he: {
     close: 'סגירת Capture', back: 'חזרה', eyebrow: 'קליטה אוניברסלית · הדמיה',
@@ -117,14 +118,14 @@ const copy = {
     gmailBody: 'בשלב עתידי ומאושר ניתן יהיה להוסיף חיבור והסכמה. כעת אין גישה לדוא״ל, אין חשבון מחובר ולא מתבקשת הרשאה.',
     understood: 'חזרה למקורות', failureTitle: 'לא הצלחנו לקרוא את ההדגמה',
     failureBody: 'הדוגמה הסינתטית הוגדרה בכוונה כלא ברורה. אפשר לנסות שוב או לבחור שיטה אחרת.',
-    retry: 'ניסיון הדגמה נוסף', successTitle: 'הרכישה נוספה להפעלה הזו',
-    successBody: 'נשמר בלשונית הזו בלבד. טעינה מחדש מסירה את התוספות להפעלה.',
+    retry: 'ניסיון הדגמה נוסף', successTitle: 'הרכישה נשמרה במכשיר הזה',
+    successBody: 'נשמר בדפדפן הזה במכשיר הזה גם לאחר רענון. אין גיבוי בענן.',
     viewPurchase: 'הצגת הרכישה', showGlobe: 'הצגה בגלובוס', done: 'סיום',
-    reset: 'איפוס תוספות הדגמה', sessionCount: 'תוספות להפעלה',
+    reset: 'ניהול נתונים מקומיים', sessionCount: 'רכישות מקומיות',
     provenance: 'הדגמה סינתטית מובנית · שער המחשה קבוע',
     csvPreview: '3 שורות סינתטיות הוצגו · רק שורה זו תתווסף לאחר אישור.',
     statusProcessing: 'סריקת ההדגמה מתבצעת', statusReady: 'הרכישה מוכנה לבדיקה',
-    statusSuccess: 'הרכישה נוספה להפעלה', required: 'שדה חובה', noPhoto: 'לא נשמר ערך של תמונה או צילום.',
+    statusSuccess: 'הרכישה נשמרה במכשיר הזה', required: 'שדה חובה', noPhoto: 'לא נשמר ערך של תמונה או צילום.',
   },
 } as const
 
@@ -155,7 +156,7 @@ export function CaptureExperience({
   onShowOnGlobe,
 }: CaptureExperienceProps) {
   const [state, dispatch] = useReducer(captureReducer, initialCaptureState)
-  const [scannerGeneration, setScannerGeneration] = useState(0)
+  const [scannerGeneration] = useState(0)
   const [reviewInput, setReviewInput] = useState<PurchaseReviewInput | null>(null)
   const [operationId, setOperationId] = useState('')
   const prepareReview = (input: PurchaseReviewInput) => { setOperationId(allocateReviewOperationId()); setReviewInput(input) }
@@ -163,6 +164,15 @@ export function CaptureExperience({
   const closeRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
   const t = copy[locale]
+  const saveGeneration = useRef(0)
+  // Invalidate the submitting view on step/operation changes and unmount.
+  // Durable completion belongs to the ledger; it must not replace newer navigation.
+  useLayoutEffect(() => () => { saveGeneration.current++ }, [step, operationId])
+  useEffect(() => {
+    const invalidate = () => { saveGeneration.current++ }
+    window.addEventListener('popstate', invalidate)
+    return () => { window.removeEventListener('popstate', invalidate) }
+  }, [])
 
   useEffect(() => {
     dispatch({ type: 'navigate', step })
@@ -172,6 +182,7 @@ export function CaptureExperience({
     previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     closeRef.current?.focus({ preventScroll: true })
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (dialogRef.current?.closest('[inert]')) return
       if (event.key === 'Escape') {
         event.preventDefault()
         onClose()
@@ -233,9 +244,10 @@ export function CaptureExperience({
     onNavigate(nextStep, 'push')
   }
 
-  const saveReview = (input: PurchaseReviewInput, allowDuplicate: boolean): SaveReviewResult => {
-    const result = onConfirm(operationId, input, allowDuplicate)
-    if (result.code === 'saved') {
+  const saveReview = async (input: PurchaseReviewInput, allowDuplicate: boolean): Promise<SaveReviewResult> => {
+    const generation = saveGeneration.current
+    const result = await onConfirm(operationId, input, allowDuplicate)
+    if (result.code === 'saved' && generation === saveGeneration.current) {
       dispatch({ type: 'confirm', purchaseId: result.purchaseId })
       onNavigate('success', 'replace')
     }
@@ -276,7 +288,7 @@ export function CaptureExperience({
         <header className={styles.header}>
           <div className={styles.headerLead}>
             {showBack && <button type="button" className={styles.back} onClick={onBack} aria-label={t.back}>←</button>}
-            <div><p>{step === 'scanner' ? (locale === 'he' ? 'Capture · מצלמה והדגמות' : 'Capture · camera & demos') : reviewInput?.provenance === 'user-reviewed' ? (locale === 'he' ? 'Capture · להפעלה בלבד' : 'Capture · session only') : t.eyebrow}</p><strong>Spendscape</strong></div>
+            <div><p>{step === 'scanner' ? (locale === 'he' ? 'Capture · מצלמה והדגמות' : 'Capture · camera & demos') : reviewInput?.provenance === 'user-reviewed' ? (locale === 'he' ? 'Capture · שמירה במכשיר' : 'Capture · on-device') : t.eyebrow}</p><strong>Spendscape</strong></div>
           </div>
           <button ref={closeRef} type="button" className={styles.close} onClick={onClose} aria-label={t.close}>×</button>
         </header>
@@ -392,8 +404,8 @@ export function CaptureExperience({
         {sessionRecords.length > 0 && (
           <footer className={styles.sessionFooter}>
             <span>{sessionRecords.length} {t.sessionCount}</span>
-            {canUndo && <button type="button" data-testid="capture-undo" aria-label={locale === 'he' ? `ביטול ההוספה האחרונה, נותרו ${undoSeconds} שניות` : `Undo last addition, ${undoSeconds} seconds remaining`} onClick={() => { onUndo(); setReviewInput(null); onNavigate('sources', 'replace') }}>{locale === 'he' ? 'ביטול ההוספה האחרונה' : 'Undo last addition'} <span aria-hidden="true">{undoSeconds}{locale === 'he' ? ' שנ׳' : 's'}</span></button>}
-            <button type="button" onClick={() => { setScannerGeneration((n) => n + 1); setReviewInput(null); onResetSession(); onNavigate('scanner', 'replace'); closeRef.current?.focus() }}>{t.reset}</button>
+            {canUndo && <button type="button" data-testid="capture-undo" aria-label={locale === 'he' ? `ביטול ההוספה האחרונה, נותרו ${undoSeconds} שניות` : `Undo last addition, ${undoSeconds} seconds remaining`} onClick={async () => { if (await onUndo()) { setReviewInput(null); onNavigate('sources', 'replace') } }}>{locale === 'he' ? 'ביטול ההוספה האחרונה' : 'Undo last addition'} <span aria-hidden="true">{undoSeconds}{locale === 'he' ? ' שנ׳' : 's'}</span></button>}
+            <button type="button" onClick={() => { void onResetSession() }}>{t.reset}</button>
           </footer>
         )}
       </section>

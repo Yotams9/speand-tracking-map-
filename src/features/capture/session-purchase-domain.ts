@@ -100,7 +100,7 @@ export function reviewedRecord(input: PurchaseReviewInput, sequence: number, con
     record.synthetic = false
     record.evidence.synthetic = false
     record.evidence.kind = 'manual-entry'
-    record.evidence.label = { en: 'Purchase details reviewed by you · session only', he: 'פרטי רכישה שנבדקו על ידך · להפעלה בלבד' }
+    record.evidence.label = { en: 'Purchase details reviewed by you · on this device', he: 'פרטי רכישה שנבדקו על ידך · במכשיר הזה' }
   }
   // Demo identity survives only unchanged built-in receipt labels. Never infer
   // product equivalence from user-entered names or a barcode candidate.
@@ -117,7 +117,7 @@ export const emptySessionLedger = (): SessionPurchaseLedger => ({ records: [], c
 function fingerprint(p: GlobePurchase) {
   return JSON.stringify([p.merchantId, p.placeId, p.channel, p.timestamp, p.originalCurrency, p.originalAmount, p.paymentMode, p.category, p.items.map(i => [i.label.en, i.quantity, i.unit, i.unitPrice, i.lineTotal])])
 }
-export type SaveReviewResult = { code: 'saved'; purchaseId: string } | { code: 'invalid'; errors: ReviewErrors } | { code: 'duplicate' | 'consumed' }
+export type SaveReviewResult = { code: 'saved'; purchaseId: string } | { code: 'invalid'; errors: ReviewErrors } | { code: 'duplicate' | 'consumed' | 'storage' | 'capacity' }
 export function saveReviewedPurchase(ledger: SessionPurchaseLedger, operationId: string, input: PurchaseReviewInput, context: ReviewContext, baseline: readonly GlobePurchase[], allowDuplicate = false): { ledger: SessionPurchaseLedger; result: SaveReviewResult } {
   if (!operationId || ledger.consumed.includes(operationId)) return { ledger, result: { code: 'consumed' } }
   const errors = validateReview(input, context)

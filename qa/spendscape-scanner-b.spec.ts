@@ -296,7 +296,7 @@ test('closing while WASM is loading cannot reactivate or publish a result',async
   await expect(page.getByTestId('barcode-result')).toBeHidden(); await baseline(page)
 })
 
-test('existing demo-session reset disposes a pending scanner without changing the canonical baseline',async({page})=>{
+test('local-data management disposes a pending scanner; confirmed deletion restores the baseline',async({page})=>{
   await mock(page,'','late'); await open(page)
   await page.getByTestId('capture-scan').click()
   await page.getByTestId('capture-confirm').click()
@@ -304,11 +304,15 @@ test('existing demo-session reset disposes a pending scanner without changing th
   await page.getByTestId('capture-open-desktop').click()
   await page.getByTestId('capture-camera-toggle').click()
   await expect.poll(async()=>(await metrics(page)).posts).toBe(1)
-  await page.getByRole('button',{name:'Reset demo additions',exact:true}).click()
+  await page.getByRole('button',{name:'Manage local data',exact:true}).click()
   await page.evaluate(()=>(window as Probe).__barcodeQA.late?.())
-  await expect(page.getByTestId('capture-scanner')).toHaveAttribute('data-camera-state','idle')
+  await expect(page.getByTestId('capture-scanner')).toHaveCount(0)
   await expect(page.getByTestId('barcode-result')).toBeHidden()
   expect((await metrics(page)).terminated).toBe(1); expect((await metrics(page)).tracks).toEqual(['ended'])
+  await page.getByTestId('local-erase').click()
+  await Promise.all([page.waitForEvent('load'),page.getByTestId('local-erase-confirm').click()])
+  await expect(page.locator('main')).toHaveAttribute('data-local-state','ready')
+  await page.waitForFunction(() => (window as Probe).__SPENDSCAPE_QA__?.ready)
   await baseline(page)
 })
 

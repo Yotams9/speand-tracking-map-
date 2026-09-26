@@ -1,0 +1,129 @@
+import type { SpendscapeDataSnapshot } from '../../data/spendscape-repository'
+import { emptySessionLedger, reviewedRecord, type PurchaseReviewInput, type SessionPurchaseLedger } from '../capture/session-purchase-domain'
+import type { SessionCaptureRecord } from '../capture/capture-domain'
+import type { SmartInboxDecision } from '../inbox/smart-inbox-domain'
+
+export const LOCAL_DB = 'spendscape-local-purchases'
+export const LOCAL_CHANNEL = 'spendscape-local-purchases-changed'
+export interface LocalPurchases { version: 1; revision: number; records: readonly SessionCaptureRecord[]; nextSequence: number; decisions: readonly SmartInboxDecision[] }
+export const emptyLocalPurchases = (): LocalPurchases => ({ version: 1, revision: 0, records: [], nextSequence: 1, decisions: [] })
+export class LocalStoreError extends Error {
+  constructor(public readonly code: 'invalid' | 'unavailable' | 'conflict' | 'capacity' | 'rejected') { super(code) }
+}
+function same(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false
+  const ak = Object.keys(a).sort(), bk = Object.keys(b).sort()
+  return ak.length === bk.length && ak.every((k, i) => k === bk[i] && same((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]))
+}
+// Stored data is untrusted. Rebuild every record through the existing reviewed
+// save boundary, then require exact structural equality: no extra media/URL or
+// arbitrary evidence fields can survive hydration or enter the write payload.
+export function validateLocalPurchases(raw: unknown, context: SpendscapeDataSnapshot): LocalPurchases {
+  try {
+    if (!raw || typeof raw !== 'object' || JSON.stringify(raw).length > 2_000_000) throw 0
+    const data = raw as LocalPurchases
+    if (data.version !== 1 || !Number.isSafeInteger(data.revision) || data.revision < 0 || !Number.isSafeInteger(data.nextSequence) || data.nextSequence < 1 || !Array.isArray(data.records) || data.records.length > 1000 || !Array.isArray(data.decisions) || data.decisions.length > context.smartInboxCases.length) throw 0
+    const sequences = new Set<number>()
+    const records = data.records.map((r: SessionCaptureRecord) => {
+      const p = r.purchase
+      if (!Array.isArray(p.items) || p.items.some((item: SessionCaptureRecord['purchase']['items'][number]) => !item.label || typeof item.label.en !== 'string' || typeof item.label.he !== 'string' || item.label.en.length > 100 || item.label.he.length > 100 || !same(item.label, { en: item.label.en, he: item.label.he }))) throw 0
+      if (r.demoProductIds !== undefined && (!Array.isArray(r.demoProductIds) || r.demoProductIds.length !== p.items.length || r.demoProductIds.some(id => id !== null && (typeof id !== 'string' || id.length > 100)))) throw 0
+      const match = /^session_purchase_[a-z]+_(\d+)$/.exec(p.id)
+      const sequence = match ? Number(match[1]) : NaN
+      if (!Number.isSafeInteger(sequence) || sequence < 1 || sequence >= data.nextSequence || sequences.has(sequence)) throw 0
+      sequences.add(sequence)
+      const input: PurchaseReviewInput = {
+        source: r.source, provenance: r.synthetic ? 'synthetic-demo' : 'user-reviewed',
+        merchantId: p.merchantId, placeId: p.placeId ?? '', channel: p.channel,
+        date: p.timestamp.slice(0, 16), currency: p.originalCurrency, payment: p.paymentMode,
+        category: p.category, amount: String(p.originalAmount),
+        baseAmount: String(p.fx.reportedBaseAmountIls ?? ''),
+        lines: p.items.map((item, i) => ({ name: item.label.en, quantity: String(item.quantity), unit: item.unit, price: String(item.unitPrice), ...(r.synthetic ? { originalLabel: { ...item.label }, demoProductId: r.demoProductIds?.[i] ?? undefined } : {}) })),
+        ...(r.identification ? { identification: r.identification } : {}),
+      }
+      const rebuilt = reviewedRecord(input, sequence, context)
+      if (!same(r, rebuilt)) throw 0
+      return rebuilt
+    })
+    const cases = new Set<string>()
+    const decisions = data.decisions.map(d => {
+      const c = context.smartInboxCases.find(c => c.id === d.caseId && c.material)
+      if (!c || cases.has(d.caseId)) throw 0
+      cases.add(d.caseId)
+      const clean: SmartInboxDecision = d.status === 'deferred' ? { caseId: d.caseId, status: 'deferred' } : { caseId: d.caseId, status: 'resolved', placeId: d.status === 'resolved' ? d.placeId : '' }
+      if (clean.status === 'resolved' && (!c.candidates.some(p => p.placeId === clean.placeId) || !context.places.some(p => p.id === clean.placeId))) throw 0
+      if (!same(d, clean)) throw 0
+      return clean
+    })
+    const clean: LocalPurchases = { version: 1, revision: data.revision, records, nextSequence: data.nextSequence, decisions }
+    if (!same(data, clean)) throw 0
+    return clean
+  } catch { throw new LocalStoreError('invalid') }
+}
+export function restoredLedger(data: LocalPurchases): SessionPurchaseLedger {
+  // No persisted timer, draft, consumed-operation list or private navigation.
+  return { ...emptySessionLedger(), records: data.records, nextSequence: data.nextSequence }
+}
+function openDatabase(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    let settled = false
+    const fail = () => { if (!settled) { settled = true; clearTimeout(timer); reject(new LocalStoreError('unavailable')) } }
+    const timer = setTimeout(fail, 5000)
+    try {
+      const request = indexedDB.open(LOCAL_DB, 1)
+      request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains('state')) request.result.createObjectStore('state') }
+      request.onblocked = fail
+      request.onerror = fail
+      request.onsuccess = () => {
+        if (settled) { request.result.close(); return }
+        settled = true; clearTimeout(timer)
+        request.result.onversionchange = () => request.result.close()
+        resolve(request.result)
+      }
+    } catch { fail() }
+  })
+}
+export async function readLocalPurchases(context: SpendscapeDataSnapshot): Promise<LocalPurchases> {
+  const db = await openDatabase()
+  try {
+    const raw = await new Promise<unknown>((resolve, reject) => {
+      const tx = db.transaction('state', 'readonly'), request = tx.objectStore('state').get('current')
+      const timer = setTimeout(() => { try { tx.abort() } catch { /* already finished */ } }, 5000)
+      tx.oncomplete = () => { clearTimeout(timer); resolve(request.result) }
+      tx.onabort = tx.onerror = () => { clearTimeout(timer); reject(new LocalStoreError('unavailable')) }
+    })
+    return raw === undefined ? emptyLocalPurchases() : validateLocalPurchases(raw, context)
+  } finally { db.close() }
+}
+// Prospective write rejection must not mark the previously persisted data invalid.
+export function validateLocalPurchaseWrite(next: LocalPurchases, context: SpendscapeDataSnapshot): LocalPurchases {
+  if (next.records.length > 1000 || JSON.stringify(next).length > 2_000_000) throw new LocalStoreError('capacity')
+  try { return validateLocalPurchases(next, context) }
+  catch { throw new LocalStoreError('rejected') }
+}
+export async function writeLocalPurchases(next: LocalPurchases, context: SpendscapeDataSnapshot, erase = false): Promise<LocalPurchases> {
+  const clean = validateLocalPurchaseWrite(next, context)
+  const db = await openDatabase()
+  try {
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction('state', 'readwrite'), store = tx.objectStore('state')
+      let result = clean, reason: 'conflict' | 'invalid' | 'unavailable' = 'unavailable'
+      const timer = setTimeout(() => { try { tx.abort() } catch { /* already finished */ } }, 5000)
+      const request = store.get('current')
+      request.onsuccess = () => {
+        try {
+          const current = erase ? request.result : request.result === undefined ? emptyLocalPurchases() : validateLocalPurchases(request.result, context)
+          if (!erase && current.revision !== clean.revision) { reason = 'conflict'; tx.abort(); return }
+          // Keep an empty revision tombstone after explicit deletion so a stale
+          // tab cannot recreate deleted purchases. It contains no purchase data.
+          const revision = Number.isSafeInteger(current?.revision) && current.revision < Number.MAX_SAFE_INTEGER ? current.revision + 1 : 1
+          result = { ...(erase ? emptyLocalPurchases() : clean), revision }
+          store.put(result, 'current')
+        } catch (e) { reason = e instanceof LocalStoreError && e.code === 'invalid' ? 'invalid' : 'unavailable'; tx.abort() }
+      }
+      tx.oncomplete = () => { clearTimeout(timer); resolve(result) }
+      tx.onabort = tx.onerror = () => { clearTimeout(timer); reject(new LocalStoreError(reason)) }
+    })
+  } finally { db.close() }
+}

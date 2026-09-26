@@ -69,7 +69,7 @@ for (const [width, he] of [[1280, false], [360, false], [360, true], [390, false
     expect(writes).toEqual([]); expect(prohibited).toEqual([]); expect(errors).toEqual([])
     await page.clock.resume()
     await page.reload(); await page.waitForFunction(() => (window as any).__SPENDSCAPE_QA__?.ready)
-    expect((await qa(page)).combinedPurchaseCount).toBe(42)
+    expect((await qa(page)).combinedPurchaseCount).toBe(43)
     await expect(card).toHaveCount(0)
   })
 }
@@ -84,14 +84,18 @@ for (const external of [false, true]) {
     expect((await qa(page)).combinedPurchaseCount).toBe(42)
   })
 }
-test('leaving Capture during Undo shows the comparison only at expiry; Reset removes it', async ({ page }) => {
+test('leaving Capture during Undo shows the comparison only at expiry; confirmed local deletion removes it', async ({ page }) => {
   await receipt(page); await save(page)
   await page.getByTestId('capture-done').click()
   await page.clock.runFor(7999); await expect(page.getByTestId('nearby-demo')).toHaveCount(0)
   await page.clock.runFor(1); await expect(page.getByTestId('nearby-demo')).toBeVisible()
   await page.getByTestId('capture-open-desktop').click()
-  await page.getByRole('button', { name: 'Reset demo additions' }).click()
-  await page.getByRole('button', { name: 'Close Capture', exact: true }).last().click()
+  await page.getByRole('button', { name: 'Manage local data' }).click()
+  await page.getByTestId('local-erase').click()
+  await page.clock.resume()
+  await Promise.all([page.waitForEvent('load'), page.getByTestId('local-erase-confirm').click()])
+  await page.waitForFunction(() => (window as any).__SPENDSCAPE_QA__?.ready)
+  await expect(page.locator('main')).toHaveAttribute('data-local-state', 'ready')
   await expect(page.getByTestId('nearby-demo')).toHaveCount(0)
   expect((await qa(page)).combinedPurchaseCount).toBe(42)
 })
