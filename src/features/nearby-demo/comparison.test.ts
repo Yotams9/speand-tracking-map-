@@ -85,3 +85,14 @@ describe('synthetic nearby comparison', () => {
     expect(JSON.stringify(data)).toBe(before)
   })
 })
+
+it('compares net paid prices after explicit discounts and suppresses nonpositive savings', () => {
+  const draft = input(); draft.lines[0].discount = '2.50'; draft.amount = '84.40'
+  expect(compare(reviewedRecord(draft, 1, data))).toMatchObject({ paidMinor: 4090, comparedMinor: 3790, savingMinor: 300 })
+  draft.lines[2].discount = '3'; draft.amount = '81.40'
+  expect(compare(reviewedRecord(draft, 1, data))).toBeNull()
+})
+it('zero discounts retain the original illustrative comparison', () => {
+  const draft = input(); draft.lines.forEach(l => { l.discount = '0' })
+  expect(compare(reviewedRecord(draft, 1, data))).toMatchObject({ paidMinor: 4340, savingMinor: 550 })
+})

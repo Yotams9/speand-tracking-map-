@@ -38,8 +38,9 @@ export interface PurchaseItem {
   label: LocalizedText
   quantity: number
   unit: 'item' | 'kg'
-  unitPrice: number
-  lineTotal: number
+  unitPrice: number // Gross price in original currency major units.
+  discountMinor?: number // Whole-line deduction in original currency minor units; absent means zero.
+  lineTotal: number // Net amount after the explicit line discount.
 }
 
 export interface FxProvenance {

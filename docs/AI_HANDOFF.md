@@ -33,13 +33,13 @@ Core TypeScript model: `SpendscapeDataSnapshot` (`profile`, `merchants`, `places
 ## 4. Completed work
 
 - Globe, RTL/trackpad, clusters, heatmap, search, Purchases, Analytics, synthetic Capture, Smart Inbox, deterministic Ask and details-first Life Replay are implemented. Replay moves the camera only on explicit `Show place`.
-- Scanner A requests live camera permission; Scanner B reads barcodes locally with pinned `zxing-wasm`; Scanner E connects a reviewed candidate to a session-only purchase. An eight-second timed Undo UI is committed. The fixture baseline is 42 purchases, 12 places/pins and illustrative ILS 6,777.38.
+- Scanner A requests live camera permission; Scanner B reads barcodes locally with pinned `zxing-wasm`; Scanner E connects a reviewed candidate to a purchase that College P1 persists in this browser's IndexedDB. An eight-second timed Undo UI is committed. The fixture baseline is 42 purchases, 12 places/pins and illustrative ILS 6,777.38.
 - Phase 2A.1 established the fixture repository boundary in `src/data/spendscape-repository.ts`. Main implementation entry points are `src/features/globe/SpendscapeGlobe.tsx`, `src/features/capture/`, and `src/data/spendscape-globe.ts`.
 - Nearby Prices NP0/NP1 benchmarked and normalized a bounded Shufersal sample; NP2–NP2V documented access stops for additional chains. NP2F found 15 unequal historical source-price pairs between two distant Shufersal stores. NP2G qualified a nearby Shufersal address point at branch 11, about 1.6 km from branch 1, and added offline selection tests. No current price pair or factual savings claim has been established.
 
 ## 5. Current state and risks
 
-Current local HEAD is `399fce8e8209f0ffbeb8893903a28b43d537f8aa`: College P1 is reviewed and committed locally. The local origin feature ref remains `66fb420` (ahead 3, behind 0; not refreshed); main/origin-main remain `eee0d26`. P2A offline receipt benchmark foundation is complete and uncommitted; see section 10. Earlier Git/QA statements are historical snapshots. No push, deployment, provider call or subsequent implementation is authorized.
+Current local HEAD is `1bbd50ec3f0bffe0fcb7da0adf016da3d61363b8`: College P1 and the reviewed P2A/P2B benchmark foundation are committed locally. The local origin feature ref remains `66fb420` (ahead 4, behind 0; not refreshed); main/origin-main remain `eee0d26`. P2B remains stopped at 5/12 synthetic Gemini attempts, with two HTTP 503 responses and no model promotion or Capture integration; see section 10. Earlier Git/QA statements are historical snapshots. No push, deployment, additional provider call or subsequent implementation is authorized.
 
 For a **factual retailer-price claim**, the immediate blocker is authoritative mapping of the regulated shekel/agora price field to the current Shufersal XML `ItemPrice` tag. NP2G stopped before fresh PriceFull downloads. The nearby coordinates are public address points, not surveyed entrances or route distances. Currency, current price overlap, source freshness/coverage, stock and dataset reuse still need proof before a factual savings claim. This does not block a clearly labelled synthetic college demo. Carrefour verification returned HTTP 403; the reviewed Osher Ad adapter uses authenticated FTP. Do not route around access controls. The scraper/parser packages have a custom noncommercial licence with attribution; retailer data rights are separate. Scanner D1 OCR missed Hebrew/mixed accuracy targets and has a worker cleanup limitation; receipt-photo OCR is not ready. Physical iPhone Scanner A/B testing is user-reported; do not label it independently instrumented QA. Some older general status documents lag recent commits: use Git and the latest checkpoint reports for current facts.
 
@@ -323,8 +323,8 @@ successes were rescored offline with exact original-score equality; 42/42
 offline/mock tests passed. No additional calls, app changes or promotion. The
 26.787-second long result and two 503 failures remain unresolved. Preserve the
 consumed recovery lock and journal. See the partial-results report for evidence
-and limits. Correction is complete and awaits separate checkpoint review; no
-new API execution, integration, commit, push or deployment is authorized.
+and limits. At that point, the correction awaited separate checkpoint review;
+the later review and local commit are recorded below.
 
 
 The complete P2A/P2B review subsequently found that offline runner tests depended
@@ -332,5 +332,54 @@ on the pre-commit HEAD and empty index. The separately authorized correction
 separates Git-independent fixture/request preparation from the unchanged live
 Git gate. Fresh offline/mock QA is **44/44 passed**, including Git/network-forbidden
 offline execution and wrong-branch/HEAD/staged-index rejection. The 21-file
-package awaits complete checkpoint re-review. Still stopped at 5/12 calls;
-no additional provider execution, integration, stage, commit or deployment.
+package passed complete checkpoint re-review and was committed locally as
+`1bbd50e`. Still stopped at 5/12 calls; no additional provider execution,
+integration, push or deployment.
+
+## 11. College P2C — reviewed line discounts (2026-09-27)
+
+The separately approved P2C implementation is complete locally, awaiting its
+checkpoint review. This section supersedes earlier version-1/current-gate
+statements above; the Architect's pre-task status reconciliation is preserved.
+Gross unit price, explicit whole-line `discountMinor` and net line total remain
+separate facts through review, detail and IndexedDB. Integer arithmetic rejects
+unresolved/invalid discounts; absent and explicit zero retain old totals and
+duplicate meaning. Nearby illustrative savings use the discounted paid amount.
+
+The envelope is now version 2 (IndexedDB database version still 1). Strict v1
+hydration changes only the in-memory envelope tag; existing records/decisions
+are not written until a successful explicit transaction. Revision conflicts,
+failed-write preservation, durable eight-second Undo and unknown-version
+rejection remain. No OCR/provider integration or calls; P2B stays at 5/12 and
+D1's negative recommendation stands. Receipt extraction remains separately gated.
+
+See [COLLEGE_P2C_CHECKPOINT.md](spendscape/COLLEGE_P2C_CHECKPOINT.md) for the exact
+13-file manifest, measured QA, corrected viewport/error-banner findings and
+physical-device limits. The finished college-product goal remains separate from
+the illustrative-price feature. No commit, push or deployment is authorized.
+Next: `APPROVE SPENDSCAPE COLLEGE P2C CHECKPOINT REVIEW`.
+
+Final P2C QA: typecheck/build passed, 210/210 unit tests, 41/41 combined
+P2C/P1/comparison/boundary production-browser tests and 19/19 neighboring
+Capture/Scanner tests. The QA server is stopped; next-env equals entry/HEAD.
+HEAD remains `1bbd50e`, protected main refs `eee0d26`, local cached origin
+feature `66fb420` (ahead 4, behind 0; no refresh). Empty index; 11 modified and
+2 new intended files, with ignored artifacts excluded.
+
+The subsequent P2C checkpoint review found a Medium visibility defect despite
+9/9 focused browser tests passing: storage failure feedback was below the
+visible scroll area after the global banner was suppressed. The separately
+approved bounded correction now reveals the inline message after every failed
+save, including repeated failures, and restores focus lost to the transaction
+inert lock without taking focus from a newer target. Retry remains unobstructed.
+Four EN/HE mobile/desktop regressions check actual clipping, keyboard retry,
+unchanged data and successful save/Undo. No storage, arithmetic or provider
+scope changed. This supersedes the prior implementation's ready-for-review
+statement only with the corrected result; a new P2C review remains the gate.
+
+Correction QA completed: final build/typecheck, 210/210 unit tests, 4/4 focused
+visibility/focus cases, then a fresh combined P2C/P1 run **31/31 passed**. Four
+initial focus failures are documented in the checkpoint. All four EN/HE
+mobile/desktop correction screenshots were inspected. Server stopped;
+next-env, HEAD and protected refs unchanged; index empty; same 13-file manifest.
+Next: `APPROVE SPENDSCAPE COLLEGE P2C CHECKPOINT REVIEW`. No commit/push/deploy.

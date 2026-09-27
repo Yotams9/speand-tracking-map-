@@ -128,3 +128,56 @@ describe('Scanner E reviewed session integration', () => {
   })
 
 })
+
+describe('P2C explicit line discounts', () => {
+  it('preserves gross price, whole-line discount and net without mutating legacy lines', () => {
+    const input = receipt(), original = reviewedRecord(input, 1, context)
+    input.lines[0].discount = '2.50'; input.amount = '84.40'
+    expect(validateReview(input, context)).toEqual({})
+    const record = reviewedRecord(input, 1, context)
+    expect(record.purchase.items[0]).toMatchObject({ unitPrice: 18.5, discountMinor: 250, lineTotal: 16 })
+    expect(original.purchase.items[0]).not.toHaveProperty('discountMinor')
+    expect(record.purchase.originalAmount).toBe(84.4)
+    expect(reviewFromDemo({ ...demoDraftForSource('receipt')!, items: record.purchase.items }, 'en').lines[0].discount).toBe('2.5')
+  })
+  it('rejects negative, excessive, malformed and unresolved discounts without repairing totals', () => {
+    for (const discount of ['-1', '18.51', '', ' ', '1e2', '1.001', '1O', null, NaN, 1] as unknown[]) {
+      const input = receipt(); input.lines[0].discount = discount as string
+      expect(validateReview(input, context)).toHaveProperty('discount-0')
+      expect(() => reviewedRecord(input, 1, context)).toThrow('review-invalid')
+    }
+    const input = receipt(); input.lines[0].discount = '1'
+    expect(validateReview(input, context).amount).toBe('arithmetic')
+  })
+  it('handles zero, full discounts, weighted rounding and JPY precision in minor units', () => {
+    const line = { name: 'Synthetic weight', unit: 'kg' as const, quantity: '1.235', price: '12.50', discount: '0.44' }
+    expect(lineMinorTotal(line, 'ILS')).toBe(1500)
+    expect(lineMinorTotal({ ...line, discount: '15.44' }, 'ILS')).toBe(0)
+    expect(lineMinorTotal({ ...line, discount: '15.45' }, 'ILS')).toBeNull()
+    expect(lineMinorTotal({ ...line, unit: 'item', quantity: '2', price: '100', discount: '20' }, 'JPY')).toBe(180)
+    expect(lineMinorTotal({ ...line, price: '100', discount: '0.01' }, 'JPY')).toBeNull()
+    const input = receipt(); input.lines[0].discount = '0'
+    expect(reviewedRecord(input, 1, context).purchase.originalAmount).toBe(86.9)
+    input.lines[0].discount = '18.5'; input.amount = '68.40'
+    expect(reviewedRecord(input, 1, context).purchase.items[0].lineTotal).toBe(0)
+  })
+  it('saves 25 separately identified repeated lines, exact totals, duplicate override and Undo', () => {
+    const input = { ...receipt(), provenance: 'user-reviewed' as const, amount: '475.00', lines: Array.from({ length: 25 }, (_, i) => ({ name: i % 2 ? 'פריט סינתטי' : 'Synthetic item', unit: 'item' as const, quantity: '2', price: '10', discount: '1' })) }
+    const saved = saveReviewedPurchase(emptySessionLedger(), 'discounted', input, context, context.purchases)
+    expect(saved.result.code).toBe('saved')
+    expect(saved.ledger.records[0].purchase.items).toHaveLength(25)
+    expect(saved.ledger.records[0].purchase.items.reduce((n, l) => n + l.lineTotal * 100, 0)).toBe(47500)
+    expect(saveReviewedPurchase(saved.ledger, 'other', input, context, context.purchases).result.code).toBe('duplicate')
+    const twice = saveReviewedPurchase(saved.ledger, 'other', input, context, context.purchases, true).ledger
+    expect(undoSessionPurchase(twice).records).toEqual(saved.ledger.records)
+    expect(saveReviewedPurchase(undoSessionPurchase(twice), 'other', input, context, context.purchases, true).result.code).toBe('consumed')
+    const purchases = combineSessionPurchases(context.purchases, saved.ledger.records)
+    expect(buildPlaceFeatureCollection(context.places, purchases).features).toHaveLength(12)
+    expect(derivePurchaseAnalytics(purchases, context.evidence).totalBaseAmountIls).toBe(7252.38)
+  })
+  it('treats explicit zero and absent discount as the same purchase for duplicates', () => {
+    const input = receipt(), saved = saveReviewedPurchase(emptySessionLedger(), 'one', input, context, context.purchases)
+    input.lines.forEach(l => { l.discount = '0' })
+    expect(saveReviewedPurchase(saved.ledger, 'two', input, context, context.purchases).result.code).toBe('duplicate')
+  })
+})

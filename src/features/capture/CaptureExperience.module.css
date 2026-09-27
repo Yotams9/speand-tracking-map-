@@ -298,3 +298,16 @@
   .sessionFooter { flex-wrap: wrap; }
   .sessionFooter button { min-block-size: 44px; }
 }
+
+/* Whole-line discount and net are separated from gross unit price. */
+.lineDiscount, .lineNet { grid-column: 1 / -1; }
+.lineNet { font-size: .82rem; line-height: 1.5; overflow-wrap: anywhere; }
+.reviewLine input { scroll-margin-block: 20px; }
+
+@media (max-width: 760px) {
+  .layer:has(.purchaseReview) {
+    position: fixed;
+    inset-block-start: var(--review-viewport-top, 0px);
+    block-size: var(--review-viewport-height, 100dvh);
+  }
+}

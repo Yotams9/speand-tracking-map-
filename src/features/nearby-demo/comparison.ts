@@ -22,9 +22,9 @@ export function demoComparison(records: readonly SessionCaptureRecord[], readyId
     const price = demoStore.prices.find(p => p.productId === record.demoProductIds?.[index])
     if (!price || item.unit !== price.unit || item.label.en !== price.label.en || item.label.he !== price.label.he || !Number.isSafeInteger(item.quantity) || item.quantity <= 0) return []
     const unitMinor = minorAmount(String(item.unitPrice), 'ILS')
-    const paidMinor = minorAmount(String(item.lineTotal), 'ILS')
+    const paidMinor = minorAmount(String(item.lineTotal), 'ILS', true)
     const comparedMinor = price.unitMinor * item.quantity
-    if (unitMinor === null || paidMinor === null || unitMinor * item.quantity !== paidMinor || !Number.isSafeInteger(comparedMinor)) return []
+    if (unitMinor === null || paidMinor === null || !Number.isSafeInteger(item.discountMinor ?? 0) || (item.discountMinor ?? 0) < 0 || unitMinor * item.quantity - (item.discountMinor ?? 0) !== paidMinor || !Number.isSafeInteger(comparedMinor)) return []
     return [{ productId: price.productId, label: price.label, quantity: item.quantity, paidMinor, comparedMinor }]
   })
   // Duplicate product identities are ambiguous, not an invitation to double count.

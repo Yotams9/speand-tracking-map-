@@ -3160,7 +3160,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       data-data-classification={initialData.source.classification}
       data-data-version={initialData.source.version}
     >
-      {localData.writeError && (localData.lastFailure.current !== 'capacity' || !captureStep) && <div role="alert" style={{ position: 'fixed', bottom: 90, left: 12, right: 12, zIndex: 300, background: '#311b1b', color: 'white', padding: 12 }}>{localData.lastFailure.current === 'capacity' ? (locale === 'he' ? 'מגבלת האחסון המקומי הושגה. הרכישות הקיימות לא השתנו.' : 'Local storage limit reached. Existing purchases are unchanged.') : (locale === 'he' ? 'השינוי לא נשמר. בדקו את האחסון ונסו שוב.' : 'Change not saved. Check storage and retry.')}</div>}
+      {localData.writeError && captureStep !== 'review' && captureStep !== 'manual' && (localData.lastFailure.current !== 'capacity' || !captureStep) && <div role="alert" style={{ position: 'fixed', bottom: 90, left: 12, right: 12, zIndex: 300, background: '#311b1b', color: 'white', padding: 12 }}>{localData.lastFailure.current === 'capacity' ? (locale === 'he' ? 'מגבלת האחסון המקומי הושגה. הרכישות הקיימות לא השתנו.' : 'Local storage limit reached. Existing purchases are unchanged.') : (locale === 'he' ? 'השינוי לא נשמר. בדקו את האחסון ונסו שוב.' : 'Change not saved. Check storage and retry.')}</div>}
       <div ref={mapNodeRef} className={styles.map} data-testid="map-canvas" />
       <div className={styles.vignette} aria-hidden="true" />
 
@@ -3678,7 +3678,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
               <ul>
                 {selectedPurchase.items.map((item) => (
                   <li key={item.id}>
-                    <span>{localized(item.label, locale)}<small>{item.quantity} × {formatMoney(item.unitPrice, locale, selectedPurchase.originalCurrency)}</small></span>
+                    <span>{localized(item.label, locale)}<small>{item.quantity} × {formatMoney(item.unitPrice, locale, selectedPurchase.originalCurrency)}{item.discountMinor !== undefined && item.discountMinor > 0 && <> · {locale === 'he' ? 'הנחה' : 'Discount'} −{formatMoney(item.discountMinor / (selectedPurchase.originalCurrency === 'JPY' ? 1 : 100), locale, selectedPurchase.originalCurrency)}</>}</small></span>
                     <strong>{formatMoney(item.lineTotal, locale, selectedPurchase.originalCurrency)}</strong>
                   </li>
                 ))}

@@ -4,7 +4,7 @@ import { validateBarcode, type BarcodeIdentity } from './barcode-domain'
 
 export const reviewCurrencies: CurrencyCode[] = ['ILS', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'MXN', 'ZAR']
 export const reviewCategories: PurchaseCategory[] = ['groceries', 'food', 'retail', 'travel']
-export interface ReviewLine { demoProductId?: string; name: string; quantity: string; unit: 'item' | 'kg'; price: string; originalLabel?: { en: string; he: string } }
+export interface ReviewLine { demoProductId?: string; name: string; quantity: string; unit: 'item' | 'kg'; price: string; discount?: string; originalLabel?: { en: string; he: string } }
 export interface PurchaseReviewInput {
   source: CaptureDraft['source']
   provenance: 'synthetic-demo' | 'user-reviewed'
@@ -25,27 +25,40 @@ export function blankReview(): PurchaseReviewInput {
   return { source: 'manual', provenance: 'user-reviewed', merchantId: '', placeId: '', channel: '', date: '', currency: '', payment: '', category: '', amount: '', baseAmount: '', lines: [] }
 }
 export function reviewFromDemo(draft: CaptureDraft, locale: 'en' | 'he'): PurchaseReviewInput {
-  return { source: draft.source, provenance: 'synthetic-demo', merchantId: draft.merchantId ?? '', placeId: draft.placeId ?? '', channel: draft.channel, date: draft.timestamp.slice(0, 16), currency: draft.originalCurrency, payment: draft.paymentMode, category: draft.category, amount: draft.originalAmount?.toFixed(draft.originalCurrency === 'JPY' ? 0 : 2) ?? '', baseAmount: '', lines: draft.items.map(item => ({ demoProductId: item.id, name: item.label[locale], originalLabel: { ...item.label }, quantity: String(item.quantity), unit: item.unit, price: String(item.unitPrice) })) }
+  return { source: draft.source, provenance: 'synthetic-demo', merchantId: draft.merchantId ?? '', placeId: draft.placeId ?? '', channel: draft.channel, date: draft.timestamp.slice(0, 16), currency: draft.originalCurrency, payment: draft.paymentMode, category: draft.category, amount: draft.originalAmount?.toFixed(draft.originalCurrency === 'JPY' ? 0 : 2) ?? '', baseAmount: '', lines: draft.items.map(item => ({ demoProductId: item.id, name: item.label[locale], originalLabel: { ...item.label }, quantity: String(item.quantity), unit: item.unit, price: String(item.unitPrice), ...(item.discountMinor !== undefined ? { discount: String(item.discountMinor / (draft.originalCurrency === 'JPY' ? 1 : 100)) } : {}) })) }
 }
 // Plain decimal input only. No exponents, sign repair, currency inference or float tolerance.
-export function minorAmount(value: string, currency: string): number | null {
+export function minorAmount(value: string, currency: string, allowZero = false): number | null {
   if (typeof value !== 'string' || !reviewCurrencies.includes(currency as CurrencyCode)) return null
   const decimals = currency === 'JPY' ? 0 : 2
   if (!(decimals ? /^\d{1,7}(?:\.\d{1,2})?$/ : /^\d{1,7}$/).test(value)) return null
   const [whole, fraction = ''] = value.split('.')
   const result = Number(whole) * 10 ** decimals + Number(fraction.padEnd(decimals, '0'))
-  return result > 0 && Number.isSafeInteger(result) ? result : null
+  return (result > 0 || (allowZero && result === 0)) && Number.isSafeInteger(result) ? result : null
 }
 function quantityUnits(line: ReviewLine): number | null {
   if (!(line.unit === 'item' ? /^\d{1,4}$/ : line.unit === 'kg' ? /^\d{1,4}(?:\.\d{1,3})?$/ : /a^/).test(line.quantity)) return null
-  const value = Math.round(Number(line.quantity) * 1000)
+  const [whole, fraction = ''] = line.quantity.split('.')
+  const value = Number(whole) * 1000 + Number(fraction.padEnd(3, '0'))
   return value > 0 ? value : null
 }
-export function lineMinorTotal(line: ReviewLine, currency: string): number | null {
+export function lineGrossMinor(line: ReviewLine, currency: string): number | null {
   const quantity = quantityUnits(line), price = minorAmount(line.price, currency)
   if (quantity === null || price === null) return null
-  const result = Math.round(price * quantity / 1000)
+  const product = price * quantity
+  if (!Number.isSafeInteger(product)) return null
+  // Preserve P1 half-up rounding for weighted lines, in integer minor units.
+  const result = Math.floor((product + 500) / 1000)
   return Number.isSafeInteger(result) && result > 0 && result <= 999999999 ? result : null
+}
+export function lineDiscountMinor(line: ReviewLine, currency: string): number | null {
+  // Only an absent field means legacy/no discount. Blank, null and malformed
+  // supplied values are unresolved; never silently coerce them to zero.
+  return line.discount === undefined ? 0 : minorAmount(line.discount, currency, true)
+}
+export function lineMinorTotal(line: ReviewLine, currency: string): number | null {
+  const gross = lineGrossMinor(line, currency), discount = lineDiscountMinor(line, currency)
+  return gross === null || discount === null || discount > gross ? null : gross - discount
 }
 export function validateReview(input: PurchaseReviewInput, context: ReviewContext): ReviewErrors {
   const errors: ReviewErrors = {}
@@ -74,6 +87,8 @@ export function validateReview(input: PurchaseReviewInput, context: ReviewContex
       if (!line.name.trim() || line.name.length > 100 || /[\u0000-\u001f]/.test(line.name)) errors[`name-${index}`] = 'required'
       if (quantityUnits(line) === null) errors[`quantity-${index}`] = 'quantity'
       if (minorAmount(line.price, input.currency) === null) errors[`price-${index}`] = 'amount'
+      const discount = lineDiscountMinor(line, input.currency), gross = lineGrossMinor(line, input.currency)
+      if (discount === null || (gross !== null && discount > gross)) errors[`discount-${index}`] = 'discount'
     })
     if (input.lines.length && (input.lines.some(line => lineMinorTotal(line, input.currency) === null) || input.lines.reduce((sum, line) => sum + (lineMinorTotal(line, input.currency) ?? 0), 0) !== amount)) errors.amount = 'arithmetic'
   }
@@ -90,7 +105,7 @@ export function reviewedRecord(input: PurchaseReviewInput, sequence: number, con
   if (Object.keys(validateReview(input, context)).length) throw new Error('review-invalid')
   const factor = input.currency === 'JPY' ? 1 : 100
   const amount = minorAmount(input.amount, input.currency)! / factor
-  const items: PurchaseItem[] = input.lines.map((line, index) => ({ id: String(index), label: input.provenance === 'synthetic-demo' && line.originalLabel && [line.originalLabel.en, line.originalLabel.he].includes(line.name) ? { ...line.originalLabel } : { en: line.name.trim(), he: line.name.trim() }, quantity: Number(line.quantity), unit: line.unit, unitPrice: minorAmount(line.price, input.currency)! / factor, lineTotal: lineMinorTotal(line, input.currency)! / factor }))
+  const items: PurchaseItem[] = input.lines.map((line, index) => ({ id: String(index), label: input.provenance === 'synthetic-demo' && line.originalLabel && [line.originalLabel.en, line.originalLabel.he].includes(line.name) ? { ...line.originalLabel } : { en: line.name.trim(), he: line.name.trim() }, quantity: Number(line.quantity), unit: line.unit, unitPrice: minorAmount(line.price, input.currency)! / factor, ...(line.discount !== undefined ? { discountMinor: lineDiscountMinor(line, input.currency)! } : {}), lineTotal: lineMinorTotal(line, input.currency)! / factor }))
   const draft: CaptureDraft = { source: input.source, provenance: 'synthetic-demo', merchantId: input.merchantId, placeId: input.placeId || null, timestamp: input.date + ':00.000Z', channel: input.channel as CaptureDraft['channel'], resolution: input.channel === 'unknown' ? 'unresolved' : 'confirmed', paymentMode: input.payment as PaymentMode, category: input.category as PurchaseCategory, originalAmount: amount, originalCurrency: input.currency as CurrencyCode, items, productCandidateOnly: false, contextConfirmed: true }
   const record = createSessionCaptureRecord(draft, sequence)
   if (input.provenance === 'user-reviewed') {
@@ -115,7 +130,7 @@ export function reviewedRecord(input: PurchaseReviewInput, sequence: number, con
 export interface SessionPurchaseLedger { records: readonly SessionCaptureRecord[]; consumed: readonly string[]; nextSequence: number; undoId: string | null }
 export const emptySessionLedger = (): SessionPurchaseLedger => ({ records: [], consumed: [], nextSequence: 1, undoId: null })
 function fingerprint(p: GlobePurchase) {
-  return JSON.stringify([p.merchantId, p.placeId, p.channel, p.timestamp, p.originalCurrency, p.originalAmount, p.paymentMode, p.category, p.items.map(i => [i.label.en, i.quantity, i.unit, i.unitPrice, i.lineTotal])])
+  return JSON.stringify([p.merchantId, p.placeId, p.channel, p.timestamp, p.originalCurrency, p.originalAmount, p.paymentMode, p.category, p.items.map(i => [i.label.en, i.quantity, i.unit, i.unitPrice, i.discountMinor ?? 0, i.lineTotal])])
 }
 export type SaveReviewResult = { code: 'saved'; purchaseId: string } | { code: 'invalid'; errors: ReviewErrors } | { code: 'duplicate' | 'consumed' | 'storage' | 'capacity' }
 export function saveReviewedPurchase(ledger: SessionPurchaseLedger, operationId: string, input: PurchaseReviewInput, context: ReviewContext, baseline: readonly GlobePurchase[], allowDuplicate = false): { ledger: SessionPurchaseLedger; result: SaveReviewResult } {

@@ -56,3 +56,41 @@ describe('local purchase boundary', () => {
   })
 
 })
+
+describe('P2C envelope compatibility and strict discounts', () => {
+  it('migrates v1 in memory with all records, decisions, revisions and identities unchanged', () => {
+    const c = data.smartInboxCases.find(c => c.material)!
+    const old = { ...disk(), version: 1, revision: 12, decisions: [{ caseId: c.id, status: 'deferred' }] }
+    const before = JSON.stringify(old)
+    const migrated = validateLocalPurchases(old, data)
+    expect(migrated).toEqual({ ...old, version: 2 })
+    expect(JSON.stringify(old)).toBe(before)
+    expect(validateLocalPurchases(migrated, data)).toEqual(migrated)
+    expect(restoredLedger(migrated)).toMatchObject({ undoId: null, consumed: [] })
+  })
+  it('round trips 25 discounted lines and preserves foreign gross prices and reported ILS', () => {
+    const input = { ...reviewFromDemo(demoDraftForSource('receipt')!, 'en'), provenance: 'user-reviewed' as const, currency: 'USD' as const, baseAmount: '1700.13', amount: '475', lines: Array.from({ length: 25 }, () => ({ name: 'Synthetic repeated item', quantity: '2', unit: 'item' as const, price: '10', discount: '1' })) }
+    const ledger = saveReviewedPurchase(emptySessionLedger(), '25', input, data, data.purchases).ledger
+    const record = { ...emptyLocalPurchases(), records: ledger.records, nextSequence: ledger.nextSequence }
+    expect(validateLocalPurchases(JSON.parse(JSON.stringify(record)), data)).toEqual(record)
+    expect(record.records[0].purchase.items[0]).toMatchObject({ unitPrice: 10, discountMinor: 100, lineTotal: 19 })
+    expect(record.records[0].purchase.fx.reportedBaseAmountIls).toBe(1700.13)
+  })
+  it('rejects discount fields in v1 and unknown future versions without mutating input', () => {
+    const old = structuredClone(disk()); old.records[0].purchase.items[0].discountMinor = 0
+    for (const raw of [{ ...old, version: 1 }, { ...disk(), version: 3 }]) {
+      const before = JSON.stringify(raw)
+      expect(() => validateLocalPurchases(raw, data)).toThrow('invalid')
+      expect(JSON.stringify(raw)).toBe(before)
+    }
+  })
+  it('rejects forged net totals, malformed discount units and extra fields', () => {
+    for (const discount of [-1, 999999, 0.5, '1', null, undefined, NaN]) {
+      const d = structuredClone(disk()); (d.records[0].purchase.items[0] as any).discountMinor = discount
+      expect(() => validateLocalPurchases(d, data)).toThrow('invalid')
+    }
+    const d = structuredClone(disk()); d.records[0].purchase.items[0].discountMinor = 100
+    expect(() => validateLocalPurchases(d, data)).toThrow('invalid')
+    expect(() => validateLocalPurchases({ ...disk(), photo: 'forbidden' }, data)).toThrow('invalid')
+  })
+})
