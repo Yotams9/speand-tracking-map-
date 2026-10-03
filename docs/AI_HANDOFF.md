@@ -22,7 +22,7 @@ Requires Node >=22.14 and npm 10.9.2. Run `npm install`, `npm run dev` (or `npm 
 
 - `src/app/`: App Router entry. `page.tsx` loads `fixtureSpendscapeRepository` and passes one serializable snapshot to the client globe.
 - `src/data/`: canonical synthetic fixtures, repository read contract, purchase/place types, filtering, derived map and analytics data.
-- `src/features/globe/`: persistent MapLibre instance and shared UI/session state. `capture/`, `inbox/`, `ask/`, and `replay/` contain their feature domains and views. `src/i18n/` handles English/Hebrew.
+- `src/features/globe/`: persistent MapLibre instance and shared UI/session state. `capture/`, `inbox/`, `ask/`, and `replay/` contain their feature domains and views; English/Hebrew copy lives with the active features. The unreachable inherited Ledgerline source tree was removed in the bounded 2026-10-01 cleanup; see README.md for the retained repository layout.
 - `tools/nearby-prices/` and `qa/nearby-prices/`: isolated Python source parsing, normalization, comparison qualification and offline tests. They are not imported by the Next.js app.
 - `docs/spendscape/`: phase authority, design, technology decisions and checkpoint evidence. `artifacts/` holds ignored raw samples and QA output.
 

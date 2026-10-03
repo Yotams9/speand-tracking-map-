@@ -113,6 +113,51 @@ QA intentionally requires an already-built `next start` production server.
 Screenshots, recordings, and run output belong only in the ignored local
 `artifacts/` directory.
 
+## Repository layout
+
+- `src/app/`: Next.js routes, metadata, and global styles.
+- `src/data/spendscape-*`: canonical fixtures, repository contract, domain
+  types, and deterministic purchase/map/analytics derivations.
+- `src/features/`: the active globe, Capture, Inbox, Ask, Replay, local
+  purchase storage, and illustrative nearby comparison. English/Hebrew copy
+  lives with these features.
+- `public/`: PWA icons/manifest and required MapLibre, RTL, and barcode assets.
+- `qa/` and `tools/`: browser regression suites and isolated receipt/price
+  experiments; these are supporting code, not application routes.
+- `docs/spendscape/` and `.agents/skills/`: project authority and checkpoint
+  evidence. Root Ledgerline planning documents are historical references.
+- `artifacts/`, `.next/`, and `node_modules/`: ignored local evidence, generated
+  builds, and installed dependencies. Receipt attempt journals/locks in
+  `artifacts/` must be preserved; they enforce consumed provider-call budgets.
+
+### Bounded cleanup — 2026-10-01
+
+Removed 35 inherited Ledgerline files (255,589 bytes) from `src/components/`,
+`src/screens/`, `src/map/`, `src/state/`, `src/i18n/`, `src/styles/`, and the
+old `src/data/{audit,derive,fixtures,types}.ts`. A TypeScript syntax-tree import
+audit, including type imports, dynamic imports, worker URLs, and CSS imports,
+found no path to them from any current route or unit test. All removed files
+were unchanged from the original protected baseline; Git history retains them.
+Active feature code, canonical fixtures, dependencies, public assets, research
+evidence, and provider-call locks are preserved.
+
+The historical purchase-navigation test now expects search to clear on reload,
+matching the existing privacy rule. Cleanup evidence belongs in the ignored
+`artifacts/cleanup-2026-10-01/` directory. This work is local to
+`feature/spendscape-rebuild`; publication remains separately gated.
+
+Validation: typecheck, production build, and all 210 unit tests passed before
+and after removal. The baseline browser selection passed 20/21; its obsolete
+search-persistence expectation passed after correction against the unchanged
+app. The expanded post-cleanup run passed 61/62. One desktop storage-error
+visibility assertion timed out; all four EN/HE mobile/desktop storage-error
+cases then passed twice in isolation (8/8), without changing that test or the
+application. This transient failure is retained in the logs rather than
+reported as an all-green combined run. Rendered Ask, Analytics, and receipt
+review screenshots were inspected across phone sizes and desktop. Existing
+uncommitted experiments and handoff edits were preserved. No commit, push,
+merge, deployment, dependency, or provider change was made.
+
 ## Accepted implementation through Slice 1D.6
 
 - Next.js App Router + TypeScript migration with pinned runtime dependencies
