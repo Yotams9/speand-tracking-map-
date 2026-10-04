@@ -311,3 +311,14 @@
     block-size: var(--review-viewport-height, 100dvh);
   }
 }
+
+/* Receipt originals are transient; corrections use the existing review grid. */
+.receiptObservations { margin: 0 0 20px; padding: 16px; background: #191c1f; border-radius: 16px; overflow-wrap: anywhere; }
+.receiptObservations p { margin: 8px 0; }
+.receiptObservations summary { cursor: pointer; padding: 12px 0; }
+.receiptObservations summary:focus-visible { outline: 2px solid #b9edf5; outline-offset: 3px; }
+.receiptObservations dl > div { display: flex; gap: 12px; flex-wrap: wrap; }
+.receiptObservations dd { margin: 0; }
+.receiptObservations ol { padding-inline-start: 24px; }
+.receiptObservations li { margin-block: 12px; }
+.receiptObservations div[data-review-feedback] > .fieldError { display: block; margin-block-start: 8px; }

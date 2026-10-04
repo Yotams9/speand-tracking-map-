@@ -451,3 +451,73 @@ ahead 6/behind 0. Index empty; next-env matches HEAD/pre-task. Unrelated work an
 all consumed provider locks preserved. No dependencies, UI/schema integration,
 stage/commit/push/deploy. Next gate: a new receipt-to-review adapter checkpoint
 review; neither commit nor consumer/provider integration is authorized.
+
+### Receipt review Capture integration — 2026-10-04
+
+Approved bounded local slice complete, awaiting separate checkpoint review.
+Capture accepts an in-memory ReceiptReviewDraft; the existing form calls
+prepareReceiptReview before explicit P1 save. Original observed merchant/address/
+printed date/time and all original lines remain separate from corrections.
+Unknown units and editable printed net amounts fail closed until resolved;
+quantity/gross price/explicit discount/net must agree. No merchant/place inference.
+Explicit wall time + IANA timezone confirmation produces the existing UTC instant;
+DST gaps fail and overlaps require a chosen occurrence. VAT/barcodes optional.
+Unsupported observation metadata stays transient; IndexedDB envelope v2 unchanged.
+One/15-item fictional observations enter only a loopback/opt-in QA hook, no public
+OCR-success control. Source changes, navigation, success and stale hooks clear
+drafts; existing late-save generation and operation protections remain.
+
+QA: focused unit 130/130; full unit 296/296 (18 files); production combined
+receipt/P2C/Capture/Scanner A/data-boundary/Nearby suite 64/64 (3.5m), plus 6/6
+real pinned barcode handoff, eight-second Undo and delayed-save navigation checks.
+Build, project/strict QA typechecks and whitespace passed. Inspected EN/HE mobile
+360/390/430 and desktop 1280 screenshots, including full errors at 360x420 under
+reduced motion. Receipt-only layout observation fixed short-viewport error clipping;
+no timeout/assertion weakened. Baseline 42/12/12/ILS 6777.38, one MapLibre; tested
+41.00 addition/reload gives ILS 6818.38 and keeps 12 pins. No outgoing purchase/
+provider/OCR request or persisted original-observation sidecars.
+
+Exact task manifest (10): CaptureExperience.tsx, PurchaseReview.tsx,
+CaptureExperience.module.css, ReceiptReviewDetails.tsx, receipt-review-time.ts,
+receipt-review-time.test.ts (all src/features/capture/);
+qa/receipt-review-integration-mocks.ts, qa/spendscape-receipt-review-integration.spec.ts,
+docs/spendscape/COLLEGE_RECEIPT_REVIEW_INTEGRATION.md, this append-only handoff.
+HEAD 6a9661b unchanged; main/origin-main eee0d26, cached origin feature 66fb420,
+ahead 7/behind 0. Index empty; unrelated dirty/untracked benchmark work preserved.
+257 other snapshotted files and 63+5 Vision hashes unchanged. next-env matches
+HEAD/pre-task; ignored artifacts only, owned QA server stopped (3000 free).
+All consumed provider locks/scores preserved; no dependency/provider/commit/push/
+deploy. Photo/file ingestion and general receipt extraction remain unimplemented;
+no real OCR accuracy or physical-device claim. Next gate:
+APPROVE SPENDSCAPE COLLEGE RECEIPT REVIEW INTEGRATION CHECKPOINT REVIEW.
+
+
+### Receipt integration date/time visibility correction — 2026-10-04
+
+The checkpoint review's Medium finding was feedback below the visible scroll
+area for missing date/time/zone and shortened-screen reconfirmation. Under the
+separate correction approval, one described error sits with the actual correction
+control; failed Save/confirmation focuses it and reveals the whole group after
+layout changes. Calendar-only UTC probing never chooses the saved timezone.
+Time validation, explicit confirmation, facts, adapter/store schema and scanners
+are unchanged. No receipt-photo/provider integration or physical-device claim.
+
+Fresh QA: 296/296 unit (18 files), typecheck/strict QA/build/whitespace passed;
+new EN/HE reduced-motion time-feedback cases 4/4; full receipt/data-boundary
+production suite 20/20 (52.4s), direct barcode/8s Undo/late-save neighbors 6/6
+(26.4s). No failures, retries, flaky cases or timeout/assertion weakening.
+Inspected 360x640/420 EN/HE correction screenshots plus fresh 390 HE and desktop
+1280 states. Fully-visible focus/error assertions cover missing zone/time,
+confirmation, resize and DST gap/overlap; save/Undo preserve baseline pins/map.
+Original 64/64 combined integration evidence remains retained separately.
+
+Correction manifest (six, within the same ten-file integration slice):
+ReceiptReviewDetails.tsx, PurchaseReview.tsx, CaptureExperience.module.css,
+qa/spendscape-receipt-review-integration.spec.ts,
+docs/spendscape/COLLEGE_RECEIPT_REVIEW_INTEGRATION.md, this appended handoff.
+294/300 other protected inputs byte-identical, all consumed provider locks and
+scores preserved. HEAD 6a9661b/main eee0d26/cached origin feature 66fb420 unchanged;
+ahead 7/behind 0, index empty, unrelated dirty/untracked work retained. next-env
+matches HEAD/pre-correction; ignored QA artifacts only, owned server stopped,
+3000 free. No dependencies, credentials, provider calls, stage/commit/push/deploy.
+Next gate: APPROVE SPENDSCAPE COLLEGE RECEIPT REVIEW INTEGRATION CHECKPOINT REVIEW.

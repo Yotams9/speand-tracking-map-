@@ -10,6 +10,7 @@ import {
 import { type LocaleCode, type Merchant, type Place } from '@/data/spendscape-globe'
 import { captureReducer, demoDraftForSource, initialCaptureState, type CaptureSource, type CaptureStep, type SessionCaptureRecord } from './capture-domain'
 import { allocateReviewOperationId, blankReview, reviewFromDemo, type PurchaseReviewInput, type SaveReviewResult } from './session-purchase-domain'
+import { receiptToReviewDraft, type ReceiptReviewDraft } from './receipt-review-adapter'
 import { PurchaseReview } from './PurchaseReview'
 import { CaptureCamera } from './CaptureCamera'
 import { NearbyDemoCard } from '../nearby-demo/NearbyDemoCard'
@@ -17,6 +18,7 @@ import type { DemoComparison } from '../nearby-demo/comparison'
 import styles from './CaptureExperience.module.css'
 
 interface CaptureExperienceProps {
+  receiptDraft?: ReceiptReviewDraft
   locale: LocaleCode
   places: readonly Place[]
   merchants: readonly Merchant[]
@@ -136,6 +138,7 @@ function formatAmount(value: number, currency: string, locale: LocaleCode): stri
 }
 
 export function CaptureExperience({
+  receiptDraft,
   locale,
   places,
   merchants,
@@ -157,9 +160,11 @@ export function CaptureExperience({
 }: CaptureExperienceProps) {
   const [state, dispatch] = useReducer(captureReducer, initialCaptureState)
   const [scannerGeneration] = useState(0)
-  const [reviewInput, setReviewInput] = useState<PurchaseReviewInput | null>(null)
+  const [reviewInput, setReviewInput] = useState<PurchaseReviewInput | ReceiptReviewDraft['review'] | null>(null)
+  const [activeReceipt, setActiveReceipt] = useState<ReceiptReviewDraft | undefined>()
+  const receiptActive = useRef(false)
   const [operationId, setOperationId] = useState('')
-  const prepareReview = (input: PurchaseReviewInput) => { setOperationId(allocateReviewOperationId()); setReviewInput(input) }
+  const prepareReview = (input: PurchaseReviewInput) => { receiptActive.current = false; setActiveReceipt(undefined); setOperationId(allocateReviewOperationId()); setReviewInput(input) }
   const dialogRef = useRef<HTMLElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
@@ -169,7 +174,10 @@ export function CaptureExperience({
   // Durable completion belongs to the ledger; it must not replace newer navigation.
   useLayoutEffect(() => () => { saveGeneration.current++ }, [step, operationId])
   useEffect(() => {
-    const invalidate = () => { saveGeneration.current++ }
+    const invalidate = () => {
+      saveGeneration.current++
+      if (receiptActive.current) { receiptActive.current = false; setActiveReceipt(undefined); setReviewInput(null) }
+    }
     window.addEventListener('popstate', invalidate)
     return () => { window.removeEventListener('popstate', invalidate) }
   }, [])
@@ -190,7 +198,7 @@ export function CaptureExperience({
       }
       if (event.key !== 'Tab' || !dialogRef.current) return
       const controls = [...dialogRef.current.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',
       )].filter((element) => element.offsetParent !== null)
       if (controls.length === 0) return
       const first = controls[0]
@@ -232,7 +240,7 @@ export function CaptureExperience({
 
   const chooseSource = (source: CaptureSource) => {
     if (source === 'manual') prepareReview(blankReview())
-    else setReviewInput(null)
+    else { receiptActive.current = false; setActiveReceipt(undefined); setReviewInput(null) }
     dispatch({ type: 'choose-source', source })
     const nextStep: CaptureStep = source === 'manual'
       ? 'manual'
@@ -253,6 +261,29 @@ export function CaptureExperience({
     }
     return result
   }
+
+  // Client-to-client, in-memory draft boundary. There is no photo/provider transport.
+  const acceptReceiptDraft = (draft: ReceiptReviewDraft) => {
+    saveGeneration.current++
+    const detached = structuredClone(draft)
+    receiptActive.current = true
+    setActiveReceipt(detached); setReviewInput(detached.review)
+    setOperationId(allocateReviewOperationId())
+    onNavigate('review', 'push')
+  }
+  useEffect(() => { if (receiptDraft) acceptReceiptDraft(receiptDraft) }, [receiptDraft])
+  useEffect(() => {
+    // QA input is opt-in on loopback only, absent from hosted/ordinary pages.
+    if (!['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) || new URLSearchParams(location.search).get('receiptReviewQa') !== '1') return
+    const target = window as Window & { __SPENDSCAPE_RECEIPT_REVIEW_QA__?: (raw: unknown) => void }
+    let active = true
+    const inject = (raw: unknown) => { if (active) acceptReceiptDraft(receiptToReviewDraft(raw)) }
+    target.__SPENDSCAPE_RECEIPT_REVIEW_QA__ = inject
+    return () => { active = false; if (target.__SPENDSCAPE_RECEIPT_REVIEW_QA__ === inject) delete target.__SPENDSCAPE_RECEIPT_REVIEW_QA__ }
+  }, [onNavigate])
+  useEffect(() => {
+    if (activeReceipt && step !== 'review') { receiptActive.current = false; setActiveReceipt(undefined); setReviewInput(null) }
+  }, [step])
 
   const lastRecord = state.lastPurchaseId
     ? sessionRecords.find((record) => record.purchase.id === state.lastPurchaseId)
@@ -347,9 +378,9 @@ export function CaptureExperience({
         )}
 
         {(step === 'review' || step === 'manual') && reviewInput && (
-          <PurchaseReview key={operationId} initial={reviewInput} locale={locale} context={{ places, merchants }}
+          <PurchaseReview key={operationId} initial={reviewInput} receiptDraft={activeReceipt} locale={locale} context={{ places, merchants }}
             manualStep={step === 'manual'} onReviewed={() => onNavigate('review', 'push')}
-            onSave={saveReview} onOther={() => { setReviewInput(null); onNavigate('sources', 'push') }} />
+            onSave={saveReview} onOther={() => { receiptActive.current = false; setActiveReceipt(undefined); setReviewInput(null); onNavigate('sources', 'push') }} />
         )}
         {(step === 'review' || step === 'manual' || step === 'success') && !reviewInput && !lastRecord && (
           <div className={styles.messageState}><h2 id="capture-title">{t.sourceTitle}</h2><p id="capture-description">{locale === 'he' ? 'הטיוטה אינה זמינה. התחילו רכישה חדשה.' : 'This draft is no longer available. Start a new purchase.'}</p><button type="button" className={styles.primary} onClick={() => onNavigate('sources', 'replace')}>{t.other}</button></div>
