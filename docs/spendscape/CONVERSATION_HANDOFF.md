@@ -34,6 +34,31 @@ purchase is undone or removed. Purchase detail has a two-press
 `Remove purchase` for added purchases. Storage is written only after a ledger
 change, never on load.
 
+Stage 2a, 2026-10-04 ("continue"): `tools/nearby-prices/build_catalog.py`
+(standard library only) downloads the store list and latest PriceFull file of
+every physical Tel Aviv store (city code 5000) for Shufersal, Rami Levy and
+Osher Ad, and writes `data/catalog/tel-aviv.json` (40 stores, 30,603 GTINs,
+about 5 MB; 6,835 GTINs appear in two or three chains). Only valid external
+GTINs and ordinary shelf prices are kept; promotions and club prices are not
+applied, and publication times stay in Israel local time as named in the file.
+`GET /api/catalog/[gtin14]` serves one product with every store price,
+cheapest first. Scanner B now shows that list and prefills the product name
+for barcodes outside the demo catalog; the request goes only to the app's own
+server, and identification still adds no purchase.
+
+Stage 2b, same day ("let's do the next"): `tools/nearby-prices/store_locations.py`
+geocodes the catalog store addresses once through OpenStreetMap Nominatim
+(one request per second, cached under `artifacts/`, house-number match inside
+Tel Aviv required; a few source misspellings are mapped explicitly). 34 of 40
+stores are located; the other six have no house-level match and stay
+unlocated. `GET /api/catalog/stores` serves them. The review form offers
+`Find the store I'm in`: one location read on press, never stored, suggests
+the closest located store within 200 m (a suggestion, not proof). Choosing a
+chain store creates merchant `chain_<chain>` and place `store_<chain>_<id>` in
+the device ledger, so it gets a pin, and fills the published shelf price of an
+identified barcode item, a quantity of 1, the total, ILS, "now" and groceries
+when those are empty. The user can change all of them.
+
 Known gaps: a store saved without a location cannot be pinned later, added
 places show placeholder city text because nothing is reverse-geocoded, added
 purchases cannot be edited, and tabs do not sync.

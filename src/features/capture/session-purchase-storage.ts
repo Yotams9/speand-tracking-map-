@@ -14,8 +14,9 @@ const sources: readonly CaptureDraft['source'][] = ['receipt', 'product', 'barco
 const evidenceKinds: readonly EvidenceKind[] = ['card-record', 'receipt', 'email-receipt', 'manual-entry']
 const fxSources: readonly FxProvenance['source'][] = ['synthetic-fixture-rate', 'identity', 'user-reported-conversion']
 const purchaseIdPattern = /^session_purchase_[a-z]+_(\d{2,6})$/
-const merchantIdPattern = /^device_merchant_(\d{2,6})$/
-const placeIdPattern = /^device_place_(\d{2,6})$/
+// Stores the user named carry a sequence number; chain stores from the price catalog do not.
+const merchantIdPattern = /^(?:device_merchant_(\d{2,6})|chain_(?:shufersal|ramilevi|osherad))$/
+const placeIdPattern = /^(?:device_place_(\d{2,6})|store_(?:shufersal|ramilevi|osherad)_\d{1,5})$/
 const instantPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/
 
 type Unknown = Record<string, unknown>
@@ -138,8 +139,8 @@ export function restoreSessionLedger(raw: string | null, context: ReviewContext)
   }
   const usedMerchants = merchants.filter(entry => records.some(record => record.purchase.merchantId === entry.id))
   const usedPlaces = places.filter(entry => records.some(record => record.purchase.placeId === entry.id))
-  for (const entry of usedMerchants) highest = Math.max(highest, Number(merchantIdPattern.exec(entry.id)![1]))
-  for (const entry of usedPlaces) highest = Math.max(highest, Number(placeIdPattern.exec(entry.id)![1]))
+  for (const entry of usedMerchants) highest = Math.max(highest, Number(merchantIdPattern.exec(entry.id)![1] ?? 0))
+  for (const entry of usedPlaces) highest = Math.max(highest, Number(placeIdPattern.exec(entry.id)![1] ?? 0))
   const storedNext = Number.isSafeInteger(stored.nextSequence) && (stored.nextSequence as number) > 0 ? stored.nextSequence as number : 1
   // IDs are derived from the sequence, so it must never fall behind a kept entry.
   return { ...emptySessionLedger(), records, merchants: usedMerchants, places: usedPlaces, nextSequence: Math.max(storedNext, highest + 1) }

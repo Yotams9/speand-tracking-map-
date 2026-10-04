@@ -285,7 +285,7 @@ export function CaptureExperience({
             onSources={() => onNavigate('sources', 'push')}
             onManual={() => chooseSource('manual')}
             onCandidate={(candidate) => {
-              prepareReview({ ...blankReview(), source: 'barcode', identification: candidate.identification,
+              prepareReview({ ...blankReview(), source: 'barcode', identification: candidate.identification, catalogPrices: candidate.catalogPrices,
                 provenance: 'user-reviewed',
                 lines: [{ name: candidate.name, quantity: '', price: '', unit: 'item' }] })
               onNavigate('review', 'push')

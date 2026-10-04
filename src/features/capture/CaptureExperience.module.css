@@ -252,6 +252,13 @@
 .barcodeResult { margin-block-end: 14px; padding: 14px; background: rgba(110,180,230,.08); border-radius: 14px; }
 .barcodeResult strong { color: #b9eaff; font-size: .78rem; }
 .barcodeResult p { color: #bbc3d0; font-size: .76rem; line-height: 1.5; overflow-wrap: anywhere; }
+.catalogPrices { margin-block: 10px; padding: 10px 12px; border: 1px solid rgba(122,235,203,.22); border-radius: 12px; background: rgba(59,208,165,.06); }
+.catalogPrices > p { margin: 0 0 6px; color: #9fead2; font-weight: 650; }
+.catalogPrices ul { display: grid; gap: 4px; margin: 0 0 6px; padding: 0; list-style: none; }
+.catalogPrices li { display: flex; justify-content: space-between; gap: 10px; color: #d7deea; font-size: .74rem; }
+.catalogPrices li:first-child strong { color: #7aebcb; }
+.catalogPrices li strong { flex: none; color: #f0f4fa; font-size: .76rem; }
+.catalogPrices small { display: block; color: #8f98a8; font-size: .64rem; line-height: 1.4; }
 @media (max-height: 500px) and (min-width: 600px) { .barcodePanel { grid-column: 2; } }
 .cameraStage[data-has-candidate='true'] .cameraViewfinder,
 .cameraStage[data-has-candidate='true'] .cameraActions,

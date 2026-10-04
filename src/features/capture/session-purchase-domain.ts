@@ -8,6 +8,8 @@ export interface ReviewLine { name: string; quantity: string; unit: 'item' | 'kg
 // A store the user names themselves. Coordinates come only from the user's own
 // explicit action and are needed only for a pinned physical place.
 export interface NewStoreInput { name: string; coordinates: [longitude: number, latitude: number] | null }
+// A located chain store from the published-price catalog, chosen by the user.
+export interface CatalogStoreChoice { id: string; chain: 'shufersal' | 'ramilevi' | 'osherad'; chainName: { en: string; he: string }; name: string; coordinates: [longitude: number, latitude: number] }
 export interface PurchaseReviewInput {
   source: CaptureDraft['source']
   provenance: 'synthetic-demo' | 'user-reviewed'
@@ -16,6 +18,9 @@ export interface PurchaseReviewInput {
   date: string; currency: '' | CurrencyCode; payment: '' | PaymentMode; category: '' | PurchaseCategory
   amount: string; baseAmount: string; lines: ReviewLine[]
   newStore?: NewStoreInput
+  catalogStore?: CatalogStoreChoice
+  /** Published shelf price per catalog store ID for an identified barcode; a form hint only. */
+  catalogPrices?: Record<string, number>
 }
 export type ReviewErrors = Record<string, string>
 export type ReviewContext = { merchants: readonly Merchant[]; places: readonly Place[] }
@@ -69,6 +74,9 @@ export function validateReview(input: PurchaseReviewInput, context: ReviewContex
     if (!validStoreName(store.name)) errors.newStoreName = 'required'
     else if (context.merchants.some(m => [m.name.en, m.name.he].some(name => storeNameKey(name) === storeNameKey(store.name)))) errors.newStoreName = 'storeExists'
     if (store.coordinates !== null ? !validStoreCoordinates(store.coordinates) : input.channel === 'physical') errors.newStoreLocation = 'location'
+    if (input.catalogStore !== undefined) errors.placeId = 'place'
+  } else if (input.catalogStore !== undefined) {
+    if (!validCatalogStore(input.catalogStore) || input.merchantId || input.placeId || input.channel !== 'physical') errors.placeId = 'place'
   } else {
     if (!merchant) errors.merchantId = 'required'
     if (input.channel === 'physical') {
@@ -117,7 +125,7 @@ export function reviewedRecord(input: PurchaseReviewInput, sequence: number, con
   if (input.identification) record.identification = { method: input.identification.method, syntheticCatalog: input.identification.syntheticCatalog === true, identity: { original: input.identification.identity.original, format: input.identification.identity.format, gtin14: input.identification.identity.gtin14 } }
   return record
 }
-// merchants/places hold only stores the user added; they exist while a record uses them.
+// merchants/places hold stores the user added or chose; they exist while a record uses them.
 export interface SessionPurchaseLedger { records: readonly SessionCaptureRecord[]; consumed: readonly string[]; nextSequence: number; undoId: string | null; merchants: readonly Merchant[]; places: readonly Place[] }
 export const emptySessionLedger = (): SessionPurchaseLedger => ({ records: [], consumed: [], nextSequence: 1, undoId: null, merchants: [], places: [] })
 export const devicePlaceLabels = { branch: { en: 'Pinned by you', he: 'סומן על ידך' }, city: { en: 'My places', he: 'המקומות שלי' }, country: { en: 'Saved on this device', he: 'נשמר במכשיר הזה' } } as const
@@ -126,11 +134,30 @@ export function validStoreCoordinates(value: unknown): value is [number, number]
   return Array.isArray(value) && value.length === 2 && value.every(v => typeof v === 'number' && Number.isFinite(v)) && Math.abs(value[0]) <= 180 && Math.abs(value[1]) <= 90
 }
 function storeNameKey(name: string) { return name.trim().replace(/\s+/g, ' ').toLocaleLowerCase() }
-function newStoreEntries(input: PurchaseReviewInput, sequence: number): { merchant: Merchant; place: Place | null } {
+const catalogChains = ['shufersal', 'ramilevi', 'osherad'] as const
+export function validCatalogStore(value: unknown): value is CatalogStoreChoice {
+  if (!value || typeof value !== 'object') return false
+  const store = value as Partial<CatalogStoreChoice>
+  return typeof store.id === 'string' && catalogChains.includes(store.chain!) && new RegExp(`^${store.chain}-\\d{1,5}$`).test(store.id)
+    && typeof store.chainName?.en === 'string' && validStoreName(store.chainName.en) && typeof store.chainName.he === 'string' && validStoreName(store.chainName.he)
+    && typeof store.name === 'string' && validStoreName(store.name) && validStoreCoordinates(store.coordinates)
+}
+export const catalogMerchantId = (chain: CatalogStoreChoice['chain']) => `chain_${chain}`
+export const catalogPlaceId = (storeId: string) => `store_${storeId.replace('-', '_')}`
+type StoreEntries = { merchantId: string; placeId: string; merchant: Merchant | null; place: Place | null }
+function newStoreEntries(input: PurchaseReviewInput, sequence: number): StoreEntries {
   const suffix = String(sequence).padStart(2, '0'), name = input.newStore!.name.trim().replace(/\s+/g, ' '), category = input.category as PurchaseCategory
   const merchant: Merchant = { id: `device_merchant_${suffix}`, name: { en: name, he: name }, category, ...(input.channel === 'online' ? { onlineOnly: true } : {}) }
   const coordinates = input.channel === 'physical' ? input.newStore!.coordinates : null
-  return { merchant, place: coordinates ? { id: `device_place_${suffix}`, merchantId: merchant.id, name: { en: name, he: name }, branch: { ...devicePlaceLabels.branch }, city: { ...devicePlaceLabels.city }, country: { ...devicePlaceLabels.country }, coordinates: [coordinates[0], coordinates[1]], category } : null }
+  const place: Place | null = coordinates ? { id: `device_place_${suffix}`, merchantId: merchant.id, name: { en: name, he: name }, branch: { ...devicePlaceLabels.branch }, city: { ...devicePlaceLabels.city }, country: { ...devicePlaceLabels.country }, coordinates: [coordinates[0], coordinates[1]], category } : null
+  return { merchantId: merchant.id, placeId: place?.id ?? '', merchant, place }
+}
+// A chain store becomes one merchant per chain and one place per store, reused by later purchases.
+function catalogStoreEntries(input: PurchaseReviewInput, context: ReviewContext): StoreEntries {
+  const store = input.catalogStore!, merchantId = catalogMerchantId(store.chain), placeId = catalogPlaceId(store.id)
+  const merchant: Merchant | null = context.merchants.some(m => m.id === merchantId) ? null : { id: merchantId, name: { ...store.chainName }, category: 'groceries' }
+  const place: Place | null = context.places.some(p => p.id === placeId) ? null : { id: placeId, merchantId, name: { ...store.chainName }, branch: { en: store.name, he: store.name }, city: { en: 'Tel Aviv-Yafo', he: 'תל אביב-יפו' }, country: { en: 'Israel', he: 'ישראל' }, coordinates: [store.coordinates[0], store.coordinates[1]], category: input.category as PurchaseCategory }
+  return { merchantId, placeId, merchant, place }
 }
 function usedDirectory(ledger: SessionPurchaseLedger, records: readonly SessionCaptureRecord[]) {
   return { merchants: ledger.merchants.filter(m => records.some(r => r.purchase.merchantId === m.id)), places: ledger.places.filter(p => records.some(r => r.purchase.placeId === p.id)) }
@@ -143,11 +170,11 @@ export function saveReviewedPurchase(ledger: SessionPurchaseLedger, operationId:
   if (!operationId || ledger.consumed.includes(operationId)) return { ledger, result: { code: 'consumed' } }
   const errors = validateReview(input, context)
   if (Object.keys(errors).length) return { ledger, result: { code: 'invalid', errors } }
-  const store = input.newStore ? newStoreEntries(input, ledger.nextSequence) : null
-  const resolved: PurchaseReviewInput = store ? { ...input, newStore: undefined, merchantId: store.merchant.id, placeId: store.place?.id ?? '' } : input
-  const record = reviewedRecord(resolved, ledger.nextSequence, store ? { merchants: [...context.merchants, store.merchant], places: store.place ? [...context.places, store.place] : context.places } : context)
+  const store = input.newStore ? newStoreEntries(input, ledger.nextSequence) : input.catalogStore ? catalogStoreEntries(input, context) : null
+  const resolved: PurchaseReviewInput = store ? { ...input, newStore: undefined, catalogStore: undefined, merchantId: store.merchantId, placeId: store.placeId } : input
+  const record = reviewedRecord(resolved, ledger.nextSequence, store ? { merchants: store.merchant ? [...context.merchants, store.merchant] : context.merchants, places: store.place ? [...context.places, store.place] : context.places } : context)
   if (!allowDuplicate && [...baseline, ...ledger.records.map(r => r.purchase)].some(p => fingerprint(p) === fingerprint(record.purchase))) return { ledger, result: { code: 'duplicate' } }
-  return { ledger: { records: [...ledger.records, record], consumed: [...ledger.consumed, operationId], nextSequence: ledger.nextSequence + 1, undoId: record.purchase.id, merchants: store ? [...ledger.merchants, store.merchant] : ledger.merchants, places: store?.place ? [...ledger.places, store.place] : ledger.places }, result: { code: 'saved', purchaseId: record.purchase.id } }
+  return { ledger: { records: [...ledger.records, record], consumed: [...ledger.consumed, operationId], nextSequence: ledger.nextSequence + 1, undoId: record.purchase.id, merchants: store?.merchant ? [...ledger.merchants, store.merchant] : ledger.merchants, places: store?.place ? [...ledger.places, store.place] : ledger.places }, result: { code: 'saved', purchaseId: record.purchase.id } }
 }
 export function undoSessionPurchase(ledger: SessionPurchaseLedger): SessionPurchaseLedger {
   const records = ledger.records.filter(r => r.purchase.id !== ledger.undoId)

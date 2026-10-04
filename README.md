@@ -156,6 +156,15 @@ Screenshots, recordings, and run output belong only in the ignored local
   place aggregates without mutating the checked-in fixture graph; since
   2026-10-02 they are kept in this browser's `localStorage` on the device and
   survive reload until removed; online/unresolved additions remain unpinned
+- real barcodes outside the demo catalog show the published shelf prices of
+  every Tel Aviv Shufersal, Rami Levy and Osher Ad store that sells them,
+  served by `/api/catalog/[gtin]` from `data/catalog/tel-aviv.json`; rebuild the
+  snapshot with `python tools/nearby-prices/build_catalog.py` (source: the
+  chains' price transparency files; promotions and club prices not applied)
+- `Find the store I'm in` suggests the closest of the 34 located Tel Aviv
+  supermarkets (store addresses geocoded once with OpenStreetMap Nominatim,
+  © OpenStreetMap contributors, ODbL) and fills that store's published price
+  for a scanned item; the location is read only on press and never stored
 - stores the user adds in the review form, pinned only from a location the
   user explicitly reads on the device, and a two-press removal of an added
   purchase from its detail panel

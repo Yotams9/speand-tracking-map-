@@ -51,6 +51,7 @@ import {
 } from '@/features/capture/capture-domain'
 import { emptySessionLedger, expireSessionPurchaseUndo, removeSessionPurchase, saveReviewedPurchase, undoSessionPurchase, resetSessionPurchases } from '@/features/capture/session-purchase-domain'
 import { DEVICE_LEDGER_KEY, restoreSessionLedger, serializeSessionLedger } from '@/features/capture/session-purchase-storage'
+import { isLocated, loadCatalogStores } from '@/features/capture/catalog-stores'
 import {
   applySmartInboxDecisions,
   caseForPurchase,
@@ -129,6 +130,11 @@ const AskSpendscapeExperience = dynamic(
 )
 
 const SOURCE_ID = 'spendscape-places'
+// Supermarkets with published prices: context markers, never purchase places or pins.
+const CATALOG_SOURCE_ID = 'spendscape-catalog-stores'
+const CATALOG_STORE_LAYER = 'spendscape-catalog-stores'
+const CATALOG_LABEL_LAYER = 'spendscape-catalog-store-labels'
+const catalogLabelExpression = (locale: LocaleCode) => ['concat', ['get', locale === 'he' ? 'chainHe' : 'chainEn'], ' · ', ['get', 'name']] as maplibregl.ExpressionSpecification
 const HEAT_LAYER = 'spendscape-heat'
 const CLUSTER_GLOW_LAYER = 'spendscape-cluster-glow'
 const CLUSTER_LAYER = 'spendscape-clusters'
@@ -1651,6 +1657,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     if (map?.getLayer(LABEL_LAYER)) {
       map.setLayoutProperty(LABEL_LAYER, 'text-field', placeLabelExpression(locale))
     }
+    if (map?.getLayer(CATALOG_LABEL_LAYER)) map.setLayoutProperty(CATALOG_LABEL_LAYER, 'text-field', catalogLabelExpression(locale))
   }, [locale])
 
   useEffect(() => {
@@ -2224,6 +2231,66 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           })
 
           const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 16 })
+          void loadCatalogStores().then((stores) => {
+            if (disposed || map.getSource(CATALOG_SOURCE_ID)) return
+            const below = map.getLayer(HEAT_LAYER) ? HEAT_LAYER : undefined
+            map.addSource(CATALOG_SOURCE_ID, {
+              type: 'geojson',
+              data: {
+                type: 'FeatureCollection',
+                features: stores.filter(isLocated).map((store) => ({
+                  type: 'Feature' as const,
+                  geometry: { type: 'Point' as const, coordinates: [store.location.lon, store.location.lat] },
+                  properties: { id: store.id, chainEn: store.chainName.en, chainHe: store.chainName.he, name: store.name, address: store.address },
+                })),
+              },
+            })
+            map.addLayer({
+              id: CATALOG_STORE_LAYER,
+              type: 'circle',
+              source: CATALOG_SOURCE_ID,
+              minzoom: 10,
+              paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 13, 4.5, 16, 7],
+                'circle-color': '#0c2b25',
+                'circle-stroke-color': '#3bd0a5',
+                'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 2],
+                'circle-opacity': 0.92,
+                'circle-pitch-alignment': 'viewport',
+              },
+            }, below)
+            map.addLayer({
+              id: CATALOG_LABEL_LAYER,
+              type: 'symbol',
+              source: CATALOG_SOURCE_ID,
+              minzoom: 14,
+              layout: {
+                'text-field': catalogLabelExpression(localeRef.current),
+                'text-font': ['Noto Sans Regular'],
+                'text-size': 11,
+                'text-offset': [0, 1.1],
+                'text-anchor': 'top',
+                'text-optional': true,
+              },
+              paint: { 'text-color': '#17614f', 'text-halo-color': 'rgba(252,253,255,0.95)', 'text-halo-width': 1.6 },
+            }, below)
+            map.on('mouseenter', CATALOG_STORE_LAYER, (event) => {
+              if (replaySessionRef.current) return
+              const feature = event.features?.[0]
+              if (!feature) return
+              const properties = feature.properties as { chainEn: string; chainHe: string; name: string; address: string }
+              const activeLocale = localeRef.current
+              const tooltip = document.createElement('div')
+              tooltip.className = styles.mapTooltip
+              const title = document.createElement('strong')
+              title.textContent = `${activeLocale === 'he' ? properties.chainHe : properties.chainEn} · ${properties.name}`
+              const meta = document.createElement('span')
+              meta.textContent = activeLocale === 'he' ? `${properties.address} · מחירים מפורסמים בסורק` : `${properties.address} · published prices in the scanner`
+              tooltip.append(title, meta)
+              popup.setLngLat((feature.geometry as Point).coordinates as [number, number]).setDOMContent(tooltip).addTo(map)
+            })
+            map.on('mouseleave', CATALOG_STORE_LAYER, () => popup.remove())
+          }).catch(() => {})
           let hoveredFeatureId: string | number | null = null
           map.on('mouseenter', PIN_LAYER, (event) => {
             if (replaySessionRef.current) return
