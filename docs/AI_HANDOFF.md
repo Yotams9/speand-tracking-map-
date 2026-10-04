@@ -383,3 +383,71 @@ initial focus failures are documented in the checkpoint. All four EN/HE
 mobile/desktop correction screenshots were inspected. Server stopped;
 next-env, HEAD and protected refs unchanged; index empty; same 13-file manifest.
 Next: `APPROVE SPENDSCAPE COLLEGE P2C CHECKPOINT REVIEW`. No commit/push/deploy.
+
+
+### College receipt-to-review core adapter — 2026-10-04
+
+Latest bounded task complete offline in receipt-review-adapter.ts and its test.
+Runtime-validated fictional observations preserve originals/alternatives alongside
+editable review fields; no merchant/place/time/unit/price/discount inference.
+Printed line amounts remain separate and must match integer calculated nets
+before whitelisted PurchaseReviewInput projection. Pre-VAT/VAT/rate and barcodes
+are optional; no historical evaluator/score/freeze/lock changed. Missing required
+facts/context require explicit review, including UTC date/time and foreign ILS.
+No consumer wiring, purchase creation side effect or persistence schema change.
+
+New mocks: one item and 15 lines with Hebrew/mixed/repeated labels, weight and
+explicit discount. Final focused tests 84/84; full Vitest 248/248 (17 files);
+project typecheck and separate strict new-file/test typecheck passed. Guarded
+mock adaptation/preparation observes zero transport/storage/log calls; existing
+save/v2 round trips, duplicates, consumed IDs, Undo and 42/12/12/ILS 6,777.38
+baseline checks pass. No build/browser/device QA; all existing UI/MapLibre/camera
+source and 219 protected files byte-identical. Initial test fixture mistakes
+corrected without weakening assertions; checkpoint records exact evidence.
+
+Remaining gate: separate core-adapter checkpoint review. Capture UI still needs
+separately approved wiring for observed metadata, unknown units, printed-line
+corrections and UTC confirmation, then existing explicit P1 save. Merchant/
+address, taxes and per-line barcode sidecars are not persisted by current v2;
+unknown merchants need explicit unresolved/canonical context, no new IDs/pins.
+No live/general receipt extraction claim; Vision 3 consumed, Gemini P2D 3/12
+and consumed Groq evidence remain locked. See COLLEGE_RECEIPT_REVIEW_ADAPTER.md.
+
+Exact task manifest (4): src/features/capture/receipt-review-adapter.ts,
+src/features/capture/receipt-review-adapter.test.ts,
+docs/spendscape/COLLEGE_RECEIPT_REVIEW_ADAPTER.md, docs/AI_HANDOFF.md (append only).
+Pre-task handoff and unrelated dirty/untracked files preserved. Feature branch,
+HEAD e7f05f8, main/origin-main eee0d26, cached origin feature 66fb420; ahead 6/
+behind 0, no fetch. Index empty; next-env matches HEAD/pre-task. Ignored evidence
+only under artifacts/spendscape-receipt-review-adapter. No server, dependencies,
+credential/provider/account/billing action, stage/commit/push/deployment.
+
+
+### Receipt adapter strict-array correction — 2026-10-04
+
+Checkpoint review found one Medium runtime validation issue: sparse JavaScript
+line arrays could return ready:true but fail local-store validation; extra array
+properties survived cloning. Ordinary JSON cannot carry these shapes. Under the
+separate correction approval, bounded dense-array validation now guards observed
+lines, ambiguous candidates and edited review lines. Reject holes/inherited or
+hidden indices, accessors, custom prototypes and extra string/symbol/hidden keys
+before cloning/projection; preserve valid dense/frozen arrays and existing caps.
+No changes to facts, arithmetic, optional VAT/barcodes, save/store or consumer UI.
+
+Fresh offline QA: 75/75 adapter tests (37 new); combined domain/store/comparison/
+repository suite 121/121 in five files, zero failures/skips. Both project and
+explicit strict new-file/test typechecks passed; whitespace checks passed.
+Original one/15-item, context, discounts, Undo, pin/baseline and storage tests
+remain green; maximum 50-line/frozen control round-trips through v2. No full
+suite/build/browser/server or provider call in this correction. Prior 248-test
+full result is historical initial-implementation evidence, not a fresh rerun.
+
+Same four-file manifest: receipt-review-adapter.ts, receipt-review-adapter.test.ts,
+COLLEGE_RECEIPT_REVIEW_ADAPTER.md and this handoff append. Pre-correction inputs
+retained in ignored artifacts/spendscape-receipt-review-adapter/strict-arrays/;
+219 protected files and 63 historical pins/five Vision wrapper hashes unchanged.
+Feature HEAD e7f05f8; protected main refs eee0d26; cached origin feature 66fb420,
+ahead 6/behind 0. Index empty; next-env matches HEAD/pre-task. Unrelated work and
+all consumed provider locks preserved. No dependencies, UI/schema integration,
+stage/commit/push/deploy. Next gate: a new receipt-to-review adapter checkpoint
+review; neither commit nor consumer/provider integration is authorized.
