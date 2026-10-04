@@ -104,7 +104,7 @@ test('manual cash unresolved saves only after review and repeated identical draf
   await page.getByTestId('session-undo').click(); await expect.poll(async () => (await qa(page)).sessionPurchaseCount).toBe(1)
   await expect(page.getByTestId('session-undo')).toHaveCount(0)
 })
-test('synthetic receipt review edits preserve arithmetic; cancellation and reload leave no additions', async ({ page }) => {
+test('synthetic receipt review edits preserve arithmetic; cancellation adds nothing and the saved addition survives reload', async ({ page }) => {
   await open(page); await page.getByTestId('capture-scan').click(); await expect(page.getByTestId('capture-review')).toBeVisible()
   await page.getByTestId('review-quantity-0').fill('2'); await page.getByTestId('capture-confirm').click()
   expect((await qa(page)).sessionPurchaseCount).toBe(0)
@@ -114,7 +114,8 @@ test('synthetic receipt review edits preserve arithmetic; cancellation and reloa
   await page.keyboard.press('Escape'); await page.getByTestId('capture-open-desktop').click(); await page.getByTestId('capture-camera-manual').click()
   await details(page, 'online', 'JPY', false); await page.keyboard.press('Escape')
   expect((await qa(page)).sessionPurchaseCount).toBe(1)
-  await page.reload(); await expect.poll(async () => (await qa(page))?.sessionPurchaseCount).toBe(0)
+  await page.reload(); await expect.poll(async () => (await qa(page))?.sessionPurchaseCount).toBe(1)
+  expect((await qa(page)).analytics.totalBaseAmountIls).toBe(6882.78)
 })
 test('Undo countdown expires after eight seconds while preserving the session addition', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -133,7 +134,7 @@ test('Undo countdown expires after eight seconds while preserving the session ad
   await page.getByTestId('capture-done').click()
   await expect(page.getByTestId('session-undo')).toHaveCount(0)
 })
-test('real pinned barcode reader from synthetic camera hands off once; no OCR, outgoing payload, storage or image retention', async ({ page, context }) => {
+test('real pinned barcode reader from synthetic camera hands off once; no OCR, outgoing payload or image retention, and only the saved purchase is stored', async ({ page, context }) => {
   const writes: number[] = [], ocr: number[] = [], errors: number[] = []
   page.on('request', request => { if (!['GET','HEAD'].includes(request.method())) writes.push(1); if (/tesseract|traineddata|scanner-d1/.test(request.url())) ocr.push(1) })
   page.on('pageerror', () => errors.push(1))
@@ -146,17 +147,24 @@ test('real pinned barcode reader from synthetic camera hands off once; no OCR, o
     paint(); setInterval(paint,100)
     Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:()=>{probe.calls++;const stream=canvas.captureStream(10);stream.getTracks().forEach(t=>{const stop=t.stop.bind(t);t.stop=()=>{probe.stopped++;stop()}});return Promise.resolve(stream)}}})
     const Native=Worker; window.Worker=class extends Native { barcode: boolean;constructor(url:string|URL,options?:WorkerOptions){super(url,options);this.barcode=options?.name==='spendscape-barcode';if(this.barcode)probe.workers++}terminate(){if(this.barcode)probe.terminated++;super.terminate()} }
-    Storage.prototype.setItem=()=>{probe.storage++;throw Error('storage-forbidden')}
+    const setItem=Storage.prototype.setItem
+    Storage.prototype.setItem=function(key:string,value:string){probe.storage++;if(this!==localStorage||key!=='spendscape.device-purchases.v1')throw Error('storage-forbidden');setItem.call(this,key,value)}
     HTMLCanvasElement.prototype.toDataURL=()=>{probe.exports++;throw Error('export-forbidden')}
     HTMLCanvasElement.prototype.toBlob=()=>{probe.exports++;throw Error('export-forbidden')}
   }, barcodeBits('2000000000015','EAN13'))
   await page.getByTestId('capture-camera-toggle').click(); await expect(page.getByTestId('barcode-product-name')).toHaveValue('Demo oats')
   expect((await qa(page)).sessionPurchaseCount).toBe(0)
+  // Identification alone stores nothing; the reviewed save is the only write.
+  expect(await page.evaluate(() => (window as unknown as {scannerEProbe: {storage: number}}).scannerEProbe.storage)).toBe(0)
   await page.getByTestId('barcode-review-purchase').click(); await details(page); await page.getByTestId('capture-confirm').click()
   await expect(page.getByTestId('capture-success')).toBeVisible()
-  expect(await page.evaluate(() => (window as unknown as {scannerEProbe: unknown}).scannerEProbe)).toEqual({calls:1,stopped:1,workers:1,terminated:1,storage:0,exports:0})
+  expect(await page.evaluate(() => (window as unknown as {scannerEProbe: unknown}).scannerEProbe)).toEqual({calls:1,stopped:1,workers:1,terminated:1,storage:1,exports:0})
   expect(writes).toEqual([]); expect(ocr).toEqual([]);expect(errors).toEqual([])
-  expect(await context.storageState()).toEqual({cookies:[],origins:[]})
+  const state = await context.storageState()
+  expect(state.cookies).toEqual([])
+  expect(state.origins.map(origin => origin.localStorage.map(entry => entry.name))).toEqual([['spendscape.device-purchases.v1']])
+  expect(state.origins[0].localStorage[0].value).not.toMatch(/data:|blob:/)
+  expect(JSON.parse(state.origins[0].localStorage[0].value).records).toHaveLength(1)
   expect(await qa(page)).toMatchObject({ combinedPurchaseCount:43, mapInstanceCount:1,mapConstructionCount:1 })
 })
 
@@ -318,7 +326,8 @@ for (const he of [false, true]) {
     expect(await page.evaluate(() => (window as any).__historyPrivacyProbe.writes.some(Boolean))).toBe(false)
     await page.reload()
     await page.waitForFunction(() => (window as any).__SPENDSCAPE_QA__?.ready)
-    expect(await qa(page)).toMatchObject({ combinedPurchaseCount: 42, canonicalPins: 12, analytics: { totalBaseAmountIls: 6777.38 } })
+    // The reviewed purchase itself is kept on the device; its search text is not.
+    expect(await qa(page)).toMatchObject({ combinedPurchaseCount: 43, canonicalPins: 12, analytics: { totalBaseAmountIls: 6802.38 } })
     await page.goForward()
     await expect.poll(() => page.evaluate(() => (window as any).__historyPrivacyProbe.traversals.length)).toBeGreaterThan(0)
     await expect(page.getByTestId('replay-player')).toHaveCount(0)
@@ -412,10 +421,53 @@ test('a newer addition replaces the deadline; Undo and Reset dismiss it immediat
   await page.getByTestId('capture-undo').click()
   await expect(page.getByTestId('capture-undo')).toHaveCount(0)
   expect((await qa(page)).sessionPurchaseCount).toBe(1)
-  await page.getByRole('button', { name: 'Reset demo additions' }).click()
+  await page.getByRole('button', { name: 'Remove saved additions' }).click()
   await add('27.00')
-  await page.getByRole('button', { name: 'Reset demo additions' }).click()
+  await page.getByRole('button', { name: 'Remove saved additions' }).click()
   await expect(page.getByTestId('capture-undo')).toHaveCount(0)
   await page.clock.runFor(8000)
   expect((await qa(page)).combinedPurchaseCount).toBe(42)
+})
+
+test('a new pinned store adds one pin, survives reload and leaves with its removed purchase', async ({ page, context }) => {
+  await context.grantPermissions(['geolocation']); await context.setGeolocation({ latitude: 32.0809, longitude: 34.7741 })
+  const errors: number[] = []; page.on('pageerror', () => errors.push(1))
+  await open(page); await page.getByTestId('capture-camera-manual').click()
+  await page.getByTestId('review-channel').selectOption('physical')
+  await page.getByTestId('review-placeId').selectOption('__new_store__')
+  await page.getByTestId('review-newStoreName').fill('Synthetic corner grocery')
+  await page.getByTestId('review-date').fill('2026-09-12T14:35')
+  await page.getByTestId('review-currency').selectOption('ILS')
+  await page.getByTestId('review-payment').selectOption('cash')
+  await page.getByTestId('review-category').selectOption('groceries')
+  await page.getByTestId('review-amount').fill('42.50')
+  // A pinned place needs the user's explicit location; nothing is inferred.
+  await page.getByTestId('manual-review').click()
+  await expect(page.getByTestId('review-newStoreLocation')).toBeFocused()
+  await expect(page.getByTestId('capture-manual')).toBeVisible()
+  await page.getByTestId('review-newStoreLocation').click()
+  await expect(page.getByTestId('review-newStoreLocation-status')).toContainText('32.0809, 34.7741')
+  await page.getByTestId('manual-review').click(); await page.getByTestId('capture-confirm').click()
+  await expect(page.getByTestId('capture-success')).toBeVisible()
+  expect(await qa(page)).toMatchObject({ combinedPurchaseCount: 43, canonicalPins: 13, mapConstructionCount: 1, analytics: { totalBaseAmountIls: 6819.88 } })
+  await page.reload(); await expect.poll(async () => (await qa(page))?.canonicalPins).toBe(13)
+  expect(await qa(page)).toMatchObject({ combinedPurchaseCount: 43, sessionPurchaseCount: 1 })
+  // The added store can be chosen again without a second location read.
+  await page.getByTestId('capture-open-desktop').click(); await page.getByTestId('capture-camera-manual').click()
+  await page.getByTestId('review-channel').selectOption('physical')
+  await page.getByTestId('review-placeId').selectOption('device_place_01')
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Purchases', exact: true }).first().click()
+  await page.getByTestId('purchase-session_purchase_manual_01').click()
+  await expect(page.getByTestId('purchase-detail')).toContainText('Synthetic corner grocery')
+  await expect(page.getByTestId('purchase-detail')).toContainText('Pinned by you')
+  await page.getByTestId('purchase-remove').click()
+  await expect(page.getByTestId('purchase-remove')).toHaveAttribute('data-armed', 'true')
+  expect((await qa(page)).combinedPurchaseCount).toBe(43)
+  await page.getByTestId('purchase-remove').click()
+  await expect(page.getByTestId('purchase-detail')).toHaveCount(0)
+  expect(await qa(page)).toMatchObject({ combinedPurchaseCount: 42, canonicalPins: 12, sessionPurchaseCount: 0, selectedPurchaseId: null, mapConstructionCount: 1 })
+  expect(await page.evaluate(() => localStorage.getItem('spendscape.device-purchases.v1'))).toBeNull()
+  await page.reload(); await expect.poll(async () => (await qa(page))?.combinedPurchaseCount).toBe(42)
+  expect(errors).toEqual([])
 })

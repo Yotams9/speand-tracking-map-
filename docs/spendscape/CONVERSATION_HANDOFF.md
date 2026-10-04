@@ -3,7 +3,42 @@
 This file transfers the relevant decisions and workspace history into a durable
 form. It is a summary of user intent, not a verbatim transcript.
 
-## Latest gate — Scanner E Replay history correction, 2026-09-15
+## Latest — device purchase storage, 2026-10-02
+
+The user restated the product goal as easy entry of purchases made anywhere,
+an app that remembers them, and suggestions that save money, and approved an
+on-device "remember" step first. Added purchases (the Scanner E ledger) are now
+written to `localStorage` under `spendscape.device-purchases.v1` and restored on
+load after strict validation against the current merchants and places
+(`src/features/capture/session-purchase-storage.ts`). Undo and operation
+idempotency stay page-lifetime. No account, backend or provider is involved;
+data lives only in that browser profile. Search text, Replay and Inbox
+decisions keep their earlier non-persistent behaviour. The earlier statements
+below that additions are session-only describe the state before this change.
+
+Agreed order after this step: real product/price catalog for the barcode
+scanner (Tel Aviv pilot; Shufersal, Rami Levy and Osher Ad were confirmed
+reachable on 2026-10-02, the latter two through their published guest user
+names, which the user approved), then receipt capture, then basket savings
+suggestions.
+
+Follow-up on the same day, approved by the user ("go with your
+recommendation"): the review form offers `＋ New store…`. A new store needs a
+unique name; a pinned physical store also needs the device location, read once
+through the browser Geolocation API only when the user presses the button.
+That location marks where the user says the store is and is never treated as
+proof of a purchase. Online and unpinned stores take no location. Stores live
+in the same device ledger (`device_merchant_NN`, `device_place_NN`), join the
+snapshot merchant/place lists at runtime, and are dropped when their last
+purchase is undone or removed. Purchase detail has a two-press
+`Remove purchase` for added purchases. Storage is written only after a ledger
+change, never on load.
+
+Known gaps: a store saved without a location cannot be pinned later, added
+places show placeholder city text because nothing is reverse-geocoded, added
+purchases cannot be edited, and tabs do not sync.
+
+## Earlier gate — Scanner E Replay history correction, 2026-09-15
 
 The user authorized `APPROVE SPENDSCAPE SCANNER E — SESSION-ONLY REVIEWED PURCHASE INTEGRATION + LOCAL QA`.
 The completed working-tree slice connects Scanner B identification, demo candidates,

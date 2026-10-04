@@ -304,7 +304,7 @@ test('existing demo-session reset disposes a pending scanner without changing th
   await page.getByTestId('capture-open-desktop').click()
   await page.getByTestId('capture-camera-toggle').click()
   await expect.poll(async()=>(await metrics(page)).posts).toBe(1)
-  await page.getByRole('button',{name:'Reset demo additions',exact:true}).click()
+  await page.getByRole('button',{name:'Remove saved additions',exact:true}).click()
   await page.evaluate(()=>(window as Probe).__barcodeQA.late?.())
   await expect(page.getByTestId('capture-scanner')).toHaveAttribute('data-camera-state','idle')
   await expect(page.getByTestId('barcode-result')).toBeHidden()

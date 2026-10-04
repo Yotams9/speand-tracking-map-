@@ -83,14 +83,14 @@ const copy = {
     gmailBody: 'A later approved phase can add connection and consent. No email is accessed, no account is connected, and no permission is requested now.',
     understood: 'Back to sources', failureTitle: 'We could not read that demo',
     failureBody: 'The synthetic example was intentionally unclear. Try again or choose another method.',
-    retry: 'Retry demo', successTitle: 'Purchase added for this session',
-    successBody: 'Stored only in this tab. Reloading removes session additions.',
+    retry: 'Retry demo', successTitle: 'Purchase saved on this device',
+    successBody: 'Saved in this browser on this device. It stays after a reload until you remove it.',
     viewPurchase: 'View purchase', showGlobe: 'Show on globe', done: 'Done',
-    reset: 'Reset demo additions', sessionCount: 'session additions',
+    reset: 'Remove saved additions', sessionCount: 'saved additions',
     provenance: 'Built-in synthetic demo · fixed illustrative FX',
     csvPreview: '3 synthetic rows previewed · only this row is added after confirmation.',
     statusProcessing: 'Simulated scan in progress', statusReady: 'Purchase ready to review',
-    statusSuccess: 'Purchase added for this session', required: 'Required', noPhoto: 'No image or photo value is retained.',
+    statusSuccess: 'Purchase saved on this device', required: 'Required', noPhoto: 'No image or photo value is retained.',
   },
   he: {
     close: 'סגירת Capture', back: 'חזרה', eyebrow: 'קליטה אוניברסלית · הדמיה',
@@ -113,14 +113,14 @@ const copy = {
     gmailBody: 'בשלב עתידי ומאושר ניתן יהיה להוסיף חיבור והסכמה. כעת אין גישה לדוא״ל, אין חשבון מחובר ולא מתבקשת הרשאה.',
     understood: 'חזרה למקורות', failureTitle: 'לא הצלחנו לקרוא את ההדגמה',
     failureBody: 'הדוגמה הסינתטית הוגדרה בכוונה כלא ברורה. אפשר לנסות שוב או לבחור שיטה אחרת.',
-    retry: 'ניסיון הדגמה נוסף', successTitle: 'הרכישה נוספה להפעלה הזו',
-    successBody: 'נשמר בלשונית הזו בלבד. טעינה מחדש מסירה את התוספות להפעלה.',
+    retry: 'ניסיון הדגמה נוסף', successTitle: 'הרכישה נשמרה במכשיר הזה',
+    successBody: 'נשמר בדפדפן הזה במכשיר הזה. הרכישה נשארת גם אחרי טעינה מחדש, עד שתסירו אותה.',
     viewPurchase: 'הצגת הרכישה', showGlobe: 'הצגה בגלובוס', done: 'סיום',
-    reset: 'איפוס תוספות הדגמה', sessionCount: 'תוספות להפעלה',
+    reset: 'הסרת התוספות השמורות', sessionCount: 'תוספות שמורות',
     provenance: 'הדגמה סינתטית מובנית · שער המחשה קבוע',
     csvPreview: '3 שורות סינתטיות הוצגו · רק שורה זו תתווסף לאחר אישור.',
     statusProcessing: 'סריקת ההדגמה מתבצעת', statusReady: 'הרכישה מוכנה לבדיקה',
-    statusSuccess: 'הרכישה נוספה להפעלה', required: 'שדה חובה', noPhoto: 'לא נשמר ערך של תמונה או צילום.',
+    statusSuccess: 'הרכישה נשמרה במכשיר הזה', required: 'שדה חובה', noPhoto: 'לא נשמר ערך של תמונה או צילום.',
   },
 } as const
 
@@ -270,7 +270,7 @@ export function CaptureExperience({
         <header className={styles.header}>
           <div className={styles.headerLead}>
             {showBack && <button type="button" className={styles.back} onClick={onBack} aria-label={t.back}>←</button>}
-            <div><p>{step === 'scanner' ? (locale === 'he' ? 'Capture · מצלמה והדגמות' : 'Capture · camera & demos') : reviewInput?.provenance === 'user-reviewed' ? (locale === 'he' ? 'Capture · להפעלה בלבד' : 'Capture · session only') : t.eyebrow}</p><strong>Spendscape</strong></div>
+            <div><p>{step === 'scanner' ? (locale === 'he' ? 'Capture · מצלמה והדגמות' : 'Capture · camera & demos') : reviewInput?.provenance === 'user-reviewed' ? (locale === 'he' ? 'Capture · נשמר במכשיר' : 'Capture · saved on this device') : t.eyebrow}</p><strong>Spendscape</strong></div>
           </div>
           <button ref={closeRef} type="button" className={styles.close} onClick={onClose} aria-label={t.close}>×</button>
         </header>
