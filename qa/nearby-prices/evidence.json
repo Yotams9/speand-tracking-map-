@@ -1,0 +1,1013 @@
+{
+  "sample": {
+    "requests": [
+      {
+        "host": "prices.shufersal.co.il",
+        "path": "/FileObject/UpdateCategory",
+        "status": 200,
+        "bytes": 3844,
+        "seconds": 12.49
+      },
+      {
+        "host": "pricesprodpublic.blob.core.windows.net",
+        "path": "/price/Price7290027600007-001-001-20260921-020000.gz",
+        "status": 200,
+        "bytes": 1215,
+        "seconds": 0.538
+      },
+      {
+        "host": "prices.shufersal.co.il",
+        "path": "/FileObject/UpdateCategory",
+        "status": 200,
+        "bytes": 3867,
+        "seconds": 8.275
+      },
+      {
+        "host": "pricesprodpublic.blob.core.windows.net",
+        "path": "/pricefull/PriceFull7290027600007-001-001-20260922-030000.gz",
+        "status": 200,
+        "bytes": 335052,
+        "seconds": 0.763
+      },
+      {
+        "host": "prices.shufersal.co.il",
+        "path": "/FileObject/UpdateCategory",
+        "status": 200,
+        "bytes": 3842,
+        "seconds": 7.85
+      },
+      {
+        "host": "pricesprodpublic.blob.core.windows.net",
+        "path": "/promo/Promo7290027600007-001-001-20260922-020000.gz",
+        "status": 200,
+        "bytes": 2707,
+        "seconds": 0.101
+      },
+      {
+        "host": "prices.shufersal.co.il",
+        "path": "/FileObject/UpdateCategory",
+        "status": 200,
+        "bytes": 3862,
+        "seconds": 8.895
+      },
+      {
+        "host": "pricesprodpublic.blob.core.windows.net",
+        "path": "/promofull/PromoFull7290027600007-001-001-20260922-030000.gz",
+        "status": 200,
+        "bytes": 229793,
+        "seconds": 0.123
+      },
+      {
+        "host": "prices.shufersal.co.il",
+        "path": "/FileObject/UpdateCategory",
+        "status": 200,
+        "bytes": 3801,
+        "seconds": 7.794
+      },
+      {
+        "host": "pricesprodpublic.blob.core.windows.net",
+        "path": "/stores/Stores7290027600007-000-20260922-025.gz",
+        "status": 200,
+        "bytes": 12626,
+        "seconds": 0.107
+      },
+      {
+        "host": "prices.shufersal.co.il",
+        "path": "/FileObject/UpdateCategory",
+        "status": 200,
+        "bytes": 3841,
+        "seconds": 10.795
+      },
+      {
+        "host": "pricesprodpublic.blob.core.windows.net",
+        "path": "/price/Price7290027600007-001-002-20260921-020000.gz",
+        "status": 200,
+        "bytes": 1136,
+        "seconds": 0.108
+      },
+      {
+        "host": "prices.shufersal.co.il",
+        "path": "/FileObject/UpdateCategory",
+        "status": 200,
+        "bytes": 3859,
+        "seconds": 9.769
+      },
+      {
+        "host": "pricesprodpublic.blob.core.windows.net",
+        "path": "/pricefull/PriceFull7290027600007-001-002-20260922-030000.gz",
+        "status": 200,
+        "bytes": 382142,
+        "seconds": 0.145
+      },
+      {
+        "host": "prices.shufersal.co.il",
+        "path": "/FileObject/UpdateCategory",
+        "status": 200,
+        "bytes": 3849,
+        "seconds": 10.836
+      },
+      {
+        "host": "pricesprodpublic.blob.core.windows.net",
+        "path": "/promo/Promo7290027600007-001-002-20260922-020000.gz",
+        "status": 200,
+        "bytes": 2818,
+        "seconds": 0.099
+      },
+      {
+        "host": "prices.shufersal.co.il",
+        "path": "/FileObject/UpdateCategory",
+        "status": 200,
+        "bytes": 3859,
+        "seconds": 6.713
+      },
+      {
+        "host": "pricesprodpublic.blob.core.windows.net",
+        "path": "/promofull/PromoFull7290027600007-001-002-20260922-030000.gz",
+        "status": 200,
+        "bytes": 257088,
+        "seconds": 0.117
+      }
+    ],
+    "files": [
+      {
+        "name": "Price7290027600007-001-001-20260921-020000.gz",
+        "kind": "Price",
+        "branch": "001",
+        "source": "https://pricesprodpublic.blob.core.windows.net/price/Price7290027600007-001-001-20260921-020000.gz",
+        "sha256": "fc8c95ef5d1bfba655a084232f86ed2637147483fa52eced360d88bb5a26c05a",
+        "bytes": 1215,
+        "xml_bytes": 8050
+      },
+      {
+        "name": "PriceFull7290027600007-001-001-20260922-030000.gz",
+        "kind": "PriceFull",
+        "branch": "001",
+        "source": "https://pricesprodpublic.blob.core.windows.net/pricefull/PriceFull7290027600007-001-001-20260922-030000.gz",
+        "sha256": "6e52f28b11304473eb96b3f646c13e0e305a31410f16b5bbcd15d5501c0d052b",
+        "bytes": 335052,
+        "xml_bytes": 5622024
+      },
+      {
+        "name": "Promo7290027600007-001-001-20260922-020000.gz",
+        "kind": "Promo",
+        "branch": "001",
+        "source": "https://pricesprodpublic.blob.core.windows.net/promo/Promo7290027600007-001-001-20260922-020000.gz",
+        "sha256": "9fa7c4cd377a976f0c1fc57a4d75274e7392196ed8a3e24250f376a8f9a82a23",
+        "bytes": 2707,
+        "xml_bytes": 70647
+      },
+      {
+        "name": "PromoFull7290027600007-001-001-20260922-030000.gz",
+        "kind": "PromoFull",
+        "branch": "001",
+        "source": "https://pricesprodpublic.blob.core.windows.net/promofull/PromoFull7290027600007-001-001-20260922-030000.gz",
+        "sha256": "b43f58037cac804bfb2a4b76ddcee6ab435918818c95023f13ef5b7a5383d4be",
+        "bytes": 229793,
+        "xml_bytes": 11005254
+      },
+      {
+        "name": "Stores7290027600007-000-20260922-025.gz",
+        "kind": "Stores",
+        "branch": "001",
+        "source": "https://pricesprodpublic.blob.core.windows.net/stores/Stores7290027600007-000-20260922-025.gz",
+        "sha256": "3d895dcad48d153f873bf4b3b9a6875e7120284070bb31ea0a29b43b9b81ffda",
+        "bytes": 12626,
+        "xml_bytes": 92746
+      },
+      {
+        "name": "Price7290027600007-001-002-20260921-020000.gz",
+        "kind": "Price",
+        "branch": "002",
+        "source": "https://pricesprodpublic.blob.core.windows.net/price/Price7290027600007-001-002-20260921-020000.gz",
+        "sha256": "c2edbf4695c235b048bea98df82f778c580b343789391db24cbda6d9711c677a",
+        "bytes": 1136,
+        "xml_bytes": 8721
+      },
+      {
+        "name": "PriceFull7290027600007-001-002-20260922-030000.gz",
+        "kind": "PriceFull",
+        "branch": "002",
+        "source": "https://pricesprodpublic.blob.core.windows.net/pricefull/PriceFull7290027600007-001-002-20260922-030000.gz",
+        "sha256": "87f4795456368c58aff049abc148558f3229223aa7ba88b6b0a5d245d3483e75",
+        "bytes": 382142,
+        "xml_bytes": 6446833
+      },
+      {
+        "name": "Promo7290027600007-001-002-20260922-020000.gz",
+        "kind": "Promo",
+        "branch": "002",
+        "source": "https://pricesprodpublic.blob.core.windows.net/promo/Promo7290027600007-001-002-20260922-020000.gz",
+        "sha256": "1ac79305d9825ff42301fb6276a0fa94fe25ae34398daaed7de1d77c96ae259f",
+        "bytes": 2818,
+        "xml_bytes": 74802
+      },
+      {
+        "name": "PromoFull7290027600007-001-002-20260922-030000.gz",
+        "kind": "PromoFull",
+        "branch": "002",
+        "source": "https://pricesprodpublic.blob.core.windows.net/promofull/PromoFull7290027600007-001-002-20260922-030000.gz",
+        "sha256": "7016706c50a76fcc326adfb3dd4da4c26b96ee5b1442013d12db05df589a1da2",
+        "bytes": 257088,
+        "xml_bytes": 12492046
+      }
+    ],
+    "compressed_bytes": 1224577,
+    "expanded_bytes": 35821123,
+    "status": "COLLECTED"
+  },
+  "benchmark": {
+    "files": [
+      {
+        "name": "Price7290027600007-001-001-20260921-020000.gz",
+        "kind": "Price",
+        "xml_tags": [
+          "AllowDiscount",
+          "BikoretNo",
+          "ChainID",
+          "Item",
+          "ItemCode",
+          "ItemName",
+          "ItemPrice",
+          "ItemStatus",
+          "ItemType",
+          "Items",
+          "LastSaleDateTime",
+          "ManufactureCountry",
+          "ManufactureItemDescription",
+          "ManufactureName",
+          "PriceUpdateTime",
+          "QtyInPackage",
+          "Quantity",
+          "Root",
+          "StoreID",
+          "SubChainID",
+          "UnitOfMeasure",
+          "UnitOfMeasurePrice",
+          "UnitQty",
+          "bIsWeighted"
+        ],
+        "runs": [
+          {
+            "rows": 9,
+            "seconds": 0.00014,
+            "sha256": "5f0ab9f42c8cb3a1c7619d9dc3621f5ead549f87de077ea7f7bd5f8a9e262379"
+          },
+          {
+            "rows": 9,
+            "seconds": 0.000113,
+            "sha256": "5f0ab9f42c8cb3a1c7619d9dc3621f5ead549f87de077ea7f7bd5f8a9e262379"
+          },
+          {
+            "rows": 9,
+            "seconds": 9.9e-05,
+            "sha256": "5f0ab9f42c8cb3a1c7619d9dc3621f5ead549f87de077ea7f7bd5f8a9e262379"
+          }
+        ],
+        "coordinate_tags": [],
+        "repeat_identical": true,
+        "output_keys": [
+          "allowdiscount",
+          "bikoretno",
+          "bisweighted",
+          "chainid",
+          "file_name",
+          "found_folder",
+          "itemcode",
+          "itemname",
+          "itemprice",
+          "itemstatus",
+          "itemtype",
+          "lastsaledatetime",
+          "manufacturecountry",
+          "manufactureitemdescription",
+          "manufacturename",
+          "priceupdatetime",
+          "qtyinpackage",
+          "quantity",
+          "storeid",
+          "subchainid",
+          "unitofmeasure",
+          "unitofmeasureprice",
+          "unitqty"
+        ],
+        "source_items": 9,
+        "valid_positive_prices": 9,
+        "valid_gtin_external_items": 9,
+        "item_types": [
+          "1"
+        ],
+        "package_quantity_present": 9,
+        "source_update_range": [
+          "2026-09-20T23:50:00",
+          "2026-09-20T23:50:00"
+        ],
+        "ids": {
+          "ChainId": null,
+          "SubChainId": null,
+          "StoreId": null
+        },
+        "nonempty_source_leaf_mismatches": 0,
+        "duplicate_source_itemcodes": 0
+      },
+      {
+        "name": "PriceFull7290027600007-001-001-20260922-030000.gz",
+        "kind": "PriceFull",
+        "xml_tags": [
+          "AllowDiscount",
+          "BikoretNo",
+          "ChainID",
+          "Item",
+          "ItemCode",
+          "ItemName",
+          "ItemPrice",
+          "ItemStatus",
+          "ItemType",
+          "Items",
+          "LastSaleDateTime",
+          "ManufactureCountry",
+          "ManufactureItemDescription",
+          "ManufactureName",
+          "PriceUpdateTime",
+          "QtyInPackage",
+          "Quantity",
+          "Root",
+          "StoreID",
+          "SubChainID",
+          "UnitOfMeasure",
+          "UnitOfMeasurePrice",
+          "UnitQty",
+          "bIsWeighted"
+        ],
+        "runs": [
+          {
+            "rows": 6587,
+            "seconds": 0.094859,
+            "sha256": "60d3fb5cb093c8525afc2985ba7690a6ae8668dcda396a2cabd64fbd108c4823"
+          },
+          {
+            "rows": 6587,
+            "seconds": 0.079124,
+            "sha256": "60d3fb5cb093c8525afc2985ba7690a6ae8668dcda396a2cabd64fbd108c4823"
+          },
+          {
+            "rows": 6587,
+            "seconds": 0.094525,
+            "sha256": "60d3fb5cb093c8525afc2985ba7690a6ae8668dcda396a2cabd64fbd108c4823"
+          }
+        ],
+        "coordinate_tags": [],
+        "repeat_identical": true,
+        "output_keys": [
+          "allowdiscount",
+          "bikoretno",
+          "bisweighted",
+          "chainid",
+          "file_name",
+          "found_folder",
+          "itemcode",
+          "itemname",
+          "itemprice",
+          "itemstatus",
+          "itemtype",
+          "lastsaledatetime",
+          "manufacturecountry",
+          "manufactureitemdescription",
+          "manufacturename",
+          "priceupdatetime",
+          "qtyinpackage",
+          "quantity",
+          "storeid",
+          "subchainid",
+          "unitofmeasure",
+          "unitofmeasureprice",
+          "unitqty"
+        ],
+        "source_items": 6587,
+        "valid_positive_prices": 6587,
+        "valid_gtin_external_items": 6505,
+        "item_types": [
+          "0",
+          "1"
+        ],
+        "package_quantity_present": 6587,
+        "source_update_range": [
+          "2014-05-07T14:00:00",
+          "2026-09-18T11:21:00"
+        ],
+        "ids": {
+          "ChainId": null,
+          "SubChainId": null,
+          "StoreId": null
+        },
+        "nonempty_source_leaf_mismatches": 0,
+        "duplicate_source_itemcodes": 0
+      },
+      {
+        "name": "Promo7290027600007-001-001-20260922-020000.gz",
+        "kind": "Promo",
+        "xml_tags": [
+          "AdditionalIsCoupon",
+          "AdditionalRestrictions",
+          "AllowMultipleDiscounts",
+          "BikoretNo",
+          "ChainID",
+          "ClubID",
+          "DiscountRate",
+          "DiscountType",
+          "DiscountedPrice",
+          "DiscountedPricePerMida",
+          "Group",
+          "GroupID",
+          "Groups",
+          "IsGiftItem",
+          "ItemCode",
+          "ItemType",
+          "MaxQty",
+          "MinNoOfItemOffered",
+          "MinPurchaseAmount",
+          "MinQty",
+          "Promotion",
+          "PromotionDays",
+          "PromotionDescription",
+          "PromotionEndDateTime",
+          "PromotionEndHour",
+          "PromotionID",
+          "PromotionItem",
+          "PromotionItems",
+          "PromotionStartDateTime",
+          "PromotionStartHour",
+          "PromotionUpdateTime",
+          "Promotions",
+          "RedemptionLimit",
+          "Remarks",
+          "RewardType",
+          "Root",
+          "StoreID",
+          "SubChainID",
+          "bIsWeighted"
+        ],
+        "runs": [
+          {
+            "rows": 22,
+            "seconds": 0.003744,
+            "sha256": "126012fe8096f308c8d182f8ac563f82bc113b9fac94c32abd30f673044b825c"
+          },
+          {
+            "rows": 22,
+            "seconds": 0.000866,
+            "sha256": "126012fe8096f308c8d182f8ac563f82bc113b9fac94c32abd30f673044b825c"
+          },
+          {
+            "rows": 22,
+            "seconds": 0.001704,
+            "sha256": "126012fe8096f308c8d182f8ac563f82bc113b9fac94c32abd30f673044b825c"
+          }
+        ],
+        "coordinate_tags": [],
+        "repeat_identical": true,
+        "output_keys": [
+          "additionaliscoupon",
+          "additionalrestrictions",
+          "allowmultiplediscounts",
+          "bikoretno",
+          "chainid",
+          "clubid",
+          "file_name",
+          "found_folder",
+          "groups",
+          "isgiftitem",
+          "minnoofitemoffered",
+          "promotiondays",
+          "promotiondescription",
+          "promotionenddatetime",
+          "promotionendhour",
+          "promotionid",
+          "promotionstartdatetime",
+          "promotionstarthour",
+          "promotionupdatetime",
+          "redemptionlimit",
+          "remarks",
+          "storeid",
+          "subchainid"
+        ]
+      },
+      {
+        "name": "PromoFull7290027600007-001-001-20260922-030000.gz",
+        "kind": "PromoFull",
+        "xml_tags": [
+          "AdditionalIsCoupon",
+          "AdditionalRestrictions",
+          "AllowMultipleDiscounts",
+          "BikoretNo",
+          "ChainID",
+          "ClubID",
+          "DiscountRate",
+          "DiscountType",
+          "DiscountedPrice",
+          "DiscountedPricePerMida",
+          "Group",
+          "GroupID",
+          "Groups",
+          "IsGiftItem",
+          "ItemCode",
+          "ItemType",
+          "MaxQty",
+          "MinNoOfItemOffered",
+          "MinPurchaseAmount",
+          "MinQty",
+          "Promotion",
+          "PromotionDays",
+          "PromotionDescription",
+          "PromotionEndDateTime",
+          "PromotionEndHour",
+          "PromotionID",
+          "PromotionItem",
+          "PromotionItems",
+          "PromotionStartDateTime",
+          "PromotionStartHour",
+          "PromotionUpdateTime",
+          "Promotions",
+          "RedemptionLimit",
+          "Remarks",
+          "RewardType",
+          "Root",
+          "StoreID",
+          "SubChainID",
+          "bIsWeighted"
+        ],
+        "runs": [
+          {
+            "rows": 1302,
+            "seconds": 0.138823,
+            "sha256": "255a46ecdff635710072f38cb619e1ccf56813af62b651df333499d77ad71c4f"
+          },
+          {
+            "rows": 1302,
+            "seconds": 0.157792,
+            "sha256": "255a46ecdff635710072f38cb619e1ccf56813af62b651df333499d77ad71c4f"
+          },
+          {
+            "rows": 1302,
+            "seconds": 0.155577,
+            "sha256": "255a46ecdff635710072f38cb619e1ccf56813af62b651df333499d77ad71c4f"
+          }
+        ],
+        "coordinate_tags": [],
+        "repeat_identical": true,
+        "output_keys": [
+          "additionaliscoupon",
+          "additionalrestrictions",
+          "allowmultiplediscounts",
+          "bikoretno",
+          "chainid",
+          "clubid",
+          "file_name",
+          "found_folder",
+          "groups",
+          "isgiftitem",
+          "minnoofitemoffered",
+          "promotiondays",
+          "promotiondescription",
+          "promotionenddatetime",
+          "promotionendhour",
+          "promotionid",
+          "promotionstartdatetime",
+          "promotionstarthour",
+          "promotionupdatetime",
+          "redemptionlimit",
+          "remarks",
+          "storeid",
+          "subchainid"
+        ]
+      },
+      {
+        "name": "Stores7290027600007-000-20260922-025.gz",
+        "kind": "Stores",
+        "xml_tags": [
+          "Address",
+          "BikoretNo",
+          "Chain",
+          "ChainID",
+          "ChainName",
+          "City",
+          "LastUpdateDate",
+          "LastUpdateTime",
+          "Store",
+          "StoreID",
+          "StoreName",
+          "StoreType",
+          "Stores",
+          "SubChain",
+          "SubChainID",
+          "SubChainName",
+          "SubChains",
+          "ZIPCode"
+        ],
+        "runs": [
+          {
+            "rows": 2,
+            "seconds": 0.008742,
+            "sha256": "ae1a0ad355a154eb71544f4ca989dea0826f38d18f6eb4e2cc430cb84859cf69"
+          },
+          {
+            "rows": 2,
+            "seconds": 0.00259,
+            "sha256": "ae1a0ad355a154eb71544f4ca989dea0826f38d18f6eb4e2cc430cb84859cf69"
+          },
+          {
+            "rows": 2,
+            "seconds": 0.002585,
+            "sha256": "ae1a0ad355a154eb71544f4ca989dea0826f38d18f6eb4e2cc430cb84859cf69"
+          }
+        ],
+        "coordinate_tags": [],
+        "repeat_identical": true,
+        "output_keys": [
+          "address",
+          "bikoretno",
+          "chainid",
+          "chainname",
+          "city",
+          "file_name",
+          "found_folder",
+          "lastupdatedate",
+          "lastupdatetime",
+          "storeid",
+          "storename",
+          "storetype",
+          "subchainid",
+          "subchainname",
+          "zipcode"
+        ]
+      },
+      {
+        "name": "Price7290027600007-001-002-20260921-020000.gz",
+        "kind": "Price",
+        "xml_tags": [
+          "AllowDiscount",
+          "BikoretNo",
+          "ChainID",
+          "Item",
+          "ItemCode",
+          "ItemName",
+          "ItemPrice",
+          "ItemStatus",
+          "ItemType",
+          "Items",
+          "LastSaleDateTime",
+          "ManufactureCountry",
+          "ManufactureItemDescription",
+          "ManufactureName",
+          "PriceUpdateTime",
+          "QtyInPackage",
+          "Quantity",
+          "Root",
+          "StoreID",
+          "SubChainID",
+          "UnitOfMeasure",
+          "UnitOfMeasurePrice",
+          "UnitQty",
+          "bIsWeighted"
+        ],
+        "runs": [
+          {
+            "rows": 10,
+            "seconds": 0.000159,
+            "sha256": "d8335a8eaaed608d75f360d6278dd5b9dbbaf14d27b8c04f7068ea868447aa8d"
+          },
+          {
+            "rows": 10,
+            "seconds": 0.000109,
+            "sha256": "d8335a8eaaed608d75f360d6278dd5b9dbbaf14d27b8c04f7068ea868447aa8d"
+          },
+          {
+            "rows": 10,
+            "seconds": 0.000111,
+            "sha256": "d8335a8eaaed608d75f360d6278dd5b9dbbaf14d27b8c04f7068ea868447aa8d"
+          }
+        ],
+        "coordinate_tags": [],
+        "repeat_identical": true,
+        "output_keys": [
+          "allowdiscount",
+          "bikoretno",
+          "bisweighted",
+          "chainid",
+          "file_name",
+          "found_folder",
+          "itemcode",
+          "itemname",
+          "itemprice",
+          "itemstatus",
+          "itemtype",
+          "lastsaledatetime",
+          "manufacturecountry",
+          "manufactureitemdescription",
+          "manufacturename",
+          "priceupdatetime",
+          "qtyinpackage",
+          "quantity",
+          "storeid",
+          "subchainid",
+          "unitofmeasure",
+          "unitofmeasureprice",
+          "unitqty"
+        ],
+        "source_items": 10,
+        "valid_positive_prices": 10,
+        "valid_gtin_external_items": 10,
+        "item_types": [
+          "1"
+        ],
+        "package_quantity_present": 10,
+        "source_update_range": [
+          "2026-09-20T09:57:00",
+          "2026-09-20T23:50:00"
+        ],
+        "ids": {
+          "ChainId": null,
+          "SubChainId": null,
+          "StoreId": null
+        },
+        "nonempty_source_leaf_mismatches": 0,
+        "duplicate_source_itemcodes": 0
+      },
+      {
+        "name": "PriceFull7290027600007-001-002-20260922-030000.gz",
+        "kind": "PriceFull",
+        "xml_tags": [
+          "AllowDiscount",
+          "BikoretNo",
+          "ChainID",
+          "Item",
+          "ItemCode",
+          "ItemName",
+          "ItemPrice",
+          "ItemStatus",
+          "ItemType",
+          "Items",
+          "LastSaleDateTime",
+          "ManufactureCountry",
+          "ManufactureItemDescription",
+          "ManufactureName",
+          "PriceUpdateTime",
+          "QtyInPackage",
+          "Quantity",
+          "Root",
+          "StoreID",
+          "SubChainID",
+          "UnitOfMeasure",
+          "UnitOfMeasurePrice",
+          "UnitQty",
+          "bIsWeighted"
+        ],
+        "runs": [
+          {
+            "rows": 7550,
+            "seconds": 0.111805,
+            "sha256": "20f924af78818c9e535d5c7942c365af285775e440131777ec08910f512f3ea7"
+          },
+          {
+            "rows": 7550,
+            "seconds": 0.102968,
+            "sha256": "20f924af78818c9e535d5c7942c365af285775e440131777ec08910f512f3ea7"
+          },
+          {
+            "rows": 7550,
+            "seconds": 0.111189,
+            "sha256": "20f924af78818c9e535d5c7942c365af285775e440131777ec08910f512f3ea7"
+          }
+        ],
+        "coordinate_tags": [],
+        "repeat_identical": true,
+        "output_keys": [
+          "allowdiscount",
+          "bikoretno",
+          "bisweighted",
+          "chainid",
+          "file_name",
+          "found_folder",
+          "itemcode",
+          "itemname",
+          "itemprice",
+          "itemstatus",
+          "itemtype",
+          "lastsaledatetime",
+          "manufacturecountry",
+          "manufactureitemdescription",
+          "manufacturename",
+          "priceupdatetime",
+          "qtyinpackage",
+          "quantity",
+          "storeid",
+          "subchainid",
+          "unitofmeasure",
+          "unitofmeasureprice",
+          "unitqty"
+        ],
+        "source_items": 7550,
+        "valid_positive_prices": 7550,
+        "valid_gtin_external_items": 7465,
+        "item_types": [
+          "0",
+          "1"
+        ],
+        "package_quantity_present": 7550,
+        "source_update_range": [
+          "2013-12-03T06:46:00",
+          "2026-09-20T09:57:00"
+        ],
+        "ids": {
+          "ChainId": null,
+          "SubChainId": null,
+          "StoreId": null
+        },
+        "nonempty_source_leaf_mismatches": 0,
+        "duplicate_source_itemcodes": 0
+      },
+      {
+        "name": "Promo7290027600007-001-002-20260922-020000.gz",
+        "kind": "Promo",
+        "xml_tags": [
+          "AdditionalIsCoupon",
+          "AdditionalRestrictions",
+          "AllowMultipleDiscounts",
+          "BikoretNo",
+          "ChainID",
+          "ClubID",
+          "DiscountRate",
+          "DiscountType",
+          "DiscountedPrice",
+          "DiscountedPricePerMida",
+          "Group",
+          "GroupID",
+          "Groups",
+          "IsGiftItem",
+          "ItemCode",
+          "ItemType",
+          "MaxQty",
+          "MinNoOfItemOffered",
+          "MinPurchaseAmount",
+          "MinQty",
+          "Promotion",
+          "PromotionDays",
+          "PromotionDescription",
+          "PromotionEndDateTime",
+          "PromotionEndHour",
+          "PromotionID",
+          "PromotionItem",
+          "PromotionItems",
+          "PromotionStartDateTime",
+          "PromotionStartHour",
+          "PromotionUpdateTime",
+          "Promotions",
+          "RedemptionLimit",
+          "Remarks",
+          "RewardType",
+          "Root",
+          "StoreID",
+          "SubChainID",
+          "bIsWeighted"
+        ],
+        "runs": [
+          {
+            "rows": 24,
+            "seconds": 0.003957,
+            "sha256": "29eae303948b77e25f6f1921ae33af59aebf7d14195fbe13e643f312a9165eec"
+          },
+          {
+            "rows": 24,
+            "seconds": 0.000976,
+            "sha256": "29eae303948b77e25f6f1921ae33af59aebf7d14195fbe13e643f312a9165eec"
+          },
+          {
+            "rows": 24,
+            "seconds": 0.000894,
+            "sha256": "29eae303948b77e25f6f1921ae33af59aebf7d14195fbe13e643f312a9165eec"
+          }
+        ],
+        "coordinate_tags": [],
+        "repeat_identical": true,
+        "output_keys": [
+          "additionaliscoupon",
+          "additionalrestrictions",
+          "allowmultiplediscounts",
+          "bikoretno",
+          "chainid",
+          "clubid",
+          "file_name",
+          "found_folder",
+          "groups",
+          "isgiftitem",
+          "minnoofitemoffered",
+          "promotiondays",
+          "promotiondescription",
+          "promotionenddatetime",
+          "promotionendhour",
+          "promotionid",
+          "promotionstartdatetime",
+          "promotionstarthour",
+          "promotionupdatetime",
+          "redemptionlimit",
+          "remarks",
+          "storeid",
+          "subchainid"
+        ]
+      },
+      {
+        "name": "PromoFull7290027600007-001-002-20260922-030000.gz",
+        "kind": "PromoFull",
+        "xml_tags": [
+          "AdditionalIsCoupon",
+          "AdditionalRestrictions",
+          "AllowMultipleDiscounts",
+          "BikoretNo",
+          "ChainID",
+          "ClubID",
+          "DiscountRate",
+          "DiscountType",
+          "DiscountedPrice",
+          "DiscountedPricePerMida",
+          "Group",
+          "GroupID",
+          "Groups",
+          "IsGiftItem",
+          "ItemCode",
+          "ItemType",
+          "MaxQty",
+          "MinNoOfItemOffered",
+          "MinPurchaseAmount",
+          "MinQty",
+          "Promotion",
+          "PromotionDays",
+          "PromotionDescription",
+          "PromotionEndDateTime",
+          "PromotionEndHour",
+          "PromotionID",
+          "PromotionItem",
+          "PromotionItems",
+          "PromotionStartDateTime",
+          "PromotionStartHour",
+          "PromotionUpdateTime",
+          "Promotions",
+          "RedemptionLimit",
+          "Remarks",
+          "RewardType",
+          "Root",
+          "StoreID",
+          "SubChainID",
+          "bIsWeighted"
+        ],
+        "runs": [
+          {
+            "rows": 1404,
+            "seconds": 0.247105,
+            "sha256": "ff73a33d6848fbc55e56708907c9d552e39da5c1599ac34c61f66674a709608d"
+          },
+          {
+            "rows": 1404,
+            "seconds": 0.170152,
+            "sha256": "ff73a33d6848fbc55e56708907c9d552e39da5c1599ac34c61f66674a709608d"
+          },
+          {
+            "rows": 1404,
+            "seconds": 0.17505,
+            "sha256": "ff73a33d6848fbc55e56708907c9d552e39da5c1599ac34c61f66674a709608d"
+          }
+        ],
+        "coordinate_tags": [],
+        "repeat_identical": true,
+        "output_keys": [
+          "additionaliscoupon",
+          "additionalrestrictions",
+          "allowmultiplediscounts",
+          "bikoretno",
+          "chainid",
+          "clubid",
+          "file_name",
+          "found_folder",
+          "groups",
+          "isgiftitem",
+          "minnoofitemoffered",
+          "promotiondays",
+          "promotiondescription",
+          "promotionenddatetime",
+          "promotionendhour",
+          "promotionid",
+          "promotionstartdatetime",
+          "promotionstarthour",
+          "promotionupdatetime",
+          "redemptionlimit",
+          "remarks",
+          "storeid",
+          "subchainid"
+        ]
+      }
+    ],
+    "library_malformed_xml": "ACCEPTED_MALFORMED_XML",
+    "network_attempts": 0,
+    "peak_process_rss_bytes_macos": 705953792,
+    "scope": "In-memory library conversion; three runs per file; not ingestion idempotency or production safety."
+  },
+  "recorded_at_utc": "2026-09-22T00:54:57.555907+00:00"
+}

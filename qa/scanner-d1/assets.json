@@ -1,0 +1,80 @@
+{
+  "runtime": [
+    {
+      "file": "../../node_modules/tesseract.js/dist/tesseract.esm.min.js",
+      "url": "/api/tesseract.esm.min.js",
+      "source": "tesseract.js@7.0.0/dist/tesseract.esm.min.js; public API served from installed dependency, not copied",
+      "bytes": 63220,
+      "sha256": "64871d76c75609fd5413b88a8171e2ef40deedd77d5875ba23df104b2d05eb29"
+    },
+    {
+      "file": "vendor/worker.min.js",
+      "url": "/vendor/worker.min.js",
+      "source": "tesseract.js@7.0.0/dist/worker.min.js",
+      "bytes": 111307,
+      "sha256": "576b7df7e3393e137e51849357c9adb53fe7ac1bb69bfa06cf3d61520f182c6d"
+    },
+    {
+      "file": "vendor/core/tesseract-core-lstm.wasm.js",
+      "url": "/vendor/core/tesseract-core-lstm.wasm.js",
+      "source": "tesseract.js-core@7.0.0; embedded WASM, no separate wasm required",
+      "bytes": 3896484,
+      "sha256": "eef5f8b2f8e20e150680b20adaec4a60babafee3adbe8a94583c81fee46e8680"
+    },
+    {
+      "file": "vendor/core/tesseract-core-simd-lstm.wasm.js",
+      "url": "/vendor/core/tesseract-core-simd-lstm.wasm.js",
+      "source": "tesseract.js-core@7.0.0; embedded WASM, no separate wasm required",
+      "bytes": 3899472,
+      "sha256": "c58b46a4c796c0b8afccf77591d5b875b6896b45d402bbce8caa6f5362447b38"
+    },
+    {
+      "file": "vendor/core/tesseract-core-relaxedsimd-lstm.wasm.js",
+      "url": "/vendor/core/tesseract-core-relaxedsimd-lstm.wasm.js",
+      "source": "tesseract.js-core@7.0.0; embedded WASM, no separate wasm required",
+      "bytes": 3905767,
+      "sha256": "861a536cf9ef8e63cb644d57bab39c388f37f7d6b6f60024b741c5f6b39a59b3"
+    },
+    {
+      "file": "vendor/lang/eng.traineddata",
+      "url": "/vendor/lang/eng.traineddata",
+      "source": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/87416418657359cb625c412a48b6e1d6d41c29bd/eng.traineddata",
+      "bytes": 4113088,
+      "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+    },
+    {
+      "file": "vendor/lang/heb.traineddata",
+      "url": "/vendor/lang/heb.traineddata",
+      "source": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/87416418657359cb625c412a48b6e1d6d41c29bd/heb.traineddata",
+      "bytes": 961404,
+      "sha256": "11f9e43ab227f786352a50f75c94c2e9906f1baba86d93276da19da7ce0904db"
+    }
+  ],
+  "licenses": [
+    {
+      "file": "licenses/api.NOTICES",
+      "bytes": 149,
+      "sha256": "cdf963ced7d25a0f98901a547647b4d6e2dbe0197fd78c87a059a87b0e542fe2"
+    },
+    {
+      "file": "licenses/core.LICENSE",
+      "bytes": 11357,
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+    },
+    {
+      "file": "licenses/tessdata.LICENSE",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "file": "licenses/tesseract.LICENSE",
+      "bytes": 11357,
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+    },
+    {
+      "file": "licenses/worker.NOTICES",
+      "bytes": 466,
+      "sha256": "45f54171aeaa1d10c0c1a66f374b7bba1f02472b1487fbe892eec04f840002ac"
+    }
+  ]
+}

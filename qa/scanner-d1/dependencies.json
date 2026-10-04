@@ -1,0 +1,250 @@
+{
+  "installedWith": "npm install --save-dev --save-exact --ignore-scripts --no-audit --no-fund tesseract.js@7.0.0 tesseract.js-core@7.0.0",
+  "scriptsExecuted": [],
+  "existingPackagesChanged": [],
+  "added": [
+    {
+      "path": "node_modules/bmp-js",
+      "version": "0.1.0",
+      "license": "MIT",
+      "dependencies": {},
+      "integrity": "sha512-vHdS19CnY3hwiNdkaqk93DvjVLfbEcI8mys4UjuWrlX1haDmroo8o4xCzh4wD6DGV6HxRCyauwhHRqMTfERtjw==",
+      "scripts": {},
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/idb-keyval",
+      "version": "6.3.0",
+      "license": "Apache-2.0",
+      "dependencies": {},
+      "integrity": "sha512-um+2dgAWmYsu615EXpWVwSmapJhON0G43t3Ka/EVaohzPQXSMqKEqeDK/oIW3Ow+BXaF2PvSc+oBTFp793A5Ow==",
+      "scripts": {
+        "build": "rollup -c && node lib/size-report.js",
+        "dev": "rollup -cw & serve",
+        "prepack": "npm run build"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/is-url",
+      "version": "1.2.4",
+      "license": "MIT",
+      "dependencies": {},
+      "integrity": "sha512-ITvGim8FhRiYe4IQ5uHSkj7pVaPDrCTkNd3yq3cV7iZAcJdHTUMPMEHcqSOy9xZ9qFenQCvi+2wjH9a1nXqHww==",
+      "scripts": {
+        "test": "mocha --reporter spec"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/node-fetch",
+      "version": "2.7.0",
+      "license": "MIT",
+      "dependencies": {
+        "whatwg-url": "^5.0.0"
+      },
+      "integrity": "sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==",
+      "scripts": {
+        "build": "cross-env BABEL_ENV=rollup rollup -c",
+        "prepare": "npm run build",
+        "test": "cross-env BABEL_ENV=test mocha --require babel-register --throw-deprecation test/test.js",
+        "report": "cross-env BABEL_ENV=coverage nyc --reporter lcov --reporter text mocha -R spec test/test.js",
+        "coverage": "cross-env BABEL_ENV=coverage nyc --reporter json --reporter text mocha -R spec test/test.js && codecov -f coverage/coverage-final.json"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {
+        "encoding": "^0.1.0"
+      },
+      "peerDependenciesMeta": {
+        "encoding": {
+          "optional": true
+        }
+      },
+      "engines": {
+        "node": "4.x || >=6.0.0"
+      }
+    },
+    {
+      "path": "node_modules/opencollective-postinstall",
+      "version": "2.0.3",
+      "license": "MIT",
+      "dependencies": {},
+      "integrity": "sha512-8AV/sCtuzUeTo8gQK5qDZzARrulB3egtLzFgteqB2tcT4Mw7B8Kt7JcDHmltjz6FOAHsvTevk70gZEbhM4ZS9Q==",
+      "scripts": {
+        "test": "jest"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/regenerator-runtime",
+      "version": "0.13.11",
+      "license": "MIT",
+      "dependencies": {},
+      "integrity": "sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==",
+      "scripts": {},
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/tesseract.js",
+      "version": "7.0.0",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "bmp-js": "^0.1.0",
+        "idb-keyval": "^6.2.0",
+        "is-url": "^1.2.4",
+        "node-fetch": "^2.6.9",
+        "opencollective-postinstall": "^2.0.3",
+        "regenerator-runtime": "^0.13.3",
+        "tesseract.js-core": "^7.0.0",
+        "wasm-feature-detect": "^1.8.0",
+        "zlibjs": "^0.3.1"
+      },
+      "integrity": "sha512-exPBkd+z+wM1BuMkx/Bjv43OeLBxhL5kKWsz/9JY+DXcXdiBjiAch0V49QR3oAJqCaL5qURE0vx9Eo+G5YE7mA==",
+      "scripts": {
+        "start": "node scripts/server.js",
+        "build": "rimraf dist && webpack --config scripts/webpack.config.prod.js && rollup -c scripts/rollup.esm.mjs",
+        "profile:tesseract": "webpack-bundle-analyzer dist/tesseract-stats.json",
+        "profile:worker": "webpack-bundle-analyzer dist/worker-stats.json",
+        "prepublishOnly": "npm run build",
+        "wait": "rimraf dist && wait-on http://localhost:3000/dist/tesseract.min.js",
+        "test": "npm-run-all -p -r start test:all",
+        "test:all": "npm-run-all wait test:browser test:node:all",
+        "test:browser": "karma start karma.conf.js",
+        "test:node": "nyc mocha --exit --bail --require ./scripts/test-helper.mjs",
+        "test:node:all": "npm run test:node -- ./tests/*.test.mjs",
+        "lint": "eslint src",
+        "lint:fix": "eslint --fix src",
+        "postinstall": "opencollective-postinstall || true"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/tesseract.js-core",
+      "version": "7.0.0",
+      "license": "Apache-2.0",
+      "dependencies": {},
+      "integrity": "sha512-WnNH518NzmbSq9zgTPeoF8c+xmilS8rFIl1YKbk/ptuuc7p6cLNELNuPAzcmsYw450ca6bLa8j3t0VAtq435Vw==",
+      "scripts": {
+        "test": "mocha ./tests/unit/*.test.js",
+        "example": "http-server -p 3000"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/tr46",
+      "version": "0.0.3",
+      "license": "MIT",
+      "dependencies": {},
+      "integrity": "sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==",
+      "scripts": {
+        "test": "mocha",
+        "pretest": "node scripts/getLatestUnicodeTests.js",
+        "prepublish": "node scripts/generateMappingTable.js"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/wasm-feature-detect",
+      "version": "1.9.0",
+      "license": "Apache-2.0",
+      "dependencies": {},
+      "integrity": "sha512-zonE+xlIIYtxPy++L24ow0hAD8CICb4+FgPyROd3buyXIqsJvUEDkBgfCCoXOd1Hu3DUr0GOfnPIdcGV+YpNaA==",
+      "scripts": {
+        "build:library": "rollup -c",
+        "build:readme": "node --experimental-modules ./render-readme.mjs",
+        "build:dts": "node --experimental-modules ./render-dts.mjs",
+        "build": "npm run build:library && npm run build:readme && npm run build:dts && npm run fmt",
+        "build:website": "npm run build && node genwebsite.cjs",
+        "prepublishOnly": "npm run build",
+        "fmt": "prettier --write --no-error-on-unmatched-pattern ./{src,test,rollup-plugins}/*.{mjs,cjs,js,md} *.{mjs,cjs,js,md}",
+        "fmt_test": "prettier --check --no-error-on-unmatched-pattern --write ./{src,test,rollup-plugins}/*.{mjs,cjs,js,md} *.{mjs,cjs,js,md}",
+        "test": "npm run fmt_test && npm run build && node --no-warnings test/index.cjs"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/webidl-conversions",
+      "version": "3.0.1",
+      "license": "BSD-2-Clause",
+      "dependencies": {},
+      "integrity": "sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==",
+      "scripts": {
+        "test": "mocha test/*.js"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/whatwg-url",
+      "version": "5.0.0",
+      "license": "MIT",
+      "dependencies": {
+        "tr46": "~0.0.3",
+        "webidl-conversions": "^3.0.0"
+      },
+      "integrity": "sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==",
+      "scripts": {
+        "build": "node scripts/transform.js && node scripts/convert-idl.js",
+        "coverage": "istanbul cover node_modules/mocha/bin/_mocha",
+        "lint": "eslint .",
+        "prepublish": "npm run build",
+        "pretest": "node scripts/get-latest-platform-tests.js && npm run build",
+        "test": "mocha"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {}
+    },
+    {
+      "path": "node_modules/zlibjs",
+      "version": "0.3.1",
+      "license": "MIT",
+      "dependencies": {},
+      "integrity": "sha512-+J9RrgTKOmlxFSDHo0pI1xM6BLVUv+o0ZT9ANtCxGkjIVCCUdx9alUF8Gm+dGLKbkkkidWIHFDZHDMpfITt4+w==",
+      "scripts": {
+        "test": "npm run test-mocha && npm run test-karma",
+        "test-mocha": "mocha --compilers js:babel-register test/nodejs/node-test.js",
+        "test-karma": "karma start --single-run"
+      },
+      "optionalDependencies": {},
+      "peerDependencies": {},
+      "peerDependenciesMeta": {},
+      "engines": {
+        "node": "*"
+      }
+    }
+  ],
+  "optionalPeersNotInstalled": [
+    "encoding (node-fetch optional peer)"
+  ]
+}

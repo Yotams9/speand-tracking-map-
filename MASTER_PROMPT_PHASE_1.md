@@ -1,3 +1,10 @@
+# Legacy Master Prompt — Inherited Ledgerline Phase 1
+
+> **Do not execute this as the Spendscape master prompt.** It is retained as
+> historical evidence for the existing demo. The current contract is
+> `AGENTS.md` plus `docs/spendscape/MASTER_PROMPT.md` and the remaining files
+> under `docs/spendscape/`.
+
 # Master Prompt — Purchase Intelligence App
 
 ## Phase 1: Front-End Concept Demo

@@ -1,3 +1,10 @@
+# Legacy Project Context — Inherited Ledgerline Baseline
+
+> **Superseded for Spendscape execution.** Preserve this file as historical
+> evidence for the inherited demo. Future Spendscape tasks must follow
+> `AGENTS.md` and `docs/spendscape/`, especially
+> `docs/spendscape/PRODUCT_CONTEXT.md`.
+
 # Project Context — Purchase Intelligence
 
 ## Product vision
@@ -87,4 +94,3 @@ Do not implement real capture, OCR, product recognition, bank/email/SMS connecti
 - Production privacy, consent, retention, and local-versus-server processing design.
 
 These choices must not be silently locked in during scaffolding. Phase 0 may recommend a Phase 1 approach; implementation requires the explicit gate in `AGENTS.md`.
-

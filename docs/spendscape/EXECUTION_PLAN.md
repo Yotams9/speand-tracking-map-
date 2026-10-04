@@ -1,0 +1,278 @@
+# Spendscape — Phased Execution Plan
+
+Every phase has a separate human gate. Later phases are context, not current
+authorization.
+
+Prior implementation checkpoint: Phase 1 through bounded Slice
+1D.6 at `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`. It includes the accepted globe-fidelity correction, deterministic
+Analytics/Stats, synthetic Universal Scanner/Capture simulation, bounded
+loading recovery, canonical local search, and the material-uncertainty Smart
+Inbox simulation, synthetic Ask/runtime/focus/history/navigation corrections,
+and details-first synthetic Life Replay with no automatic camera travel and
+explicit `Show place` as its sole camera-moving action. No Phase 1 product
+implementation slice or technology slice is active. The bounded Phase 1E
+critical review, production-rendered local QA, and documentation reconciliation
+are complete with no remaining Blocker or High defect. Bounded Phase 2A.1 is
+complete. Subsequent separately approved Scanner A/B are completed, reviewed,
+committed and pushed; Scanner B at `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`
+remains identification-only, with no purchase creation. The existing SkDev /
+sk-dev3 Hobby Vercel college demo is active. iPhone 17 Pro, iOS 26.6.1 Safari
+has a user-reported Scanner A/B smoke-test pass, not independently instrumented
+or exhaustive device QA. See [the reconciled handoff](CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation)
+for the exact checkpoints, deployment, evidence limits and deferred demo-action
+clarity issue. No implementation slice is currently active. Scanner D, Scanner E,
+optional Scanner C, backend, database, authentication and real providers retain
+separate gates. The college-demo replan supersedes local Supabase Phase 2A.2 for
+this demonstration; the backend roadmap below remains future context.
+Technology candidates and evaluation work nest inside these phases
+as specified in `TECHNOLOGY_STRATEGY.md`; they do not create a competing roadmap
+or authorize real ingestion.
+
+## Phase 0 — readiness and decision checkpoint
+
+Status: completed.
+
+Objective: establish a trustworthy baseline and confirm the first build slice.
+
+Authorized during Phase 0: read repository/durable documents, inspect public references
+read-only, and return this readiness deliverable:
+
+1. Branch/worktree and clean-state evidence.
+2. Inherited-code baseline: preserve/adapt/replace.
+3. Restatement of locked decisions without reopening settled questions.
+4. Material risks and contradictions.
+5. Recommended Phase 1 slices.
+6. Globe-renderer plan and production-provider decision gate.
+7. Screen/state and synthetic-data acceptance matrix.
+8. Missing accounts, keys, tools, MCPs, or skills separated into needed now and
+   later.
+9. Explicit scope exclusions.
+10. End with `APPROVE SPENDSCAPE PHASE 1 BUILD + QA` and stop.
+
+Hard stop: no file changes, installs, app execution, tests, commit, push, or
+deployment.
+
+## Phase 1 — foundation, premium UX, real globe, synthetic story
+
+Gate: `APPROVE SPENDSCAPE PHASE 1 BUILD + QA`
+
+Objective: a polished local Spendscape PWA concept on the target frontend, with
+a real smooth globe and complete synthetic product story. No production backend
+or real user data.
+
+### 1A — baseline and migration
+
+Status: completed and checkpointed.
+
+- Record the existing baseline before modification.
+- Migrate deliberately from Vite to Next.js App Router + TypeScript.
+- Preserve useful fixture/derivation/i18n behavior.
+- Keep globe state outside remount-prone route boundaries.
+- Lock Node/package-manager versions and update run instructions.
+
+### 1B — design system and shell
+
+Status: completed and checkpointed.
+
+- Rebrand Ledgerline to Spendscape.
+- Implement original dark-premium tokens inspired by the reference.
+- Build desktop/mobile composition from `PRODUCT_CONTEXT.md`.
+- Accessibility, safe areas, RTL, keyboard, and reduced motion.
+
+### 1C — globe fidelity spike and integration
+
+Status: completed through the approved Slice 1C.1 visual-polish checkpoint.
+
+- MapLibre globe with an approved development style.
+- Atmosphere, auto-spin/stop, gestures, reset, fly-to, fit-bounds, clusters,
+  canonical place pins, heatmap, tooltips/selection, and empty states.
+- Prove one place/many purchases = one pin and online purchase = no pin.
+- Measure representative performance before expanding.
+
+### 1D — synthetic product experience
+
+Status: bounded Slices 1D.1–1D.6 are complete and checkpointed through
+`95d865f1`. No Phase 1 product implementation slice is active.
+Preserve accepted Ask preview/Apply/Undo, runtime validation, focus/history,
+and mobile order `Globe · Capture · Purchases · Stats`. Search,
+filters, timeline, Purchases, place/purchase detail, shared state, nested
+receipts, cash/manual, multi-currency provenance, unresolved examples, and
+deterministic Analytics/Stats, and the synthetic frontend Universal
+Scanner/Capture simulation with session-only demo records are implemented.
+Real AI/provider work, production Replay, privacy/share,
+providers, real ingestion, and backend work remain deferred.
+
+- Search, filters, timeline, Analytics/Stats, Purchases, place/purchase detail.
+- Universal Scanner simulation, cash/manual, nested receipt items.
+- Smart Inbox, multi-currency-ready display, AI action simulation, and synthetic
+  Life Replay. Privacy/share implementation remains deferred to its later gate.
+- All numbers from one coherent synthetic fixture source.
+
+#### Completed bounded Slice 1D.6 — synthetic Life Replay
+
+- Timeline entry; compact non-modal player over the same mounted globe.
+- Explicit Play/Pause, previous/next, committed scrub, 0.5×/1×/2× speed,
+  date narrowing within current filters, completion, empty and single states.
+- One event per composed canonical purchase; chronological timestamp/ID order.
+- Physical places reuse pins; online/unresolved stay in the story without pins.
+- Details-first playback with no automatic camera commands; temporary pin
+  highlight/mode and one explicit Show place action; restore entry query,
+  selection and camera.
+- Interruptible playback, safe Back/Forward/reload/focus, RTL and reduced motion.
+- Preserve session Capture, Inbox decisions and Ask Undo. No new Ask actions.
+- No network code, provider, dependency, route, sharing/export/video generation.
+- Domain/timer tests, relevant regression suites, production screenshots at
+  360×640, 390×844, 430×932 RTL and 1280×800. Emulation is not physical Safari.
+- Completed and checkpointed at
+  `95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`.
+
+### 1E — functional and visual QA
+
+Status: completed with no remaining Blocker or High defect and recorded by the
+Phase 1E documentation checkpoint. Bounded Phase 2A.1 is also complete.
+These historical approvals did not authorize later slices; see the current
+scanner/demo status above for subsequently consumed approvals.
+
+- Appropriate type/build/unit checks.
+- Every visible control exercised.
+- Small, typical, large phone and desktop rendered review.
+- Globe performance/interaction, RTL, keyboard, reduced motion, long copy,
+  empty/loading/error, and PWA-ready states.
+- Fix blockers/high defects and re-check neighboring states.
+
+Acceptance evidence: runnable local app, run instructions, final screenshots,
+functional/visual matrix, baseline-versus-final summary, dependency/provider
+rationale, known limitations, and “Not implemented yet”.
+
+Hard stop: no additional product slice, real backend, accounts, real data,
+deployment, commit/push, or Phase 2 work beyond separately authorized 2A.1.
+
+## Phase 2 — Supabase foundation and canonical data
+
+Gate: `APPROVE SPENDSCAPE PHASE 2 BACKEND + AUTH + QA`
+
+### Bounded 2A.1 — local data contract boundary + fixture adapter QA
+
+Gate received: `APPROVE SPENDSCAPE PHASE 2A.1 — LOCAL DATA CONTRACT BOUNDARY + FIXTURE ADAPTER QA`
+
+Status: implementation, bounded correction, and checkpoint review passed;
+separate checkpoint commit approval received on 2026-09-05 and consumed by this
+local checkpoint. That approval did not authorize later slices. Its scope was limited
+to a provider-neutral serializable read snapshot, a
+server-side repository interface, an adapter over the existing
+canonical synthetic fixture graph, deterministic contract tests, minimal
+status reconciliation, and local behavior-parity QA. The fixture graph remains
+the single data source.
+
+Acceptance evidence: referential integrity, stable IDs/order, nested totals,
+fixed synthetic FX provenance, one-place/one-pin and online/unresolved pin
+exclusion parity; typecheck, unit tests, production build, and representative
+production-rendered navigation/state checks with one mounted MapLibre instance.
+
+Correction evidence (2026-09-05): the P2 Ask latest-purchase summary now reads
+merchants only from the supplied context. Fixture-backed defaults were removed
+from Ask, Inbox, Replay, search, pin, lookup, summary, and Analytics operations.
+The unchanged graph moved to `src/data/spendscape-fixtures.ts`, consumed at
+runtime only by the fixture adapter. A transitive dependency test guards the
+feature boundary. Typecheck, 104 unit tests, production build, 16 boundary/Ask
+browser tests, 4 focused Replay/composition checks, and `git diff --check`
+passed. No remaining Blocker or High defect. Original Ledgerline files are
+unreachable from the active Next.js routes and remain unchanged. Local evidence
+and the complete apparent-exception ledger are in
+`artifacts/spendscape-phase-2a1/correction/CORRECTION_REPORT.md`.
+
+Hard stop: no Supabase package or CLI, schema/SQL/migration, Auth/RLS/storage,
+resource/account/credential, provider or network-calling data implementation,
+new dependency, real data, deployment, commit/push, or broader Phase 2 work.
+
+Implement the approved canonical backend/auth boundary, migrations, RLS,
+private storage policy, and server data access using synthetic data. Supabase is
+the current platform candidate. Creating or connecting a Supabase project,
+selecting a region/plan, applying remote migrations, or enabling paid usage
+requires a separately named provider-resource authorization. Add queues only
+for a concrete approved retryable workload.
+
+Evidence: reviewed migrations, RLS tests, isolated environments, rollback, and
+threat-model update. Stop before Gmail/scanner AI/real data/deployment.
+
+## Phase 3 — Universal Scanner and ingestion
+
+Gate: `APPROVE SPENDSCAPE PHASE 3 INGESTION + QA`
+
+Implement approved camera/file/PDF/CSV/manual pipelines, barcode adapters,
+idempotent jobs, and product-photo deletion. Tesseract.js is an OCR benchmark
+candidate; AI-assisted extraction must use an approved `AIProvider` benchmark
+and adapter. Gmail is a separate consent slice and needs explicit
+credential/connection confirmation.
+
+Evidence: synthetic/adversarial fixtures, retries, schema validation, retention
+audit, cost/latency, and no duplicate writes.
+
+## Phase 4 — matching, fusion, Smart Inbox, currencies
+
+Gate: `APPROVE SPENDSCAPE PHASE 4 MATCHING + FUSION + QA`
+
+Implement evidence fusion/deduplication, `PlaceProvider`/GPS candidate matching,
+Smart Inbox resolution, FX adapters, and correction audit. Geoapify, Google
+Places, bounded Overture data, and Frankfurter remain candidates until their
+approved benchmark and provider-promotion record are complete.
+
+Evidence: deterministic evaluation set, false-merge/match analysis, reversible
+decisions, GPS-never-proof tests, and provider provenance.
+
+## Phase 5 — intelligence, privacy, sharing, replay
+
+Gate: `APPROVE SPENDSCAPE PHASE 5 INTELLIGENCE + PRIVACY + QA`
+
+Add advanced analytics, habits/insights, typed AI UI tools through
+`AIProvider`, production Life Replay, scoped sharing, export/deletion/retention, and
+privacy center. Cloudflare Workers AI/Gemma is the initial benchmark candidate;
+an optional OpenAI Responses adapter remains documented. Neither is selected
+without the approved benchmark and privacy/provider gate.
+
+The bounded frontend-only synthetic Replay in Phase 1 does not activate this
+Phase 5 gate, real data, integrations, or production Replay infrastructure.
+
+Evidence: authorization/confirmation gates, redaction, share expiry/revocation,
+reduced motion, and insight truthfulness evaluations.
+
+## Phase 6 — production hardening and deployment
+
+The existing bounded college-demo Production bootstrap is a separately approved
+exception, documented in the current handoff. It does not complete or activate
+this broader release phase, or authorize further deployments.
+
+Gate: `APPROVE SPENDSCAPE PHASE 6 DEPLOYMENT + RELEASE QA`
+
+Finalize providers, observability, rate/cost controls, security review,
+backup/recovery, PWA production checks, preview, and the approved deployment
+target. Vercel is a candidate; Hobby is development/private-noncommercial-demo
+only unless current terms permit the intended use.
+
+Before production, present exact target, environment, data policy, estimated
+cost, security evidence, and rollback plan.
+
+## Technology sub-gates within approved phases
+
+An existing phase token authorizes only the work named by that phase and the
+latest bounded user instruction. It does not automatically authorize:
+
+- installing every candidate package in `TECHNOLOGY_STRATEGY.md`;
+- creating provider accounts, projects, databases, buckets, OAuth clients, or
+  remote migrations;
+- adding payment methods, paid plans, overages, or automatic billing;
+- sending private data to OCR/AI/email/place/product/FX providers;
+- connecting Gmail or another external account;
+- production deployment or real-user data.
+
+Before any such action, report the exact provider, environment, data fields,
+licence/attribution, quota, commercial-use terms, privacy/retention, billing
+failure mode, fallback, test evidence, and rollback, then obtain the separately
+required explicit authorization.
+
+## Cross-phase ledger
+
+Every checkpoint reports current phase/authorization, completed evidence,
+remaining acceptance items, changed files/dependencies/providers, assumptions,
+decisions needed, deferred work, Git status, remote/deployment state, and exact
+next approval. Then stop at the phase hard stop.
