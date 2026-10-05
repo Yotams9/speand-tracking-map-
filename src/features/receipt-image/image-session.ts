@@ -7,7 +7,7 @@ export interface ImagePorts {
   inspect: (file: File, signal: AbortSignal) => Promise<ReceiptImageInfo>
   createUrl: (file: File) => string
   revokeUrl: (url: string) => void
-  extract: (signal: AbortSignal) => Promise<unknown>
+  extract: (signal: AbortSignal, file: File) => Promise<unknown>
   state: (state: ImageState) => void
   complete: (draft: ReceiptReviewDraft) => void
 }
@@ -58,7 +58,7 @@ export class ReceiptImageSession {
     if (this.disposed || this.phase !== 'ready' || !this.input) return
     const { generation, controller } = this.begin('reading')
     try {
-      const response = await this.ports.extract(controller.signal)
+      const response = await this.ports.extract(controller.signal, this.input)
       if (generation !== this.generation || this.disposed) return
       const draft = receiptToReviewDraft(response)
       this.release(); this.emit('idle'); this.ports.complete(draft)

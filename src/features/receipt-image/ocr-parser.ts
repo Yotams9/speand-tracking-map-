@@ -20,7 +20,7 @@ export function validateOcrDocument(raw: unknown): raw is OcrDocument {
   return true
 }
 const center = (w: OcrWord) => w.x + w.width / 2
-function rows(words: OcrWord[]): OcrWord[][] {
+export function rows(words: OcrWord[]): OcrWord[][] {
   const result: OcrWord[][] = []
   for (const word of [...words].sort((a, b) => a.y + a.height / 2 - b.y - b.height / 2 || a.x - b.x)) {
     const last = result.at(-1), anchor = last?.[0]
@@ -29,7 +29,7 @@ function rows(words: OcrWord[]): OcrWord[][] {
   }
   return result.map(row => row.sort((a, b) => a.x - b.x))
 }
-function label(words: OcrWord[]): string | null {
+export function label(words: OcrWord[]): string | null {
   if (!words.length) return null
   const visual = [...words].sort((a, b) => a.x - b.x)
   if (visual.some((word, i) => i > 0 && word.x < visual[i - 1].x + visual[i - 1].width)) return null
@@ -47,7 +47,7 @@ function label(words: OcrWord[]): string | null {
   const value = ordered.map(w => w.text).join(' ')
   return value.length <= 500 ? value : null
 }
-function numeric(words: OcrWord[], kind: string): string | null {
+export function numeric(words: OcrWord[], kind: string): string | null {
   if (!words.length || words.length > 7) return null
   const ordered = [...words].sort((a, b) => a.x - b.x)
   if (ordered.length === 1) return ordered[0].text
@@ -62,7 +62,7 @@ function numeric(words: OcrWord[], kind: string): string | null {
   const pattern = kind === 'date' ? /^(?:\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4})$/ : kind === 'time' ? /^\d{2}:\d{2}$/ : kind === 'vatRate' ? /^\d{1,3}(?:\.\d{1,2})?%$/ : /^\d{1,8}(?:\.\d{1,3})?$/
   return pattern.test(value) ? value : null
 }
-function unique(values: (string | null)[]): ReceiptObservation {
+export function unique(values: (string | null)[]): ReceiptObservation {
   // An unresolved printed occurrence cannot be masked by a resolved repeat.
   if (values.includes(null)) return null
   const all = [...new Set(values.filter((value): value is string => value !== null))]
