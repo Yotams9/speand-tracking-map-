@@ -1,14 +1,17 @@
+import type { AttemptDiagnostics, AttemptEmit, AttemptSession } from './vision-attempt'
 import { MAX_RECEIPT_BYTES, receiptImageHeader } from './image-input'
 import { normalizeVisionResponse } from './vision-normalize'
 import { parseVisionReceipt } from './short-receipt-parser'
 import { receiptToReviewDraft } from '../capture/receipt-review-adapter'
 export interface VisionLocalPorts {
   enabled: boolean
+  fictionalQa?: boolean
   approvedHash: string
   hash: (bytes: Uint8Array) => string
   consumed: () => Promise<boolean>
   reserve: () => Promise<void>
-  recognize: (bytes: Uint8Array, signal: AbortSignal) => Promise<unknown>
+  diagnostics: AttemptDiagnostics
+  recognize: (bytes: Uint8Array, signal: AbortSignal, emit: AttemptEmit) => Promise<unknown>
 }
 export const VISION_JOB_MS = 25_000
 const loopback = (host: string) => ['localhost','127.0.0.1','[::1]'].includes(host)
@@ -22,7 +25,12 @@ function local(request: Request) {
 export function createVisionLocalHandler(ports: VisionLocalPorts, timeoutMs=VISION_JOB_MS) {
   return async(request: Request) => {
     if (!ports.enabled || !/^[a-f0-9]{64}$/.test(ports.approvedHash) || !local(request)) return reply('ocr-unavailable',503)
-    if (request.method === 'GET') return reply(await ports.consumed() ? 'attempt-consumed' : 'local-vision-ready',200)
+    if (request.method === 'GET') {
+      try {
+        if(request.headers.get('x-spendscape-vision-status')==='1')return reply('attempt-status',200,{attempt:await ports.diagnostics.status(),consumed:await ports.consumed(),mode:ports.fictionalQa?'fictional-qa':'native'})
+        return reply(await ports.consumed() ? 'attempt-consumed' : 'local-vision-ready',200)
+      }catch{return reply('diagnostics-unavailable',503)}
+    }
     if (request.method !== 'POST') return reply('request-invalid',400)
     const mime=request.headers.get('content-type')
     if (!mime || !['image/jpeg','image/png'].includes(mime)) return reply('image-format',400)
@@ -31,7 +39,7 @@ export function createVisionLocalHandler(ports: VisionLocalPorts, timeoutMs=VISI
     const controller=new AbortController(), signal=AbortSignal.any([request.signal,controller.signal])
     const timer=setTimeout(()=>controller.abort(),timeoutMs)
     const reader=request.body?.getReader();let bytes:Uint8Array|null=null
-    const chunks:Uint8Array[]=[];let length=0
+    const chunks:Uint8Array[]=[];let length=0;let attempt:AttemptSession|null=null
     const abortRead=()=>{void reader?.cancel().catch(()=>{})}
     signal.addEventListener('abort',abortRead,{once:true})
     try {
@@ -50,21 +58,30 @@ export function createVisionLocalHandler(ports: VisionLocalPorts, timeoutMs=VISI
       // Reservation is permanent even on auth/load/error/cancellation. Exactly
       // one future provider dispatch is permitted across processes/restarts.
       await ports.reserve()
+      try {attempt=await ports.diagnostics.start()}catch{throw new Error('diagnostics-unavailable')}
       if(signal.aborted)throw new Error('cancelled')
       const raw=await new Promise<unknown>((resolve,reject)=>{
         const abort=()=>reject(new Error('cancelled'))
         signal.addEventListener('abort',abort,{once:true})
-        ports.recognize(bytes!,signal).then(resolve,reject).finally(()=>signal.removeEventListener('abort',abort))
+        ports.recognize(bytes!,signal,attempt!.emit).then(resolve,reject).finally(()=>signal.removeEventListener('abort',abort))
       })
       if(signal.aborted)throw new Error('cancelled')
-      const parsed=parseVisionReceipt(normalizeVisionResponse(raw))
+      await attempt.emit('normalization-start')
+      const normalized=normalizeVisionResponse(raw)
+      await attempt.emit('normalization-complete')
+      await attempt.emit('parsing-start')
+      const parsed=parseVisionReceipt(normalized)
+      await attempt.emit('parsing-complete')
       receiptToReviewDraft(parsed.observations)
       if(signal.aborted)throw new Error('cancelled')
-      return reply('vision-observations',200,parsed)
+      const response=reply('vision-observations',200,parsed)
+      await attempt.emit('review-response-complete')
+      return response
     } catch(error) {
       const message=error instanceof Error ? error.message : ''
-      const allowed=['image-size','image-format','image-not-approved','attempt-consumed','authentication-failed','transport-failed','recognition-failed','recognition-empty','normalization-failed','layout-unsupported']
+      const allowed=['image-size','image-format','image-not-approved','attempt-consumed','authentication-failed','transport-failed','recognition-failed','recognition-empty','normalization-failed','layout-unsupported','diagnostics-unavailable']
       const code=signal.aborted ? 'cancelled' : allowed.includes(message) ? message : 'ocr-invalid'
+      if(attempt)try{await attempt.emit(signal.aborted?'interrupted':'failure',{code})}catch{/* Existing durable stages remain incomplete; never retry. */}
       return reply(code,code==='attempt-consumed'?409:signal.aborted?408:422)
     } finally {clearTimeout(timer);signal.removeEventListener('abort',abortRead);reader?.releaseLock();bytes?.fill(0);for(const chunk of chunks)chunk.fill(0)}
   }

@@ -1,3 +1,17 @@
+# Local Vision attempt diagnostics — 2026-10-06
+
+- Entry HEAD `108d2bbce89b452230781dfa75157c87a700dff9` on `feature/spendscape-rebuild`; local Vision integration is committed. Current bounded diagnostics correction is uncommitted and awaits review. Prior real validation remains inconclusive; its reservation and all historical evidence stay unchanged. No new live attempt is authorized.
+- Separate private lifecycle JSONL starts exclusively after the one-call reservation and is fsynced before authentication/dispatch. Fixed allowlisted stages cover reservation, auth, dispatch initiation, provider HTTP receipt, normalization, parsing, response preparation and failure/interruption. Only bounded timing, numeric HTTP/code and allowlisted Google status survive; no image/token/OCR/message/field values. Record failure before transmission fails closed.
+- Restricted loopback/same-origin GET `/api/receipt-ocr`, headers `x-spendscape-local-vision: 1` + `x-spendscape-vision-status: 1`, returns the safe record with no-store. Activation gates still apply. Missing legacy record stays null with consumed=true; no historical backfill. Restart leaves a nonterminal record incomplete, not a reconstructed diagnosis. Dispatch initiation is not proof of Google receipt/processing; review-response-complete means a Response was prepared, not browser delivery.
+- Explicit fictional server QA (`SPENDSCAPE_VISION_DIAGNOSTIC_QA=1` + validated QA_RUN) uses fake authentication and injected transport only, isolated under artifacts/vision-diagnostics-qa/<run>. Default/hosted activation restrictions remain. It cannot use gcloud/native fetch. Real native reservation path remains consumed.
+- Fresh QA: 44/44 focused lifecycle/boundary tests, 443/443 full units, typecheck and production build passed; 7/7 isolated production-browser mocks (10.1s). Two initial builds hit Turbopack tracing of an unrelated ignored venv; restricting QA paths to a dedicated subtree fixed it without touching old artifacts/config. EN/HE 360px review screenshots inspected; save/reload, 42 baseline purchases, 12 pins and one MapLibre verified by neighboring tests. No timeout/assertion relaxation.
+- Exact manifest/results and limits: docs/spendscape/COLLEGE_VISION_ATTEMPT_DIAGNOSTICS.md. Evidence: artifacts/vision-diagnostics-0knnvnf4/; no historical QA destination regenerated. All 656 protected inputs match entry. Server stopped, next-env restored to entry bytes, main refs/consumed locks preserved. No credentials/provider call, dependency/account/billing/schema/UI change, stage/commit/push/deploy.
+- Next gate: `APPROVE SPENDSCAPE COLLEGE LOCAL VISION ATTEMPT DIAGNOSTICS CHECKPOINT REVIEW`. A later real attempt needs separate approval and a new reviewed reservation; never reset the consumed one. Real extraction/general receipt support remains unproved.
+
+The following handoff is preserved as historical context and superseded by this status.
+
+---
+
 # Current local Vision receipt slice — 2026-10-05
 
 - HEAD `37fac7d059bac7947f1fe2f8828518e1e2d49187`, branch `feature/spendscape-rebuild`; the prior mock receipt-image checkpoint is committed locally. Current local Vision connection is **uncommitted, awaiting review**; exact 18-file manifest and limitations: `docs/spendscape/COLLEGE_LOCAL_VISION_RECEIPT.md`.

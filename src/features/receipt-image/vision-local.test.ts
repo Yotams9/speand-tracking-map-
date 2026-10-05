@@ -9,7 +9,7 @@ import {join} from 'node:path'
 const hash='a'.repeat(64)
 function png(){const b=new Uint8Array(33);b.set([137,80,78,71,13,10,26,10]);const v=new DataView(b.buffer);v.setUint32(8,13);v.setUint32(12,0x49484452);v.setUint32(16,64);v.setUint32(20,64);return b}
 function request(headers:Record<string,string>={},signal?:AbortSignal,body:Uint8Array=png()){return new Request('http://127.0.0.1:3000/api/receipt-ocr',{method:'POST',headers:{host:'127.0.0.1:3000',origin:'http://127.0.0.1:3000','content-type':'image/png','x-spendscape-local-vision':'1',...headers},body,signal})}
-function ports(){let consumed=false;return {enabled:true,approvedHash:hash,hash:()=>hash,consumed:async()=>consumed,reserve:vi.fn(async()=>{if(consumed)throw new Error('attempt-consumed');consumed=true}),recognize:vi.fn(async()=>visionResponse(fictionalShortOcr()))}}
+function ports(){let consumed=false;return {diagnostics:{start:async()=>({emit:async()=>{}}),status:async()=>null},enabled:true,approvedHash:hash,hash:()=>hash,consumed:async()=>consumed,reserve:vi.fn(async()=>{if(consumed)throw new Error('attempt-consumed');consumed=true}),recognize:vi.fn(async()=>visionResponse(fictionalShortOcr()))}}
 beforeEach(()=>{vi.stubGlobal('fetch',()=>{throw new Error('offline-network-guard')})})
 afterEach(()=>vi.unstubAllGlobals())
 describe('exclusive local Vision boundary with offline network guard',()=>{
