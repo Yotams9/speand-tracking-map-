@@ -2,12 +2,15 @@ import { type CurrencyCode, type GlobePurchase, type Merchant, type Place, type 
 import { createSessionCaptureRecord, type CaptureDraft, type SessionCaptureRecord } from './capture-domain'
 import { validateBarcode, type BarcodeIdentity } from './barcode-domain'
 
+import { composeDirectory, emptyDirectory, previewSequence, proposeDirectory, pruneDirectory, type DirectoryIntent, type LocalDirectory } from '../local-purchases/local-directory'
+
 export const reviewCurrencies: CurrencyCode[] = ['ILS', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'MXN', 'ZAR']
 export const reviewCategories: PurchaseCategory[] = ['groceries', 'food', 'retail', 'travel']
 export interface ReviewLine { demoProductId?: string; name: string; quantity: string; unit: 'item' | 'kg'; price: string; discount?: string; originalLabel?: { en: string; he: string } }
 export interface PurchaseReviewInput {
   source: CaptureDraft['source']
   provenance: 'synthetic-demo' | 'user-reviewed'
+  directoryIntent?: DirectoryIntent
   identification?: { identity: BarcodeIdentity; method: 'camera' | 'manual' | 'demo'; syntheticCatalog: boolean }
   merchantId: string; placeId: string; channel: '' | 'physical' | 'online' | 'unknown'
   date: string; currency: '' | CurrencyCode; payment: '' | PaymentMode; category: '' | PurchaseCategory
@@ -61,6 +64,11 @@ export function lineMinorTotal(line: ReviewLine, currency: string): number | nul
   return gross === null || discount === null || discount > gross ? null : gross - discount
 }
 export function validateReview(input: PurchaseReviewInput, context: ReviewContext): ReviewErrors {
+  if (input?.directoryIntent !== undefined) {
+    const proposal = proposeDirectory(input.directoryIntent, input.merchantId, input.channel, previewSequence(context), context)
+    const { directoryIntent: _intent, ...resolved } = input
+    return { ...validateReview({ ...resolved, merchantId: proposal.merchantId, placeId: proposal.placeId }, composeDirectory(context, proposal.directory)), ...proposal.errors }
+  }
   const errors: ReviewErrors = {}
   if (!input || typeof input !== 'object' || ['merchantId', 'placeId', 'date', 'amount', 'baseAmount', 'channel', 'currency', 'payment', 'category', 'source', 'provenance'].some(key => typeof input[key as keyof PurchaseReviewInput] !== 'string')) return { amount: 'required' }
   const amount = minorAmount(input.amount, input.currency)
@@ -127,8 +135,8 @@ export function reviewedRecord(input: PurchaseReviewInput, sequence: number, con
   if (input.identification) record.identification = { method: input.identification.method, syntheticCatalog: input.identification.syntheticCatalog === true, identity: { original: input.identification.identity.original, format: input.identification.identity.format, gtin14: input.identification.identity.gtin14 } }
   return record
 }
-export interface SessionPurchaseLedger { records: readonly SessionCaptureRecord[]; consumed: readonly string[]; nextSequence: number; undoId: string | null }
-export const emptySessionLedger = (): SessionPurchaseLedger => ({ records: [], consumed: [], nextSequence: 1, undoId: null })
+export interface SessionPurchaseLedger { directory: LocalDirectory; records: readonly SessionCaptureRecord[]; consumed: readonly string[]; nextSequence: number; undoId: string | null }
+export const emptySessionLedger = (): SessionPurchaseLedger => ({ directory: emptyDirectory(), records: [], consumed: [], nextSequence: 1, undoId: null })
 function fingerprint(p: GlobePurchase) {
   return JSON.stringify([p.merchantId, p.placeId, p.channel, p.timestamp, p.originalCurrency, p.originalAmount, p.paymentMode, p.category, p.items.map(i => [i.label.en, i.quantity, i.unit, i.unitPrice, i.discountMinor ?? 0, i.lineTotal])])
 }
@@ -137,14 +145,29 @@ export function saveReviewedPurchase(ledger: SessionPurchaseLedger, operationId:
   if (!operationId || ledger.consumed.includes(operationId)) return { ledger, result: { code: 'consumed' } }
   const errors = validateReview(input, context)
   if (Object.keys(errors).length) return { ledger, result: { code: 'invalid', errors } }
-  const record = reviewedRecord(input, ledger.nextSequence, context)
+  let directory = ledger.directory
+  let resolved = input
+  if (input.directoryIntent) {
+    const proposal = proposeDirectory(input.directoryIntent, input.merchantId, input.channel, ledger.nextSequence, context)
+    if (Object.keys(proposal.errors).length) return { ledger, result: { code: 'invalid', errors: proposal.errors } }
+    directory = { merchants: [...directory.merchants, ...proposal.directory.merchants], places: [...directory.places, ...proposal.directory.places] }
+    const { directoryIntent: _intent, ...facts } = input
+    resolved = { ...facts, merchantId: proposal.merchantId, placeId: proposal.placeId }
+    context = composeDirectory(context, proposal.directory)
+  }
+  const record = reviewedRecord(resolved, ledger.nextSequence, context)
   if (!allowDuplicate && [...baseline, ...ledger.records.map(r => r.purchase)].some(p => fingerprint(p) === fingerprint(record.purchase))) return { ledger, result: { code: 'duplicate' } }
-  return { ledger: { records: [...ledger.records, record], consumed: [...ledger.consumed, operationId], nextSequence: ledger.nextSequence + 1, undoId: record.purchase.id }, result: { code: 'saved', purchaseId: record.purchase.id } }
+  return { ledger: { directory, records: [...ledger.records, record], consumed: [...ledger.consumed, operationId], nextSequence: ledger.nextSequence + 1, undoId: record.purchase.id }, result: { code: 'saved', purchaseId: record.purchase.id } }
 }
 export function undoSessionPurchase(ledger: SessionPurchaseLedger): SessionPurchaseLedger {
-  return { ...ledger, records: ledger.records.filter(r => r.purchase.id !== ledger.undoId), undoId: null }
+  return deleteLocalPurchase(ledger, ledger.undoId ?? '')
 }
 export function expireSessionPurchaseUndo(ledger: SessionPurchaseLedger, expectedId: string): SessionPurchaseLedger {
   return ledger.undoId === expectedId ? { ...ledger, undoId: null } : ledger
 }
-export function resetSessionPurchases(ledger: SessionPurchaseLedger): SessionPurchaseLedger { return { ...ledger, records: [], undoId: null } }
+export function deleteLocalPurchase(ledger: SessionPurchaseLedger, purchaseId: string): SessionPurchaseLedger {
+  if (!ledger.records.some(r => r.purchase.id === purchaseId)) return ledger
+  const records = ledger.records.filter(r => r.purchase.id !== purchaseId)
+  return { ...ledger, records, directory: pruneDirectory(ledger.directory, records.map(r => r.purchase)), undoId: ledger.undoId === purchaseId ? null : ledger.undoId }
+}
+export function resetSessionPurchases(ledger: SessionPurchaseLedger): SessionPurchaseLedger { return { ...ledger, directory: emptyDirectory(), records: [], undoId: null } }

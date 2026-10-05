@@ -322,3 +322,16 @@
 .receiptObservations ol { padding-inline-start: 24px; }
 .receiptObservations li { margin-block: 12px; }
 .receiptObservations div[data-review-feedback] > .fieldError { display: block; margin-block-start: 8px; }
+
+.directoryReview { min-width: 0; border: 1px solid var(--line, #37444e); border-radius: 16px; padding: 14px; display: grid; gap: 12px; }
+.directoryReview legend { padding-inline: 6px; font-weight: 600; }
+.directoryReview p { font-size: 13px; line-height: 1.5; }
+.directoryActions, .directoryFields { display: grid; gap: 12px; }
+.directoryReview button { padding: 12px; min-height: 44px; background: #263238; color: #fff; border: 1px solid #53616a; border-radius: 12px; text-align: start; }
+.directoryReview :is(input, select, button):focus-visible { outline: 2px solid #b8f0dd; outline-offset: 3px; }
+.directoryReview .directoryCheck { display: flex; flex-wrap: wrap; align-items: start; gap: 8px; font-size: 13px; line-height: 1.5; }
+.directoryReview .directoryCheck input { width: 22px; height: 22px; min-height: 22px; flex-shrink: 0; }
+.directoryCheck small { flex-basis: 100%; }
+@media (min-width: 761px) { .directoryFields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.purchaseReview .directoryReview .directoryCheck { display: grid; grid-template-columns: 22px minmax(0, 1fr); flex-direction: row; }
+.directoryReview .directoryCheck small { grid-column: 1 / -1; }

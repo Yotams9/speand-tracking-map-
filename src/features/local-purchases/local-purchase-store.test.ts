@@ -60,10 +60,11 @@ describe('local purchase boundary', () => {
 describe('P2C envelope compatibility and strict discounts', () => {
   it('migrates v1 in memory with all records, decisions, revisions and identities unchanged', () => {
     const c = data.smartInboxCases.find(c => c.material)!
-    const old = { ...disk(), version: 1, revision: 12, decisions: [{ caseId: c.id, status: 'deferred' }] }
+    const { directory: _directory, ...legacy } = disk()
+    const old = { ...legacy, version: 1, revision: 12, decisions: [{ caseId: c.id, status: 'deferred' }] }
     const before = JSON.stringify(old)
     const migrated = validateLocalPurchases(old, data)
-    expect(migrated).toEqual({ ...old, version: 2 })
+    expect(migrated).toEqual({ ...old, directory: { merchants: [], places: [] }, version: 3 })
     expect(JSON.stringify(old)).toBe(before)
     expect(validateLocalPurchases(migrated, data)).toEqual(migrated)
     expect(restoredLedger(migrated)).toMatchObject({ undoId: null, consumed: [] })
@@ -78,7 +79,7 @@ describe('P2C envelope compatibility and strict discounts', () => {
   })
   it('rejects discount fields in v1 and unknown future versions without mutating input', () => {
     const old = structuredClone(disk()); old.records[0].purchase.items[0].discountMinor = 0
-    for (const raw of [{ ...old, version: 1 }, { ...disk(), version: 3 }]) {
+    for (const raw of [{ ...old, version: 1 }, { ...disk(), version: 4 }]) {
       const before = JSON.stringify(raw)
       expect(() => validateLocalPurchases(raw, data)).toThrow('invalid')
       expect(JSON.stringify(raw)).toBe(before)
@@ -93,4 +94,36 @@ describe('P2C envelope compatibility and strict discounts', () => {
     expect(() => validateLocalPurchases(d, data)).toThrow('invalid')
     expect(() => validateLocalPurchases({ ...disk(), photo: 'forbidden' }, data)).toThrow('invalid')
   })
+})
+
+it('validates v3 against the composed graph and migrates v2 discounts without changing records', async () => {
+  const fictionalIntent = () => ({merchant:{name:'Fictional store',category:'groceries' as const,separate:false},place:{branch:'Fictional branch',city:'Fictional city',country:'Fictional country',address:'',longitude:'34.75',latitude:'32.1',confirmed:true,separate:false}})
+  const { blankReview } = await import('../capture/session-purchase-domain')
+  const input = { ...blankReview(), source: 'receipt' as const, merchantId: '', channel: 'physical' as const, date: '2026-10-03T09:15', currency: 'ILS' as const, payment: 'cash' as const, category: 'groceries' as const, amount: '8', lines: [{name:'Free fictional item',quantity:'1',unit:'item' as const,price:'10',discount:'10'},{name:'Discounted fictional item',quantity:'1',unit:'item' as const,price:'10',discount:'2'}], directoryIntent: fictionalIntent() }
+  const l=saveReviewedPurchase(emptySessionLedger(),'new',input,data,data.purchases).ledger
+  expect(l.records).toHaveLength(1)
+  const d={...emptyLocalPurchases(),directory:l.directory,records:l.records,nextSequence:l.nextSequence}
+  expect(validateLocalPurchases(JSON.parse(JSON.stringify(d)),data)).toEqual(d)
+  expect(d.records[0].purchase.items[0]).toMatchObject({unitPrice:10,discountMinor:1000,lineTotal:0})
+  expect(()=>validateLocalPurchases({...d,directory:{merchants:[],places:[]}},data)).toThrow('invalid')
+  const {directory:_directory,...legacy}=disk(),old={...legacy,version:2,revision:21}
+  const before=JSON.stringify(old),migrated=validateLocalPurchases(old,data)
+  expect(migrated).toEqual({...old,version:3,directory:{merchants:[],places:[]}});expect(JSON.stringify(old)).toBe(before)
+})
+it('rejects orphan directories and malformed versioned arrays without salvaging', async () => {
+  const { proposeDirectory } = await import('./local-directory')
+  const d=emptyLocalPurchases(); d.directory=proposeDirectory({merchant:{name:'Fictional orphan',category:'retail',separate:false}},'','online',1,data).directory;d.nextSequence=2
+  expect(()=>validateLocalPurchases(d,data)).toThrow('invalid')
+  for (const key of ['records','decisions']) expect(()=>validateLocalPurchases({...emptyLocalPurchases(),[key]:Array(1)},data)).toThrow('invalid')
+})
+
+it('migrates actual v2 full/partial discounts without rewriting financial facts',async()=>{
+ const { blankReview }=await import('../capture/session-purchase-domain')
+ const place=data.places[0]
+ const input={...blankReview(),source:'receipt' as const,merchantId:place.merchantId,placeId:place.id,channel:'physical' as const,date:'2026-10-03T09:15',currency:'ILS' as const,payment:'cash' as const,category:'groceries' as const,amount:'8',lines:[{name:'Fictional free item',quantity:'1',unit:'item' as const,price:'10',discount:'10'},{name:'Fictional discounted item',quantity:'1',unit:'item' as const,price:'10',discount:'2'}]}
+ const ledger=saveReviewedPurchase(emptySessionLedger(),'legacy-discounts',input,data,data.purchases).ledger
+ const old={version:2,revision:17,records:ledger.records,nextSequence:ledger.nextSequence,decisions:[]},before=JSON.stringify(old)
+ const migrated=validateLocalPurchases(old,data)
+ expect(migrated.records).toEqual(old.records);expect(migrated.records[0].purchase.items[0]).toMatchObject({unitPrice:10,discountMinor:1000,lineTotal:0});expect(JSON.stringify(old)).toBe(before)
+ expect(migrated).toEqual({...old,version:3,directory:{merchants:[],places:[]}})
 })

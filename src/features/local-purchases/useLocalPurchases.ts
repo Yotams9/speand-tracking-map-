@@ -38,7 +38,7 @@ export function useLocalPurchases(context: SpendscapeDataSnapshot, onRestore: (d
     if (lock.current || (!erase && phase !== 'ready')) return false
     lock.current = true; lastFailure.current = 'storage'; setBusy(true); setWriteError(false)
     try {
-      const next = { ...current.current, records: ledger.records, nextSequence: ledger.nextSequence, decisions }
+      const next = { ...current.current, directory: ledger.directory, records: ledger.records, nextSequence: ledger.nextSequence, decisions }
       const saved = await writeLocalPurchases(next, context, erase)
       current.current = saved
       try { channel.current?.postMessage({ changed: true }) } catch { /* No data in notifications. */ }

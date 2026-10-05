@@ -54,7 +54,8 @@ import { demoComparison } from '@/features/nearby-demo/comparison'
 import { useLocalPurchases } from '@/features/local-purchases/useLocalPurchases'
 import { LocalDataPanel } from '@/features/local-purchases/LocalDataPanel'
 import { restoredLedger } from '@/features/local-purchases/local-purchase-store'
-import { emptySessionLedger, expireSessionPurchaseUndo, saveReviewedPurchase, undoSessionPurchase } from '@/features/capture/session-purchase-domain'
+import { composeDirectory } from '@/features/local-purchases/local-directory'
+import { deleteLocalPurchase, emptySessionLedger, expireSessionPurchaseUndo, saveReviewedPurchase, undoSessionPurchase } from '@/features/capture/session-purchase-domain'
 import {
   applySmartInboxDecisions,
   caseForPurchase,
@@ -784,7 +785,7 @@ function navigationHash(snapshot: NavigationSnapshot): string {
   if (snapshot.inboxCaseId) return `#inbox/${snapshot.inboxCaseId}`
   if (snapshot.askOpen) return '#ask'
   if (snapshot.selectedPurchaseId) return `#purchase/${snapshot.selectedPurchaseId}`
-  if (snapshot.selectedPlaceId) return `#place/${snapshot.selectedPlaceId}`
+  if (snapshot.selectedPlaceId) return snapshot.selectedPlaceId.startsWith('local_place_') ? '#place' : `#place/${snapshot.selectedPlaceId}`
   if (snapshot.surface === 'purchases') return '#purchases'
   if (snapshot.surface === 'stats') return '#stats'
   return '#globe'
@@ -813,15 +814,15 @@ interface SpendscapeGlobeProps {
 
 export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const {
-    merchants: globeMerchants,
-    places: globePlaces,
+    merchants: baselineMerchants,
+    places: baselinePlaces,
     purchases: globePurchases,
     evidence: globeEvidenceRecords,
     smartInboxCases,
   } = initialData
   const placeFeatureCollection = useMemo(
-    () => buildPlaceFeatureCollection(globePlaces, globePurchases),
-    [globePlaces, globePurchases],
+    () => buildPlaceFeatureCollection(baselinePlaces, globePurchases),
+    [baselinePlaces, globePurchases],
   )
   const mapNodeRef = useRef<HTMLDivElement>(null)
   const queryDockRef = useRef<HTMLElement>(null)
@@ -890,6 +891,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const [captureDepth, setCaptureDepth] = useState(0)
   const [sessionLedger, setSessionLedger] = useState(emptySessionLedger)
   const sessionLedgerRef = useRef(sessionLedger)
+  const directoryGraph = useMemo(() => composeDirectory({ merchants: baselineMerchants, places: baselinePlaces }, sessionLedger.directory), [baselineMerchants, baselinePlaces, sessionLedger.directory])
+  const { merchants: globeMerchants, places: globePlaces } = directoryGraph
+  const globePlacesRef = useRef(globePlaces)
+  globePlacesRef.current = globePlaces
+  const [deletePurchaseId, setDeletePurchaseId] = useState<string | null>(null)
   const sessionCaptureRecords = sessionLedger.records
   const [comparisonReadyId, setComparisonReadyId] = useState<string | null>(null)
   const nearbyComparison = useMemo(() => demoComparison(sessionCaptureRecords, comparisonReadyId, sessionLedger.undoId, globePlaces), [sessionCaptureRecords, comparisonReadyId, sessionLedger.undoId, globePlaces])
@@ -1005,7 +1011,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     ? allPurchases.filter((purchase) => replay.purchaseIds.includes(purchase.id)) : [], [allPurchases, replay])
   const visibleData = useMemo(
     () => buildPlaceFeatureCollection(globePlaces, visiblePurchases),
-    [visiblePurchases],
+    [globePlaces, visiblePurchases],
   )
   const visibleSummary = useMemo(
     () => derivedPurchaseSummary(visiblePurchases, globePlaces),
@@ -1032,7 +1038,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         (feature) => feature.properties.placeId === 'place_shuk_bograshov',
       ).length,
     }
-  }, [allPurchases])
+  }, [globePlaces, allPurchases])
   const timelineMonths = useMemo(() => availableTimelineMonths(allPurchases), [allPurchases])
   const askContext = useMemo<AskContext>(() => ({
     merchants: globeMerchants,
@@ -1196,7 +1202,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     const entry = replaySessionRef.current?.entry
     const stored: StoredExperienceState = {
       marker: 'spendscape-1d1', locale, query, mode, surface,
-      selectedPlaceId,
+      selectedPlaceId: selectedPlaceId?.startsWith('local_place_') ? null : selectedPlaceId,
       selectedPurchaseId: selectedPurchaseId?.startsWith('session_purchase_') ? null : selectedPurchaseId,
       captureStep: null, captureDepth: 0, inboxCaseId: null,
       askOpen: false,
@@ -1205,6 +1211,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     // Free text can contain a session purchase's private item/merchant details.
     // Preserve filters/preferences, but never persist search (including Replay's
     // entry query). Overwrite any legacy stored search without restoring it.
+    if (stored.selectedPlaceId?.startsWith('local_place_')) stored.selectedPlaceId = null
     stored.query = { ...stored.query, search: '' }
     window.sessionStorage.setItem(EXPERIENCE_STORAGE_KEY, JSON.stringify(stored))
   }, [locale, mode, query, selectedPlaceId, selectedPurchaseId, stateRestored, surface])
@@ -1449,7 +1456,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       setMode('pins')
     }
     setSurface(snapshot.replay ? 'globe' : snapshot.surface)
-    setSelectedPlaceId(snapshot.selectedPlaceId)
+    const selectedPlace = snapshot.selectedPlaceId?.startsWith('local_place_') && !globePlacesRef.current.some(p => p.id === snapshot.selectedPlaceId) ? null : snapshot.selectedPlaceId
+    setSelectedPlaceId(selectedPlace)
     setSelectedPurchaseId(snapshot.selectedPurchaseId)
     setCaptureStep(snapshot.captureStep ?? null)
     setCaptureDepth(snapshot.captureDepth ?? 0)
@@ -1460,7 +1468,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     setMobileToolsOpen(false)
     setSearchOpen(false)
     setActiveSearchIndex(-1)
-    updateSelectedFilter(snapshot.replay ? null : snapshot.selectedPlaceId)
+    updateSelectedFilter(snapshot.replay ? null : selectedPlace)
   }, [releaseReplay, stopSpin, updateSelectedFilter])
 
   const pushNavigation = useCallback((patch: Partial<NavigationSnapshot>) => {
@@ -1558,7 +1566,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       return
     }
     const map = mapRef.current
-    const place = placeForId(placeId, globePlaces)
+    const place = placeForId(placeId, globePlacesRef.current)
     if (!place) return
     const activeElement = document.activeElement
     if (activeElement instanceof HTMLElement && activeElement !== document.body) {
@@ -2346,7 +2354,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
               return [coordinate.lng, coordinate.lat]
             },
             renderedPlaceIdsAt: (placeId) => {
-              const place = placeForId(placeId, globePlaces)
+              const place = placeForId(placeId, globePlacesRef.current)
               if (!place || !map.getLayer(PIN_LAYER)) return []
               const point = map.project(place.coordinates)
               return map.queryRenderedFeatures(point, { layers: [PIN_LAYER] })
@@ -2597,7 +2605,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
 
   const fitPlaceIds = useCallback((placeIds: string[]) => {
     const places = placeIds
-      .map((placeId) => placeForId(placeId, globePlaces))
+      .map((placeId) => placeForId(placeId, globePlacesRef.current))
       .filter((place): place is NonNullable<typeof place> => Boolean(place))
     if (places.length === 0) return
     runCameraAction('search-city-fit', (map) => {
@@ -2812,6 +2820,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     sessionLedgerRef.current = undone
     setSessionLedger(sessionLedgerRef.current)
     if (selectedPurchaseId === removedId) setSelectedPurchaseId(null)
+    if (selectedPlaceId?.startsWith('local_place_') && !undone.directory.places.some(p => p.id === selectedPlaceId)) updateSelectedFilter(null)
+    setAskUndoSnapshot(null)
     if (replay?.purchaseIds.includes(removedId)) exitReplayForNavigation(() => {})
     setStatus(locale === 'he' ? 'ההוספה האחרונה בוטלה' : 'Last session addition undone')
     if (!captureStep) requestAnimationFrame(() => {
@@ -2819,6 +2829,19 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       Array.from(buttons).find(button => button.offsetParent !== null)?.focus({ preventScroll: true })
     })
     return true
+  }
+
+  const removeLocalPurchase = async (id: string) => {
+    const next = deleteLocalPurchase(sessionLedgerRef.current, id)
+    if (next === sessionLedgerRef.current) return
+    if (!await localData.commit(next, inboxDecisionsRef.current)) return
+    sessionLedgerRef.current = next; setSessionLedger(next)
+    setDeletePurchaseId(null); setSelectedPurchaseId(null); setComparisonReadyId(null)
+    if (selectedPlaceId?.startsWith('local_place_') && !next.directory.places.some(p => p.id === selectedPlaceId)) updateSelectedFilter(null)
+    setAskUndoSnapshot(null); setAskFeedback(null); setAskOpen(false)
+    if (replay?.purchaseIds.includes(id)) exitReplayForNavigation(() => {})
+    setStatus(locale === 'he' ? 'הרכישה נמחקה מהמכשיר הזה' : 'Purchase deleted from this device')
+    requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-testid="history-search"]')?.focus({ preventScroll: true }))
   }
 
   const resetSessionCaptures = async () => {
@@ -2926,7 +2949,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           cameraActions.push((map) => {
             const bounds = new maplibregl.LngLatBounds()
             for (const placeId of placeIds) {
-              const place = placeForId(placeId, globePlaces)
+              const place = placeForId(placeId, globePlacesRef.current)
               if (place) bounds.extend(place.coordinates)
             }
             map.fitBounds(bounds, {
@@ -3102,7 +3125,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     if (window.__SPENDSCAPE_QA__) {
       window.__SPENDSCAPE_QA__.replayEventPresentations = replayEventPresentationsRef.current
     }
-    const place = replayPlace(purchase, globePlaces)
+    const place = replayPlace(purchase, globePlacesRef.current)
     updateSelectedFilter(place?.id ?? null)
     replayLastPlaceRef.current = place?.id ?? null
     // Playback owns only event details and a temporary pin highlight. It never
@@ -3702,6 +3725,9 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             </button>
           )}
 
+          {sessionCaptureRecords.some(r => r.purchase.id === selectedPurchase.id) && <div className={styles.localDelete}>
+            {deletePurchaseId === selectedPurchase.id ? <><p role="status">{locale === 'he' ? 'למחוק רכישה זו מהמכשיר? אי אפשר לבטל. מקומות שעדיין בשימוש יישארו.' : 'Delete this purchase from this device? This cannot be undone. Places still in use will remain.'}</p><button type="button" data-testid="local-purchase-delete-confirm" onClick={() => removeLocalPurchase(selectedPurchase.id)}>{locale === 'he' ? 'כן, למחוק רכישה' : 'Yes, delete purchase'}</button><button type="button" onClick={() => setDeletePurchaseId(null)}>{locale === 'he' ? 'ביטול' : 'Cancel'}</button></> : <button type="button" data-testid="local-purchase-delete" onClick={() => setDeletePurchaseId(selectedPurchase.id)}>{locale === 'he' ? 'מחיקת רכישה מהמכשיר' : 'Delete purchase from device'}</button>}
+          </div>}
           {selectedPurchase.placeId && (
             <button type="button" className={styles.viewPlaceButton} onClick={() => selectPlace(selectedPurchase.placeId!)}>{t.viewPlace}</button>
           )}

@@ -1,6 +1,20 @@
+# Current local slice — 2026-10-05
+
+- Branch `feature/spendscape-rebuild`, HEAD `82bfce9c90b6d5e231f95680fd38150b33eda3b0` unchanged. Local merchant/place integration is implemented and locally tested, **uncommitted and awaiting separate checkpoint review**. Full behavior, exact 22-file manifest and limitations: `docs/spendscape/COLLEGE_LOCAL_MERCHANTS_PLACES.md`.
+- IndexedDB envelope v3 is the sole local purchase/directory authority; v1/v2 validate and migrate in memory without hydration writes. Explicit saves atomically persist records, local merchants/places, sequence and Inbox decisions under the revision guard. Strict validation, discounts/zero-net lines, receipt observations/timezone, duplicate override, eight-second Undo and confirmed deletion with last-reference cleanup remain. No localStorage purchase authority, GPS/geocoder, provider/OCR wiring or new dependency.
+- Capture explicitly creates/reuses merchants and manually confirmed physical branches. Online/unresolved remain unpinned. All views use the composed validated graph; one MapLibre instance. Baseline remains 42 purchases, 12 places/pins, ILS 6,777.38. Receipt-photo extraction remains a separate gate; prior provider results/locks and D1's negative recommendation are unchanged.
+- Final QA: application typecheck/build passed; 307/307 unit tests; fresh final combined production-browser run 175/175 (12 suites, zero retries/skips/flaky). EN/HE 360/390/430/desktop and short-height review screenshots inspected. First aggregate 171/175 and investigations remain recorded; only synthetic branch-address and explicitly approved asynchronous test assertion corrections followed. Extra strict compilation of legacy Scanner E exposes a pre-existing history-probe TS2556; application typecheck and other four scoped QA-file compilation pass.
+- Git safety: index unchanged/no staged changes; main and origin/main `eee0d26b55e5061f87ac664938df0c195800b74f`; local origin feature ref `66fb4204154c88789e9e0401e317f9000b6b5e18`, ahead 8/behind 0 (not fetched). `next-env.d.ts` restored exactly to entry/HEAD; QA server stopped. No commit/push/deploy. Unrelated entry benchmark/docs work is preserved.
+- Evidence limit: four old ignored Capture screenshots/recording were regenerated before QA output isolation; original hashes retained, originals unavailable. All 152 scoped provider source/evidence hashes are unchanged. See checkpoint for exact paths and failure history.
+- Next gate only: `APPROVE SPENDSCAPE COLLEGE LOCAL MERCHANTS AND PLACES CHECKPOINT REVIEW`. Commit/publication/deployment and photo ingestion are not authorized. The finished college-product goal remains separate from illustrative ILS nearby prices.
+
+The prior handoff below is retained unchanged as historical context; the current status above supersedes its older next-gate, schema and Git statements.
+
+---
+
 # Spendscape — AI handoff
 
-Updated against the local worktree on 2026-09-26. This is a quick orientation, not a replacement for `AGENTS.md` and the authority files in `docs/spendscape/`; read those before acting. Recheck Git and external services because they can change.
+Updated against the local worktree on 2026-09-27. This is a quick orientation, not a replacement for `AGENTS.md` and the authority files in `docs/spendscape/`; read those before acting. Recheck Git and external services because they can change.
 
 ## 1. Project overview
 
@@ -28,7 +42,7 @@ Requires Node >=22.14 and npm 10.9.2. Run `npm install`, `npm run dev` (or `npm 
 
 Flow: synthetic fixture repository → server snapshot → persistent client globe → derived Purchases/Stats/search/map state. Reviewed Capture commits to native IndexedDB before updating the shared ledger; validated records and Inbox decisions restore into the same graph. Undo removes the latest addition within eight seconds and persists that removal; reload does not restart Undo. Scanner B identifies a barcode/product candidate; it does not prove a purchase. No application `/api/*` endpoint is currently implemented. The intended `/api/compare-price` route remains a proposal.
 
-Core TypeScript model: `SpendscapeDataSnapshot` (`profile`, `merchants`, `places`, `purchases`, `evidence`, `smartInboxCases`); `GlobePurchase` includes merchant, optional place, channel, resolution, original amount/currency, FX provenance and nested items. One pin represents a physical place, not each transaction; online/unresolved purchases have no pin. There is no backend database schema or migration; the local IndexedDB version-1 envelope is documented in COLLEGE_P1_CHECKPOINT.md. The planned separate retailer-price read model is described, not created, in `docs/spendscape/NEARBY_PRICES_NP1_SCHEMA.md` (source files, stores, products, price observations, promotions and projections).
+Core TypeScript model: `SpendscapeDataSnapshot` (`profile`, `merchants`, `places`, `purchases`, `evidence`, `smartInboxCases`); `GlobePurchase` includes merchant, optional place, channel, resolution, original amount/currency, FX provenance and nested items. One pin represents a physical place, not each transaction; online/unresolved purchases have no pin. There is no backend database schema or migration; the local IndexedDB envelope is version 2 with validated in-memory version-1 compatibility, documented in COLLEGE_P2C_CHECKPOINT.md. The planned separate retailer-price read model is described, not created, in `docs/spendscape/NEARBY_PRICES_NP1_SCHEMA.md` (source files, stores, products, price observations, promotions and projections).
 
 ## 4. Completed work
 
@@ -39,7 +53,7 @@ Core TypeScript model: `SpendscapeDataSnapshot` (`profile`, `merchants`, `places
 
 ## 5. Current state and risks
 
-Current local HEAD is `1bbd50ec3f0bffe0fcb7da0adf016da3d61363b8`: College P1 and the reviewed P2A/P2B benchmark foundation are committed locally. The local origin feature ref remains `66fb420` (ahead 4, behind 0; not refreshed); main/origin-main remain `eee0d26`. P2B remains stopped at 5/12 synthetic Gemini attempts, with two HTTP 503 responses and no model promotion or Capture integration; see section 10. Earlier Git/QA statements are historical snapshots. No push, deployment, additional provider call or subsequent implementation is authorized.
+Current local HEAD is `6d384029cf6ad83c0f55537650d35b0bed6a4b12`: College P1, the P2A/P2B benchmark foundation, and the reviewed P2C discount support are committed locally. The local origin feature ref remains `66fb420` (ahead 5, behind 0; not refreshed); main/origin-main remain `eee0d26`. P2B remains stopped at 5/12 synthetic Gemini attempts, with two HTTP 503 responses and no model promotion or Capture integration; see sections 10–11. Earlier Git/QA statements are historical snapshots. No push, deployment, additional provider call or subsequent implementation is authorized.
 
 For a **factual retailer-price claim**, the immediate blocker is authoritative mapping of the regulated shekel/agora price field to the current Shufersal XML `ItemPrice` tag. NP2G stopped before fresh PriceFull downloads. The nearby coordinates are public address points, not surveyed entrances or route distances. Currency, current price overlap, source freshness/coverage, stock and dataset reuse still need proof before a factual savings claim. This does not block a clearly labelled synthetic college demo. Carrefour verification returned HTTP 403; the reviewed Osher Ad adapter uses authenticated FTP. Do not route around access controls. The scraper/parser packages have a custom noncommercial licence with attribution; retailer data rights are separate. Scanner D1 OCR missed Hebrew/mixed accuracy targets and has a worker cleanup limitation; receipt-photo OCR is not ready. Physical iPhone Scanner A/B testing is user-reported; do not label it independently instrumented QA. Some older general status documents lag recent commits: use Git and the latest checkpoint reports for current facts.
 
@@ -384,6 +398,594 @@ mobile/desktop correction screenshots were inspected. Server stopped;
 next-env, HEAD and protected refs unchanged; index empty; same 13-file manifest.
 Next: `APPROVE SPENDSCAPE COLLEGE P2C CHECKPOINT REVIEW`. No commit/push/deploy.
 
+The bounded P2C correction passed its subsequent checkpoint re-review and was
+committed locally as `6d38402`. The 13-file checkpoint and no-provider boundary
+remain unchanged. No push or deployment followed; receipt-photo extraction and
+the complete Universal Scanner journey remain unfinished.
+
+## 12. College P2D — offline next-candidate preparation, 2026-09-27
+
+P2C is committed at `6d38402`. Separately authorized P2D preparation selects
+`gemini-3.1-flash-lite` as an unqualified latency-oriented candidate; official
+image/structured-output/free-tier evidence and caveats are in
+`docs/spendscape/COLLEGE_P2D_RECEIPT_CANDIDATE.md`. Four P2A images, truth, strict
+scoring and original thresholds are unchanged. P2D freezes its own requests
+and reserves no live attempts yet: **0/12 calls**. P2B remains stopped at 5/12;
+its responses, hashes, journal and consumed recovery lock are unchanged.
+
+The isolated mock executor enforces 12 maximum attempts, 61-second pacing,
+30-second timeout, durable exclusive reservation and stop-on-error; CLI live
+execution is locked pending separate activation and user verification of the
+candidate's access/quotas on an unbilled Free project. No key was requested.
+Final offline network-guarded suite: **55/55 passed**; freeze/whitespace checks
+passed. No extraction success, API compatibility or physical-device result is
+claimed. No consumer UI/storage/dependency change, build, server or live call.
+
+Seven-file manifest and evidence are in the P2D record. Architect's entry edits
+are preserved verbatim. HEAD/main/upstream unchanged, index empty, ahead 5 /
+behind 0 against cached origin feature; next-env equals HEAD; artifacts ignored.
+No commit/push/deploy. Next approval is the exact P2D synthetic benchmark
+activation token in that record, conditional on account checks. Receipt Capture
+integration remains separately gated; no other implementation slice is active.
+
+P2D activation was subsequently explicitly authorized (max 12, Free only, $0).
+The CLI is now activated with mandatory Free/no-billing/model-quota confirmations
+and environment-only key handling; preparation-stage locked-CLI text above is
+historical. Fresh network-guarded offline QA: **57/57 passed**. Frozen requests
+and policy unchanged; only the activation runner hash renewed. Live execution
+is pending user verification of this candidate's account access/quotas: **0/12**,
+no live reservation. Do not run until confirmed; never rerun after an attempt
+error. Instructions and fixed command are in the P2D record. Git unchanged.
+
+P2D user confirmed the project Free/no billing and candidate quota 15 RPM /
+250K TPM / 500 RPD. Initial invocation failed before any reservation because
+the local key filter excluded periods. Bounded filter correction permits periods
+unchanged and retains whitespace/control rejection; **58/58 offline tests pass**.
+No key inspected, no API call, no P2D reservation (0/12). Requests/policy/P2B
+unchanged; runner hash refreshed. User alone will run the approved command.
+
+
+### P2D locked attempt and offline compatibility review
+
+Safe journal now verifies **1/12 consumed**, English-6, HTTP 400 in 476 ms;
+no extraction scored and no error body retained. Earlier 0/12 statements are
+historical. The remaining 11 attempts are unused and not authorized for recovery.
+Original reservation/journal/summary and all frozen requests remain unchanged.
+
+Offline review found `unit` uses `type: [string, null]` with
+`enum: [item, kg, null]`. Google's structured-output guide documents nullable
+types and string/numeric enums, but not null-valued enums. This is a plausible
+compatibility issue, not a proven cause; the raw JSON-schema route is distinct
+from Google's typed OpenAPI Schema, whose enum field is string-only.
+Also, the REST reference specifies APPLICATION_JSON for responseFormat.text.mimeType
+and LOW for thinkingLevel, whereas guide examples use application/json and low.
+The frozen payload follows those guide examples; this official-document conflict
+prevents claiming a confirmed runtime rejection from inspection alone.
+References: https://ai.google.dev/api/generate-content and
+https://ai.google.dev/gemini-api/docs/generate-content/structured-output .
+
+Proposed only: a P2D-local schema clone with unit anyOf(string enum item/kg,
+null type), plus canonical REST enum spellings APPLICATION_JSON and LOW. Preserve
+P2B's shared schema, all factual validation and original criteria. Before any
+separately approved recovery, freeze a distinct revision and prove semantic
+parity, request isolation and aggregate <=12 attempts with immutable attempt 1
+and an exclusive recovery lock. No code/schema/manifest correction was made.
+Four current request hashes verified offline; tests for the proposed correction
+remain future work. No key access, API call, provider change, commit/push/deploy.
+
+### P2D isolated unit-anyOf candidate — offline preparation
+
+The latest user instruction supersedes the proposed casing changes above:
+only nullable unit representation changes. Four new files under
+`qa/receipt-p2d/unit-anyof/` contain an isolated cloned request/schema, candidate
+freeze, six focused tests and README. `application/json` and `low` are retained.
+Original P2D/P2B requests, original freeze, reservation, journal and attempt-1
+evidence remain byte-identical. Candidate request/schema hashes are distinct;
+prompt/images/evaluator/thresholds unchanged. Focused 6/6 and combined 64/64
+network-guarded offline tests passed. No key access or API calls; no recovery
+runner activated. Candidate remains unproven; 1/12 consumed, 11 unused and locked.
+Separate bounded recovery authorization is still required. No commit/push/deploy.
+
+### P2D recovery foundation — offline only
+
+Separate `unit-anyof/recovery.mjs` verifies the frozen candidate and original
+HTTP-400 evidence before exclusive durable recovery reservation; mock runs
+number attempts 2–12 (Hebrew-6 first), maximum 11 additional, stop on error.
+Original evidence and candidate files are byte-identical. No environment/key
+access or default transport; CLI live execution remains disabled. Focused 10/10
+and combined 74/74 guarded offline tests passed. Three new recovery files plus
+this appended status are the task diff; see `unit-anyof/RECOVERY.md` for checks
+and exact future approval. Real state remains locked 1/12, 11 unused; no real
+recovery lock created, no API call, commit, push or deployment.
+
+P2D unit-anyOf recovery activation has now received explicit user approval.
+CLI is activated for the fixed recovery directory with mandatory Free/no-billing/
+model-quota confirmations and Git/frozen-evidence checks. User-terminal execution
+only; no agent key access or live call. Combined offline QA 75/75 passed; no
+recovery reservation exists yet. Original/candidate freezes and attempt 1 are
+unchanged: 1/12 consumed, 11 unused. Stop on any recovery error; do not rerun.
+
+### P2D diagnostic preparation — verified 2/12, 2026-09-28
+
+Safe original/recovery journals now verify two consumed attempts: English-6
+HTTP 400/476 ms, then unit-anyOf Hebrew-6 HTTP 400/574 ms. Ten unused; both
+reservations locked. Earlier 1/12 statements are historical. Neither scored;
+discarded error bodies prevent identifying the cause. No Gemini rerun authorized.
+
+Offline-only `qa/receipt-p2d/diagnostic/` adds a response consumer, nine mock tests
+and plan. Capture is capped at 64 KiB/1 s and emits only allowlisted codes/reasons
+and fixed field-name hints, never provider message text, metadata or input.
+No transport/key access/persistence/live CLI. Focused 9/9, combined 84/84 guarded
+tests passed. Original requests, freezes and both evidence sets unchanged.
+One future diagnostic call requires separate authorization and a tested one-shot
+adapter (global attempt 3, no retry). If no actionable cause results, stop Gemini
+retries and propose a separately bounded Free-tier comparison. No provider change,
+API call, commit/push/deploy here. See diagnostic/README.md for the exact plan.
+
+P2D one-shot diagnostic adapter is now prepared offline only: attempt.mjs and
+its separate freeze/tests/ATTEMPT.md verify both locked evidence sets and reserve
+only global attempt 3 in a new fixed location. Same unit-anyOf Hebrew-6 request;
+no retry/attempt 4, key access or native transport. Errors use the reviewed bounded
+allowlist; success retains only strict evaluation metrics, never receipt content.
+Final focused 10/10 and combined 94/94 offline tests passed. All previous source/
+evidence unchanged. No real diagnostic reservation: still 2/12 consumed, 10
+unused. Exact separate activation/one-call approval is in diagnostic/ATTEMPT.md.
+No commit/push/deploy; both prior locks remain intact.
+
+The separate P2D diagnostic attempt-3 activation/live-call approval was received.
+New diagnostic/live.mjs binds the reviewed one-shot adapter and fixed location,
+with Free/no-billing/quota/key/Git checks; new mock activation test included.
+95/95 guarded offline tests passed. No key accessed or live call by the agent;
+user-terminal command only. Original evidence/freezes and offline adapter unchanged.
+No diagnostic reservation yet: 2 consumed, 10 unused; never continue to attempt 4.
+
+The user-run diagnostic attempt 3 subsequently returned HTTP 400 / INVALID_ARGUMENT
+after 61.488 seconds including the required 61-second wait. Its allowlisted
+diagnostic has no reason or field hint; no extraction was scored. The safe
+attempt-3 journal and summary confirm **3/12 consumed, 9 unused**. All three
+reservations remain locked. Earlier 2/12 statements are historical. Per the
+agreed decision rule, stop Gemini retries; no attempt 4 is authorized. The next
+bounded task is documentation-only assessment of one alternative Free-tier
+candidate, with no provider calls, account changes or billing activation.
+
+Documentation-only non-Gemini assessment completed: Groq `qwen/qwen3.8-27b`
+has documented vision/strict-schema support and a Free plan, but our Hebrew
+receipt accuracy and existing user-account entitlement/quota are unverified.
+Not cleared for execution or account creation. Single next gate: user-reported
+existing Groq Free-account/model/quota readiness, without keys or settings changes.
+See `docs/spendscape/COLLEGE_RECEIPT_NON_GEMINI_ASSESSMENT.md`. P2D remains stopped
+at 3 consumed / 9 unused, all locks preserved; no Gemini retry or live call.
+
+The user subsequently reports Groq Free, no added payment method, model access,
+and displayed limits 30 RPM / 1,000 RPD / 8,000 TPM / 200,000 TPD. This is
+user-reported account evidence. Benchmark readiness remains open because the
+complete 25-line receipt request plus safe output allowance has not been shown
+to fit the 8,000 TPM limit; an account-specific input/output split may also
+apply. Next gate: offline token-budget and request-compatibility analysis only.
+No runner, credentials, provider call, billing change or P2D retry is authorized.
+
+Groq offline token-budget analysis completed; see
+`docs/spendscape/COLLEGE_GROQ_TOKEN_BUDGET.md`. Full 25-row compact output is
+3,580 UTF-8 bytes (5,470 pretty); conservative input + 20%-margin output
+scenario is 8,436 tokens, versus 7,518 with more efficient input tokenization.
+These are byte-based proxies, not provider counts. Verdict: inconclusive; no
+safe 8,000-TPM bound established. TPM hover split, concurrent usage and official
+reservation accounting remain unresolved. No runner/live clearance, field or
+threshold reduction. User-reported Free/no-payment/model quotas retained; P2D
+remains locked at 3/12 with all evidence unchanged.
+
+Groq mixed-25 one-shot pilot prepared offline in `qa/receipt-groq-pilot/`.
+Experimental 3,840 output cap, strict schema, explicit non-thinking; complete
+frozen image/prompt/fields/evaluator unchanged. Separate exclusive durable
+reservation, injected mock transport only, no live CLI or key access. Final
+network-guarded tests 33/33 passed (9 pilot + 24 evaluator/numeric). Request hash
+and dependencies frozen; README records limits, exact manifest and separate
+one-call activation token. Offline preparation is reviewable, but admission and
+extraction quality remain unproven; 8K TPM split/accounting/concurrency unresolved.
+No real Groq reservation/call; P2D remains locked at 3/12. No commit/push/deploy.
+
+The exact Groq one-shot activation/one-call approval was received. New
+`qa/receipt-groq-pilot/live.mjs` binds the unchanged frozen mixed-25 request and
+fixed reservation with Free/no-billing/model confirmations, secure user-terminal
+key handling, pinned freeze and Git checks. New mock activation test; combined
+network-guarded suite **34/34 passed**. No agent credential access, real reservation
+or live call. User-terminal execution pending; never rerun after reservation.
+Request cap remains experimental 3,840; P2D still locked at 3/12. No commit/push/deploy.
+
+The user-run Groq pilot is now consumed. Its retained safe summary reports
+quality-fail in 4.536 seconds: all 25 rows, no omissions/extra rows, numeric and
+sum checks pass, 0/24 readable labels match, headers are not exact, and 25 lines /
+26 fields require correction. The request was admitted and returned a valid
+complete extraction; this is not proof of repeatable quota headroom or accepted
+quality. The pilot core retained only aggregate metrics, not extracted labels,
+header values or the provider response, so actual mismatches cannot be recovered
+from these artifacts. Preserve the consumed Groq reservation; no rerun or model
+promotion. Next bounded task: offline evaluator/adapter compatibility and
+evidence-sufficiency review, with no calls or relaxed criteria. P2D stays 3/12.
+
+Consumed Groq pilot offline review: retained summary confirms quality-fail at
+4,536 ms, 0/24 readable labels strict-exact, numeric evidence exact, one header
+mismatch (merchant/date/currency), 25 correction lines / 26 fields. No adapter
+mapping defect found. Ten fresh synthetic adapter controls plus three Unicode/
+missing-key assertions passed; existing guarded suite 44/44. Run swaps can produce
+the same pattern, but actual cause cannot be reconstructed from discarded output.
+Original score is unchanged; no Groq retry. See COLLEGE_GROQ_PILOT_REVIEW.md for
+evidence limits and proposed allowlisted row/header diagnostic metadata. Next
+gate: offline-only diagnostic metadata preparation + mock QA, separately approved.
+Groq reservation consumed; P2D remains locked at 3/12; no provider call or commit.
+
+Groq diagnostic metadata prepared offline in `qa/receipt-groq-diagnostics/`:
+pure fixed mixed-25 projection, expected IDs/allowlisted field names/five boolean
+label flags only. Revalidates score correspondence; no verdict changes, text
+retention, logging, runner or pilot/live wiring. Saved focused controls plus
+existing evaluator/label tests passed 29/29. Consumed summary/reservation and all
+29 frozen dependencies unchanged; P2D 3/12 and Groq one consumed remain locked.
+Next gate: separate offline diagnostic-metadata checkpoint review, not a live call.
+
+Architect's bounded metadata checkpoint review passed: 29/29 tests rerun under
+the network guard, all 29 frozen dependency hashes and both consumed Groq
+evidence hashes matched, whitespace check passed. No actionable defect found
+in this slice. Next proposed task is offline-only wiring into a separately
+reserved one-shot diagnostic adapter with the unchanged request and strict
+score; no live activation or additional call is authorized by this review.
+
+Separate Groq one-shot diagnostic adapter prepared offline in
+`qa/receipt-groq-diagnostic-one/`; additive reviewed metadata only after validated
+extraction and unchanged strict evaluation. Exact original mixed-25 request hash
+preserved (e9fd9818…5a668b), experimental cap 3,840; no native transport/key access
+or live CLI. New exclusive Groq-attempt-2 reservation remains absent. Final guarded
+suite 36/36 passed, including original quality parity and late-response/body-timeout
+privacy. Original pilot/evidence and P2D remain unchanged/locked. README records
+manifest, freeze and separate one-call activation token; no live approval consumed.
+
+Groq diagnostic one-call activation explicitly approved. Added separate
+`qa/receipt-groq-diagnostic-one/live.mjs` and mock activation test; fixed endpoint,
+reservation, original request and pinned freeze, with Free/no-billing/quota/Git
+checks. Guarded suite 37/37 passed. Agent accessed no key and made no provider
+call; new diagnostic reservation absent, user-terminal execution pending.
+Original Groq pilot remains consumed and P2D locked at 3/12. Never rerun after
+reservation. No request/score/evidence change, commit, push or deployment.
+
+2026-09-29 user scope correction: prioritize a usable college receipt scanner
+with 10–15 items rather than treating 25-item qualification as the immediate
+release gate. Choose 15 items for a separately versioned representative fixture;
+retain all historical 25-item fixtures, scores, freezes and locks unchanged.
+This scope change does not authorize provider calls, billing or activation of
+the old mixed-25 command. Next task: prepare the new 15-item fixture and offline
+acceptance evidence. GitHub's current official docs state GitHub Models retired
+on 2026-07-30 (https://docs.github.com/en/github-models). Cloud Vision offers OCR
+and a monthly free allowance but its setup requires enabled Cloud billing;
+no such billing change is authorized by this user message. OCR text/layout must
+still be mapped into validated receipt fields and explicit user review.
+
+Submission deadline supplied by the user: **2026-10-16**. On 2026-09-29 there
+are 17 calendar days remaining. Prioritize the user-approved 10–15-item
+receipt-photo -> reviewed draft -> persisted purchase journey, then final
+integration/device QA, separately approved deployment and presentation rehearsal.
+The 15-item fixture is not yet present in this inspected worktree. Receipt
+provider extraction is not qualified or integrated into Capture. Current local
+frontend/persistence work must not be described as the deployed version without
+verifying its release. A recommended milestone is a viable extraction path by
+2026-10-02; unresolved failure then requires an explicit scope/provider decision,
+not further open-ended diagnostic cycles. Planning dates are targets, not
+guarantees or authorization for implementation, calls, billing or deployment.
+
+## Architect status review — 2026-10-04
+
+Read-only review covered the 52 first-party Markdown files inventoried in the
+repository root, docs/, qa/ and .agents/skills/, plus the separate ignored
+real-receipt harness and its retained summaries. Installed dependency and
+generated artifact documentation are not part of this inventory. Source and
+Git, rather than stale status paragraphs, establish the current implementation.
+No fresh application tests, build, browser QA or provider calls were performed.
+
+The separate cropped one-item real-receipt test has two consumed attempts with
+the same request hash: attempt 1 returned HTTP 429 after 226 ms; attempt 2
+returned extraction-fail after 1,521 ms. Nine of eleven checks passed. Date and
+item line amount failed. Local inspection of the cropped image corroborated the
+reference date and line amount; the actual extracted values were discarded, so
+the cause cannot be reconstructed. Merchant/product labels are present but
+unscored. core.mjs deliberately returns fullSuccess:false even for perfect
+numeric/date checks. This is a test limitation, not an additional observed
+extraction error. Both reservations remain consumed; no retry is authorized.
+Historical Gemini/Groq synthetic experiments retain their independent budgets,
+scores and locks. This real-receipt experiment does not qualify a provider.
+
+Verified product state:
+- Phase 1 and bounded Phase 2A.1 are completed foundations. Full original
+  backend/authentication Phase 2 is not implemented; the college path instead
+  uses native IndexedDB under College P1, with P2C discounts/envelope v2.
+- Camera preview and local barcode decoding exist; receipt/product/document
+  source demos remain synthetic. There is no application receipt-provider
+  endpoint or photo-to-extraction-to-review integration.
+- The original Phase 3 Universal Scanner is partially represented by camera,
+  barcode and explicit review/save; real receipt/photo/PDF/CSV/Gmail ingestion
+  is incomplete. General matching/fusion/FX, real AI actions and sharing remain
+  later original-roadmap work, not completed by synthetic UI counterparts.
+- Nearby comparison accepts only the eligible built-in synthetic receipt.
+  Actual reviewed receipt additions are excluded. NP2 cross-retailer proof was
+  not completed; the user-approved illustrative comparison is a separate path.
+- The original deployment record covers Scanner B. No current hosted-version
+  verification or final college release acceptance is established by this review.
+- General authority/status documents still contain historical pre-College-P1
+  statements. Preserve their product rules, but do not replay consumed gates or
+  present those status paragraphs as current facts.
+
+Recommended single next implementation slice (not activated by this review):
+an offline provider-neutral extraction-to-editable-review bridge, exercised with
+a separately versioned 15-item mock fixture. Preserve observed line amounts
+separately from calculated amounts, mark discrepancies/nulls, require explicit
+resolution before save, and reuse the existing durable save/Undo boundary.
+Do not invent time, unit, merchant/place IDs or product matches. Mock evidence
+does not qualify live extraction. Acquisition and approved server transport are
+subsequent integration work; no new provider experiment is authorized here.
+
+Remaining college delivery order: reviewed receipt flow and bounded extraction
+evidence; price-comparison integration for explicitly matched reviewed items;
+agreed disposition of still-synthetic/deferred visible capabilities; final
+EN/HE mobile/physical-device integration QA; separately approved publication
+and presentation rehearsal. On 2026-10-04, 12 calendar days remain to submission.
+This is a proposed delivery order, not a promise to finish the full master vision.
+
+Git at review: feature/spendscape-rebuild, HEAD 6d384029cf6ad83c0f55537650d35b0bed6a4b12,
+ahead 5 / behind 0 relative to the cached upstream (not refreshed). Both main
+refs remain eee0d26b55e5061f87ac664938df0c195800b74f. Existing uncommitted
+benchmark work and the bounded legacy cleanup remain present and preserved.
+This review appends only this handoff; no commit, push or deployment.
+
+## Cloud Vision bounded recovery — 2026-10-04
+
+Original Vision attempt 1 is consumed: HTTP 403 after 1,200ms, unchanged request
+hash d1a4c4f…71fc9f4b, no OCR result. Missing billing remains a possible cause,
+not a diagnosis; the error body was discarded. Both retained files and all
+historical Gemini/Groq/Vision evidence are preserved.
+
+The interrupted recovery had three partial source files, unresolved readiness,
+missing imports/freeze and no attempt-two reservation/result; it could not
+dispatch through the supplied wrapper. Resume reused that work and completed
+qa/receipt-vision-pilot/recovery/. The latest user-console reports establish
+correct-project linkage to the existing active Free Trial, Vision API enabled
+and authenticated gcloud for spendscape-receipt-benchmark. The user reports a
+new billing account, no Vision use except our single 403 attempt, no other
+users/projects and no concurrent use. Counting that call conservatively as one
+unit gives >=999 remaining monthly free units; this is user-reported evidence,
+not independently metered usage. The other project's Free Trial screenshot
+alone was not linkage evidence. No paid upgrade or Gemini setting change.
+
+Separate attempt-2 request/ready/source hashes are frozen; original crop,
+profile, request and evaluator unchanged. Durable exclusive attempt-two
+reservation, one additional OCR unit maximum, no retry/redirect/fallback,
+30s deadline and ephemeral selected-field inspection preserved. Token remains
+internal to user-executed gcloud authentication. Numeric/label quality is still
+unproven; fullSuccess remains false pending label review.
+
+Final guarded mock suite: 55/55 passed (15 recovery + 40 existing pilot/wrapper);
+initial test-file syntax error fixed before passing runs. Actual local preflight
+is checked without credentials/send/reservation. No application/build/browser
+QA or integration. Latest user approval already authorizes exactly one
+user-terminal recovery while the reported free-allowance/trial facts remain true;
+no duplicate approval needed. Never rerun after attempt-two exists, even on
+error or uncertain dispatch. User execution/result pending; no attempt 3.
+
+Task manifest: six files in qa/receipt-vision-pilot/recovery/ (job.mjs,
+wrapper.mjs, live.mjs, recovery.test.mjs, README.md, freeze.json), plus this
+appended handoff record. Ignored local readiness/interruption/integrity records
+remain outside source commits. Git: feature/spendscape-rebuild, HEAD e7f05f8;
+main/origin-main eee0d26; cached upstream 66fb420. Index empty; next-env matches
+HEAD. No staging, commit, fetch, push, deployment, resource/credential access or
+agent provider call. Earlier handoff history and unrelated changes preserved.
+
+### Consumed Cloud Vision recovery result — 2026-10-04
+
+User-executed attempt 2 returned field-review-required in 1,477ms with the same
+frozen request hash. Saved reservation/summary confirm consumption; both Vision
+one-shot reservations now remain locked and no attempt 3 is authorized. The
+service returned structured OCR annotation successfully; this is not receipt
+extraction acceptance or proof of the first 403's cause. Reported timing includes
+authentication/request/local evaluation, excludes user inspection, and is not an
+isolated Google OCR latency measurement.
+
+Within the frozen selected regions, quantity and printed line amount matched
+exactly. Product-label text was present but has no verified label reference or
+accuracy score. Date, unit price, payable total, pre-VAT, VAT amount and VAT rate
+had no selected words and remained unresolved. Arithmetic checks were null,
+fullSuccess false; no values were repaired and no purchase was created. The
+selector requires full word-box containment. Aggregate evidence cannot establish
+whether absent fields were absent from Google's entire transcription or omitted
+by the local region/segmentation filter; provider content was deliberately not
+retained. Do not characterize these as confirmed wrong numbers or a demonstrated
+Vision recognition failure.
+
+Original/recovery freezes, request/profile and historical retained evidence
+hashes remain intact; no credentials/provider calls by Codex. Only this status
+was appended; no source change, tests/build/server, stage/commit/push/deployment
+or account action. Next proposed gate: offline field-region/segmentation and
+evidence-sufficiency review only, not another provider call or application
+integration. Previous pending-execution paragraph records pre-call history.
+
+
+### Vision field-selection v2 offline candidate — 2026-10-04
+
+Bounded correction prepared separately in qa/receipt-vision-pilot/selection-v2/;
+not wired to any live wrapper or app. Local visual inspection found tight
+original field regions and payable-total printing below its ROI. A separate
+ignored version-2 profile preserves the crop hash/dimensions and reference facts.
+Selection now permits bounded box crossings, uses unique geometric ownership,
+and joins adjacent date/decimal fragments only with observed punctuation.
+Missing separators, digit-to-digit splits, multiple candidates, oversized boxes,
+neighboring identifiers and unsafe text remain unresolved. No expected-answer
+selection, inferred characters or silent amount repair.
+
+Fixed-name/count/boolean diagnostics distinguish no candidate, excluded geometry,
+ambiguity, segmentation and parsing failures without retaining values/text or
+coordinates. Unchanged original evaluator separates selected-stream OCR/CER,
+interpretation and arithmetic; internal projection boxes are synthetic, not
+provider evidence. Original ephemeral TTY/expiry controls reused. Labels remain
+unscored/review-required and fullSuccess false. This is crop-specific geometry,
+not general receipt extraction or product acceptance.
+
+Final network-guarded suite: 80/80 passed, zero failures/skips (25 candidate +
+55 original pilot/wrapper/recovery regressions). Initial candidate run 24/25
+identified a missing-slash diagnostic classification issue; ordering corrected
+without relaxing numeric acceptance. Synthetic mocks establish candidate
+behavior only. Discarded attempt-2 provider output cannot be reconstructed or
+rescored; no claim that the consumed result is fixed. Both Vision reservations
+remain consumed/locked; Gemini/Groq history unchanged; no further call approved.
+
+Exact task manifest: qa/receipt-vision-pilot/selection-v2/{select.mjs,
+select.test.mjs,README.md,freeze.json}, plus this appended docs/AI_HANDOFF.md.
+Ignored artifacts/receipt-vision-selection-v2/ contains candidate profile,
+pre-task hashes and offline test output. Separate freeze records candidate and
+preserved hashes; 53 pre-existing files remain byte-identical, including original
+selector/profile/freezes/scores/reservations/results and next-env.d.ts. Original
+crop unchanged. Existing unrelated dirty/untracked work preserved.
+
+Git: feature/spendscape-rebuild, HEAD e7f05f80543623182a6cc5c8d49101dc9e75c421;
+main/origin-main eee0d26b55e5061f87ac664938df0c195800b74f; cached upstream
+66fb4204154c88789e9e0401e317f9000b6b5e18 (ahead 6 / behind 0; not refreshed).
+Index empty, next-env matches HEAD. No application/dependency/generated edits,
+build/browser/server, credential/provider/billing action, stage/commit/push or
+deployment. Next gate: separate offline candidate checkpoint review; live wiring
+or another provider call requires a later bounded authorization.
+
+Architect selection-v2 checkpoint review, 2026-10-04: Pass within the offline
+candidate scope; no actionable defect found. Fresh network-guarded combined
+execution passed 80/80, with no skips or failures. All three hashed candidate
+files, the separate v2 profile and all 53 preserved files matched the candidate
+freeze. Git whitespace check passed; index empty and protected refs unchanged.
+This does not qualify provider accuracy or repair the consumed live result.
+Recommended next gate: separately authorized selection-v2 one-call validation,
+with a new attempt-3 wrapper/reservation, unchanged image/provider request and
+at most one additional OCR unit after allowance/readiness confirmation. Prior
+locks stay consumed. No live call or credential access occurred in this review.
+
+
+### Vision selection-v2 one-call validation preparation — 2026-10-04
+
+User authorized exactly one additional user-terminal Vision call (global
+attempt 3, maximum one additional OCR unit) with the reviewed unchanged v2
+selector/profile and original crop/request. Separate wrapper prepared under
+qa/receipt-vision-pilot/selection-v2-validation/. No attempt-three reservation
+or provider dispatch exists yet; no credentials accessed by Codex. Do not run
+either consumed original wrapper; never remove/reset any reservation.
+
+The user freshly reconfirmed exact project spendscape-receipt-benchmark,
+linked active existing Free Trial, enabled Vision API, no billing-account Vision
+use beyond our two attempts and no concurrent use. Conservatively counting both
+leaves >=998 monthly free units, user-reported rather than independently metered.
+Google's official pricing/setup/data-use documentation rechecked. New separately
+hashed readiness record; if readiness facts change or allowance is unknown, stop.
+No paid upgrade, settings/resource change or Gemini/Groq call authorized.
+
+Original provider request SHA-256 remains d1a4c4f560b6ef7f2e4a766e7c47ee3c3085ae1e51c9e95f22f24a3271fc9f4b:
+one unchanged image, DOCUMENT_TEXT_DETECTION only. Fixed durable exclusive
+artifacts/receipt-vision-pilot/attempt-three/ reservation precedes gcloud auth/
+dispatch; any existing or incomplete directory consumes/blocks the attempt.
+No retry, redirect, fallback or fourth call. 30s deadline including auth, 10s
+per gcloud subprocess and 2MiB response limit preserved. Cancellation/late
+results cannot send late credentials, open inspection or overwrite the result.
+A dispatched call may still finish at Google after local cancellation; never
+rerun uncertainty. Existing gcloud login/token helper is user-executed only.
+
+Summary retains approved OCR/CER checks, separate interpretation/arithmetic and
+safe v2 field/count/boolean selection diagnostics. No OCR/financial/label/payment
+values or credentials persisted. Selected safe fields are ephemeral TTY-only,
+cleared on close/expiry <=60s. Label remains independently unscored and requires
+human review; fullSuccess false. authRequestEvaluationElapsedMs spans auth,
+request/response and local selection/evaluation after reservation; excludes
+preflight, human inspection and final persistence, not isolated OCR latency.
+Even perfect one-receipt numeric results do not qualify 10–15-item/general support.
+
+Final guarded offline suite 101/101 passed, zero failures/skips (21 wrapper +
+80 preserved controls); no initial test failures. Credential-free actual local
+preflight passed; no reservation/auth/send. All 61 pre-task protected source/
+profile/evidence files remain byte-identical, including v2 freeze and both
+consumed Vision results/locks; original reference facts/image preserved. Existing
+MockTimers experimental warnings only. No application/build/browser/server QA.
+
+Exact task manifest: qa/receipt-vision-pilot/selection-v2-validation/{job.mjs,
+wrapper.mjs,live.mjs,validation.test.mjs,README.md,freeze.json}, plus this appended
+handoff. Separate ignored artifacts/receipt-vision-selection-v2-validation/
+contains before/readiness/test/integrity records, no receipt contents. Prior
+handoff/Architect review and unrelated dirty/untracked work preserved.
+Git remains feature/spendscape-rebuild at e7f05f80543623182a6cc5c8d49101dc9e75c421;
+main/origin-main eee0d26b55e5061f87ac664938df0c195800b74f; cached upstream
+66fb4204154c88789e9e0401e317f9000b6b5e18, ahead 6/behind 0, no fetch. Index
+empty; next-env matches HEAD. No dependency/application/generated edits,
+staging/commit/push/deployment or agent credential/provider/account action.
+User execution pending; README contains exact command authorized by the latest
+prompt, no duplicate approval needed. Stop after that single result, including
+errors/timeouts; no continuation is authorized.
+
+
+### Consumed Vision selection-v2 validation result — 2026-10-04
+
+User-executed attempt 3 is consumed/locked. Retained reservation and summary
+verified against the unchanged request hash d1a4c4f…71fc9f4b and reviewed v2
+freeze. No fourth call or rerun authorized. Preparation's pending-execution
+paragraph is historical; all three Vision reservations now remain consumed.
+No agent credential access or provider call.
+
+Result: field-review-required. Seven of eight checked date/numeric fields had
+exact selected-stream transcription (zero CER edits) and exact interpretation:
+date, quantity, unit price, line amount, payable total, VAT amount and VAT rate.
+Weighted-line arithmetic passed. Pre-VAT remained unresolved: excluded-candidate,
+two intersecting boxes, zero selected words, two excluded words; no ownership
+conflict, privacy exclusion or segmentation failure reported. This establishes
+local geometric exclusion, not that Google failed to recognize the value or
+that either excluded box contained it. No raw response was retained, so the
+precise box/character cause remains unknown.
+
+Boundary-crossing selection was observed for date, VAT and VAT rate. VAT-rate
+reconstruction joined two observed fragments and scored exactly. This validates
+those v2 paths on this response; it cannot rescore or explain the discarded
+attempt-2 response. Tax reconciliation remains null because pre-VAT is missing.
+Product label selected three words, present but unscored; human label correctness
+has not been reported. fullSuccess false; labelsNeedUserReview true. No missing
+value inferred/repaired or purchase created. No 10–15-item/general receipt claim.
+
+Elapsed 1,693ms includes authentication, request/response and local selection/
+evaluation; excludes preflight, human inspection and final persistence, not
+isolated OCR latency. All 63 pinned input/history/readiness files and five wrapper
+files matched current validation freeze. Summary SHA-256:
+a9343a32541fb9179ebf02971b92d86ee4df866d6411356551a70d7115f336c9.
+Separate ignored consumed-result-integrity.json records safe checks/hashes only.
+No selector/profile/request/freeze/result/lock changed. This turn appends only
+this handoff plus that ignored integrity record; no tests/build/server needed.
+Git refs/index/next-env and unrelated changes preserved; no commit/push/deploy,
+resource/billing/account change. Next proposed gate: separately approved offline
+pre-VAT selection/evidence review only, not another call or application wiring.
+
+### Architect scope correction — college receipt core, 2026-10-04
+
+Latest user decision: pre-VAT is not required by the college product. The
+proposed pre-VAT selection review above is superseded; do not spend another
+provider attempt on that field. VAT amount/rate may be optional metadata, not
+core-save acceptance gates. Preserve all historical evaluator results, freezes,
+consumed reservations and locks; attempt 3 remains field-review-required, not a
+retroactively relabeled full pass.
+
+Source check: PurchaseReviewInput/validateReview in session-purchase-domain.ts
+contain no tax fields. Receipt saving currently needs final amount, currency,
+date/time, item names, quantities, units and unit prices with explicit discounts
+when applicable and reconciled line totals. Payment/category/channel also need
+review context. Merchant IDs must exist in canonical context; a physical place
+must match that merchant. Observed merchant/address text alone cannot create a
+confirmed place or coordinates. Barcode identification is optional and must
+pass the existing validation; missing codes must remain missing.
+
+Attempt 3 established exact date, quantity, unit price, line amount and final
+amount on this one-item crop. It did not qualify merchant/address extraction,
+barcode identification, label accuracy, general layouts or 10–15-item receipts,
+nor implement receipt OCR in Capture. The next proposed bounded Builder task is
+an offline core receipt-to-review draft contract/adapter with mocked observations
+and explicit unresolved fields. Consumer UI/provider wiring remains subsequent
+work. A different cropped 10–15-item receipt would be useful for later validation;
+no additional receipt upload/provider call is authorized by this planning turn.
+
+Architect changed only this handoff append; no application or evidence edits,
+credential access, provider call, commit, push, deployment or account change.
+
 
 ### College receipt-to-review core adapter — 2026-10-04
 
@@ -451,6 +1053,28 @@ ahead 6/behind 0. Index empty; next-env matches HEAD/pre-task. Unrelated work an
 all consumed provider locks preserved. No dependencies, UI/schema integration,
 stage/commit/push/deploy. Next gate: a new receipt-to-review adapter checkpoint
 review; neither commit nor consumer/provider integration is authorized.
+
+### Architect post-commit routing — 2026-10-04
+
+Local HEAD verified as 6a9661b6657d187bd7a2a012c103a0a65fb36734 on
+feature/spendscape-rebuild, cached upstream ahead 7/behind 0. Its four-file
+manifest contains the corrected adapter, tests, checkpoint and 68 adapter-only
+handoff lines. Index empty; unrelated benchmark work remains dirty/untracked.
+Architect read the committed adapter/checkpoint and reran its focused suite:
+75/75 passed. No fresh full-suite, browser, build, provider or device verification.
+
+CaptureExperience still imports PurchaseReviewInput/reviewFromDemo, not this
+adapter. Next proposed single slice: connect receipt drafts and
+prepareReceiptReview to the existing editable Capture review/save flow, with
+fictional observations delivered through QA-only injection. Expose unresolved
+units, observed merchant/address/time and editable printed amounts; retain
+explicit date/time confirmation and canonical/unresolved place rules. No public
+control may pretend to have scanned a real photo. Live photo ingestion/provider
+parsing remains subsequent work. The user's short and discount-bearing receipts
+are future validation references, not attached raw data to persist or upload now.
+This routing note does not activate implementation or another provider attempt.
+All consumed locks and historical scores remain unchanged. Architect appended
+only this note; no application edit, credential access, commit/push/deploy.
 
 ### Receipt review Capture integration — 2026-10-04
 

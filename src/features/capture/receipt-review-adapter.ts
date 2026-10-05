@@ -130,6 +130,7 @@ export function prepareReceiptReview(draft: ReceiptReviewDraft, context: ReviewC
     (own(line, 'discount') && typeof line.discount !== 'string'))) return { ready: false, errors: { lines: 'items' } }
   const input: PurchaseReviewInput = {
     source: 'receipt', provenance: 'user-reviewed',
+    ...(review.directoryIntent !== undefined ? { directoryIntent: review.directoryIntent } : {}),
     merchantId: review.merchantId, placeId: review.placeId, channel: review.channel,
     date: review.date, currency: review.currency, payment: review.payment, category: review.category,
     amount: review.amount, baseAmount: review.baseAmount,

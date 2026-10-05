@@ -247,3 +247,13 @@ for (const he of [false, true]) for (const height of [640, 420]) {
     await expect.poll(async () => (await qa(page)).combinedPurchaseCount).toBe(42)
   })
 }
+
+test('receipt directory intent remains transient until explicit save and cannot bypass printed totals',async({page})=>{
+  await page.goto('/?receiptReviewQa=1');await ready(page);await open(page);await inject(page,fifteenReceipt);await context(page)
+  await page.getByTestId('review-new-merchant').click();await page.getByTestId('review-merchantName').fill('Fictional receipt-only merchant');await page.getByTestId('review-merchantCategory').selectOption('groceries')
+  await page.getByTestId('review-printedAmount-0').fill('5.99');await page.getByTestId('capture-confirm').click();await expect(page.getByTestId('review-printedAmount-0')).toHaveAttribute('aria-invalid','true')
+  expect((await qa(page)).combinedPurchaseCount).toBe(42);expect(await stored(page)).toBeUndefined()
+  await page.getByTestId('review-printedAmount-0').fill('6.00');await page.getByTestId('capture-confirm').click();await expect(page.getByTestId('capture-success')).toBeVisible()
+  const d=await stored(page);expect(d.directory.merchants[0].name).toEqual({en:'Fictional receipt-only merchant',he:'Fictional receipt-only merchant'});expect(d.directory.places).toEqual([]);expect(d.records[0].purchase.items[0]).toMatchObject({unitPrice:3.25,discountMinor:50,lineTotal:6})
+  await page.getByTestId('capture-undo').click();expect((await stored(page)).directory).toEqual({merchants:[],places:[]})
+})

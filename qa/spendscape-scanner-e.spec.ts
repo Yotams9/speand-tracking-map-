@@ -191,7 +191,7 @@ for (const he of [false, true]) {
     await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem('spendscape.phase1d1.experience-state')!).query.currency)).toBe('USD')
     expect(await page.evaluate(marker => Object.values(sessionStorage).some(v => v.includes(marker)), marker)).toBe(false)
     await page.getByTestId('session-undo').click()
-    expect((await qa(page)).combinedPurchaseCount).toBe(42)
+    await expect.poll(async () => (await qa(page)).combinedPurchaseCount).toBe(42)
     expect(await page.evaluate(marker => Object.values(sessionStorage).some(v => v.includes(marker)), marker)).toBe(false)
     // A legacy persisted search is discarded rather than resurrected on reload.
     await page.evaluate(marker => {
@@ -267,7 +267,7 @@ test('actual insecure HTTP origin supports manual saves, cancellation and repeat
   await expect(page.getByTestId('capture-review')).toBeVisible()
   await page.keyboard.press('Escape')
   await page.getByTestId('session-undo').click()
-  expect((await qa(page)).sessionPurchaseCount).toBe(1)
+  await expect.poll(async () => (await qa(page)).sessionPurchaseCount).toBe(1)
   expect((await qa(page)).mapConstructionCount).toBe(1)
   expect(errors).toEqual([])
 })

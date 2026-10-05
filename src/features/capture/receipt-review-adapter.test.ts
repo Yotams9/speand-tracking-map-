@@ -302,3 +302,16 @@ describe('offline receipt-to-review adapter', () => {
     }
   })
 })
+
+it('preserves explicit directory intent through preparation without bypassing printed arithmetic', () => {
+  const draft=receiptToReviewDraft(one())
+  Object.assign(draft.review,{channel:'physical',date:'2026-10-03T09:15',payment:'cash',category:'groceries',directoryIntent:{merchant:{name:'Fictional reviewed store',category:'groceries',separate:false},place:{branch:'Fictional branch',city:'Fictional city',country:'Fictional country',address:'Fictional address',longitude:'34.75',latitude:'32.1',confirmed:true,separate:false}}})
+  const original=JSON.stringify(draft.observations),prepared=prepareReceiptReview(draft,data)
+  expect(prepared.ready).toBe(true)
+  if(prepared.ready) expect(prepared.input.directoryIntent).toEqual(draft.review.directoryIntent)
+  draft.review.lines[0].printedAmount='12.51'
+  expect(prepareReceiptReview(draft,data)).toMatchObject({ready:false,errors:{'printedAmount-0':'arithmetic'}})
+  expect(JSON.stringify(draft.observations)).toBe(original)
+  draft.review.directoryIntent!.place!.confirmed=false
+  expect(prepareReceiptReview(draft,data)).toMatchObject({ready:false,errors:{'place-confirmed':'location'}})
+})

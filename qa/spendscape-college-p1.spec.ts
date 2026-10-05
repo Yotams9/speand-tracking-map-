@@ -132,7 +132,7 @@ test('foreign online purchase survives page closure; unknown barcode remains use
   await page.getByTestId('review-amount').fill('25.00');await page.getByTestId('review-quantity-0').fill('2');await page.getByTestId('review-price-0').fill('12.50');await page.getByTestId('review-baseAmount').fill('87.43')
   await save(page)
   const d=await stored(page);expect(d.records[0]).toMatchObject({synthetic:false,purchase:{placeId:null,originalCurrency:'USD',fx:{reportedBaseAmountIls:87.43,source:'user-reported-conversion'}}})
-  expect(Object.keys(d).sort()).toEqual(['decisions','nextSequence','records','revision','version'])
+  expect(Object.keys(d).sort()).toEqual(['decisions','directory','nextSequence','records','revision','version'])
   expect(JSON.stringify(await context.storageState())).not.toContain('P1 private')
   expect(await page.evaluate(()=> JSON.stringify([history.state,location.href,{...sessionStorage}]))).not.toContain('P1 private')
   expect(logs.join(' ')).not.toContain('P1 private');expect(writes).toEqual([])

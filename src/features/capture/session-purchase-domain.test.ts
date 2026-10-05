@@ -181,3 +181,32 @@ describe('P2C explicit line discounts', () => {
     expect(saveReviewedPurchase(saved.ledger, 'two', input, context, context.purchases).result.code).toBe('duplicate')
   })
 })
+
+it('atomically proposes local entities, reuses branches, and prunes only last references without recycling IDs', async () => {
+  const { composeDirectory } = await import('../local-purchases/local-directory')
+  const { deleteLocalPurchase } = await import('./session-purchase-domain')
+  const intent = { merchant: { name: 'Fictional new merchant', category: 'groceries' as const, separate: false }, place: { branch: 'Fictional branch', city: 'Fictional city', country: 'Fictional country', address: '', longitude: '34.75', latitude: '32.1', confirmed: true, separate: false } }
+  const input = { ...manual(), channel: 'physical' as const, merchantId: '', directoryIntent: intent }
+  const before = emptySessionLedger(), first = saveReviewedPurchase(before,'new',input,context,context.purchases)
+  expect(first.result.code).toBe('saved');expect(before.directory.places).toEqual([])
+  const graph = composeDirectory(context,first.ledger.directory)
+  const reuse = { ...manual(), channel: 'physical' as const, merchantId: 'local_merchant_1', placeId: 'local_place_1' }
+  expect(saveReviewedPurchase(first.ledger,'new',input,graph,context.purchases).result.code).toBe('consumed')
+  expect(saveReviewedPurchase(first.ledger,'duplicate',reuse,graph,context.purchases).result.code).toBe('duplicate')
+  const second = saveReviewedPurchase(first.ledger,'second',reuse,graph,context.purchases,true).ledger
+  const undone = undoSessionPurchase(second)
+  expect(undone.directory.places).toHaveLength(1);expect(undone.nextSequence).toBe(3)
+  const removed = deleteLocalPurchase(undone,undone.records[0].purchase.id)
+  expect(removed.directory).toEqual({merchants:[],places:[]});expect(removed.nextSequence).toBe(3)
+  expect(deleteLocalPurchase(second,context.purchases[0].id)).toBe(second)
+  const branch = saveReviewedPurchase(first.ledger,'branch',{ ...reuse, directoryIntent: {place:{...intent.place,branch:'Fictional south',longitude:'34.8'}} },graph,context.purchases)
+  expect(branch.result.code).toBe('saved');expect(branch.ledger.directory.merchants).toHaveLength(1);expect(branch.ledger.directory.places).toHaveLength(2)
+})
+it('keeps online-first local merchants usable later at an explicitly confirmed branch', async () => {
+  const { composeDirectory } = await import('../local-purchases/local-directory')
+  const first=saveReviewedPurchase(emptySessionLedger(),'online',{...manual(),merchantId:'',directoryIntent:{merchant:{name:'Fictional online first',category:'retail',separate:false}}},context,context.purchases)
+  expect(first.result.code).toBe('saved');expect(first.ledger.directory.places).toEqual([])
+  const graph=composeDirectory(context,first.ledger.directory)
+  const second=saveReviewedPurchase(first.ledger,'branch',{...manual(),merchantId:'local_merchant_1',channel:'physical',directoryIntent:{place:{branch:'Fictional branch',city:'Fictional city',country:'Fictional country',address:'',longitude:'0',latitude:'0',confirmed:true,separate:false}}},graph,context.purchases)
+  expect(second.result.code).toBe('saved')
+})

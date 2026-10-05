@@ -1,3 +1,4 @@
+import { composeDirectory, denseArray, emptyDirectory, exactObject, pruneDirectory, validateDirectory, type LocalDirectory } from './local-directory'
 import type { SpendscapeDataSnapshot } from '../../data/spendscape-repository'
 import { emptySessionLedger, reviewedRecord, type PurchaseReviewInput, type SessionPurchaseLedger } from '../capture/session-purchase-domain'
 import type { SessionCaptureRecord } from '../capture/capture-domain'
@@ -5,8 +6,8 @@ import type { SmartInboxDecision } from '../inbox/smart-inbox-domain'
 
 export const LOCAL_DB = 'spendscape-local-purchases'
 export const LOCAL_CHANNEL = 'spendscape-local-purchases-changed'
-export interface LocalPurchases { version: 2; revision: number; records: readonly SessionCaptureRecord[]; nextSequence: number; decisions: readonly SmartInboxDecision[] }
-export const emptyLocalPurchases = (): LocalPurchases => ({ version: 2, revision: 0, records: [], nextSequence: 1, decisions: [] })
+export interface LocalPurchases { version: 3; directory: LocalDirectory; revision: number; records: readonly SessionCaptureRecord[]; nextSequence: number; decisions: readonly SmartInboxDecision[] }
+export const emptyLocalPurchases = (): LocalPurchases => ({ version: 3, directory: emptyDirectory(), revision: 0, records: [], nextSequence: 1, decisions: [] })
 export class LocalStoreError extends Error {
   constructor(public readonly code: 'invalid' | 'unavailable' | 'conflict' | 'capacity' | 'rejected') { super(code) }
 }
@@ -21,14 +22,16 @@ function same(a: unknown, b: unknown): boolean {
 // arbitrary evidence fields can survive hydration or enter the write payload.
 export function validateLocalPurchases(raw: unknown, context: SpendscapeDataSnapshot): LocalPurchases {
   try {
-    if (!raw || typeof raw !== 'object' || JSON.stringify(raw).length > 2_000_000) throw 0
+    if (!raw || typeof raw !== 'object' || !exactObject(raw, Object.keys(raw)) || JSON.stringify(raw).length > 2_000_000) throw 0
     const data = raw as Omit<LocalPurchases, 'version'> & { version: number }
-    if ((data.version !== 1 && data.version !== 2) || !Number.isSafeInteger(data.revision) || data.revision < 0 || !Number.isSafeInteger(data.nextSequence) || data.nextSequence < 1 || !Array.isArray(data.records) || data.records.length > 1000 || !Array.isArray(data.decisions) || data.decisions.length > context.smartInboxCases.length) throw 0
+    if ((data.version !== 1 && data.version !== 2 && data.version !== 3) || !Number.isSafeInteger(data.revision) || data.revision < 0 || !Number.isSafeInteger(data.nextSequence) || data.nextSequence < 1 || !denseArray(data.records, 1000) || !denseArray(data.decisions, context.smartInboxCases.length)) throw 0
+    const directory = data.version === 3 ? validateDirectory(data.directory, context, data.nextSequence) : emptyDirectory()
+    const graph = composeDirectory(context, directory)
     const sequences = new Set<number>()
     const records = data.records.map((r: SessionCaptureRecord) => {
       const p = r.purchase
-      if (!Array.isArray(p.items) || p.items.some((item: SessionCaptureRecord['purchase']['items'][number]) => !item.label || typeof item.label.en !== 'string' || typeof item.label.he !== 'string' || item.label.en.length > 100 || item.label.he.length > 100 || !same(item.label, { en: item.label.en, he: item.label.he }))) throw 0
-      if (r.demoProductIds !== undefined && (!Array.isArray(r.demoProductIds) || r.demoProductIds.length !== p.items.length || r.demoProductIds.some(id => id !== null && (typeof id !== 'string' || id.length > 100)))) throw 0
+      if (!denseArray(p.items, 50) || p.items.some((item: SessionCaptureRecord['purchase']['items'][number]) => !item.label || typeof item.label.en !== 'string' || typeof item.label.he !== 'string' || item.label.en.length > 100 || item.label.he.length > 100 || !same(item.label, { en: item.label.en, he: item.label.he }))) throw 0
+      if (r.demoProductIds !== undefined && (!denseArray(r.demoProductIds, 50) || r.demoProductIds.length !== p.items.length || r.demoProductIds.some(id => id !== null && (typeof id !== 'string' || id.length > 100)))) throw 0
       // V1 never carried discounts; accepting one would reinterpret old data.
       if (p.items.some(item => Object.hasOwn(item, 'discountMinor') &&
         (data.version === 1 || !Number.isSafeInteger(item.discountMinor) || item.discountMinor! < 0))) throw 0
@@ -45,7 +48,7 @@ export function validateLocalPurchases(raw: unknown, context: SpendscapeDataSnap
         lines: p.items.map((item, i) => ({ name: item.label.en, quantity: String(item.quantity), unit: item.unit, price: String(item.unitPrice), ...(Object.hasOwn(item, 'discountMinor') ? { discount: String(item.discountMinor! / (p.originalCurrency === 'JPY' ? 1 : 100)) } : {}), ...(r.synthetic ? { originalLabel: { ...item.label }, demoProductId: r.demoProductIds?.[i] ?? undefined } : {}) })),
         ...(r.identification ? { identification: r.identification } : {}),
       }
-      const rebuilt = reviewedRecord(input, sequence, context)
+      const rebuilt = reviewedRecord(input, sequence, graph)
       if (!same(r, rebuilt)) throw 0
       return rebuilt
     })
@@ -59,16 +62,17 @@ export function validateLocalPurchases(raw: unknown, context: SpendscapeDataSnap
       if (!same(d, clean)) throw 0
       return clean
     })
-    const clean: LocalPurchases = { version: 2, revision: data.revision, records, nextSequence: data.nextSequence, decisions }
-    // V1 → V2 changes only the envelope tag. Reads never write the migration;
-    // the next explicit successful write uses V2 under the same revision guard.
-    if (!same(data, { ...clean, version: data.version })) throw 0
+    const clean: LocalPurchases = { version: 3, directory, revision: data.revision, records, nextSequence: data.nextSequence, decisions }
+    // Historical envelopes are validated before an in-memory-only migration.
+    const { directory: _directory, ...legacy } = clean
+    if (!same(data, data.version === 3 ? clean : { ...legacy, version: data.version })) throw 0
+    if (!same(directory, pruneDirectory(directory, records.map(r => r.purchase)))) throw 0
     return clean
   } catch { throw new LocalStoreError('invalid') }
 }
 export function restoredLedger(data: LocalPurchases): SessionPurchaseLedger {
   // No persisted timer, draft, consumed-operation list or private navigation.
-  return { ...emptySessionLedger(), records: data.records, nextSequence: data.nextSequence }
+  return { ...emptySessionLedger(), directory: data.directory, records: data.records, nextSequence: data.nextSequence }
 }
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
