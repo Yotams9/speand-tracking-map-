@@ -24,6 +24,7 @@ export type CaptureSource =
 export type CaptureStep =
   | 'scanner'
   | 'sources'
+  | 'receipt-image'
   | 'processing'
   | 'review'
   | 'manual'

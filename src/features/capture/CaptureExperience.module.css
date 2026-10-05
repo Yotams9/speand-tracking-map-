@@ -335,3 +335,12 @@
 @media (min-width: 761px) { .directoryFields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .purchaseReview .directoryReview .directoryCheck { display: grid; grid-template-columns: 22px minmax(0, 1fr); flex-direction: row; }
 .directoryReview .directoryCheck small { grid-column: 1 / -1; }
+.receiptImage { display: flex; flex-direction: column; gap: 16px; }
+.receiptImage p { line-height: 1.55; }
+.receiptImage .actions { flex-shrink: 0; }
+.receiptPreview { max-inline-size: 100%; max-block-size: 220px; object-fit: contain; border-radius: 12px; background: #18222b; }
+.imageInput { display: none; }
+.imageQa { padding: 12px; border: 1px solid #788691; border-radius: 12px; font-size: 13px; }
+.imageQa label { display: grid; gap: 8px; }
+.imageQa select { padding: 12px; color: #fff; background: #1b2631; border: 1px solid #647585; border-radius: 10px; }
+.receiptImage :is(button, select):focus-visible { outline: 2px solid #b8f0dd; outline-offset: 3px; }

@@ -108,7 +108,9 @@ export function receiptToReviewDraft(raw: unknown): ReceiptReviewDraft {
         const unit = observed(line.unit)
         return {
           name: observed(line.name), quantity: observed(line.quantity),
-          unit: unit === 'item' || unit === 'kg' ? unit : '',
+          // Resolve only explicit printed unit spellings; observations retain
+          // the original string, and missing/unknown units stay unresolved.
+          unit: unit === 'item' || unit === 'יח׳' ? 'item' : unit === 'kg' || unit === 'ק״ג' ? 'kg' : '',
           price: observed(line.unitPrice), printedAmount: observed(line.lineAmount),
           ...(own(line, 'discount') ? { discount: observed(line.discount!) } : {}),
         }

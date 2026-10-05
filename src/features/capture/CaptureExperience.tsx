@@ -13,6 +13,7 @@ import { allocateReviewOperationId, blankReview, reviewFromDemo, type PurchaseRe
 import { receiptToReviewDraft, type ReceiptReviewDraft } from './receipt-review-adapter'
 import { PurchaseReview } from './PurchaseReview'
 import { CaptureCamera } from './CaptureCamera'
+import { ReceiptImageIntake } from '../receipt-image/ReceiptImageIntake'
 import { NearbyDemoCard } from '../nearby-demo/NearbyDemoCard'
 import type { DemoComparison } from '../nearby-demo/comparison'
 import styles from './CaptureExperience.module.css'
@@ -262,7 +263,7 @@ export function CaptureExperience({
     return result
   }
 
-  // Client-to-client, in-memory draft boundary. There is no photo/provider transport.
+  // Runtime-validated observations enter this detached in-memory draft boundary.
   const acceptReceiptDraft = (draft: ReceiptReviewDraft) => {
     saveGeneration.current++
     const detached = structuredClone(draft)
@@ -342,6 +343,8 @@ export function CaptureExperience({
           />
         )}
 
+        {step === 'receipt-image' && <ReceiptImageIntake locale={locale} onDraft={acceptReceiptDraft} />}
+
         {step === 'sources' && (
           <div className={styles.scrollBody} data-testid="capture-sources">
             <div className={styles.stageCopy}>
@@ -350,6 +353,7 @@ export function CaptureExperience({
               <p id="capture-description">{t.sourceBody}</p>
             </div>
             <div className={styles.sourceGrid}>
+              <button type="button" className={styles.sourceCard} onClick={() => { receiptActive.current = false; setActiveReceipt(undefined); setReviewInput(null); onNavigate('receipt-image', 'push') }} data-testid="capture-source-receipt-image"><strong>{locale === 'he' ? 'צילום / העלאת קבלה' : 'Receipt photo / upload'}</strong><small>{locale === 'he' ? 'צילום זמני · זיהוי עדיין לא פעיל' : 'Temporary photo · recognition not activated'}</small></button>
               {sourceOrder.map((source, index) => (
                 <button
                   type="button"
