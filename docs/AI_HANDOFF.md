@@ -1,3 +1,19 @@
+# One live transient parser inspection — 2026-10-06
+
+- Inspection checkpoint is committed locally at HEAD d279759e0a1ab4d186d711ce3f5477fa0057ca87 on feature/spendscape-rebuild. Latest authorization consumed exactly one new native Capture request; no further request/retry/save authorized.
+- Minimal fixed mapping validation-20261006-inspection-one → artifacts/receipt-vision-local-validation-20261006-inspection-one, separate exclusive reservation/lifecycle. Historical/default mappings unchanged; unknown names still disable native mode, no arbitrary paths. New mapping concurrency/restart/exclusive reservation mock control added. Focused offline tests195/195 across10files, application typecheck/build and whitespace passed. Fresh ignored evidence artifacts/vision-inspection-live-682bv4oc; no historical QA regenerated.
+- Approved original crop hash aa40404b602ccc38e3f16d75bf30472fc12afc1c69d2a217e869cb6b7376ef46 verified. Read-only authentication active, exact project spendscape-receipt-benchmark billingEnabled=true and vision.googleapis.com enabled. Free Trial/remaining applicable free allowance/no other concurrent use reuse the user's documented confirmations, not independently measured usage. Official pricing rechecked https://cloud.google.com/vision/pricing (first1,000 Document Text Detection units/month free); no account-wide hard spending cap or independently verified charge is claimed. No account/settings/billing changes.
+- Before Read: restricted status mode=native, consumed=false, attempt=null; new path absent; visible page, explicit server activation and checked client inspection. Selected crop once and pressed actual Capture Read once. Durable outcome consumed=true/state=failed: reserved0ms, authentication-start5, authentication-complete455, dispatch-initiated461, provider-http HTTP2002461, normalization-start2473, normalization-complete2479, parsing-start2484, failure2491/code layout-unsupported/layoutReason item-row-unassigned. Timing includes authentication/request/normalization/parser; not isolated OCR latency. Dispatch intent alone is not receipt proof; the HTTP200 response is confirmed. Browser file-chooser handling was unusually delayed before dispatch; it is not OCR performance evidence.
+- Transient UI inspected while visible before120-second expiry: short-two-row-table strategy;16grouped rows,9header/0item/0continuation/0numeric-details/2summary/5unassigned. Exactly one explicitly rejected row, ordinal10, the first body row. Other unassigned rows were not treated as rejected or processed.
+- Rejected row has one numeric-bearing word entirely within the amount column, with neither a description nor an item-code anchor. The immediately following row contains a description and an amount anchor; those rows are vertically separated beyond the grouping tolerance but within two word heights. Confirmed source cause: short-receipt-parser.ts starts[0] !== 0 rejects leading body rows before the first supported item anchor. The trace does not establish whether the leading token is a detached line amount, misrecognized decoration, or another observation; no values, text, geometry or OCR accuracy verdict retained. It is not supported as a discount/header/summary/verified product identifier. The neighboring amount means association is potentially competing, not automatically safe.
+- Proposed narrow offline gate: conservative leading amount-column row association/classification with varied fictional geometry, requiring a unique printed item relationship; preserve competing numeric observations as unresolved and never discard arbitrary rows, overwrite another printed amount, invent an item or relax review arithmetic. If unique association cannot be established, retain a precise leading-numeric-row rejection/ambiguity instead of claiming a repaired draft. No parser correction implemented in this diagnosis task.
+- Inspection explicitly closed then Capture/tab closed; no draft/save/reload. Receipt text/geometry remained transient UI/memory; screenshots/video/traces/raw-content logging disabled, no content retained in journals/evidence. Native server stopped; next-env restored to exact entry/HEAD bytes. All prior locks/lifecycles and protected evidence unchanged, original absent lifecycle not backfilled. No dependency/merge/commit/push/deployment. Index empty; main/origin-main unchanged eee0d26b55e5061f87ac664938df0c195800b74f; cached origin feature66fb4204154c88789e9e0401e317f9000b6b5e18, ahead14/behind0. Unrelated untracked research preserved.
+- Exact uncommitted manifest4: src/server/vision-local-run.ts; src/server/vision-local-run.test.ts; src/server/vision-local.ts; docs/AI_HANDOFF.md. No new native activation or provider request permitted by these configuration files alone.
+
+Earlier entries below are preserved as history.
+
+---
+
 # Transient inspection background cleanup correction — 2026-10-06
 
 - Authorized bounded correction complete; uncommitted, awaiting a new checkpoint review. The prior independent review found one Medium defect: a response arriving after backgrounding populated inspection because the visibility listener started only after content existed. Its isolated mock evidence remains artifacts/parser-review-un7yygh_ (4 passed/1 failed); no historical score or live result is changed.
@@ -1273,3 +1289,45 @@ ahead 7/behind 0, index empty, unrelated dirty/untracked work retained. next-env
 matches HEAD/pre-correction; ignored QA artifacts only, owned server stopped,
 3000 free. No dependencies, credentials, provider calls, stage/commit/push/deploy.
 Next gate: APPROVE SPENDSCAPE COLLEGE RECEIPT REVIEW INTEGRATION CHECKPOINT REVIEW.
+
+## 2026-10-06 — conservative leading amount correction (offline; uncommitted)
+
+Bounded short-table parser change: exactly one leading grouped numeric-bearing
+row may belong to the immediately following description-anchored item. All
+prefix words must start in the amount column and end before the code-column
+boundary; at most seven words; no percentage marker. Positive centre-baseline
+separation must be <= twice the smaller row's maximum word height. Any second
+anchored item within that same window, intervening row, distant/unrelated prefix
+or code-column crossing retains item-row-unassigned. No arithmetic, payable-total
+matching, expected answer, new item or inferred discount is used for ownership.
+
+A wholly contained, uniquely reconstructed amount remains observed text.
+Competing occurrences (even equal values) become unresolved candidates; damaged
+singletons remain verbatim for strict validation. Unreconstructable fragments
+are candidates when bounded to 2–5 tokens, otherwise null. Column crossings
+remain null; original words/geometry remain available only in transient
+inspection, with the accepted prefix classified numeric-details. They are not
+silently skipped or accepted as financial facts. Existing optional VAT/barcode,
+partial-layout, discount and printed-line validation behavior remains intact.
+
+Changed in this task: src/features/receipt-image/short-receipt-parser.ts,
+short-receipt-parser.test.ts, parser-inspection.test.ts, and this appended status.
+Fresh isolated evidence: artifacts/leading-amount-0ofeof47 (ignored). Initial
+focused run: 89/93 passed; four new test setup/assertion failures corrected
+(grouped-row placement and draft field path), without weakening production
+acceptance. Final guarded offline suite: 310/310 across 11 files (receipt-image,
+receipt adapter and session-purchase domain); npm run typecheck passed;
+git diff --check passed. No browser QA/build/server/provider request was needed
+or performed. All receipt fixtures used for this task are fictional.
+
+The prior live response was discarded; this is mock evidence only, not a fix
+claim or OCR accuracy verdict for that receipt. Multiple prefix rows, ambiguous
+ownership and unsupported layouts still reject. No live validation authorized.
+Entry recovery/config changes and unrelated untracked work are preserved.
+HEAD d279759e0a1ab4d186d711ce3f5477fa0057ca87 and feature branch unchanged;
+main/origin main eee0d26, cached origin feature 66fb420 unchanged; index empty;
+next-env.d.ts matches HEAD. Cumulative tracked manifest is seven files: the four
+above plus the three pre-existing src/server/vision-local{,-run,-run.test} files.
+Consumed reservations, diagnostics and historical benchmark evidence preserved.
+No stage, commit, push or deployment. Next gate: separate leading-amount
+checkpoint review; no new live request.

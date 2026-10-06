@@ -209,3 +209,29 @@ describe('bounded short-layout variations and structural reasons',()=>{
     let error:unknown;try{parseVisionReceipt(doc)}catch(e){error=e};expect(layoutReason(error)).toBe('item-row-unassigned')
   })
 })
+
+describe('bounded leading amount ownership',()=>{
+  const leading=(count=1,competing=false)=>{const d=fictionalShortOcr(count),a=d.words.find(w=>w.y===260&&w.x===60)!;if(competing)d.words.push({...a,y:240});else a.y=240;return d}
+  it.each([1,2,15])('associates a unique adjacent prefix without creating a row (%s items)',count=>{const d=leading(count),before=structuredClone(d),r=parseVisionReceipt(d);expect(r.observations.lines).toHaveLength(count);expect(r.observations.lines[0].lineAmount).toBe('7.50');expect(d).toEqual(before)})
+  it.each(['7.50','9.25'])('keeps competing amount %s unresolved even when equal',text=>{const d=leading(1,true);d.words.find(w=>w.y===240)!.text=text;const r=parseVisionReceipt(d);expect(r.observations.lines[0].lineAmount).toEqual({candidates:[text,'7.50']});expect(receiptToReviewDraft(r.observations).review.lines[0].printedAmount).toBe('')})
+  it('retains damaged singleton without repairing its characters',()=>{const d=leading();d.words.find(w=>w.y===240)!.text='I.50';expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('I.50')})
+  it('reconstructs only adjacent decimal fragments',()=>{const d=leading(),a=d.words.find(w=>w.y===240)!;a.text='7.';a.width=16;d.words.push({...a,x:78,text:'50'});expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('7.50');d.words.at(-1)!.x=145;expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toEqual({candidates:['7.','50']})})
+  it('keeps a column crossing unresolved and retains its inspection evidence',()=>{const d=leading(),a=d.words.find(w=>w.y===240)!;a.x=290;a.width=60;expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBeNull()})
+  it.each(['distant','intervening','multiple','unrelated','code-crossing','percent','two-prefixes'])('rejects unsupported %s ownership',kind=>{
+    const d=leading(),a=d.words.find(w=>w.y===240)!;
+    if(kind==='distant')for(const w of d.words)if(w.y>=260&&w.y<=288)w.y+=50
+    if(kind==='intervening')d.words.push({text:'Header',x:500,y:255,width:50,height:5})
+    if(kind==='multiple')d.words.push({text:'Other',x:500,y:278,width:50,height:5},{text:'999999',x:850,y:278,width:60,height:5})
+    if(kind==='unrelated')a.text='Identifier'
+    if(kind==='code-crossing'){a.x=290;a.width=450}
+    if(kind==='percent')a.text='10%'
+    if(kind==='two-prefixes')d.words.push({...a,y:232,height:5})
+    expect(()=>parseVisionReceipt(d)).toThrow('layout-unsupported')
+    try{parseVisionReceipt(d)}catch(e){expect(layoutReason(e)).toBe('item-row-unassigned')}
+  })
+  it('does not associate across an intervening summary',()=>{const d=leading();d.words.push({text:'VAT',x:550,y:250,width:40,height:5});try{parseVisionReceipt(d);throw Error('unexpected success')}catch(e){expect(layoutReason(e)).toBe('item-anchor-missing')}})
+  it('preserves missing fields and printed-line validation after association',async()=>{const d=leading();d.words.find(w=>w.y===240)!.text='7.49';const draft=receiptToReviewDraft(parseVisionReceipt(d).observations);expect(draft.observations.lines[0].lineAmount).toBe('7.49');expect(prepareReceiptReview(draft,await fixtureSpendscapeRepository.loadSnapshot()).ready).toBe(false)})
+})
+
+it('does not drop a competing item amount when leading fragments are damaged',()=>{const d=fictionalShortOcr();d.words.push({text:'7.',x:60,y:240,width:16,height:20},{text:'5O',x:145,y:240,width:16,height:20});expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toEqual({candidates:['7.','5O','7.50']})})
+it('accepts the two-height limit and rejects a larger gap without total matching',()=>{const d=fictionalShortOcr();const a=d.words.find(w=>w.y===260&&w.x===60)!;a.y=240;a.text='9.25';for(const w of d.words)if(w.y===260||w.y===288)w.y+=20;expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('9.25');for(const w of d.words)if(w.y===280||w.y===308)w.y+=1;expect(()=>parseVisionReceipt(d)).toThrow('layout-unsupported')})

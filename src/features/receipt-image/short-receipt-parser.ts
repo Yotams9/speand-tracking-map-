@@ -1,5 +1,5 @@
 import { label, numeric, rows, unique, validateOcrDocument, parseOcrReceipt, type OcrWord, type RowTrace } from './ocr-parser'
-import type { ReceiptObservations, ReceiptLineObservation } from '../capture/receipt-review-adapter'
+import type { ReceiptObservations, ReceiptLineObservation, ReceiptObservation } from '../capture/receipt-review-adapter'
 import { ReceiptLayoutError } from './layout-reason'
 const center = (w: OcrWord) => w.x + w.width / 2
 const compact = (v: string) => v.replace(/[\s"״׳'.:]/g, '')
@@ -55,7 +55,24 @@ export function parseVisionReceipt(raw: unknown, trace?: RowTrace) {
   }
   const starts=body.flatMap((row,i)=>isStart(row)?[i]:[])
   if (!starts.length) throw new ReceiptLayoutError('item-anchor-missing')
-  if (starts[0] !== 0) {trace?.(body[0],'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned')}
+  let leading: OcrWord[] | null = null
+  if (starts[0] !== 0) {
+    const row=body[0], next=body[starts[0]]
+    const height=(r:OcrWord[])=>Math.max(...r.map(w=>w.height))
+    const baseline=(r:OcrWord[])=>r[0].y+r[0].height/2
+    const bound=2*Math.min(height(row),height(next))
+    // Exactly one adjacent prefix row, entirely originating in the amount
+    // column, and a following description anchor. No intervening rows, chained
+    // association, value matching or arithmetic. Another item in the same
+    // two-height window makes ownership ambiguous.
+    const supported=starts[0]===1 && row.length<=7 && row.every(w=>numericFragment(w.text) && !w.text.includes('%') && w.x<amountRight && w.x+w.width<=nameRight) && row.some(w=>/[0-9]/.test(w.text)) &&
+      next.some(w=>within(w,amountRight,nameRight) && /[A-Za-z\u0590-\u05ff]/.test(w.text) && !numericFragment(w.text)) &&
+      baseline(next)>baseline(row) && baseline(next)-baseline(row)<=bound &&
+      !starts.slice(1).some(i=>baseline(body[i])-baseline(row)<=bound)
+    if(!supported){trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned')}
+    leading=row
+    trace?.(row,'numeric-details')
+  }
   for (let item = 0; item < starts.length; item++) {
     const top = body[starts[item]], following=body.slice(starts[item]+1,starts[item+1]??body.length)
     trace?.(top,'item')
@@ -85,7 +102,22 @@ export function parseVisionReceipt(raw: unknown, trace?: RowTrace) {
     // Ambiguous row association must not erase a printed discount marker.
     const discountUnresolved = numericRows.some(row=>row.some(w=>w.text.includes('%')))
     const amountCrossing=top.some(w=>w.x<amountRight && w.x+w.width>amountRight)
-    lines.push({ name: itemName && itemName.length<=500?itemName:null, quantity: q, unit: null, unitPrice: p, lineAmount: amountCrossing?null:numeric(amounts, 'lineAmount'), ...(discountUnresolved ? {discount:null} : {}) })
+    let lineAmount:ReceiptObservation=amountCrossing?null:numeric(amounts,'lineAmount')
+    if(item===0 && leading){
+      const crossing=leading.some(w=>!within(w,0,amountRight))
+      const leadingValue=numeric(leading,'lineAmount')
+      // Competing printed observations remain candidates even when identical.
+      // A crossing or unreconstructable fragment remains unresolved; its words
+      // and geometry remain in the transient inspection, never silently skipped.
+      if(crossing || amountCrossing)lineAmount=null
+      else if(amounts.length){lineAmount=leadingValue!==null && typeof lineAmount==='string'?{candidates:[leadingValue,lineAmount]}:null}
+      else lineAmount=leadingValue
+      if(lineAmount===null && !crossing && !amountCrossing){
+        const evidence=[...(leadingValue===null?leading.map(w=>w.text):[leadingValue]),...amounts.map(w=>w.text)]
+        if(evidence.length>=2 && evidence.length<=5)lineAmount={candidates:evidence}
+      }
+    }
+    lines.push({ name: itemName && itemName.length<=500?itemName:null, quantity: q, unit: null, unitPrice: p, lineAmount, ...(discountUnresolved ? {discount:null} : {}) })
   }
   if (!lines.length || lines.length > 50) throw new ReceiptLayoutError(lines.length ? 'item-count-limit' : 'item-anchor-missing')
   const before = grouped.slice(0,table.i)
@@ -116,5 +148,5 @@ export function parseVisionReceipt(raw: unknown, trace?: RowTrace) {
     return [value && ['ILS','USD','EUR','GBP','₪'].includes(value) ? value : null]
   })
   const observations: ReceiptObservations = { merchantName:heading(before[0]),address:heading(before[1]),date:unique(dates),time:unique(times),currency:unique(currencies),finalAmount:unique(totals),lines }
-  return {observations,diagnostics:{layout:'short-printed-table' as const,rows:lines.length,unresolved: Object.values(observations).filter(v=>v===null).length+lines.reduce((n,l)=>n+Object.values(l).filter(v=>v===null).length,0)}}
+  return {observations,diagnostics:{layout:'short-printed-table' as const,rows:lines.length,unresolved: Object.values(observations).filter(v=>v===null).length+lines.reduce((n,l)=>n+Object.values(l).filter(v=>v===null || typeof v==='object').length,0)}}
 }
