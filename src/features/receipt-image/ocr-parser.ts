@@ -1,3 +1,4 @@
+import {rowRejection} from './row-rejection'
 import type { ReceiptObservations, ReceiptObservation, ReceiptLineObservation } from '../capture/receipt-review-adapter'
 import { ReceiptLayoutError } from './layout-reason'
 
@@ -113,14 +114,16 @@ export function parseOcrReceipt(raw: unknown, trace?: RowTrace): { observations:
     const nameOnly = row.length === (buckets.name?.length ?? 0)
     if (nameOnly) {
       if (!previous || !lines.length) {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-anchor-missing')}
-      if (row[0].y-previous[0].y>Math.max(...previous.map(w=>w.height))*4 || !row.some(w=>/[A-Za-z\u0590-\u05ff]/.test(w.text))) {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned')}
+      const checks={'near-item':!(row[0].y-previous[0].y>Math.max(...previous.map(w=>w.height))*4),'description-structure':row.some(w=>/[A-Za-z\u0590-\u05ff]/.test(w.text))}
+      if (!Object.values(checks).every(Boolean)) {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned',rowRejection('labelled-continuation',grouped.indexOf(row)+1,grouped.length,row.length,checks))}
       const extra=get('name'), last=lines.at(-1)!, value=typeof last.name==='string' && extra ? last.name+' '+extra : null
       last.name=value && value.length<=500?value:null
       trace?.(row,'continuation')
     } else {
       // A row in an unknown column, or an unassigned numeric continuation,
       // cannot establish another item. Keep ambiguous association fail closed.
-      if (!buckets.name?.length || !(['quantity','unitPrice','lineAmount'] as const).some(key=>buckets[key]?.length)) {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned')}
+      const checks={'name-present':!!buckets.name?.length,'financial-present':(['quantity','unitPrice','lineAmount'] as const).some(key=>!!buckets[key]?.length)}
+      if (!Object.values(checks).every(Boolean)) {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned',rowRejection('labelled-item',grouped.indexOf(row)+1,grouped.length,row.length,checks))}
       lines.push({ name: get('name'), quantity: get('quantity'), unit: get('unit'), unitPrice: get('unitPrice'), lineAmount: get('lineAmount'), ...(anchors.some(w => columns[w.text] === 'discount') ? { discount: get('discount') } : anchors.some(w=>!columns[w.text]) ? {discount:null} : {}) })
       trace?.(row,'item')
     }

@@ -1,3 +1,4 @@
+import {rowRejection} from './row-rejection'
 import { label, numeric, rows, unique, validateOcrDocument, parseOcrReceipt, type OcrWord, type RowTrace } from './ocr-parser'
 import type { ReceiptObservations, ReceiptLineObservation, ReceiptObservation } from '../capture/receipt-review-adapter'
 import { ReceiptLayoutError } from './layout-reason'
@@ -65,11 +66,17 @@ export function parseVisionReceipt(raw: unknown, trace?: RowTrace) {
     // column, and a following description anchor. No intervening rows, chained
     // association, value matching or arithmetic. Another item in the same
     // two-height window makes ownership ambiguous.
-    const supported=starts[0]===1 && row.length<=7 && row.every(w=>numericFragment(w.text) && !w.text.includes('%') && w.x<amountRight && w.x+w.width<=nameRight) && row.some(w=>/[0-9]/.test(w.text)) &&
-      next.some(w=>within(w,amountRight,nameRight) && /[A-Za-z\u0590-\u05ff]/.test(w.text) && !numericFragment(w.text)) &&
-      baseline(next)>baseline(row) && baseline(next)-baseline(row)<=bound &&
-      !starts.slice(1).some(i=>baseline(body[i])-baseline(row)<=bound)
-    if(!supported){trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned')}
+    const checks={
+      'single-prefix':starts[0]===1,
+      'word-limit':row.length<=7,
+      'numeric-structure':row.every(w=>numericFragment(w.text) && !w.text.includes('%')) && row.some(w=>/[0-9]/.test(w.text)),
+      'amount-column':row.every(w=>w.x<amountRight && w.x+w.width<=nameRight),
+      'description-anchor':next.some(w=>within(w,amountRight,nameRight) && /[A-Za-z\u0590-\u05ff]/.test(w.text) && !numericFragment(w.text)),
+      'forward-baseline':baseline(next)>baseline(row),
+      'near-baseline':baseline(next)-baseline(row)<=bound,
+      'unique-item':!starts.slice(1).some(i=>baseline(body[i])-baseline(row)<=bound),
+    }
+    if(!Object.values(checks).every(Boolean)){trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned',rowRejection('short-leading',grouped.indexOf(row)+1,grouped.length,row.length,checks))}
     leading=row
     trace?.(row,'numeric-details')
   }
@@ -79,13 +86,19 @@ export function parseVisionReceipt(raw: unknown, trace?: RowTrace) {
     const nameRows=[top.filter(w=>within(w,amountRight,nameRight))]
     const numericRows: OcrWord[][]=[]
     for(const row of following){
-      const near=row[0].y-top[0].y <= Math.max(...top.map(w=>w.height))*8
-      const description=row.every(w=>within(w,amountRight,nameRight)) && row.some(w=>/[A-Za-z\u0590-\u05ff]/.test(w.text)) && !row.every(w=>numericFragment(w.text))
-      if(description && near){nameRows.push(row);trace?.(row,'continuation')}
-      // Retain malformed numeric observations verbatim; a short quantity beside
-      // a damaged price is not a product-code anchor or a new item.
-      else if(row.every(w=>numericFragment(w.text)) && row.every(w=>w.x>=amountRight)){if(near){numericRows.push(row);trace?.(row,'numeric-details')}}
-      else {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned')}
+      const checks={
+        'near-item':row[0].y-top[0].y <= Math.max(...top.map(w=>w.height))*8,
+        'description-column':row.every(w=>within(w,amountRight,nameRight)),
+        'description-structure':row.some(w=>/[A-Za-z\u0590-\u05ff]/.test(w.text)) && !row.every(w=>numericFragment(w.text)),
+        'numeric-structure':row.every(w=>numericFragment(w.text)),
+        'numeric-column':row.every(w=>w.x>=amountRight),
+      }
+      if(checks['description-column'] && checks['description-structure'] && checks['near-item']){nameRows.push(row);trace?.(row,'continuation')}
+      // Preserve the existing distant-numeric-row behavior; only actual throws
+      // carry a rejection signature. Do not mislabel unprocessed rows rejected.
+      else if(checks['numeric-structure'] && checks['numeric-column']){if(checks['near-item']){numericRows.push(row);trace?.(row,'numeric-details')}}
+      else {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned',rowRejection('short-following',grouped.indexOf(row)+1,grouped.length,row.length,checks))}
+
     }
     const names=nameRows.map(row=>label(row)), itemName=names.every(v=>v!==null)?names.join(' '):null
     const amounts = top.filter(w => within(w, 0, amountRight))
