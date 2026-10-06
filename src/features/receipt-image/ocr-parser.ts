@@ -1,4 +1,5 @@
 import type { ReceiptObservations, ReceiptObservation, ReceiptLineObservation } from '../capture/receipt-review-adapter'
+import { ReceiptLayoutError } from './layout-reason'
 
 export interface OcrWord { text: string; x: number; y: number; width: number; height: number }
 export interface OcrDocument { version: 1; width: number; height: number; words: OcrWord[] }
@@ -20,11 +21,11 @@ export function validateOcrDocument(raw: unknown): raw is OcrDocument {
   return true
 }
 const center = (w: OcrWord) => w.x + w.width / 2
-export function rows(words: OcrWord[]): OcrWord[][] {
+export function rows(words: OcrWord[], tolerance = .45): OcrWord[][] {
   const result: OcrWord[][] = []
   for (const word of [...words].sort((a, b) => a.y + a.height / 2 - b.y - b.height / 2 || a.x - b.x)) {
     const last = result.at(-1), anchor = last?.[0]
-    if (anchor && Math.abs(word.y + word.height / 2 - anchor.y - anchor.height / 2) <= Math.min(word.height, anchor.height) * .45) last!.push(word)
+    if (anchor && Math.abs(word.y + word.height / 2 - anchor.y - anchor.height / 2) <= Math.min(word.height, anchor.height) * tolerance) last!.push(word)
     else result.push([word])
   }
   return result.map(row => row.sort((a, b) => a.x - b.x))
@@ -72,11 +73,13 @@ export function unique(values: (string | null)[]): ReceiptObservation {
 // regions, expected-answer lookup, totals repair, ID/barcode inference or FX.
 export function parseOcrReceipt(raw: unknown): { observations: ReceiptObservations; diagnostics: { layout: 'labelled-table'; rows: number; unresolved: number } } {
   if (!validateOcrDocument(raw)) throw new Error('ocr-invalid')
-  const grouped = rows(raw.words)
-  const candidates = grouped.map((r, i) => ({ i, r, known: r.filter(w => columns[w.text]) })).filter(r => ['name', 'quantity', 'unit', 'unitPrice', 'lineAmount'].every(k => r.known.filter(w => columns[w.text] === k).length === 1))
-  if (candidates.length !== 1) throw new Error('layout-unsupported')
-  const table = candidates[0], anchors = table.known.sort((a, b) => center(a) - center(b))
-  if (new Set(anchors.map(w => columns[w.text])).size !== anchors.length) throw new Error('layout-unsupported')
+  const grouped = rows(raw.words, .65)
+  const candidates = grouped.map((r, i) => ({ i, r, known: r.filter(w => columns[w.text]) })).filter(r => ['name', 'lineAmount'].every(k => r.known.some(w => columns[w.text] === k)) && r.known.some(w=>['quantity','unit','unitPrice'].includes(columns[w.text])))
+  if (candidates.length !== 1) throw new ReceiptLayoutError(candidates.length ? 'table-header-ambiguous' : 'table-header-missing')
+  // Unknown printed header cells remain geometric boundaries, never guessed
+  // field names. Their data cannot leak into a neighboring known field.
+  const table = candidates[0], anchors = [...table.r].sort((a, b) => center(a) - center(b))
+  if (new Set(table.known.map(w => columns[w.text])).size !== table.known.length) throw new ReceiptLayoutError('column-header-ambiguous')
   const found: Partial<Record<keyof Omit<ReceiptObservations, 'lines'>, (string | null)[]>> = {}
   const headerRows = new Set<number>()
   grouped.forEach((row, index) => {
@@ -89,19 +92,34 @@ export function parseOcrReceipt(raw: unknown): { observations: ReceiptObservatio
   })
   const footer = grouped.findIndex((_, i) => i > table.i && headerRows.has(i))
   const itemRows = grouped.slice(table.i + 1, footer < 0 ? grouped.length : footer)
-  if (!itemRows.length || itemRows.length > 50) throw new Error('layout-unsupported')
-  const lines: ReceiptLineObservation[] = itemRows.map(row => {
+  if (!itemRows.length || itemRows.length > 50) throw new ReceiptLayoutError(itemRows.length ? 'item-count-limit' : 'item-anchor-missing')
+  const lines: ReceiptLineObservation[] = []
+  let previous: OcrWord[] | undefined
+  for (const row of itemRows) {
     const buckets: Partial<Record<Column, OcrWord[]>> = {}, conflicts = new Set<Column>()
     row.forEach(word => {
       const index = anchors.findIndex((_, i) => center(word) < (i === anchors.length - 1 ? raw.width : (center(anchors[i]) + center(anchors[i + 1])) / 2))
       if (index < 0) return
       const key = columns[anchors[index].text], left = index === 0 ? 0 : (center(anchors[index - 1]) + center(anchors[index])) / 2, right = index === anchors.length - 1 ? raw.width : (center(anchors[index]) + center(anchors[index + 1])) / 2
+      if (!key) return
       if (word.x < left || word.x + word.width > right) conflicts.add(key)
       ;(buckets[key] ??= []).push(word)
     })
     const get = (key: Column) => conflicts.has(key) ? null : key === 'name' || key === 'unit' ? label(buckets[key] ?? []) : numeric(buckets[key] ?? [], key)
-    return { name: get('name'), quantity: get('quantity'), unit: get('unit'), unitPrice: get('unitPrice'), lineAmount: get('lineAmount'), ...(anchors.some(w => columns[w.text] === 'discount') ? { discount: get('discount') } : {}) }
-  })
+    const nameOnly = row.length === (buckets.name?.length ?? 0)
+    if (nameOnly) {
+      if (!previous || !lines.length) throw new ReceiptLayoutError('item-anchor-missing')
+      if (row[0].y-previous[0].y>Math.max(...previous.map(w=>w.height))*4 || !row.some(w=>/[A-Za-z\u0590-\u05ff]/.test(w.text))) throw new ReceiptLayoutError('item-row-unassigned')
+      const extra=get('name'), last=lines.at(-1)!, value=typeof last.name==='string' && extra ? last.name+' '+extra : null
+      last.name=value && value.length<=500?value:null
+    } else {
+      // A row in an unknown column, or an unassigned numeric continuation,
+      // cannot establish another item. Keep ambiguous association fail closed.
+      if (!buckets.name?.length || !(['quantity','unitPrice','lineAmount'] as const).some(key=>buckets[key]?.length)) throw new ReceiptLayoutError('item-row-unassigned')
+      lines.push({ name: get('name'), quantity: get('quantity'), unit: get('unit'), unitPrice: get('unitPrice'), lineAmount: get('lineAmount'), ...(anchors.some(w => columns[w.text] === 'discount') ? { discount: get('discount') } : anchors.some(w=>!columns[w.text]) ? {discount:null} : {}) })
+    }
+    previous=row
+  }
   const observations: ReceiptObservations = { merchantName: unique(found.merchantName ?? []), address: unique(found.address ?? []), date: unique(found.date ?? []), time: unique(found.time ?? []), currency: unique(found.currency ?? []), finalAmount: unique(found.finalAmount ?? []), lines }
   for (const key of ['preVat', 'vatAmount', 'vatRate'] as const) if (found[key]) observations[key] = unique(found[key]!)
   const unresolved = lines.reduce((count, line) => count + Object.values(line).filter(v => v === null).length, Object.values(observations).filter(v => v === null || typeof v === 'object' && 'candidates' in v).length)

@@ -4,8 +4,31 @@ import { parseOcrReceipt, validateOcrDocument, type OcrDocument, type OcrWord } 
 import { receiptToReviewDraft, prepareReceiptReview } from '../capture/receipt-review-adapter'
 import { fixtureSpendscapeRepository } from '../../data/spendscape-repository'
 import { emptySessionLedger, saveReviewedPurchase, undoSessionPurchase } from '../capture/session-purchase-domain'
+import {layoutReason} from './layout-reason'
 
 describe('provider-neutral labelled receipt geometry', () => {
+  it.each(['Qty','Unit','Price'])('keeps known fields when printed %s header cannot be resolved',async key=>{
+    const doc=fictionalOcr('one');doc.words.find(w=>w.text===key)!.text='Unknown'
+    const line=parseOcrReceipt(doc).observations.lines[0]
+    expect(line.name).toBe('קוואקר בדוי Oats');expect(line.lineAmount).toBe('12.50')
+    expect(line[key==='Qty'?'quantity':key==='Unit'?'unit':'unitPrice']).toBeNull()
+    expect(line.discount).toBeNull() // An unknown column cannot be assumed not to contain a discount.
+    expect((await completeReview(doc)).ready.ready).toBe(false)
+  })
+  it('joins a bounded name-only continuation without inventing an item',()=>{
+    const doc=fictionalOcr('one');doc.words.push({text:'Extended',x:30,y:277,width:70,height:20})
+    const lines=parseOcrReceipt(doc).observations.lines
+    expect(lines).toHaveLength(1);expect(lines[0]).toMatchObject({name:'קוואקר בדוי Oats Extended',quantity:'2',unitPrice:'6.25',lineAmount:'12.50'})
+  })
+  it('accepts modest vertical baseline variation without changing values',()=>{
+    const doc=fictionalOcr('one');doc.words=doc.words.map(w=>({...w,y:w.y+(w.x>450?12:0)}))
+    expect(parseOcrReceipt(doc).observations.lines[0]).toMatchObject({quantity:'2',unitPrice:'6.25',lineAmount:'12.50'})
+  })
+  it('rejects competing known columns with a fixed structural reason',()=>{
+    const doc=fictionalOcr('one');doc.words.push({text:'Qty',x:700,y:210,width:30,height:20})
+    let error:unknown;try{parseOcrReceipt(doc)}catch(e){error=e}
+    expect(layoutReason(error)).toBe('column-header-ambiguous')
+  })
   it('keeps a deterministic 15-item duplicate fingerprint and consumed IDs through Undo', async () => {
     const context = await fixtureSpendscapeRepository.loadSnapshot()
     const prepare = () => {
@@ -84,7 +107,7 @@ describe('provider-neutral labelled receipt geometry', () => {
     expect(parseOcrReceipt(doc).observations.lines[0].quantity).toBeNull()
   })
   it('rejects unsupported or competing tables and oversized runtime documents', () => {
-    const doc = fictionalOcr('one');doc.words.find(w => w.text === 'Qty')!.text='Unknown';expect(()=>parseOcrReceipt(doc)).toThrow('layout-unsupported')
+    const doc = fictionalOcr('one');doc.words.find(w => w.text === 'Qty')!.text='Unknown';expect(parseOcrReceipt(doc).observations.lines[0]).toMatchObject({quantity:null,unitPrice:'6.25',lineAmount:'12.50',discount:null})
     const repeated = fictionalOcr('one');repeated.words.push(...repeated.words.filter(w=>w.y===210).map(w=>({...w,y:370})));expect(()=>parseOcrReceipt(repeated)).toThrow('layout-unsupported')
     expect(validateOcrDocument({...fictionalOcr('one'),words:Array(1501).fill(fictionalOcr('one').words[0])})).toBe(false)
   })
@@ -175,5 +198,13 @@ describe('review correction: bilingual word runs and competing header occurrence
   it('never repairs an observed malformed singleton to match another total', () => {
     const doc = fictionalOcr('one'); doc.words.push(boxed('Total:', 30, 355, 100), boxed('O.50', 160, 355, 40))
     expect(parseOcrReceipt(doc).observations.finalAmount).toEqual({ candidates: ['12.50', 'O.50'] })
+  })
+})
+
+describe('unassigned labelled-table rows cannot create items',()=>{
+  it.each(['unknown','numeric'])('rejects isolated %s cell without a product anchor',kind=>{
+    const doc=fictionalOcr('one');doc.words.find(w=>w.text==='Unit')!.text='Unknown';
+    doc.words.push({text:kind==='unknown'?'Unassigned':'99',x:kind==='unknown'?480:760,y:285,width:60,height:20});
+    let error:unknown;try{parseOcrReceipt(doc)}catch(e){error=e};expect(layoutReason(error)).toBe('item-row-unassigned')
   })
 })

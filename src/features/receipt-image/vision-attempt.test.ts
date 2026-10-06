@@ -50,10 +50,11 @@ describe('durable private attempt lifecycle',()=>{
   expect(await readFile(join(dir,'record.jsonl'),'utf8')).not.toContain(secret)
  })
  it.each(['normalize','parse'])('distinguishes %s failure',async mode=>{
-  const doc=fictionalShortOcr();doc.words=doc.words.filter(w=>w.text!=='כמות')
+  const doc=fictionalShortOcr();doc.words=doc.words.filter(w=>w.text!=='תיאור')
   const p=setup(vi.fn(async()=>Response.json(mode==='normalize'?{secret}:visionResponse(doc))))
   await p.handler(request());const stages=(await p.diagnostics.status())!.events.map(e=>e.stage)
   expect(stages).toContain('normalization-start');expect(stages.includes('parsing-start')).toBe(mode==='parse');expect(stages.at(-1)).toBe('failure')
+  if(mode==='parse')expect((await p.diagnostics.status())?.events.at(-1)).toMatchObject({code:'layout-unsupported',layoutReason:'table-header-missing'})
  })
  it.each(['disconnect','timeout'])('records %s interruption and rejects late completion',async mode=>{
   let finish!:(r:Response)=>void;const p=setup(vi.fn(()=>new Promise(resolve=>{finish=resolve}))),c=new AbortController()

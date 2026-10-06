@@ -1,3 +1,4 @@
+import { layoutReason } from './layout-reason'
 import type { AttemptDiagnostics, AttemptEmit, AttemptSession } from './vision-attempt'
 import { MAX_RECEIPT_BYTES, receiptImageHeader } from './image-input'
 import { normalizeVisionResponse } from './vision-normalize'
@@ -81,8 +82,8 @@ export function createVisionLocalHandler(ports: VisionLocalPorts, timeoutMs=VISI
       const message=error instanceof Error ? error.message : ''
       const allowed=['image-size','image-format','image-not-approved','attempt-consumed','authentication-failed','transport-failed','recognition-failed','recognition-empty','normalization-failed','layout-unsupported','diagnostics-unavailable']
       const code=signal.aborted ? 'cancelled' : allowed.includes(message) ? message : 'ocr-invalid'
-      if(attempt)try{await attempt.emit(signal.aborted?'interrupted':'failure',{code})}catch{/* Existing durable stages remain incomplete; never retry. */}
-      return reply(code,code==='attempt-consumed'?409:signal.aborted?408:422)
+      if(attempt)try{await attempt.emit(signal.aborted?'interrupted':'failure',{code,layoutReason:layoutReason(error)})}catch{/* Existing durable stages remain incomplete; never retry. */}
+      return reply(code,code==='attempt-consumed'?409:signal.aborted?408:422,layoutReason(error)?{layoutReason:layoutReason(error)}:{})
     } finally {clearTimeout(timer);signal.removeEventListener('abort',abortRead);reader?.releaseLock();bytes?.fill(0);for(const chunk of chunks)chunk.fill(0)}
   }
 }
