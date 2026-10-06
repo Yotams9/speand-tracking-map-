@@ -4,9 +4,11 @@ import { MAX_RECEIPT_BYTES, receiptImageHeader } from './image-input'
 import { normalizeVisionResponse } from './vision-normalize'
 import { parseVisionReceipt } from './short-receipt-parser'
 import { receiptToReviewDraft } from '../capture/receipt-review-adapter'
+import {inspectParser,type ParserInspection} from './parser-inspection'
 export interface VisionLocalPorts {
   enabled: boolean
   fictionalQa?: boolean
+  inspectionEnabled?: boolean
   approvedHash: string
   hash: (bytes: Uint8Array) => string
   consumed: () => Promise<boolean>
@@ -29,7 +31,7 @@ export function createVisionLocalHandler(ports: VisionLocalPorts, timeoutMs=VISI
     if (request.method === 'GET') {
       try {
         if(request.headers.get('x-spendscape-vision-status')==='1')return reply('attempt-status',200,{attempt:await ports.diagnostics.status(),consumed:await ports.consumed(),mode:ports.fictionalQa?'fictional-qa':'native'})
-        return reply(await ports.consumed() ? 'attempt-consumed' : 'local-vision-ready',200)
+        return reply(await ports.consumed() ? 'attempt-consumed' : 'local-vision-ready',200,ports.inspectionEnabled?{inspectionAvailable:true}:{})
       }catch{return reply('diagnostics-unavailable',503)}
     }
     if (request.method !== 'POST') return reply('request-invalid',400)
@@ -41,6 +43,8 @@ export function createVisionLocalHandler(ports: VisionLocalPorts, timeoutMs=VISI
     const timer=setTimeout(()=>controller.abort(),timeoutMs)
     const reader=request.body?.getReader();let bytes:Uint8Array|null=null
     const chunks:Uint8Array[]=[];let length=0;let attempt:AttemptSession|null=null
+    let inspection:ParserInspection|undefined
+    const inspecting=ports.inspectionEnabled===true && request.headers.get('x-spendscape-parser-inspection')==='1'
     const abortRead=()=>{void reader?.cancel().catch(()=>{})}
     signal.addEventListener('abort',abortRead,{once:true})
     try {
@@ -71,11 +75,15 @@ export function createVisionLocalHandler(ports: VisionLocalPorts, timeoutMs=VISI
       const normalized=normalizeVisionResponse(raw)
       await attempt.emit('normalization-complete')
       await attempt.emit('parsing-start')
-      const parsed=parseVisionReceipt(normalized)
+      const inspected=inspecting?inspectParser(normalized):undefined
+      inspection=inspected?.inspection
+      if(inspection && new TextEncoder().encode(JSON.stringify(inspection)).length>240_000){inspection=undefined;throw new Error('ocr-invalid')}
+      if(inspected?.error)throw inspected.error
+      const parsed=inspected?.parsed??parseVisionReceipt(normalized)
       await attempt.emit('parsing-complete')
       receiptToReviewDraft(parsed.observations)
       if(signal.aborted)throw new Error('cancelled')
-      const response=reply('vision-observations',200,parsed)
+      const response=inspection?reply('parser-inspection',200,{inspection}):reply('vision-observations',200,parsed)
       await attempt.emit('review-response-complete')
       return response
     } catch(error) {
@@ -83,7 +91,7 @@ export function createVisionLocalHandler(ports: VisionLocalPorts, timeoutMs=VISI
       const allowed=['image-size','image-format','image-not-approved','attempt-consumed','authentication-failed','transport-failed','recognition-failed','recognition-empty','normalization-failed','layout-unsupported','diagnostics-unavailable']
       const code=signal.aborted ? 'cancelled' : allowed.includes(message) ? message : 'ocr-invalid'
       if(attempt)try{await attempt.emit(signal.aborted?'interrupted':'failure',{code,layoutReason:layoutReason(error)})}catch{/* Existing durable stages remain incomplete; never retry. */}
-      return reply(code,code==='attempt-consumed'?409:signal.aborted?408:422,layoutReason(error)?{layoutReason:layoutReason(error)}:{})
+      return reply(code,code==='attempt-consumed'?409:signal.aborted?408:422,{...(layoutReason(error)?{layoutReason:layoutReason(error)}:{}),...(!signal.aborted&&inspection?{inspection}:{})})
     } finally {clearTimeout(timer);signal.removeEventListener('abort',abortRead);reader?.releaseLock();bytes?.fill(0);for(const chunk of chunks)chunk.fill(0)}
   }
 }

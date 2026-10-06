@@ -4,6 +4,7 @@ import type { LocaleCode } from '../../data/spendscape-globe'
 import type { ReceiptReviewDraft } from '../capture/receipt-review-adapter'
 import { inspectReceiptImage } from './image-input'
 import { ReceiptImageSession, type ImageState } from './image-session'
+import {INSPECTION_MS,validateParserInspection,type ParserInspection} from './parser-inspection'
 import styles from '../capture/CaptureExperience.module.css'
 
 const copy = {
@@ -14,6 +15,8 @@ export function ReceiptImageIntake({ locale, onDraft }: { locale: LocaleCode; on
   const [state, setState] = useState<ImageState>({ phase: 'idle', preview: null, code: null })
   const [qa, setQa] = useState(false)
   const [live, setLive] = useState(false)
+  const [inspectionAvailable,setInspectionAvailable]=useState(false),[inspection,setInspection]=useState<ParserInspection|null>(null)
+  const inspectOptIn=useRef(false)
   const fixture = useRef<'one' | 'fifteen'>('one'), complete = useRef(onDraft), session = useRef<ReceiptImageSession | null>(null)
   complete.current = onDraft
   const t = copy[locale], photo = useRef<HTMLInputElement>(null), upload = useRef<HTMLInputElement>(null), read = useRef<HTMLButtonElement>(null)
@@ -22,24 +25,30 @@ export function ReceiptImageIntake({ locale, onDraft }: { locale: LocaleCode; on
     const liveOpted = !optedIn && ['localhost','127.0.0.1','[::1]'].includes(location.hostname) && new URLSearchParams(location.search).get('receiptVisionLocal') === '1'
     const capability = new AbortController()
     let available = false
-    if (liveOpted) void fetch('/api/receipt-ocr', { cache: 'no-store', credentials: 'omit', redirect: 'error', signal: capability.signal, headers: { 'x-spendscape-local-vision': '1' } }).then(async res => { const value = await res.json(); if (!capability.signal.aborted && res.ok && value.code === 'local-vision-ready') { available = true; setLive(true) } }).catch(() => {})
+    if (liveOpted) void fetch('/api/receipt-ocr', { cache: 'no-store', credentials: 'omit', redirect: 'error', signal: capability.signal, headers: { 'x-spendscape-local-vision': '1' } }).then(async res => { const value = await res.json(); if (!capability.signal.aborted && res.ok && value.code === 'local-vision-ready') { available = true; setLive(true);setInspectionAvailable(value.inspectionAvailable===true) } }).catch(() => {})
     setQa(optedIn)
-    const current = new ReceiptImageSession({ inspect: inspectReceiptImage, createUrl: file => URL.createObjectURL(file), revokeUrl: url => URL.revokeObjectURL(url), state: setState, complete: draft => complete.current(draft), extract: async (signal, file) => {
+    const current = new ReceiptImageSession({ inspect: inspectReceiptImage, createUrl: file => URL.createObjectURL(file), revokeUrl: url => URL.revokeObjectURL(url), state: value=>{if(['idle','validating','reading'].includes(value.phase))setInspection(null);setState(value)}, complete: draft => complete.current(draft), extract: async (signal, file) => {
       if (!optedIn && (!liveOpted || !available)) throw new Error('ocr-unavailable')
-      const res = await fetch('/api/receipt-ocr', { method: 'POST', cache: 'no-store', credentials: 'omit', redirect: 'error', signal, headers: optedIn ? { 'Content-Type': 'application/json', 'x-spendscape-local-qa': '1' } : { 'Content-Type': file.type, 'x-spendscape-local-vision': '1' }, body: optedIn ? JSON.stringify({ fixture: fixture.current }) : file })
+      const res = await fetch('/api/receipt-ocr', { method: 'POST', cache: 'no-store', credentials: 'omit', redirect: 'error', signal, headers: optedIn ? { 'Content-Type': 'application/json', 'x-spendscape-local-qa': '1' } : { 'Content-Type': file.type, 'x-spendscape-local-vision': '1',...(inspectOptIn.current?{'x-spendscape-parser-inspection':'1'}:{}) }, body: optedIn ? JSON.stringify({ fixture: fixture.current }) : file })
       // Bound response bytes before JSON parsing; no provider payload reaches UI.
       const reader = res.body?.getReader(); if (!reader) throw new Error('ocr-invalid')
       let body = '', count = 0
       const decoder = new TextDecoder('utf-8', { fatal: true })
-      try { while (true) { const chunk = await reader.read(); if (chunk.done) break; count += chunk.value.byteLength; if (count > 64_000) { await reader.cancel(); throw new Error('ocr-invalid') }; body += decoder.decode(chunk.value, { stream: true }) }; body += decoder.decode() } finally { reader.releaseLock() }
+      try { while (true) { const chunk = await reader.read(); if (chunk.done) break; count += chunk.value.byteLength; if (count > (inspectOptIn.current?256_000:64_000)) { await reader.cancel(); throw new Error('ocr-invalid') }; body += decoder.decode(chunk.value, { stream: true }) }; body += decoder.decode() } finally { reader.releaseLock() }
       if (signal.aborted) throw new Error('cancelled')
       const value = JSON.parse(body)
+      if(inspectOptIn.current && validateParserInspection(value.inspection)){if(document.hidden)throw new Error('cancelled');setInspection(value.inspection);throw new Error(value.code==='parser-inspection'?'parser-inspection':'layout-unsupported')}
       if (!res.ok || value.code !== (optedIn ? 'synthetic-qa' : 'vision-observations')) throw new Error(value.code === 'ocr-unavailable' ? 'ocr-unavailable' : 'ocr-invalid')
       return value.observations
     } }, liveOpted ? 30_000 : 15_000)
     session.current = current
-    return () => { capability.abort(); current.dispose(); if (session.current === current) session.current = null }
+    // Listen before a response exists. Cancellation invalidates this generation
+    // even if the tab becomes visible again before the response arrives.
+    const clearHidden = () => { if (document.hidden) { setInspection(null); if (inspectOptIn.current) current.cancel() } }
+    document.addEventListener('visibilitychange', clearHidden)
+    return () => { document.removeEventListener('visibilitychange', clearHidden); capability.abort(); current.dispose(); if (session.current === current) session.current = null }
   }, [])
+  useEffect(()=>{if(!inspection)return;const timer=setTimeout(()=>setInspection(null),INSPECTION_MS);return()=>clearTimeout(timer)},[inspection])
   useEffect(() => {
     if (state.phase !== 'ready') return
     read.current?.focus({ preventScroll: true })
@@ -47,10 +56,17 @@ export function ReceiptImageIntake({ locale, onDraft }: { locale: LocaleCode; on
     return () => cancelAnimationFrame(frame)
   }, [state.phase])
   const choose = (input: HTMLInputElement) => { const file = input.files?.[0]; input.value = ''; if (file) void session.current?.select(file) }
-  const message = state.code === 'ocr-unavailable' ? t.unavailable : state.code === 'image-format' ? t.format : state.code === 'image-size' ? t.size : state.code === 'timeout' ? t.timeout : state.code ? t.failed : state.phase === 'validating' ? t.validating : state.phase === 'reading' ? t.reading : state.phase === 'ready' ? t.ready : ''
+  const message = state.code === 'parser-inspection' ? (locale==='he'?'הבדיקה הזמנית הושלמה. לא נוצרה טיוטה לשמירה.':'Temporary inspection complete. No purchase draft was created.') : state.code === 'ocr-unavailable' ? t.unavailable : state.code === 'image-format' ? t.format : state.code === 'image-size' ? t.size : state.code === 'timeout' ? t.timeout : state.code ? t.failed : state.phase === 'validating' ? t.validating : state.phase === 'reading' ? t.reading : state.phase === 'ready' ? t.ready : ''
   return <div className={`${styles.scrollBody} ${styles.receiptImage}`} data-testid="receipt-image-intake" data-phase={state.phase}>
     <h2 id="capture-title">{t.title}</h2><p id="capture-description">{live ? (locale === 'he' ? 'בדיקה מקומית אחת בלבד: לחיצה על קריאת קבלה תשלח רק את הצילום החתוך שאושר ל־Google Vision. הצילום והתצפיות זמניים. נדרשת בדיקה מפורשת לפני שמירה.' : 'One local validation only: Read receipt sends only the approved cropped photo to Google Vision. The photo and observations are temporary. Explicit review is required before saving.') : t.body}</p>
     {qa && <div className={styles.imageQa} data-testid="receipt-image-qa"><p>{t.qa}</p><label>{locale === 'he' ? 'דוגמה בדיונית' : 'Fictional fixture'}<select data-testid="receipt-image-fixture" defaultValue="one" onChange={e => { session.current?.cancel(); fixture.current = e.target.value as 'one' | 'fifteen' }}><option value="one">1 item</option><option value="fifteen">15 items</option></select></label></div>}
+    {inspectionAvailable && <label><input type="checkbox" data-testid="parser-inspection-opt-in" disabled={state.phase==='reading'} onChange={e=>{inspectOptIn.current=e.target.checked;setInspection(null)}} />{locale==='he'?'בדיקת שורות מקומית וזמנית בלבד — ללא שמירה':'Temporary local row inspection only — no saving'}</label>}
+    {inspection && <section aria-label={locale==='he'?'בדיקת שורות זמנית':'Temporary row inspection'} data-testid="parser-inspection" dir={locale==='he'?'rtl':'ltr'}>
+      <p>{locale==='he'?'תוכן זמני בלבד. יימחק תוך שתי דקות או בסגירה. שורה שלא סווגה עשויה להיות שורה שטרם נבדקה.':'Memory only. Cleared after two minutes or on close. Unassigned can also mean not yet reached.'}</p>
+      <p data-testid="parser-inspection-reason">{inspection.reason??(locale==='he'?'אין דחיית מבנה':'No layout rejection')}</p>
+      <button type="button" className={styles.secondary} data-testid="parser-inspection-close" onClick={()=>setInspection(null)}>{locale==='he'?'סגירת הבדיקה':'Close inspection'}</button>
+      <ol>{inspection.rows.map((row,i)=><li key={i} data-testid="parser-inspection-row"><strong>{i+1} · {row.kind}{row.rejected?' · REJECTED':''}</strong><p dir="auto">{row.words.map(index=>inspection.document.words[index].text).join(' ')}</p><details><summary>{locale==='he'?'מיקום המילים':'Word geometry'}</summary><ul>{row.words.map(index=>{const w=inspection.document.words[index];return <li key={index} dir="auto">{w.text} · x={w.x}, y={w.y}, w={w.width}, h={w.height}</li>})}</ul></details></li>)}</ol>
+    </section>}
     <input ref={photo} type="file" accept="image/jpeg,image/png" capture="environment" aria-label={t.photo} data-testid="receipt-photo-input" className={styles.imageInput} onChange={e => choose(e.currentTarget)} />
     <input ref={upload} type="file" accept="image/jpeg,image/png" aria-label={t.upload} data-testid="receipt-upload-input" className={styles.imageInput} onChange={e => choose(e.currentTarget)} />
     <div className={styles.actions}><button type="button" className={styles.secondary} onClick={() => photo.current?.click()} data-testid="receipt-photo">{t.photo}</button><button type="button" className={styles.secondary} onClick={() => upload.current?.click()} data-testid="receipt-upload">{t.upload}</button></div>

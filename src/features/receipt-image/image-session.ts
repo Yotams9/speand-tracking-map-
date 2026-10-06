@@ -1,7 +1,7 @@
 import { receiptToReviewDraft, type ReceiptReviewDraft } from '../capture/receipt-review-adapter'
 import type { ReceiptImageInfo } from './image-input'
 export type ImagePhase = 'idle' | 'validating' | 'ready' | 'reading' | 'error'
-export type ImageError = 'image-size' | 'image-format' | 'ocr-unavailable' | 'ocr-invalid' | 'layout-unsupported' | 'timeout'
+export type ImageError = 'image-size' | 'image-format' | 'ocr-unavailable' | 'ocr-invalid' | 'layout-unsupported' | 'timeout' | 'parser-inspection'
 export interface ImageState { phase: ImagePhase; preview: string | null; code: ImageError | null }
 export interface ImagePorts {
   inspect: (file: File, signal: AbortSignal) => Promise<ReceiptImageInfo>
@@ -51,7 +51,7 @@ export class ReceiptImageSession {
   }
   private fail(error: unknown) {
     const message = error instanceof Error ? error.message : ''
-    const code: ImageError = ['image-size', 'image-format', 'ocr-unavailable', 'layout-unsupported'].includes(message) ? message as ImageError : 'ocr-invalid'
+    const code: ImageError = ['image-size', 'image-format', 'ocr-unavailable', 'layout-unsupported', 'parser-inspection'].includes(message) ? message as ImageError : 'ocr-invalid'
     this.release(); this.emit('error', code)
   }
   async read() {

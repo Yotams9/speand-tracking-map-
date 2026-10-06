@@ -1,4 +1,4 @@
-import { label, numeric, rows, unique, validateOcrDocument, parseOcrReceipt, type OcrWord } from './ocr-parser'
+import { label, numeric, rows, unique, validateOcrDocument, parseOcrReceipt, type OcrWord, type RowTrace } from './ocr-parser'
 import type { ReceiptObservations, ReceiptLineObservation } from '../capture/receipt-review-adapter'
 import { ReceiptLayoutError } from './layout-reason'
 const center = (w: OcrWord) => w.x + w.width / 2
@@ -19,14 +19,15 @@ function spans(row: OcrWord[], choices: string[]) {
 // two-row description/code/amount + quantity/unit-price table, labelled totals.
 // Anchors come from text/relative geometry; never crop coordinates or reference
 // answers. Unsupported currency/units, percent discounts and dates stay raw.
-export function parseVisionReceipt(raw: unknown) {
+export function parseVisionReceipt(raw: unknown, trace?: RowTrace) {
   if (!validateOcrDocument(raw)) throw new Error('ocr-invalid')
-  try { return parseOcrReceipt(raw) } catch (error) { if (!(error instanceof ReceiptLayoutError) || error.reason !== 'table-header-missing') throw error }
+  try { return parseOcrReceipt(raw,trace) } catch (error) { if (!(error instanceof ReceiptLayoutError) || error.reason !== 'table-header-missing') throw error }
   // Modest baseline offsets are bounded against the first word, never chained.
   const grouped = rows(raw.words, .65)
   const tables = grouped.map((row, i) => ({ i, row, name: spans(row, ['תיאורפריט','Itemdescription']), amount: spans(row, ['סהכ','Amount']), code: spans(row,['קודפריט','Itemcode']) })).filter(t => t.name.length > 0 && t.amount.length > 0 && t.code.length > 0)
   if (tables.length !== 1) throw new ReceiptLayoutError(tables.length ? 'table-header-ambiguous' : 'table-header-missing')
   const table = tables[0], second = grouped[table.i + 1] ?? []
+  for(const row of grouped.slice(0,table.i+1))trace?.(row,'header')
   if(table.name.length!==1 || table.amount.length!==1 || table.code.length!==1)throw new ReceiptLayoutError('column-header-ambiguous')
   const headerNear = second.length && second[0].y - table.row[0].y <= Math.max(...table.row.map(w=>w.height)) * 4
   const quantities = headerNear ? spans(second, ['כמות','Quantity']) : [], prices = headerNear ? spans(second, ['מיחידה','מחיריחידה','Unitprice']) : []
@@ -36,8 +37,10 @@ export function parseVisionReceipt(raw: unknown) {
   if (!(center(amount) < center(name) && center(name) < center(code))) throw new ReceiptLayoutError('column-order-unsupported')
   const numericColumns = quantity && price && center(price) < center(quantity)
   const bodyStart = table.i + (numericHeader ? 2 : 1)
+  if(numericHeader)trace?.(second,'header')
   const summary = grouped.map((row, i) => ({ row, i, total: spans(row, ['סכוםכוללמעמ','לתשלום','Totalpayable']), tax: spans(row,['סכוםלפנימעמ','מעמ','VAT']) })).filter(r => r.i >= bodyStart && (r.total.length || r.tax.length))
   const footer = summary[0]?.i ?? grouped.length, body = grouped.slice(bodyStart, footer)
+  for(const entry of summary)trace?.(entry.row,'summary')
   if (!body.length || body.length > 200) throw new ReceiptLayoutError(body.length ? 'item-count-limit' : 'item-anchor-missing')
   const amountRight = (center(amount) + center(name)) / 2, nameRight = (center(name) + center(code)) / 2
   const numberMiddle = numericColumns ? (center(price!) + center(quantity!)) / 2 : null
@@ -52,19 +55,20 @@ export function parseVisionReceipt(raw: unknown) {
   }
   const starts=body.flatMap((row,i)=>isStart(row)?[i]:[])
   if (!starts.length) throw new ReceiptLayoutError('item-anchor-missing')
-  if (starts[0] !== 0) throw new ReceiptLayoutError('item-row-unassigned')
+  if (starts[0] !== 0) {trace?.(body[0],'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned')}
   for (let item = 0; item < starts.length; item++) {
     const top = body[starts[item]], following=body.slice(starts[item]+1,starts[item+1]??body.length)
+    trace?.(top,'item')
     const nameRows=[top.filter(w=>within(w,amountRight,nameRight))]
     const numericRows: OcrWord[][]=[]
     for(const row of following){
       const near=row[0].y-top[0].y <= Math.max(...top.map(w=>w.height))*8
       const description=row.every(w=>within(w,amountRight,nameRight)) && row.some(w=>/[A-Za-z\u0590-\u05ff]/.test(w.text)) && !row.every(w=>numericFragment(w.text))
-      if(description && near)nameRows.push(row)
+      if(description && near){nameRows.push(row);trace?.(row,'continuation')}
       // Retain malformed numeric observations verbatim; a short quantity beside
       // a damaged price is not a product-code anchor or a new item.
-      else if(row.every(w=>numericFragment(w.text)) && row.every(w=>w.x>=amountRight)){if(near)numericRows.push(row)}
-      else throw new ReceiptLayoutError('item-row-unassigned')
+      else if(row.every(w=>numericFragment(w.text)) && row.every(w=>w.x>=amountRight)){if(near){numericRows.push(row);trace?.(row,'numeric-details')}}
+      else {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned')}
     }
     const names=nameRows.map(row=>label(row)), itemName=names.every(v=>v!==null)?names.join(' '):null
     const amounts = top.filter(w => within(w, 0, amountRight))

@@ -3,6 +3,8 @@ import { ReceiptLayoutError } from './layout-reason'
 
 export interface OcrWord { text: string; x: number; y: number; width: number; height: number }
 export interface OcrDocument { version: 1; width: number; height: number; words: OcrWord[] }
+export type RowKind = 'header' | 'item' | 'continuation' | 'numeric-details' | 'summary' | 'unassigned'
+export type RowTrace = (row: OcrWord[], kind: RowKind, rejected?: boolean) => void
 const fields = ['name', 'quantity', 'unit', 'unitPrice', 'discount', 'lineAmount'] as const
 type Column = typeof fields[number]
 const columns: Record<string, Column> = Object.assign(Object.create(null), { Item: 'name', פריט: 'name', Qty: 'quantity', כמות: 'quantity', Unit: 'unit', יחידה: 'unit', Price: 'unitPrice', מחיר: 'unitPrice', Discount: 'discount', הנחה: 'discount', Amount: 'lineAmount', סכום: 'lineAmount' })
@@ -71,7 +73,7 @@ export function unique(values: (string | null)[]): ReceiptObservation {
 }
 // Explicit labelled headers and one aligned item table only. No fixed receipt
 // regions, expected-answer lookup, totals repair, ID/barcode inference or FX.
-export function parseOcrReceipt(raw: unknown): { observations: ReceiptObservations; diagnostics: { layout: 'labelled-table'; rows: number; unresolved: number } } {
+export function parseOcrReceipt(raw: unknown, trace?: RowTrace): { observations: ReceiptObservations; diagnostics: { layout: 'labelled-table'; rows: number; unresolved: number } } {
   if (!validateOcrDocument(raw)) throw new Error('ocr-invalid')
   const grouped = rows(raw.words, .65)
   const candidates = grouped.map((r, i) => ({ i, r, known: r.filter(w => columns[w.text]) })).filter(r => ['name', 'lineAmount'].every(k => r.known.some(w => columns[w.text] === k)) && r.known.some(w=>['quantity','unit','unitPrice'].includes(columns[w.text])))
@@ -79,6 +81,7 @@ export function parseOcrReceipt(raw: unknown): { observations: ReceiptObservatio
   // Unknown printed header cells remain geometric boundaries, never guessed
   // field names. Their data cannot leak into a neighboring known field.
   const table = candidates[0], anchors = [...table.r].sort((a, b) => center(a) - center(b))
+  trace?.(table.r,'header')
   if (new Set(table.known.map(w => columns[w.text])).size !== table.known.length) throw new ReceiptLayoutError('column-header-ambiguous')
   const found: Partial<Record<keyof Omit<ReceiptObservations, 'lines'>, (string | null)[]>> = {}
   const headerRows = new Set<number>()
@@ -87,6 +90,7 @@ export function parseOcrReceipt(raw: unknown): { observations: ReceiptObservatio
     if (keyed.length !== 1 || keyed[0] !== row[0] && keyed[0] !== row.at(-1)) return
     const key = keyed[0], field = headers[key.text.replace(/:$/, '')], rest = row.filter(w => w !== key)
     headerRows.add(index)
+    trace?.(row,index>table.i?'summary':'header')
     const value = ['merchantName', 'address', 'currency'].includes(field) ? label(rest) : numeric(rest, field)
     ;(found[field] ??= []).push(value)
   })
@@ -108,15 +112,17 @@ export function parseOcrReceipt(raw: unknown): { observations: ReceiptObservatio
     const get = (key: Column) => conflicts.has(key) ? null : key === 'name' || key === 'unit' ? label(buckets[key] ?? []) : numeric(buckets[key] ?? [], key)
     const nameOnly = row.length === (buckets.name?.length ?? 0)
     if (nameOnly) {
-      if (!previous || !lines.length) throw new ReceiptLayoutError('item-anchor-missing')
-      if (row[0].y-previous[0].y>Math.max(...previous.map(w=>w.height))*4 || !row.some(w=>/[A-Za-z\u0590-\u05ff]/.test(w.text))) throw new ReceiptLayoutError('item-row-unassigned')
+      if (!previous || !lines.length) {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-anchor-missing')}
+      if (row[0].y-previous[0].y>Math.max(...previous.map(w=>w.height))*4 || !row.some(w=>/[A-Za-z\u0590-\u05ff]/.test(w.text))) {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned')}
       const extra=get('name'), last=lines.at(-1)!, value=typeof last.name==='string' && extra ? last.name+' '+extra : null
       last.name=value && value.length<=500?value:null
+      trace?.(row,'continuation')
     } else {
       // A row in an unknown column, or an unassigned numeric continuation,
       // cannot establish another item. Keep ambiguous association fail closed.
-      if (!buckets.name?.length || !(['quantity','unitPrice','lineAmount'] as const).some(key=>buckets[key]?.length)) throw new ReceiptLayoutError('item-row-unassigned')
+      if (!buckets.name?.length || !(['quantity','unitPrice','lineAmount'] as const).some(key=>buckets[key]?.length)) {trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned')}
       lines.push({ name: get('name'), quantity: get('quantity'), unit: get('unit'), unitPrice: get('unitPrice'), lineAmount: get('lineAmount'), ...(anchors.some(w => columns[w.text] === 'discount') ? { discount: get('discount') } : anchors.some(w=>!columns[w.text]) ? {discount:null} : {}) })
+      trace?.(row,'item')
     }
     previous=row
   }
