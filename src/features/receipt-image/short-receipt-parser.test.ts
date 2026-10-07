@@ -4,7 +4,7 @@ import {fictionalShortOcr} from './vision-fixtures'
 import {fictionalOcr} from './ocr-fixtures'
 import {receiptToReviewDraft,prepareReceiptReview} from '../capture/receipt-review-adapter'
 import {fixtureSpendscapeRepository} from '../../data/spendscape-repository'
-import {layoutReason} from './layout-reason'
+import {layoutReason,layoutRowRejection} from './layout-reason'
 import {safeAttemptEvent} from './vision-attempt'
 import {vi,afterEach,beforeEach} from 'vitest'
 beforeEach(()=>vi.stubGlobal('fetch',()=>{throw new Error('OFFLINE_NETWORK_GUARD')}))
@@ -235,3 +235,66 @@ describe('bounded leading amount ownership',()=>{
 
 it('does not drop a competing item amount when leading fragments are damaged',()=>{const d=fictionalShortOcr();d.words.push({text:'7.',x:60,y:240,width:16,height:20},{text:'5O',x:145,y:240,width:16,height:20});expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toEqual({candidates:['7.','5O','7.50']})})
 it('accepts the two-height limit and rejects a larger gap without total matching',()=>{const d=fictionalShortOcr();const a=d.words.find(w=>w.y===260&&w.x===60)!;a.y=240;a.text='9.25';for(const w of d.words)if(w.y===260||w.y===288)w.y+=20;expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('9.25');for(const w of d.words)if(w.y===280||w.y===308)w.y+=1;expect(()=>parseVisionReceipt(d)).toThrow('layout-unsupported')})
+
+describe('typography-aware leading ownership',()=>{
+  function unequal(gap=10,variation=false){
+    const d=fictionalShortOcr(),a=d.words.find(w=>w.y===260&&w.x===60)!
+    a.y=240;a.height=10
+    for(const w of d.words)if(w.y===260){w.y=250+gap;w.height=30}
+    // Three anchor words retain one grouped row; the leftmost word no longer
+    // determines proximity. The median edges stay at 260/290 for gap=10.
+    if(variation){d.words.find(w=>w.x===500&&w.height===30)!.y-=2;d.words.find(w=>w.x===850&&w.height===30)!.y+=2}
+    return d
+  }
+  function signature(d:ReturnType<typeof unequal>){
+    let error:unknown;try{parseVisionReceipt(d)}catch(e){error=e}
+    expect(layoutReason(error)).toBe('item-row-unassigned')
+    return layoutRowRejection(error)!
+  }
+  it.each([false,true])('accepts unequal glyph heights with modest baseline variation=%s',variation=>{
+    const d=unequal(10,variation),before=structuredClone(d)
+    expect(parseVisionReceipt(d).observations.lines[0]).toEqual({name:'מוצר בדוי',quantity:'3',unit:null,unitPrice:'2.50',lineAmount:'7.50'})
+    expect(d).toEqual(before)
+  })
+  it.each([.5,1,2,3])('is invariant under uniform scale %s for both boundary outcomes',scale=>{
+    const transform=(d:ReturnType<typeof unequal>)=>({...d,width:d.width*scale,height:d.height*scale,words:d.words.map(w=>({...w,x:w.x*scale,y:w.y*scale,width:w.width*scale,height:w.height*scale}))})
+    expect(parseVisionReceipt(transform(unequal(10,true))).observations).toEqual(parseVisionReceipt(unequal(10,true)).observations)
+    expect(signature(transform(unequal(10.125,true)))).toEqual(signature(unequal(10.125,true)))
+  })
+  it('rejects just outside the observed gap bound with exactly the actual failed predicate',()=>{
+    const s=signature(unequal(10.125,true));expect(s.path).toBe('short-leading')
+    expect(Object.entries(s.checks).filter(([,value])=>!value).map(([key])=>key)).toEqual(['near-baseline'])
+  })
+  it('does not let one tall word inflate the representative row window',()=>{
+    const d=unequal(12);const code=d.words.find(w=>w.x===850&&w.height===30)!;code.y-=6;code.height+=12
+    expect(signature(d).checks['near-baseline']).toBe(false)
+  })
+  it('handles a taller prefix and smaller anchored text using the same edge rule',()=>{
+    const d=unequal();d.words.find(w=>w.y===240)!.height=30
+    for(const w of d.words)if(w.height===30&&w.y===260){w.y=280;w.height=10}
+    expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('7.50')
+    for(const w of d.words)if(w.y===280)w.y+=.125
+    expect(signature(d).checks['near-baseline']).toBe(false)
+  })
+  it('uses median edges when the leftmost anchor word varies within its grouped row',()=>{
+    const d=fictionalShortOcr(),a=d.words.find(w=>w.y===260&&w.x===60)!;a.y=240
+    for(const w of d.words)if(w.y===260)w.y=w.x===500?282:w.x===850?278:280
+    for(const w of d.words)if(w.y===288)w.y=308
+    expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('7.50')
+  })
+  it('checks a taller competing anchored item against the same shared window',()=>{
+    const d=unequal();d.words=d.words.filter(w=>w.y!==288);d.words.push({text:'Other',x:500,y:260,width:50,height:70},{text:'999999',x:850,y:260,width:60,height:70})
+    expect(signature(d).checks['unique-item']).toBe(false)
+  })
+  it('keeps a small competing anchor inside the shared window ambiguous',()=>{
+    const d=fictionalShortOcr();d.words.find(w=>w.y===260&&w.x===60)!.y=240
+    d.words.push({text:'Other',x:500,y:278,width:50,height:5},{text:'999999',x:850,y:278,width:60,height:5})
+    expect(signature(d).checks['unique-item']).toBe(false)
+  })
+  it('preserves damaged and competing observations rather than selecting a convenient amount',()=>{
+    const damaged=unequal();damaged.words.find(w=>w.y===240)!.text='I.50'
+    expect(parseVisionReceipt(damaged).observations.lines[0].lineAmount).toBe('I.50')
+    const competing=unequal();competing.words.push({text:'9.25',x:60,y:260,width:40,height:30})
+    expect(parseVisionReceipt(competing).observations.lines[0].lineAmount).toEqual({candidates:['7.50','9.25']})
+  })
+})

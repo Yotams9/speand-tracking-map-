@@ -59,22 +59,37 @@ export function parseVisionReceipt(raw: unknown, trace?: RowTrace) {
   let leading: OcrWord[] | null = null
   if (starts[0] !== 0) {
     const row=body[0], next=body[starts[0]]
-    const height=(r:OcrWord[])=>Math.max(...r.map(w=>w.height))
-    const baseline=(r:OcrWord[])=>r[0].y+r[0].height/2
-    const bound=2*Math.min(height(row),height(next))
+    const median=(values:number[])=>{
+      const sorted=[...values].sort((a,b)=>a-b),middle=Math.floor(sorted.length/2)
+      return sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2
+    }
+    const extent=(r:OcrWord[])=>{
+      const top=median(r.map(w=>w.y)),bottom=median(r.map(w=>w.y+w.height))
+      return {top,bottom,height:bottom-top,baseline:(top+bottom)/2}
+    }
+    const prefix=extent(row), anchor=extent(next)
+    // Representative glyph edges, not the first word's centre or tallest
+    // word, bound the blank inter-row gap to one smaller row height. Equal,
+    // aligned heights retain the former two-height centre-distance bound.
+    // Medians tolerate modest within-row variation without one tall outlier
+    // expanding ownership. Competing anchors are checked against this same
+    // shared upper edge, never a narrower window based on their own height.
+    // Geometry never selects among competing amounts.
+    const windowEnd=prefix.bottom+Math.min(prefix.height,anchor.height)
+    const nearby=(candidate:OcrWord[])=>{const e=extent(candidate);return e.baseline>prefix.baseline && e.top<=windowEnd}
     // Exactly one adjacent prefix row, entirely originating in the amount
     // column, and a following description anchor. No intervening rows, chained
     // association, value matching or arithmetic. Another item in the same
-    // two-height window makes ownership ambiguous.
+    // typography-aware window makes ownership ambiguous.
     const checks={
       'single-prefix':starts[0]===1,
       'word-limit':row.length<=7,
       'numeric-structure':row.every(w=>numericFragment(w.text) && !w.text.includes('%')) && row.some(w=>/[0-9]/.test(w.text)),
       'amount-column':row.every(w=>w.x<amountRight && w.x+w.width<=nameRight),
       'description-anchor':next.some(w=>within(w,amountRight,nameRight) && /[A-Za-z\u0590-\u05ff]/.test(w.text) && !numericFragment(w.text)),
-      'forward-baseline':baseline(next)>baseline(row),
-      'near-baseline':baseline(next)-baseline(row)<=bound,
-      'unique-item':!starts.slice(1).some(i=>baseline(body[i])-baseline(row)<=bound),
+      'forward-baseline':anchor.baseline>prefix.baseline,
+      'near-baseline':anchor.top<=windowEnd,
+      'unique-item':!starts.slice(1).some(i=>nearby(body[i])),
     }
     if(!Object.values(checks).every(Boolean)){trace?.(row,'unassigned',true);throw new ReceiptLayoutError('item-row-unassigned',rowRejection('short-leading',grouped.indexOf(row)+1,grouped.length,row.length,checks))}
     leading=row
