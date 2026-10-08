@@ -18,6 +18,12 @@ export interface PurchaseReviewInput {
 }
 export type ReviewErrors = Record<string, string>
 export type ReviewContext = { merchants: readonly Merchant[]; places: readonly Place[] }
+// A reviewed receipt's payable amount is a distinct fact from its product sum.
+// Existing source/provenance fields carry this meaning through the v3 store;
+// synthetic demos and non-receipt paths retain their reconciliation rule.
+export function usesFinalPayableTotal(input: Pick<PurchaseReviewInput, 'source' | 'provenance'>): boolean {
+  return input.source === 'receipt' && input.provenance === 'user-reviewed'
+}
 // IDs are local idempotency keys, not credentials. A module-lifetime sequence
 // survives Capture unmount/reset and needs no secure-context-only browser API.
 let operationSequence = 0
@@ -98,7 +104,12 @@ export function validateReview(input: PurchaseReviewInput, context: ReviewContex
       const discount = lineDiscountMinor(line, input.currency), gross = lineGrossMinor(line, input.currency)
       if (discount === null || (gross !== null && discount > gross)) errors[`discount-${index}`] = 'discount'
     })
-    if (input.lines.length && (input.lines.some(line => lineMinorTotal(line, input.currency) === null) || input.lines.reduce((sum, line) => sum + (lineMinorTotal(line, input.currency) ?? 0), 0) !== amount)) errors.amount = 'arithmetic'
+    if (input.lines.length) {
+      const invalidLine = input.lines.some(line => lineMinorTotal(line, input.currency) === null)
+      if (usesFinalPayableTotal(input)) {
+        if (invalidLine) errors.lines = 'items'
+      } else if (invalidLine || input.lines.reduce((sum, line) => sum + (lineMinorTotal(line, input.currency) ?? 0), 0) !== amount) errors.amount = 'arithmetic'
+    }
   }
   if (input.identification) {
     if (input.provenance !== 'user-reviewed') errors.provenance = 'required'

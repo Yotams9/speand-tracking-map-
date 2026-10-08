@@ -32,6 +32,7 @@ import {
   merchantForId,
   placeForId,
   purchasesForPlace,
+  purchaseItemTotalMinor,
   synchronizeSelection,
   type CategoryFilter,
   type CanonicalSearchResult,
@@ -49,6 +50,7 @@ import {
   combineSessionPurchases,
   type CaptureStep,
 } from '@/features/capture/capture-domain'
+import { ReceiptPayableSummary } from '@/features/capture/ReceiptPayableSummary'
 import { NearbyDemoCard } from '@/features/nearby-demo/NearbyDemoCard'
 import { demoComparison } from '@/features/nearby-demo/comparison'
 import { useLocalPurchases } from '@/features/local-purchases/useLocalPurchases'
@@ -3708,6 +3710,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
               </ul>
             )}
           </section>
+
+          {selectedPurchase.provenance === 'user-reviewed-session' && selectedPurchase.items.length > 0 && <ReceiptPayableSummary itemMinor={purchaseItemTotalMinor(selectedPurchase)} payableMinor={Math.round(selectedPurchase.originalAmount * (selectedPurchase.originalCurrency === 'JPY' ? 1 : 100))} currency={selectedPurchase.originalCurrency} locale={locale} />}
 
           <div className={styles.provenanceBlock}>
             <span><small>{t.fxProvenance}</small><strong>{localized(selectedPurchase.fx.label, locale)} · {selectedPurchase.fx.source === 'user-reported-conversion' ? selectedPurchase.fx.reportedBaseAmountIls : selectedPurchase.fx.rateToBase} {selectedPurchase.fx.baseCurrency}</strong></span>

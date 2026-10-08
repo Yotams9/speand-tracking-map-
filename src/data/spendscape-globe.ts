@@ -137,8 +137,13 @@ export function syntheticFx(
 }
 
 
+export function purchaseItemTotalMinor(purchase: Pick<GlobePurchase, 'items' | 'originalCurrency'>): number {
+  const factor = purchase.originalCurrency === 'JPY' ? 1 : 100
+  return purchase.items.reduce((sum, item) => sum + Math.round(item.lineTotal * factor), 0)
+}
+
 export function nestedItemTotal(purchase: GlobePurchase): number {
-  return Math.round(purchase.items.reduce((sum, item) => sum + item.lineTotal, 0) * 100) / 100
+  return purchaseItemTotalMinor(purchase) / (purchase.originalCurrency === 'JPY' ? 1 : 100)
 }
 
 export function baseAmountIlsForPurchase(purchase: GlobePurchase): number {

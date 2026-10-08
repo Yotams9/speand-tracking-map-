@@ -1355,3 +1355,36 @@ above plus the three pre-existing src/server/vision-local{,-run,-run.test} files
 Consumed reservations, diagnostics and historical benchmark evidence preserved.
 No stage, commit, push or deployment. Next gate: separate leading-amount
 checkpoint review; no new live request.
+
+## 2026-10-08 — Final payable review/save, offline checkpoint
+
+User-approved policy supersedes the receipt-level-discount blocker above:
+user-reviewed receipts store explicitly confirmed payable independently of
+valid product sum. EN/HE review and saved details show both totals and a
+nonblocking difference; no allocation, inferred discount or printed-line rewrite.
+Synthetic demos/non-receipts remain reconciled. Per-line/invalid-value/context/
+timezone gates remain strict; v3 shape unchanged, no migration or hydration write.
+Spending uses payable; item sum uses minor units. Foreign amounts still need
+explicit reported ILS. Original observations remain transient.
+
+Fictional5-row/7-unit control: product60.55/payable60.50/date2013-09-30; unknown
+GTINs. Real candidate extraction and real save/reload remain unverified. No
+provider/request/schema change or live allowance; historical locks preserved,
+stopped slot remains stopped. Old launcher must not be reused.
+
+QA: final guarded10-file195/195; app/focused strict typechecks and production
+build passed; final combined production-browser23/23 (47.7s), including17
+receipt integration regressions. Ten final EN/HE synthetic screenshots inspected
+(360/390/430/1280 widths); duplicates/Undo/save/reload/both totals/12pins/one map
+verified. Sandbox Chrome-launch23 failures occurred before assertions; unchanged
+rerun passed with local browser permissions. Earlier test-only corrections and
+reports retained. Historical30ms direct-image timing variability and full strict
+QA typecheck limitation not claimed resolved.
+
+Exact13-file task manifest, commands, limits and Git state:
+docs/spendscape/COLLEGE_FINAL_PAYABLE_TOTAL.md. Fresh ignored evidence:
+artifacts/final-payable-4436jwo9. HEAD25e6920, feature/spendscape-rebuild, empty
+index; cumulative tree remains dirty with prior work. Main refs/entry next-env/
+15,657-file entry snapshot preserved outside manifest; owned3130server stopped.
+No credentials, provider calls, billing/Vercel action, commit/push/deployment.
+Next gate: separate final-payable checkpoint review; any inference remains gated.

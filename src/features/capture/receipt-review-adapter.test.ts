@@ -149,10 +149,10 @@ describe('offline receipt-to-review adapter', () => {
     expect(input(draft).amount).toBe('12.50')
     expect(draft.observations.lines[0].lineAmount).toBe('12.49')
   })
-  it('rejects inconsistent totals without inferring fees, discounts or a replacement total', () => {
+  it('preserves a different reviewed payable total without inferring fees, discounts or a replacement total', () => {
     const raw = fifteen(); raw.finalAmount = '40.99'
     const draft = completed(receiptToReviewDraft(raw))
-    expect(errors(draft)).toHaveProperty('amount', 'arithmetic')
+    expect(input(draft).amount).toBe('40.99')
     expect(draft.review.amount).toBe('40.99')
     expect(draft.review.lines[1]).not.toHaveProperty('discount')
   })

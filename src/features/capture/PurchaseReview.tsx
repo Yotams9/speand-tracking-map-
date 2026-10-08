@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { localized, type LocaleCode } from '@/data/spendscape-globe'
-import { lineMinorTotal, reviewCategories, reviewCurrencies, validateReview, type PurchaseReviewInput, type ReviewContext, type ReviewErrors, type SaveReviewResult } from './session-purchase-domain'
+import { lineMinorTotal, minorAmount, usesFinalPayableTotal, reviewCategories, reviewCurrencies, validateReview, type PurchaseReviewInput, type ReviewContext, type ReviewErrors, type SaveReviewResult } from './session-purchase-domain'
 import { prepareReceiptReview, type ReceiptReviewDraft } from './receipt-review-adapter'
 import { ReceiptReviewDetails, receiptCopy } from './ReceiptReviewDetails'
 import { MerchantPlaceReview } from './MerchantPlaceReview'
+import { ReceiptPayableSummary } from './ReceiptPayableSummary'
 import styles from './CaptureExperience.module.css'
 
 type EditableReview = Omit<PurchaseReviewInput, 'lines'> & { lines: (PurchaseReviewInput['lines'][number] | ReceiptReviewDraft['review']['lines'][number])[] }
@@ -111,6 +112,12 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
   const factor = input.currency === 'JPY' ? 1 : 100
   const validLineTotals = input.lines.every(line => calculatedLine(line, input.currency) !== null)
   const lineTotal = input.lines.reduce((sum, line) => sum + (calculatedLine(line, input.currency) ?? 0), 0) / factor
+  const finalPayable = usesFinalPayableTotal(input)
+  const printedTotals = input.lines.map(line => receiptDraft
+    ? minorAmount('printedAmount' in line ? line.printedAmount : '', input.currency, true)
+    : calculatedLine(line, input.currency))
+  const itemMinor = printedTotals.length && printedTotals.every(value => value !== null)
+    ? printedTotals.reduce<number>((sum, value) => sum + value!, 0) : null
   const money = (amount: number) => input.currency ? new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-GB', { style: 'currency', currency: input.currency }).format(amount) : '—'
   const merchant = context.merchants.find(m => m.id === input.merchantId)
   const place = context.places.find(p => p.id === input.placeId)
@@ -127,7 +134,7 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
       <label>{t.currency}<select {...attrs('currency')} value={input.currency} onChange={e => patch({ currency: e.target.value as PurchaseReviewInput['currency'], baseAmount: '' })}><option value="">{t.required}</option>{reviewCurrencies.map(c => <option key={c}>{c}</option>)}</select>{error('currency')}</label>
       <label>{t.payment}<select {...attrs('payment')} value={input.payment} onChange={e => patch({ payment: e.target.value as PurchaseReviewInput['payment'] })}><option value="">{t.required}</option>{(['card', 'cash', 'manual'] as const).map(p => <option key={p} value={p}>{t[p]}</option>)}</select>{error('payment')}</label>
       <label>{t.category}<select {...attrs('category')} value={input.category} onChange={e => patch({ category: e.target.value as PurchaseReviewInput['category'] })}><option value="">{t.required}</option>{reviewCategories.map(c => <option key={c} value={c}>{t[c]}</option>)}</select>{error('category')}</label>
-      <label>{t.amount}<input {...attrs('amount')} dir="ltr" inputMode="decimal" value={input.amount} onChange={e => patch({ amount: e.target.value })} />{error('amount')}</label>
+      <label>{finalPayable ? (locale === 'he' ? 'סכום סופי לתשלום' : 'Final payable total') : t.amount}<input {...attrs('amount')} dir="ltr" inputMode="decimal" value={input.amount} onChange={e => patch({ amount: e.target.value })} />{error('amount')}</label>
       {input.provenance === 'user-reviewed' && input.currency && input.currency !== 'ILS' && <label>{t.baseAmount}<input {...attrs('baseAmount')} dir="ltr" inputMode="decimal" value={input.baseAmount} onChange={e => patch({ baseAmount: e.target.value })} />{error('baseAmount')}<small>{t.conversion}</small></label>}
       <div className={styles.fullField}><p>{input.lines.length ? t.total : t.noItems}</p>{input.lines.map((line, i) => <fieldset key={i} className={styles.reviewLine}><legend>{i + 1}. {line.name || t.name}</legend>
         <label>{t.name}<input {...attrs(`name-${i}`)} dir="auto" maxLength={100} value={line.name} onChange={e => patch({ lines: input.lines.map((l, j) => j === i ? { ...l, name: e.target.value } : l) })} />{error(`name-${i}`)}</label>
@@ -138,7 +145,7 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
         <label className={styles.lineDiscount}>{t.discount}<input {...attrs(`discount-${i}`)} aria-required={false} aria-describedby={errors[`discount-${i}`] ? `review-error-discount-${i}` : `review-discount-hint-${i}`} dir="ltr" inputMode="decimal" value={line.discount ?? '0'} onChange={e => patch({ lines: input.lines.map((l, j) => j === i ? { ...l, discount: e.target.value } : l) })} /><small id={`review-discount-hint-${i}`}>{t.discountHint}</small>{error(`discount-${i}`)}</label>
         <output className={styles.lineNet} data-testid={`review-net-${i}`}>{t.net}: <bdi>{calculatedLine(line, input.currency) === null ? '—' : money(calculatedLine(line, input.currency)! / factor)}</bdi></output><button type="button" className={styles.secondary} onClick={() => patch({ lines: input.lines.filter((_, j) => j !== i) })}>{t.remove} {i + 1}</button>
       </fieldset>)}{error('lines')}<button type="button" className={styles.secondary} disabled={input.lines.length >= 50} onClick={() => patch({ lines: [...input.lines, receiptDraft ? { name: '', quantity: '', price: '', unit: '', printedAmount: '' } : { name: '', quantity: '', price: '', unit: 'item' }] })}>{t.addLine}</button></div>
-    </div><aside className={styles.reviewSummary} aria-label={t.summary}><strong>{t.summary}</strong><p>{input.directoryIntent ? [input.directoryIntent.merchant?.name ?? (merchant ? localized(merchant.name, locale) : t.required), input.directoryIntent.place?.branch].filter(Boolean).join(' · ') : place ? `${localized(place.name, locale)} · ${localized(place.branch, locale)} · ${localized(place.city, locale)}` : merchant ? localized(merchant.name, locale) : t.required}</p><p>{input.channel ? t[input.channel] : t.required}</p><p><bdi>{input.date.replace('T', ' ')} {input.date && 'UTC'}</bdi></p><p>{input.payment ? t[input.payment] : t.required}</p>{input.lines.length > 0 && <p>{t.total}: <bdi>{validLineTotals ? money(lineTotal) : '—'}</bdi></p>}<p>{t.amount}: <bdi>{money(Number(input.amount) || 0)}</bdi></p>{input.baseAmount && <p>{t.baseAmount}: <bdi>{input.baseAmount} ILS</bdi></p>}</aside></div>
+    </div><aside className={styles.reviewSummary} aria-label={t.summary}><strong>{t.summary}</strong><p>{input.directoryIntent ? [input.directoryIntent.merchant?.name ?? (merchant ? localized(merchant.name, locale) : t.required), input.directoryIntent.place?.branch].filter(Boolean).join(' · ') : place ? `${localized(place.name, locale)} · ${localized(place.branch, locale)} · ${localized(place.city, locale)}` : merchant ? localized(merchant.name, locale) : t.required}</p><p>{input.channel ? t[input.channel] : t.required}</p><p><bdi>{input.date.replace('T', ' ')} {input.date && 'UTC'}</bdi></p><p>{input.payment ? t[input.payment] : t.required}</p>{finalPayable ? <ReceiptPayableSummary review itemMinor={itemMinor} payableMinor={minorAmount(input.amount, input.currency)} currency={input.currency} locale={locale} /> : <>{input.lines.length > 0 && <p>{t.total}: <bdi>{validLineTotals ? money(lineTotal) : '—'}</bdi></p>}<p>{t.amount}: <bdi>{money(Number(input.amount) || 0)}</bdi></p></>}{input.baseAmount && <p>{t.baseAmount}: <bdi>{input.baseAmount} ILS</bdi></p>}</aside></div>
     <p ref={status} role="status" aria-live="polite">{Object.keys(errors).length ? t.errors : message ? t[message] : ''}</p>
     </div>
     <div className={`${styles.actions} ${styles.stickyActions}`}><button type="submit" className={styles.primary} data-identification-method={input.identification?.method} data-testid={manualStep ? 'manual-review' : 'capture-confirm'}>{manualStep ? t.review : t.save}</button>{message === 'duplicate' && <button type="button" className={styles.secondary} data-testid="review-save-separate" onClick={() => submit(true)}>{t.again}</button>}<button type="button" className={styles.secondary} onClick={onOther}>{t.other}</button></div>
