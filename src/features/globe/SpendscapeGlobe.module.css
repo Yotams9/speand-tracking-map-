@@ -1786,3 +1786,69 @@
 .sessionUndo { position: absolute; z-index: 72; inset-inline-end: 20px; inset-block-end: 160px; padding: 12px 16px; min-block-size: 44px; border: 1px solid #6b8095; border-radius: 12px; color: #eaf5ff; background: #152131; font: inherit; cursor: pointer; box-shadow: 0 4px 20px #0008; }
 .sessionUndo:focus-visible { outline: 3px solid #9ee6ff; outline-offset: 3px; }
 @media (max-width: 760px) { .sessionUndo { inset-block-end: calc(208px + var(--safe-bottom)); inset-inline-end: 12px; font-size: .75rem; } }
+
+/* Demo data switch and first-run empty states */
+.demoToggle {
+  min-block-size: 42px;
+  padding-inline: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--cloud);
+  font-size: 0.72rem;
+  font-weight: 640;
+  cursor: pointer;
+}
+.demoToggle:hover { background: rgba(255, 255, 255, 0.13); }
+.demoToggle[aria-pressed='true'] { border-color: rgba(105, 223, 255, 0.28); color: #a6edff; }
+
+.homeEmpty {
+  position: absolute;
+  z-index: 12;
+  inset-inline-start: calc(34px + var(--safe-left));
+  inset-block-end: calc(40px + var(--safe-bottom));
+  inline-size: min(360px, calc(100vw - 32px));
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(12, 15, 22, 0.72);
+  backdrop-filter: blur(18px) saturate(130%);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+.homeEmpty h2 { margin: 0; font: 600 1.35rem/1.15 var(--display); }
+.homeEmpty p { margin: 0; color: #b4bac6; font-size: 0.86rem; line-height: 1.5; }
+.emptyPrimary {
+  min-block-size: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  background: var(--cloud);
+  color: #090a0d;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.emptyLink {
+  min-block-size: 44px;
+  border-radius: 12px;
+  background: transparent;
+  color: #c9d0dc;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.emptyHint { margin-block: 18px 6px; }
+
+@media (max-width: 760px) {
+  .homeEmpty {
+    inset-inline: 16px;
+    inline-size: auto;
+    inset-block-end: calc(214px + var(--safe-bottom));
+    padding: 16px;
+  }
+}

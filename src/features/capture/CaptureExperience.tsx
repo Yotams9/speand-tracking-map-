@@ -17,6 +17,8 @@ interface CaptureExperienceProps {
   locale: LocaleCode
   places: readonly Place[]
   merchants: readonly Merchant[]
+  /** Stores the purchase form offers; defaults to every known store. */
+  offered?: { merchants: readonly Merchant[]; places: readonly Place[] }
   step: CaptureStep
   reducedMotion: boolean
   sessionRecords: readonly SessionCaptureRecord[]
@@ -73,10 +75,10 @@ const copy = {
     unresolvedTruth: 'No confirmed place · no map pin will be created.',
     nested: 'Receipt items', total: 'Total', original: 'Original amount', date: 'Date', payment: 'Payment',
     add: 'Add purchase', cancel: 'Cancel', editContext: 'Purchase context required',
-    productTruth: 'A product or barcode identifies a candidate only. It is not proof of a purchase or merchant. Product photos are not retained.',
-    selectPlace: 'Confirm merchant and place', amount: 'Amount', confirmContext: 'Use this purchase context',
+    productTruth: 'A product or barcode identifies a candidate only. It is not proof of a purchase or store. Product photos are not retained.',
+    selectPlace: 'Confirm store and place', amount: 'Amount', confirmContext: 'Use this purchase context',
     manualTitle: 'Quick Add', manualBody: 'Cash and manual purchases stay first-class, with no invented location.',
-    merchant: 'Merchant', currency: 'Currency', category: 'Category', channel: 'Channel',
+    merchant: 'Store', currency: 'Currency', category: 'Category', channel: 'Channel',
     physical: 'Physical place', online: 'Online', unknown: 'Unresolved place',
     card: 'Card', cash: 'Cash', manual: 'Manual', saveReview: 'Review purchase',
     gmailTitle: 'Automatic email receipts are planned',
@@ -103,10 +105,10 @@ const copy = {
     unresolvedTruth: 'אין מקום מאומת · לא תיווצר סיכה במפה.',
     nested: 'פריטי קבלה', total: 'סך הכול', original: 'סכום מקורי', date: 'תאריך', payment: 'תשלום',
     add: 'הוספת רכישה', cancel: 'ביטול', editContext: 'נדרש הקשר רכישה',
-    productTruth: 'מוצר או ברקוד מזהים רק מועמד. הם אינם הוכחה לרכישה או לבית עסק. תמונות מוצר אינן נשמרות.',
-    selectPlace: 'אישור בית עסק ומקום', amount: 'סכום', confirmContext: 'שימוש בהקשר הרכישה הזה',
+    productTruth: 'מוצר או ברקוד מזהים רק מועמד. הם אינם הוכחה לרכישה או לחנות. תמונות מוצר אינן נשמרות.',
+    selectPlace: 'אישור חנות ומקום', amount: 'סכום', confirmContext: 'שימוש בהקשר הרכישה הזה',
     manualTitle: 'הוספה מהירה', manualBody: 'רכישות במזומן וידניות נשארות מלאות, בלי להמציא מיקום.',
-    merchant: 'בית עסק', currency: 'מטבע', category: 'קטגוריה', channel: 'ערוץ',
+    merchant: 'חנות', currency: 'מטבע', category: 'קטגוריה', channel: 'ערוץ',
     physical: 'מקום פיזי', online: 'אונליין', unknown: 'מקום לא פתור',
     card: 'כרטיס', cash: 'מזומן', manual: 'ידני', saveReview: 'בדיקת הרכישה',
     gmailTitle: 'ייבוא אוטומטי של קבלות מהדוא״ל מתוכנן',
@@ -134,6 +136,7 @@ export function CaptureExperience({
   locale,
   places,
   merchants,
+  offered,
   step,
   reducedMotion,
   sessionRecords,
@@ -329,7 +332,7 @@ export function CaptureExperience({
         )}
 
         {(step === 'review' || step === 'manual') && reviewInput && (
-          <PurchaseReview key={operationId} initial={reviewInput} locale={locale} context={{ places, merchants }}
+          <PurchaseReview key={operationId} initial={reviewInput} locale={locale} context={{ places, merchants }} offered={offered}
             manualStep={step === 'manual'} onReviewed={() => onNavigate('review', 'push')}
             onSave={saveReview} onOther={() => { setReviewInput(null); onNavigate('sources', 'push') }} />
         )}

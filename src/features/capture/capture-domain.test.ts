@@ -51,7 +51,7 @@ describe('Slice 1D.3 deterministic Capture domain', () => {
       category: 'groceries', paymentMode: 'cash', channel: 'physical',
     }
     expect(validateManualCapture(invalid, 'en')).toEqual({
-      merchantId: 'Choose a merchant.',
+      merchantId: 'Choose a store.',
       amount: 'Enter a positive amount.',
       timestamp: 'Choose a date and time.',
       placeId: 'Choose a physical place or mark it unresolved.',

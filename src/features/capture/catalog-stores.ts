@@ -54,3 +54,28 @@ export function withPublishedPrice(input: PurchaseReviewInput, storeId: string |
   const quantity = line.quantity || '1'
   return { ...input, currency: 'ILS', lines: [{ ...line, price: price.toFixed(2), quantity }], amount: input.amount || (Math.round(price * 100 * Number(quantity)) / 100).toFixed(2) }
 }
+
+// The form keeps dates as UTC minutes ('YYYY-MM-DDTHH:mm'); people read and type
+// them in their own local time. Unparseable text passes through for validation.
+export function nowUtcMinutes(now = new Date()): string {
+  return now.toISOString().slice(0, 16)
+}
+
+export function utcToLocalInput(value: string): string {
+  const date = new Date(`${value}:00Z`)
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value) || !Number.isFinite(date.getTime())) return value
+  const pad = (part: number) => String(part).padStart(2, '0')
+  return `${String(date.getFullYear()).padStart(4, '0')}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+export function localInputToUtc(value: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value
+  const date = new Date(value)
+  return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 16) : value
+}
+
+// Choosing a chain store means "I'm shopping there": an empty date becomes now.
+// A date the user already typed is never replaced, and "now" stays editable.
+export function withNowIfEmpty(input: PurchaseReviewInput, now = new Date()): PurchaseReviewInput {
+  return input.date ? input : { ...input, date: nowUtcMinutes(now) }
+}

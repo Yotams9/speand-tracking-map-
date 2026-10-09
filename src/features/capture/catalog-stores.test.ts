@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { canonicalSpendscapeData } from '../../data/spendscape-fixtures'
 import { buildPlaceFeatureCollection } from '../../data/spendscape-globe'
 import type { CatalogStoreSummary } from '../../data/price-catalog'
-import { catalogChoice, catalogIdForPlace, distanceMeters, isLocated, nearestCatalogStore, withPublishedPrice } from './catalog-stores'
+import { catalogChoice, catalogIdForPlace, distanceMeters, isLocated, localInputToUtc, nearestCatalogStore, utcToLocalInput, withNowIfEmpty, withPublishedPrice } from './catalog-stores'
 import { blankReview, catalogPlaceId, emptySessionLedger, removeSessionPurchase, saveReviewedPurchase, validateReview, type PurchaseReviewInput, type ReviewContext, type SessionPurchaseLedger } from './session-purchase-domain'
 import { restoreSessionLedger, serializeSessionLedger } from './session-purchase-storage'
 
@@ -75,5 +75,27 @@ describe('chain store purchases', () => {
     expect(restored).toMatchObject({ merchants: second.ledger.merchants, places: second.ledger.places, records: second.ledger.records })
     const emptied = removeSessionPurchase(removeSessionPurchase(restored, 'session_purchase_barcode_01'), 'session_purchase_barcode_02')
     expect(emptied).toMatchObject({ records: [], merchants: [], places: [] })
+  })
+})
+
+describe('date defaults for a chosen chain store', () => {
+  const now = new Date('2026-10-09T20:41:37.000Z')
+  it('fills an empty date with the current minute', () => {
+    expect(withNowIfEmpty({ ...base(), date: '' }, now).date).toBe('2026-10-09T20:41')
+  })
+  it('never replaces a date the user typed', () => {
+    expect(withNowIfEmpty(base(), now).date).toBe('2026-10-04T09:15')
+  })
+  it('shows stored UTC minutes in local time and stores local input as UTC', () => {
+    const local = utcToLocalInput('2026-10-09T20:41')
+    const expected = new Date('2026-10-09T20:41:00Z')
+    expect(new Date(local).getTime()).toBe(expected.getTime())
+    expect(localInputToUtc(local)).toBe('2026-10-09T20:41')
+    expect(localInputToUtc(utcToLocalInput('2026-03-27T00:30'))).toBe('2026-03-27T00:30')
+  })
+  it('passes empty and partial text through unchanged', () => {
+    expect(utcToLocalInput('')).toBe('')
+    expect(localInputToUtc('')).toBe('')
+    expect(localInputToUtc('2026-10-0')).toBe('2026-10-0')
   })
 })

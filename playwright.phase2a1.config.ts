@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test'
+import { demoEnglishStorage } from './qa/demo-storage'
 
 // Requires the explicitly started production server; never falls back to next dev.
 export default defineConfig({
@@ -10,7 +11,7 @@ export default defineConfig({
   outputDir: 'artifacts/spendscape-phase-2a1/playwright-results',
   reporter: [['line'], ['json', { outputFile: 'artifacts/spendscape-phase-2a1/qa-report.json' }]],
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL: 'http://127.0.0.1:3000', storageState: demoEnglishStorage,
     browserName: 'chromium',
     channel: 'chrome',
     headless: true,

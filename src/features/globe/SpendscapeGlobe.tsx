@@ -52,6 +52,7 @@ import {
 import { emptySessionLedger, expireSessionPurchaseUndo, removeSessionPurchase, saveReviewedPurchase, undoSessionPurchase, resetSessionPurchases } from '@/features/capture/session-purchase-domain'
 import { DEVICE_LEDGER_KEY, restoreSessionLedger, serializeSessionLedger } from '@/features/capture/session-purchase-storage'
 import { isLocated, loadCatalogStores } from '@/features/capture/catalog-stores'
+import { DEFAULT_LOCALE, demoStory, offeredDirectory, readDemoPreference, readLocalePreference, writeDemoPreference, writeLocalePreference } from '@/data/demo-visibility'
 import {
   applySmartInboxDecisions,
   caseForPurchase,
@@ -537,6 +538,11 @@ const copy = {
     noPurchases: 'No purchases match this view', noPurchasesBody: 'Adjust the shared search, filters, or timeline.',
     reloadNote: 'Shared view saved for this session', onlineNoPin: 'Online · no map pin',
     unresolvedNoPin: 'Unresolved · no map pin', manualEntry: 'Manual cash record',
+    demoLoad: 'Load demo data', demoHide: 'Hide demo data', demoOn: 'Demo data on',
+    demoLoadedStatus: 'Demo purchases loaded. They are fictional.', demoHiddenStatus: 'Demo purchases hidden',
+    emptyTitle: 'No purchases yet', emptyBody: 'Scan a barcode or type a purchase in. It stays on this device.',
+    emptyAdd: 'Add your first purchase', emptyDemoHint: 'Just looking around? Load fictional demo purchases.',
+    ownHistoryIntro: 'Everything you added, across every channel and currency. Saved on this device.',
   },
   he: {
     product: 'Spendscape', checkpoint: 'נקודת ביקורת גלובוס', navGlobe: 'גלובוס',
@@ -582,6 +588,11 @@ const copy = {
     noPurchases: 'אין רכישות התואמות לתצוגה', noPurchasesBody: 'אפשר לשנות חיפוש, מסננים או ציר זמן משותפים.',
     reloadNote: 'התצוגה המשותפת נשמרה להפעלה זו', onlineNoPin: 'אונליין · ללא סיכה',
     unresolvedNoPin: 'לא פתור · ללא סיכה', manualEntry: 'רשומת מזומן ידנית',
+    demoLoad: 'טען נתוני דמו', demoHide: 'הסתר נתוני דמו', demoOn: 'נתוני דמו פעילים',
+    demoLoadedStatus: 'רכישות הדמו נטענו. הן בדיוניות.', demoHiddenStatus: 'רכישות הדמו הוסתרו',
+    emptyTitle: 'עוד אין רכישות', emptyBody: 'סרקו ברקוד או הקלידו רכישה. היא נשמרת במכשיר הזה.',
+    emptyAdd: 'הוספת רכישה ראשונה', emptyDemoHint: 'רק מסתכלים? טענו רכישות דמו בדיוניות.',
+    ownHistoryIntro: 'כל מה שהוספת, בכל ערוץ ומטבע. נשמר במכשיר הזה.',
   },
 } as const
 
@@ -817,10 +828,14 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const {
     merchants: snapshotMerchants,
     places: snapshotPlaces,
+  } = initialData
+  // Demo purchases stay hidden until the person loads them (remembered on this device).
+  const [demoData, setDemoData] = useState(false)
+  const {
     purchases: globePurchases,
     evidence: globeEvidenceRecords,
     smartInboxCases,
-  } = initialData
+  } = useMemo(() => demoStory(initialData, demoData), [demoData, initialData])
   const [sessionLedger, setSessionLedger] = useState(emptySessionLedger)
   // Stores the user added join the snapshot lists; without any, identity is unchanged.
   const globeMerchants = useMemo(
@@ -885,7 +900,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const sessionUndoDeadlineRef = useRef(0)
   const [undoSeconds, setUndoSeconds] = useState(0)
   const loadStartRef = useRef(0)
-  const localeRef = useRef<LocaleCode>('en')
+  const localeRef = useRef<LocaleCode>(DEFAULT_LOCALE)
   const modeRef = useRef<MapMode>('pins')
   const mapInstanceCountRef = useRef(0)
   const mapConstructionCountRef = useRef(0)
@@ -893,7 +908,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const captureDismissedRef = useRef(false)
   const captureResumeSpinRef = useRef(false)
 
-  const [locale, setLocale] = useState<LocaleCode>('en')
+  const [locale, setLocale] = useState<LocaleCode>(DEFAULT_LOCALE)
   const [query, setQuery] = useState<PurchaseQuery>(defaultPurchaseQuery)
   const [mode, setMode] = useState<MapMode>('pins')
   const [surface, setSurface] = useState<ProductSurface>('globe')
@@ -924,7 +939,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   replayMapAvailableRef.current = mapAvailable
   const [autoSpin, setAutoSpin] = useState(true)
   const [reducedMotion, setReducedMotion] = useState(false)
-  const [status, setStatus] = useState<string>(copy.en.loading)
+  const [status, setStatus] = useState<string>(copy[DEFAULT_LOCALE].loading)
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false)
   const [compactViewport, setCompactViewport] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -1038,6 +1053,17 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     }
   }, [allPurchases, globePlaces])
   const timelineMonths = useMemo(() => availableTimelineMonths(allPurchases), [allPurchases])
+  // The purchase form offers fictional demo stores only while demo data is on.
+  const offeredStores = useMemo(() => offeredDirectory(
+    { merchants: globeMerchants, places: globePlaces },
+    new Set(snapshotMerchants.map((merchant) => merchant.id)),
+    new Set(snapshotPlaces.map((place) => place.id)),
+    {
+      merchantIds: new Set(sessionCaptureRecords.map((record) => record.purchase.merchantId)),
+      placeIds: new Set(sessionCaptureRecords.flatMap((record) => record.purchase.placeId ? [record.purchase.placeId] : [])),
+    },
+    demoData,
+  ), [demoData, globeMerchants, globePlaces, sessionCaptureRecords, snapshotMerchants, snapshotPlaces])
   const askContext = useMemo<AskContext>(() => ({
     merchants: globeMerchants,
     places: globePlaces,
@@ -1134,6 +1160,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   }, [sessionLedger])
 
   useEffect(() => {
+    let preferences: Storage | null = null
+    try { preferences = window.localStorage } catch { preferences = null }
+    setDemoData(readDemoPreference(preferences))
+    const preferredLocale = readLocalePreference(preferences)
+    if (preferredLocale) setLocale(preferredLocale)
     let restored: Partial<StoredExperienceState> = {}
     try {
       const raw = window.sessionStorage.getItem(EXPERIENCE_STORAGE_KEY)
@@ -1240,6 +1271,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     stored.query = { ...stored.query, search: '' }
     window.sessionStorage.setItem(EXPERIENCE_STORAGE_KEY, JSON.stringify(stored))
   }, [locale, mode, query, selectedPlaceId, selectedPurchaseId, stateRestored, surface])
+
+  useEffect(() => {
+    if (!stateRestored) return
+    try { writeLocalePreference(window.localStorage, locale) } catch { /* storage blocked */ }
+  }, [locale, stateRestored])
 
   useEffect(() => {
     const dismissed = askWasOpenRef.current && !askOpen
@@ -2919,6 +2955,19 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     setStatus(locale === 'he' ? 'התוספות השמורות הוסרו' : 'Saved additions removed')
   }
 
+  // Loading or hiding the demo story returns to a clean view; the person's own purchases stay.
+  const toggleDemoData = () => exitReplayForNavigation(() => {
+    const next = !demoData
+    try { writeDemoPreference(window.localStorage, next) } catch { /* storage blocked: lasts this visit */ }
+    stopSpin(false)
+    const snapshot: NavigationSnapshot = { marker: 'spendscape-1d1', surface, selectedPlaceId: null, selectedPurchaseId: null }
+    window.history.replaceState({ ...window.history.state, ...snapshot }, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+    setSmartInboxDecisions([])
+    setDemoData(next)
+    setStatus(next ? t.demoLoadedStatus : t.demoHiddenStatus)
+  })
+
   // Only purchases the user added can be removed; the detail layer closes first.
   const removeSavedPurchase = (purchaseId: string) => {
     const next = removeSessionPurchase(sessionLedgerRef.current, purchaseId)
@@ -3291,7 +3340,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         </nav>
 
         <div className={styles.headerActions}>
-          <button
+          {smartInboxCases.length > 0 && <button
             type="button"
             className={styles.inboxButton}
             onClick={() => openInbox()}
@@ -3301,7 +3350,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5zM5 14h4l1.5 2h3L15 14h4"/></svg>
             <span>{t.inbox}</span>
             {pendingInbox.length > 0 && <em aria-label={`${pendingInbox.length} pending`}>{pendingInbox.length}</em>}
-          </button>
+          </button>}
           <button
             type="button"
             className={styles.addPurchaseButton}
@@ -3310,7 +3359,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           >
             <span aria-hidden="true">＋</span>{t.addPurchase}
           </button>
-          <span className={styles.syntheticBadge}>{sessionCaptureRecords.some(r => !r.synthetic) ? (locale === 'he' ? 'הדגמה + התוספות שלך' : 'Demo + your additions') : t.synthetic}</span>
+          <button type="button" className={styles.demoToggle} aria-pressed={demoData} data-testid="demo-toggle" onClick={toggleDemoData}>{demoData ? t.demoHide : t.demoLoad}</button>
           <button
             type="button"
           className={styles.languageButton}
@@ -3332,6 +3381,17 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           <span><strong>{currentGlobeCounts.physicalConfirmedCount}</strong> {t.purchasesSummary}</span>
         </p>
       </section>
+
+      {surface === 'globe' && allPurchases.length === 0 && !captureStep && !replay && (
+        <section className={styles.homeEmpty} aria-labelledby="home-empty-title" data-testid="home-empty">
+          <h2 id="home-empty-title">{t.emptyTitle}</h2>
+          <p>{t.emptyBody}</p>
+          <button type="button" className={styles.emptyPrimary} onClick={openCapture} data-testid="home-empty-add">
+            <span aria-hidden="true">＋</span>{t.emptyAdd}
+          </button>
+          <button type="button" className={styles.emptyLink} onClick={toggleDemoData} data-testid="home-demo-load">{t.emptyDemoHint}</button>
+        </section>
+      )}
 
       <section ref={queryDockRef} className={styles.queryDock} aria-label="Globe query controls" data-testid="query-dock">
         <div ref={searchRootRef} className={styles.searchShell}>
@@ -3578,7 +3638,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       {loading && surface === 'globe' && !captureStep && (
         <div className={styles.loadingState} role="status" data-testid="map-loading">
           <div className={styles.loadingGlobe} aria-hidden="true"><span /></div>
-          <p className={styles.eyebrow}>{t.synthetic}</p>
+          {demoData && <p className={styles.eyebrow}>{t.synthetic}</p>}
           <h2>{t.loading}</h2>
           <p>{t.loadingBody}</p>
           <div className={styles.loadingLine}><span /></div>
@@ -3604,9 +3664,9 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         </div>
       )}
 
-      {mapAvailable && visibleData.features.length === 0 && (
+      {mapAvailable && visibleData.features.length === 0 && allPurchases.length > 0 && (
         <div className={styles.emptyState} role="status" data-testid="map-empty">
-          <p className={styles.eyebrow}>{t.synthetic}</p>
+          {demoData && <p className={styles.eyebrow}>{t.synthetic}</p>}
           <h2>{t.noPlaces}</h2>
           <p>{t.noPlacesBody}</p>
           <button type="button" onClick={clearFilters}>{t.clear}</button>
@@ -3661,9 +3721,9 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         <section className={styles.purchasesPanel} aria-labelledby="purchases-title" data-testid="purchases-panel">
           <header className={styles.panelHeader}>
             <div>
-              <p className={styles.eyebrow}>{t.synthetic}</p>
+              {demoData && <p className={styles.eyebrow}>{t.demoOn}</p>}
               <h2 id="purchases-title">{t.history}</h2>
-              <p>{sessionCaptureRecords.some(r => !r.synthetic) ? (locale === 'he' ? 'נתוני הדגמה והתוספות ששמרת במכשיר הזה.' : 'Demo history and the additions you saved on this device.') : t.historyIntro}</p>
+              <p>{!demoData ? t.ownHistoryIntro : sessionCaptureRecords.some(r => !r.synthetic) ? (locale === 'he' ? 'נתוני הדגמה והתוספות ששמרת במכשיר הזה.' : 'Demo history and the additions you saved on this device.') : t.historyIntro}</p>
             </div>
             <button ref={purchasesCloseRef} type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.closeHistory}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
@@ -3688,9 +3748,18 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             {(query.search || query.category !== 'all' || activeFilterCount > 0) && (
               <button type="button" data-testid="history-reset" onClick={clearFilters}>{t.resetQuery}</button>
             )}
+            {demoData && <button type="button" data-testid="purchases-demo-hide" onClick={toggleDemoData}>{t.demoHide}</button>}
           </div>
 
-          {visiblePurchases.length === 0 ? (
+          {allPurchases.length === 0 ? (
+            <div className={styles.historyEmpty} role="status" data-testid="purchases-empty" data-empty-kind="no-purchases">
+              <h3>{t.emptyTitle}</h3>
+              <p>{t.emptyBody}</p>
+              <button type="button" className={styles.emptyPrimary} onClick={openCapture}>{t.emptyAdd}</button>
+              <p className={styles.emptyHint}>{t.emptyDemoHint}</p>
+              <button type="button" onClick={toggleDemoData} data-testid="purchases-demo-load">{t.demoLoad}</button>
+            </div>
+          ) : visiblePurchases.length === 0 ? (
             <div className={styles.historyEmpty} role="status" data-testid="purchases-empty">
               <h3>{t.noPurchases}</h3>
               <p>{t.noPurchasesBody}</p>
@@ -3754,6 +3823,10 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           onSelectMonth={setTimelineMonth}
           onSelectPlace={selectPlace}
           initialView={analyticsView}
+          demoData={demoData}
+          hasAnyPurchases={allPurchases.length > 0}
+          onAddPurchase={openCapture}
+          onLoadDemo={toggleDemoData}
         />
       )}
 
@@ -3881,6 +3954,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           locale={locale}
           places={globePlaces}
           merchants={globeMerchants}
+          offered={offeredStores}
           step={captureStep}
           reducedMotion={reducedMotion}
           sessionRecords={sessionCaptureRecords}

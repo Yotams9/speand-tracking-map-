@@ -256,3 +256,5 @@
   from { opacity: 0; transform: translateY(8px) scale(.992); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+.empty .emptySecondary { margin-block-start: 10px; border: 1px solid rgba(255, 255, 255, 0.16); background: transparent; color: #e7edf2; }
+.empty button { min-block-size: 44px; }

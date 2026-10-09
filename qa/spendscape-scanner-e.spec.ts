@@ -162,9 +162,11 @@ test('real pinned barcode reader from synthetic camera hands off once; no OCR, o
   expect(writes).toEqual([]); expect(ocr).toEqual([]);expect(errors).toEqual([])
   const state = await context.storageState()
   expect(state.cookies).toEqual([])
-  expect(state.origins.map(origin => origin.localStorage.map(entry => entry.name))).toEqual([['spendscape.device-purchases.v1']])
-  expect(state.origins[0].localStorage[0].value).not.toMatch(/data:|blob:/)
-  expect(JSON.parse(state.origins[0].localStorage[0].value).records).toHaveLength(1)
+  // Language and demo-data choices are device preferences; the only purchase data is the saved purchase.
+  const stored = state.origins.map(origin => origin.localStorage.filter(entry => !['spendscape.locale.v1', 'spendscape.demo-data.v1'].includes(entry.name)))
+  expect(stored.map(entries => entries.map(entry => entry.name))).toEqual([['spendscape.device-purchases.v1']])
+  expect(stored[0][0].value).not.toMatch(/data:|blob:/)
+  expect(JSON.parse(stored[0][0].value).records).toHaveLength(1)
   expect(await qa(page)).toMatchObject({ combinedPurchaseCount:43, mapInstanceCount:1,mapConstructionCount:1 })
 })
 

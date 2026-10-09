@@ -254,7 +254,7 @@ export type ManualCaptureErrors = Partial<Record<keyof ManualCaptureInput, strin
 export function validateManualCapture(input: ManualCaptureInput, locale: LocaleCode): ManualCaptureErrors {
   const errors: ManualCaptureErrors = {}
   const amount = Number(input.amount)
-  if (!input.merchantId) errors.merchantId = locale === 'he' ? 'יש לבחור בית עסק.' : 'Choose a merchant.'
+  if (!input.merchantId) errors.merchantId = locale === 'he' ? 'יש לבחור חנות.' : 'Choose a store.'
   if (!Number.isFinite(amount) || amount <= 0) {
     errors.amount = locale === 'he' ? 'יש להזין סכום חיובי.' : 'Enter a positive amount.'
   }

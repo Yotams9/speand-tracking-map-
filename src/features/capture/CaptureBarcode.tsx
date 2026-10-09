@@ -22,7 +22,7 @@ const copy = {
     unknown: 'Unknown barcode', unknownBody: 'The code is valid, but is not in this small demo catalog. No real product lookup was made.',
     real: 'Found in Tel Aviv published prices', checking: 'Checking the Tel Aviv price files…', missing: 'Not in the Tel Aviv price files of Shufersal, Rami Levy and Osher Ad. Type the product name below.', lookupError: 'The price files could not be checked right now. Type the product name below.',
     prices: 'Published shelf prices in Tel Aviv', stores: 'stores', perKg: 'per kg', more: 'more stores · up to', priceNote: 'From the chains’ official price files ({date}). Promotions and club prices are not applied; the price you pay may differ.',
-    name: 'Product name for review', note: 'Identification only. Nothing is added to your purchases. The price you paid, merchant, date and place are unknown.',
+    name: 'Product name for review', note: 'Identification only. Nothing is added to your purchases. The price you paid, store, date and place are unknown.',
     retry: 'Retry barcode scan', reset: 'Clear result', original: 'Scanned code', normalized: 'Equivalent GTIN',
   },
   he: {
@@ -38,7 +38,7 @@ const copy = {
     unknown: 'ברקוד לא מוכר', unknownBody: 'הקוד תקין, אך אינו בקטלוג ההדגמה הקטן. לא בוצע חיפוש מוצר אמיתי.',
     real: 'נמצא במחירוני תל אביב', checking: 'בודקים במחירוני תל אביב…', missing: 'המוצר לא נמצא במחירונים של שופרסל, רמי לוי ואושר עד בתל אביב. הקלידו את שם המוצר למטה.', lookupError: 'לא ניתן לבדוק במחירונים כרגע. הקלידו את שם המוצר למטה.',
     prices: 'מחירי מדף מפורסמים בתל אביב', stores: 'סניפים', perKg: 'לק״ג', more: 'סניפים נוספים · עד', priceNote: 'מתוך קובצי המחירים הרשמיים של הרשתות ({date}). מבצעים ומחירי מועדון אינם כלולים; המחיר בקופה עשוי להיות שונה.',
-    name: 'שם מוצר לבדיקה', note: 'זיהוי בלבד. דבר לא נוסף לרכישות. המחיר ששילמתם, בית העסק, התאריך והמקום אינם ידועים.',
+    name: 'שם מוצר לבדיקה', note: 'זיהוי בלבד. דבר לא נוסף לרכישות. המחיר ששילמתם, החנות, התאריך והמקום אינם ידועים.',
     retry: 'ניסיון סריקה נוסף', reset: 'ניקוי תוצאה', original: 'הקוד שנסרק', normalized: 'GTIN מקביל',
   },
 } as const

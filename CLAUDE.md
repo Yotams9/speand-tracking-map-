@@ -1,80 +1,66 @@
-# CLAUDE.md — Purchase Intelligence Prototype
+# CLAUDE.md — Spendscape
 
-## Required reading order
+## What exists today
 
-Before proposing or performing work, read completely:
+Spendscape is a working mobile-first web app, not a planning exercise:
 
-1. `AGENTS.md`
-2. `PROJECT_CONTEXT.md`
-3. `MASTER_PROMPT_PHASE_1.md`
-4. The four `SKILL.md` files under `.agents/skills/`
-5. `CLAUDE_CODE_START_HERE.md`
+- Next.js (App Router) + TypeScript, MapLibre globe with OpenFreeMap tiles.
+- Hebrew is the default language; English is one tap away.
+- Purchases the user adds are kept on the device (`localStorage`).
+- A real Tel Aviv published-price catalog (`data/catalog/tel-aviv.json`) for
+  Shufersal, Rami Levy and Osher Ad, served by `/api/catalog/[gtin]` and
+  `/api/catalog/stores`. Barcode scanning, "find the store I'm in" and
+  published-price autofill use it.
+- Synthetic demo purchases are hidden by default and can be loaded from the
+  app ("טען נתוני דמו" / "Load demo data").
+- A deterministic spending-insights engine (`src/features/insights/`) computes
+  totals, top stores and month comparisons from the user's purchases.
 
-Treat these files as the project's approved product and workflow baseline. If they conflict, follow the user's latest explicit instruction first, then `AGENTS.md`, then the remaining files in the order above.
+Background documents (`AGENTS.md`, `PROJECT_CONTEXT.md`,
+`MASTER_PROMPT_PHASE_1.md`, `docs/spendscape/*`) record earlier history and
+product intent. Their phase gates and exact approval phrases are historical and
+no longer block work.
 
-## Current authorization
+## How work is authorized now
 
-The project begins in **Phase 0: planning only**.
+- Work happens in bounded tasks that the user gives in chat. Do what the task
+  asks, verify it, report, and stop.
+- The user writes in Hebrew and prefers short, plain explanations. Recommend one
+  option rather than listing many.
+- Ask before anything outward-facing or hard to undo: pushing to `main`,
+  merging, deploying (Vercel), connecting accounts or paid services.
+- Never print or commit `.env.local` or any credential.
+- Free tools and free tiers only.
+- Collaborators work in parallel; stay inside the files the task is about.
 
-The existence of this folder, this file, or the master prompt does not authorize implementation or testing.
+## Working loop
 
-Until the user sends the exact phrase below, do not:
+`PLAN → IMPLEMENT → typecheck → unit tests → build → run and look → fix → repeat`
 
-- Create or modify application source code.
-- Initialize a framework or application boilerplate.
-- Install packages or dependencies.
-- Start a development server.
-- Run builds, tests, linters, browser automation, screenshots, or visual QA.
-- Connect accounts or use real personal, financial, receipt, email, bank, or location data.
-- Deploy or publish anything.
-
-Exact Phase 1 authorization:
-
-`APPROVE PHASE 1 BUILD + QA`
-
-Do not infer approval from “continue,” “looks good,” “go ahead,” or similar wording.
-
-## Phase 0 task
-
-Return only the readiness package required by section 2 of `MASTER_PROMPT_PHASE_1.md`:
-
-1. Understanding.
-2. Proposed experience.
-3. Recommended technical approach and tradeoffs.
-4. Screen and state inventory.
-5. Mock-data plan.
-6. Acceptance plan.
-7. Assumptions and unresolved decisions.
-8. Scope exclusions.
-9. The exact approval request.
-
-Then stop and wait.
-
-## Phase 1 task after approval
-
-After receiving `APPROVE PHASE 1 BUILD + QA`, build only the Phase 1 mobile-first front-end concept demo defined in `MASTER_PROMPT_PHASE_1.md`.
-
-Use iterative loops:
-
-`PLAN → IMPLEMENT → RUN → INSPECT → IDENTIFY ISSUES → FIX → RUN AGAIN`
-
-Phase 1 may include front-end code, navigation, map/globe presentation, coherent synthetic mock data, simulated Capture, simulated Smart Inbox, responsive layouts, rendered visual QA, interaction QA, and final screenshots.
-
-Phase 1 must not include real integrations, real user data, production OCR or vision, real matching or fusion engines, production price infrastructure, complex backend, authentication, native apps, public deployment, or Phase 2.
-
-When Phase 1 acceptance passes, deliver the required handoff and stop. Do not continue into a later phase without new explicit approval.
+- Windows + PowerShell: use `npm.cmd` / `npx.cmd`.
+- `npm.cmd run typecheck`, `npm.cmd test`, `npm.cmd run build`.
+- Playwright uses the installed Chrome (`channel: 'chrome'`) against a server
+  on `127.0.0.1:3000`. Keep screenshots and reports under `artifacts/`
+  (git-ignored). `qa/spendscape-night-shots.spec.ts` walks every main screen in
+  Hebrew and English at phone and desktop size.
+- Existing Playwright suites run with demo data on and English via
+  `qa/demo-storage.ts`.
 
 ## Non-negotiable product truths
 
-- GPS is evidence, never proof of a purchase or exact merchant.
-- Ask the user only when uncertainty materially affects the outcome.
-- Smart Inbox should resolve meaningful ambiguity with one tap.
-- Never use an LLM as the source of factual prices, amounts, dates, distances, route times, coordinates, or place identifiers.
-- Use synthetic data only in Phase 1 and label savings as mock, illustrative, or estimated.
-- Keep mock totals, visit counts, averages, routes, and savings internally consistent.
-- Do not split a recommended basket across stores.
-- Compare product substitutions only when logically equivalent.
-- Keep Map/Home, For You, Capture, Inbox, and Profile as the five primary areas.
-- Design mobile first and make the map/globe the visual identity.
-- Avoid admin-dashboard, banking-spreadsheet, CRUD-template, and generic AI-dashboard styling.
-
+- GPS is evidence, never proof of a purchase or exact store. A location only
+  suggests a store; the user confirms.
+- Auto-filled values (store, date, price, category) always stay editable.
+- Ask the user only when uncertainty materially affects the outcome; Smart Inbox
+  should resolve meaningful ambiguity with one tap.
+- Never use an LLM as the source of factual prices, amounts, dates, distances,
+  route times, coordinates, or place identifiers. Numbers come from
+  deterministic code over stored data.
+- Compare products only by identical barcode (GTIN); substitutions only when
+  logically equivalent.
+- Never split a recommended basket across stores.
+- Label demo data and savings as demo, illustrative, or estimated. Keep totals,
+  visit counts, averages and savings internally consistent.
+- Keep currencies separate; never invent exchange rates.
+- Mobile first; the map/globe is the visual identity. Avoid admin-dashboard,
+  banking-spreadsheet, CRUD-template, and generic AI-dashboard styling.

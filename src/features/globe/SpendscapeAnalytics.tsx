@@ -33,6 +33,12 @@ interface SpendscapeAnalyticsProps {
   onSelectMonth: (month: string | null) => void
   onSelectPlace: (placeId: string) => void
   initialView: AnalyticsView | null
+  /** Demo purchases are part of the figures. */
+  demoData: boolean
+  /** False when nothing has been saved yet (and demo data is off). */
+  hasAnyPurchases: boolean
+  onAddPurchase: () => void
+  onLoadDemo: () => void
 }
 
 const copy = {
@@ -59,6 +65,10 @@ const copy = {
     cardRecord: 'Card record', receipt: 'Receipt', emailReceipt: 'Email receipt', manualEntry: 'Manual entry',
     emptyTitle: 'No analytics for this shared view',
     emptyBody: 'Adjust the search, filters, or selected month. The canonical fixtures remain unchanged.',
+    ownEyebrow: 'From the purchases you saved', ownTotal: 'Total spent (ILS)',
+    ownNote: 'ILS purchases as you entered them; other currencies use the ILS amount you reported. No exchange rates are invented.',
+    firstTitle: 'Your spending will show up here', firstBody: 'Add a purchase and see totals, top stores and months, calculated on this device.',
+    firstAdd: 'Add your first purchase', firstDemo: 'Load demo data',
   },
   he: {
     eyebrow: 'ניתוחים דטרמיניסטיים · נתונים סינתטיים',
@@ -83,6 +93,10 @@ const copy = {
     cardRecord: 'רשומת כרטיס', receipt: 'קבלה', emailReceipt: 'קבלה בדוא״ל', manualEntry: 'הזנה ידנית',
     emptyTitle: 'אין נתונים לניתוח בתצוגה המשותפת',
     emptyBody: 'אפשר לשנות חיפוש, מסננים או חודש נבחר. ה־fixtures הקנוניים נשארים ללא שינוי.',
+    ownEyebrow: 'מתוך הרכישות ששמרת', ownTotal: 'סה״כ הוצאה (ש״ח)',
+    ownNote: 'רכישות בש״ח כפי שהזנת; במטבע אחר נעשה שימוש בסכום בש״ח שדיווחת. לא מומצאים שערי מטבע.',
+    firstTitle: 'כאן יופיעו ההוצאות שלך', firstBody: 'הוסיפו רכישה ותראו סכומים, חנויות מובילות וחודשים — מחושבים במכשיר הזה.',
+    firstAdd: 'הוספת רכישה ראשונה', firstDemo: 'טען נתוני דמו',
   },
 } as const
 
@@ -140,7 +154,8 @@ function chartGeometry(months: PurchaseAnalytics['months']) {
 export function SpendscapeAnalytics({
   analytics, places, locale, query, activeFilterCount, onClose, onSearch, onOpenFilters,
   onOpenTimeline, onReset, onOpenPurchases, onSelectCategory, onSelectChannel,
-  onSelectCurrency, onSelectMonth, onSelectPlace, initialView,
+  onSelectCurrency, onSelectMonth, onSelectPlace, initialView, demoData, hasAnyPurchases,
+  onAddPurchase, onLoadDemo,
 }: SpendscapeAnalyticsProps) {
   const t = copy[locale]
   const chart = chartGeometry(analytics.months)
@@ -165,7 +180,7 @@ export function SpendscapeAnalytics({
     <section className={styles.panel} aria-labelledby="analytics-title" data-testid="analytics-panel">
       <header className={styles.header}>
         <div>
-          <p>{analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הדגמה + התוספות שלך' : 'Demo + your additions') : t.eyebrow}</p>
+          <p>{!demoData ? t.ownEyebrow : analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הדגמה + התוספות שלך' : 'Demo + your additions') : t.eyebrow}</p>
           <h2 id="analytics-title">{t.title}</h2>
           <span>{t.intro}</span>
         </div>
@@ -202,11 +217,19 @@ export function SpendscapeAnalytics({
       </div>
 
       <div className={styles.scrollArea}>
+        {!hasAnyPurchases ? (
+          <section className={styles.empty} role="status" data-testid="analytics-first-run">
+            <h3>{t.firstTitle}</h3>
+            <p>{t.firstBody}</p>
+            <button type="button" onClick={onAddPurchase} data-testid="analytics-add">{t.firstAdd}</button>
+            <button type="button" className={styles.emptySecondary} onClick={onLoadDemo} data-testid="analytics-demo-load">{t.firstDemo}</button>
+          </section>
+        ) : <>
         <section className={styles.heroMetrics} aria-label={t.title} data-testid="analytics-summary" data-analytics-view="overview" tabIndex={-1}>
           <article className={styles.totalMetric}>
-            <span>{t.total}</span>
+            <span>{demoData ? t.total : t.ownTotal}</span>
             <strong data-testid="analytics-total">{formatMoney(analytics.totalBaseAmountIls, locale)}</strong>
-            <small>{analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הסיכום משלב נתוני הדגמה ותוספות שלך. המרות לתוספות דווחו על ידך ולא אומתו.' : 'Totals combine demo data and your saved additions. Conversions for your additions are user-reported, not verified.') : t.normalizedNote}</small>
+            <small>{analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הסיכום משלב נתוני הדגמה ותוספות שלך. המרות לתוספות דווחו על ידך ולא אומתו.' : 'Totals combine demo data and your saved additions. Conversions for your additions are user-reported, not verified.') : demoData ? t.normalizedNote : t.ownNote}</small>
           </article>
           <article>
             <span>{t.purchases}</span>
@@ -387,6 +410,7 @@ export function SpendscapeAnalytics({
             </section>
           </>
         )}
+        </>}
       </div>
 
       <footer className={styles.footer}>
