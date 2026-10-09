@@ -220,7 +220,7 @@ for (const config of [
     expect(await player.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true)
     const nav = page.locator('nav[aria-label="Mobile primary"] > button')
     expect(await nav.count()).toBe(4)
-    expect(await nav.allTextContents()).toEqual(config.he ? ['גלובוס', 'קליטה', 'רכישות', 'נתונים'] : ['Globe', 'Capture', 'Purchases', 'Stats'])
+    expect(await nav.allTextContents()).toEqual(config.he ? ['גלובוס', 'הוספה', 'רכישות', 'נתונים'] : ['Globe', 'Add', 'Purchases', 'Stats'])
     await context.close()
   })
 }

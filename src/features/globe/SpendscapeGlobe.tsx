@@ -496,9 +496,9 @@ async function ensureRtlTextPlugin(): Promise<void> {
 
 const copy = {
   en: {
-    product: 'Spendscape', checkpoint: 'Globe checkpoint', navGlobe: 'Globe',
+    product: 'Spendscape', checkpoint: 'Your purchases on a globe', navGlobe: 'Globe',
     navAnalytics: 'Analytics', navPurchases: 'Purchases',
-    addPurchase: 'Add purchase', capture: 'Capture',
+    addPurchase: 'Add purchase', capture: 'Add',
     inbox: 'Inbox', openInbox: 'Open Smart Inbox', reviewMatch: 'Review match',
     headline: 'Your world, in purchases.',
     intro: 'Every confirmed place becomes one point in a living history.',
@@ -546,9 +546,9 @@ const copy = {
     ownHistoryIntro: 'Everything you added, across every channel and currency. Saved on this device.',
   },
   he: {
-    product: 'Spendscape', checkpoint: 'נקודת ביקורת גלובוס', navGlobe: 'גלובוס',
+    product: 'Spendscape', checkpoint: 'הרכישות שלך על הגלובוס', navGlobe: 'גלובוס',
     navAnalytics: 'ניתוחים', navPurchases: 'רכישות',
-    addPurchase: 'הוספת רכישה', capture: 'קליטה',
+    addPurchase: 'הוספת רכישה', capture: 'הוספה',
     inbox: 'תיבת עזרה', openInbox: 'פתיחת תיבת העזרה', reviewMatch: 'בדיקת התאמה',
     headline: 'עולם הרכישות שלך.',
     intro: 'כל מקום מאומת הופך לנקודה אחת בהיסטוריה חיה.',
@@ -2280,7 +2280,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
                 features: stores.filter(isLocated).map((store) => ({
                   type: 'Feature' as const,
                   geometry: { type: 'Point' as const, coordinates: [store.location.lon, store.location.lat] },
-                  properties: { id: store.id, chainEn: store.chainName.en, chainHe: store.chainName.he, name: store.name, address: store.address },
+                  properties: { id: store.id, chain: store.chain, chainEn: store.chainName.en, chainHe: store.chainName.he, name: store.name, address: store.address },
                 })),
               },
             })
@@ -2291,8 +2291,9 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
               minzoom: 10,
               paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 13, 4.5, 16, 7],
-                'circle-color': '#0c2b25',
-                'circle-stroke-color': '#3bd0a5',
+                'circle-color': '#1a1e26',
+                // A quiet per-chain tint so neighbouring chains are told apart; no logos.
+                'circle-stroke-color': ['match', ['get', 'chain'], 'shufersal', '#e0707f', 'ramilevi', '#e3a95c', 'osherad', '#7f9fe0', '#aab1bd'],
                 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 2],
                 'circle-opacity': 0.92,
                 'circle-pitch-alignment': 'viewport',
@@ -2311,7 +2312,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
                 'text-anchor': 'top',
                 'text-optional': true,
               },
-              paint: { 'text-color': '#17614f', 'text-halo-color': 'rgba(252,253,255,0.95)', 'text-halo-width': 1.6 },
+              paint: { 'text-color': '#2b313b', 'text-halo-color': 'rgba(252,253,255,0.95)', 'text-halo-width': 1.6 },
             }, below)
             map.on('mouseenter', CATALOG_STORE_LAYER, (event) => {
               if (replaySessionRef.current) return
@@ -3375,7 +3376,6 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       </header>
 
       <section className={styles.hero} aria-labelledby="globe-title">
-        <p className={styles.eyebrow}>{t.checkpoint}</p>
         <h1 id="globe-title">{t.headline}</h1>
         <p className={styles.heroCopy}>{t.intro}</p>
         <p className={styles.heroMeta}>
@@ -3846,6 +3846,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             {selectedPurchase.placeId
               ? `${localized(placeForId(selectedPurchase.placeId, globePlaces)!.branch, locale)} · ${localized(placeForId(selectedPurchase.placeId, globePlaces)!.city, locale)}`
               : selectedPurchase.resolution === 'unresolved' ? t.unresolvedNoPin : t.onlineNoPin}
+          </p>
+
+          <p className={styles.detailHeroAmount} data-testid="purchase-detail-amount">
+            <strong>{formatMoney(selectedPurchase.originalAmount, locale, selectedPurchase.originalCurrency)}</strong>
+            <small>{formatDate(selectedPurchase.timestamp, locale)}</small>
           </p>
 
           <div className={styles.detailBadges}>

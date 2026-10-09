@@ -9,14 +9,29 @@
   --cloud: #f7f7fb;
   --ash: #a6a8b2;
   --ash-deep: #777b88;
-  --cyan: #69dfff;
+  /* Neutral highlight; the only colour accent is mint, kept for savings and the cheapest price. */
+  --cyan: #e4e8ee;
   --iris: #8f79ff;
   --violet: #bd73ff;
-  --mint: #69e2c2;
+  --mint: #6ee7c3;
+  --accent: var(--mint);
+  --accent-soft: rgba(110, 231, 195, 0.12);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --touch: 44px;
+  --frost: rgba(14, 17, 24, 0.72);
+  --frost-strong: rgba(14, 17, 24, 0.86);
+  --text-muted: #aab1bd;
   --amber: #ffad6f;
   --danger: #ff7b89;
-  --display: "Iowan Old Style", "Baskerville", "Times New Roman", serif;
-  --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Hebrew", Arial, sans-serif;
+  --sans: var(--font-heebo), var(--font-inter), ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --display: var(--sans);
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
@@ -38,6 +53,7 @@ body {
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "tnum" 1;
 }
 
 button, input, select { font: inherit; }
@@ -49,11 +65,14 @@ button { border: 0; }
 a { color: inherit; text-decoration: none; }
 
 :focus-visible {
-  outline: 2px solid var(--cyan);
+  outline: 2px solid #ffffff;
   outline-offset: 3px;
 }
 
-::selection { background: rgba(143, 121, 255, 0.45); }
+::selection { background: rgba(255, 255, 255, 0.28); }
+
+/* Controls default to a comfortable 44 px touch target; components may only grow it. */
+:where(button, select, input:not([type='checkbox'], [type='radio'], [type='range'])) { min-block-size: var(--touch); }
 
 .routeFallback {
   min-block-size: 100dvh;

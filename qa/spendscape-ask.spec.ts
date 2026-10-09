@@ -394,7 +394,7 @@ test('mobile nav order and secondary Ask sheet remain coherent in English, Hebre
 
   const mobileNav = page.locator('nav[aria-label="Mobile primary"]')
   await expect(mobileNav.locator(':scope > button')).toHaveCount(4)
-  expect(await mobileNav.locator(':scope > button > span').allTextContents()).toEqual(['Globe', 'Capture', 'Purchases', 'Stats'])
+  expect(await mobileNav.locator(':scope > button > span').allTextContents()).toEqual(['Globe', 'Add', 'Purchases', 'Stats'])
   const navBoxes = await mobileNav.locator(':scope > button').evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().width))
   expect(Math.max(...navBoxes) - Math.min(...navBoxes)).toBeLessThanOrEqual(1)
   await checkMobileNavOrder(page, false)
@@ -415,7 +415,7 @@ test('mobile nav order and secondary Ask sheet remain coherent in English, Hebre
 
   await page.getByRole('button', { name: 'Switch to Hebrew' }).click()
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
-  expect(await mobileNav.locator(':scope > button > span').allTextContents()).toEqual(['גלובוס', 'קליטה', 'רכישות', 'נתונים'])
+  expect(await mobileNav.locator(':scope > button > span').allTextContents()).toEqual(['גלובוס', 'הוספה', 'רכישות', 'נתונים'])
   await checkMobileNavOrder(page, true)
   await page.getByRole('button', { name: 'כלי גלובוס' }).click()
   await page.getByTestId('ask-open-mobile').click()
