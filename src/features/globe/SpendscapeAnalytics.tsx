@@ -4,7 +4,9 @@ import type { PurchaseAnalytics } from '@/data/spendscape-analytics'
 import type { AnalyticsView } from '@/features/ask/ask-spendscape-domain'
 import {
   localized,
+  merchantForId,
   placeForId,
+  type Merchant,
   type CategoryFilter,
   type ChannelFilter,
   type CurrencyFilter,
@@ -13,11 +15,15 @@ import {
   type PurchaseCategory,
   type PurchaseQuery,
 } from '@/data/spendscape-globe'
+import { amountIn, fromMinor, type MonthSummary } from '@/features/insights/insights-domain'
 import styles from './SpendscapeAnalytics.module.css'
 
 interface SpendscapeAnalyticsProps {
   analytics: PurchaseAnalytics
   places: readonly Place[]
+  merchants: readonly Merchant[]
+  /** Deterministic "this month" figures from the insights engine (unfiltered). */
+  monthSummary: MonthSummary
   locale: LocaleCode
   query: PurchaseQuery
   activeFilterCount: number
@@ -69,6 +75,9 @@ const copy = {
     ownNote: 'ILS purchases as you entered them; other currencies use the ILS amount you reported. No exchange rates are invented.',
     firstTitle: 'Your spending will show up here', firstBody: 'Add a purchase and see totals, top stores and months, calculated on this device.',
     firstAdd: 'Add your first purchase', firstDemo: 'Load demo data',
+    monthTitle: 'This month', monthNone: 'Nothing saved this month yet.', topStore: 'Top store', topCategory: 'Top category',
+    vsLast: 'vs {month}', less: 'less', more: 'more', same: 'Same as {month}', noCompare: 'No {month} purchases to compare',
+    monthPurchases: 'Purchases this month', ownBase: 'in ILS',
   },
   he: {
     eyebrow: 'ניתוחים דטרמיניסטיים · נתונים סינתטיים',
@@ -97,6 +106,9 @@ const copy = {
     ownNote: 'רכישות בש״ח כפי שהזנת; במטבע אחר נעשה שימוש בסכום בש״ח שדיווחת. לא מומצאים שערי מטבע.',
     firstTitle: 'כאן יופיעו ההוצאות שלך', firstBody: 'הוסיפו רכישה ותראו סכומים, חנויות מובילות וחודשים — מחושבים במכשיר הזה.',
     firstAdd: 'הוספת רכישה ראשונה', firstDemo: 'טען נתוני דמו',
+    monthTitle: 'החודש', monthNone: 'עוד לא נשמרו רכישות החודש.', topStore: 'החנות המובילה', topCategory: 'הקטגוריה המובילה',
+    vsLast: 'לעומת {month}', less: 'פחות', more: 'יותר', same: 'כמו ב{month}', noCompare: 'אין רכישות ב{month} להשוואה',
+    monthPurchases: 'רכישות החודש', ownBase: 'בש״ח',
   },
 } as const
 
@@ -152,7 +164,7 @@ function chartGeometry(months: PurchaseAnalytics['months']) {
 }
 
 export function SpendscapeAnalytics({
-  analytics, places, locale, query, activeFilterCount, onClose, onSearch, onOpenFilters,
+  analytics, places, merchants, monthSummary, locale, query, activeFilterCount, onClose, onSearch, onOpenFilters,
   onOpenTimeline, onReset, onOpenPurchases, onSelectCategory, onSelectChannel,
   onSelectCurrency, onSelectMonth, onSelectPlace, initialView, demoData, hasAnyPurchases,
   onAddPurchase, onLoadDemo,
@@ -225,11 +237,12 @@ export function SpendscapeAnalytics({
             <button type="button" className={styles.emptySecondary} onClick={onLoadDemo} data-testid="analytics-demo-load">{t.firstDemo}</button>
           </section>
         ) : <>
+        <MonthSummaryCard summary={monthSummary} merchants={merchants} locale={locale} />
         <section className={styles.heroMetrics} aria-label={t.title} data-testid="analytics-summary" data-analytics-view="overview" tabIndex={-1}>
           <article className={styles.totalMetric}>
             <span>{demoData ? t.total : t.ownTotal}</span>
             <strong data-testid="analytics-total">{formatMoney(analytics.totalBaseAmountIls, locale)}</strong>
-            <small>{analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הסיכום משלב נתוני הדגמה ותוספות שלך. המרות לתוספות דווחו על ידך ולא אומתו.' : 'Totals combine demo data and your saved additions. Conversions for your additions are user-reported, not verified.') : demoData ? t.normalizedNote : t.ownNote}</small>
+            <small>{!demoData ? t.ownNote : analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הסיכום משלב נתוני הדגמה ותוספות שלך. המרות לתוספות דווחו על ידך ולא אומתו.' : 'Totals combine demo data and your saved additions. Conversions for your additions are user-reported, not verified.') : t.normalizedNote}</small>
           </article>
           <article>
             <span>{t.purchases}</span>
@@ -239,7 +252,7 @@ export function SpendscapeAnalytics({
           <article>
             <span>{t.average}</span>
             <strong data-testid="analytics-average">{formatMoney(analytics.averageBaseAmountIls, locale)}</strong>
-            <small>{t.base}</small>
+            <small>{demoData ? t.base : t.ownBase}</small>
           </article>
         </section>
 
@@ -417,6 +430,33 @@ export function SpendscapeAnalytics({
         <span><strong>{analytics.purchaseCount}</strong> {t.results}</span>
         <button type="button" onClick={onOpenPurchases} data-testid="analytics-view-purchases">{t.viewPurchases}<i aria-hidden="true">→</i></button>
       </footer>
+    </section>
+  )
+}
+
+function MonthSummaryCard({ summary, merchants, locale }: { summary: MonthSummary; merchants: readonly Merchant[]; locale: LocaleCode }) {
+  const t = copy[locale]
+  const ils = amountIn(summary.total, 'ILS')
+  const others = summary.total.totals.filter((entry) => entry.currency !== 'ILS')
+  const lastMonth = formatMonth(summary.previousMonth, locale).split(' ')[0]
+  const store = summary.topStore ? merchantForId(summary.topStore.storeId, merchants) : undefined
+  const change = summary.vsPrevious
+  return (
+    <section className={styles.monthCard} aria-labelledby="analytics-month-title" data-testid="analytics-month-summary" data-source-purchases={summary.total.purchaseIds.length}>
+      <p id="analytics-month-title">{t.monthTitle} · {formatMonth(summary.month, locale)}</p>
+      <strong className={styles.monthAmount} data-testid="analytics-month-total">{formatMoney(fromMinor(ils, 'ILS'), locale)}</strong>
+      {others.length > 0 && <p className={styles.monthOthers}>{others.map((entry) => formatMoney(fromMinor(entry.minor, entry.currency), locale, entry.currency)).join(' · ')}</p>}
+      {summary.total.purchaseCount === 0 ? <p className={styles.monthMuted}>{t.monthNone}</p> : (
+        <dl className={styles.monthFacts}>
+          <div><dt>{t.topStore}</dt><dd data-testid="analytics-month-store">{store ? localized(store.name, locale) : '—'}{summary.topStore && <small>{formatMoney(fromMinor(amountIn(summary.topStore), 'ILS'), locale)}</small>}</dd></div>
+          <div><dt>{t.topCategory}</dt><dd data-testid="analytics-month-category">{summary.topCategory ? t[categoryLabels[summary.topCategory.category]] : '—'}{summary.topCategory && <small>{formatMoney(fromMinor(amountIn(summary.topCategory), 'ILS'), locale)}</small>}</dd></div>
+          <div><dt>{t.monthPurchases}: {summary.total.purchaseCount}</dt><dd data-testid="analytics-month-change" data-direction={!change ? 'none' : change.deltaMinor < 0 ? 'down' : change.deltaMinor > 0 ? 'up' : 'same'}>
+            {!change ? <span className={styles.monthMuted}>{t.noCompare.replace('{month}', lastMonth)}</span>
+              : change.deltaMinor === 0 ? t.same.replace('{month}', lastMonth)
+              : <>{formatMoney(fromMinor(Math.abs(change.deltaMinor), 'ILS'), locale)} {change.deltaMinor < 0 ? t.less : t.more}{change.percent !== null && <> ({Math.abs(change.percent)}%)</>}<small>{t.vsLast.replace('{month}', lastMonth)}</small></>}
+          </dd></div>
+        </dl>
+      )}
     </section>
   )
 }

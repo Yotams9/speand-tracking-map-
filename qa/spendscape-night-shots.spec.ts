@@ -86,6 +86,23 @@ for (const [width, height] of [[390, 844], [1440, 900]] as const) {
         await page.getByTestId('review-placeId').selectOption(await chain.getAttribute('value') ?? '')
         await page.waitForTimeout(400)
         await shot(page, `${name}-07-review`)
+
+        // Save it, then see it everywhere: stats summary, list and detail.
+        await page.getByTestId('review-payment').selectOption('card')
+        await page.getByTestId('capture-confirm').click()
+        await expect(page.getByTestId('capture-success')).toBeVisible()
+        await shot(page, `${name}-08-saved`)
+        await page.getByTestId('capture-done').click()
+        await page.waitForTimeout(800)
+        await shot(page, `${name}-09-home-with-purchase`)
+        await navigate(page, mobile, 'stats')
+        await expect(page.getByTestId('analytics-month-summary')).toBeVisible()
+        await shot(page, `${name}-10-stats-with-purchase`)
+        await navigate(page, mobile, 'purchases')
+        await shot(page, `${name}-11-purchases-with-purchase`)
+        await page.locator('[data-testid^="purchase-session_purchase"]').first().click()
+        await page.waitForTimeout(500)
+        await shot(page, `${name}-12-own-purchase-detail`)
         expect(errors).toEqual([])
       })
     }

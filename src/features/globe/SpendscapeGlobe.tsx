@@ -52,6 +52,7 @@ import {
 import { emptySessionLedger, expireSessionPurchaseUndo, removeSessionPurchase, saveReviewedPurchase, undoSessionPurchase, resetSessionPurchases } from '@/features/capture/session-purchase-domain'
 import { DEVICE_LEDGER_KEY, restoreSessionLedger, serializeSessionLedger } from '@/features/capture/session-purchase-storage'
 import { isLocated, loadCatalogStores } from '@/features/capture/catalog-stores'
+import { thisMonthSummary } from '@/features/insights/insights-domain'
 import { DEFAULT_LOCALE, demoStory, offeredDirectory, readDemoPreference, readLocalePreference, writeDemoPreference, writeLocalePreference } from '@/data/demo-visibility'
 import {
   applySmartInboxDecisions,
@@ -1053,6 +1054,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     }
   }, [allPurchases, globePlaces])
   const timelineMonths = useMemo(() => availableTimelineMonths(allPurchases), [allPurchases])
+  // "This month" is always the person's whole month, independent of filters.
+  const monthSummary = useMemo(() => thisMonthSummary(allPurchases, { now: new Date() }), [allPurchases])
   // The purchase form offers fictional demo stores only while demo data is on.
   const offeredStores = useMemo(() => offeredDirectory(
     { merchants: globeMerchants, places: globePlaces },
@@ -3808,6 +3811,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         <SpendscapeAnalytics
           analytics={visibleAnalytics}
           places={globePlaces}
+          merchants={globeMerchants}
+          monthSummary={monthSummary}
           locale={locale}
           query={query}
           activeFilterCount={activeFilterCount}

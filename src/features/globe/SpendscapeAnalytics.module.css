@@ -258,3 +258,17 @@
 }
 .empty .emptySecondary { margin-block-start: 10px; border: 1px solid rgba(255, 255, 255, 0.16); background: transparent; color: #e7edf2; }
 .empty button { min-block-size: 44px; }
+
+/* "This month" summary from the insights engine */
+.monthCard { display: grid; gap: 6px; margin-block-end: 12px; padding: 20px; border: 1px solid var(--analytics-line); border-radius: 16px; background: rgba(255, 255, 255, 0.04); }
+.monthCard > p:first-child { margin: 0; color: #aeb7c4; font-size: 0.78rem; font-weight: 640; }
+.monthAmount { font-size: clamp(2.2rem, 9vw, 2.9rem); font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; color: #f4f7fa; font-variant-numeric: tabular-nums; }
+.monthOthers { margin: 0; color: #c7ced8; font-size: 0.84rem; }
+.monthMuted { margin: 0; color: #9aa3b1; font-size: 0.8rem; }
+.monthFacts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 10px 0 0; }
+.monthFacts > div { min-inline-size: 0; padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); }
+.monthFacts dt { color: #9aa3b1; font-size: 0.7rem; }
+.monthFacts dd { margin: 4px 0 0; color: #eef2f6; font-size: 0.9rem; font-weight: 650; overflow-wrap: anywhere; }
+.monthFacts dd small { display: block; margin-block-start: 2px; color: #aeb7c4; font-size: 0.72rem; font-weight: 500; }
+.monthFacts dd[data-direction='down'] { color: var(--mint, #7ef0c1); }
+@media (max-width: 760px) { .monthFacts { grid-template-columns: 1fr 1fr; } .monthFacts > div:last-child { grid-column: 1 / -1; } }
