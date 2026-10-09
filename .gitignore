@@ -18,3 +18,6 @@ Thumbs.db
 
 # Real receipts for the local R1 benchmark never go into git.
 /tools/receipt-benchmark/local-receipts/
+
+.vercel
+.env*
