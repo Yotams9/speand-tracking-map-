@@ -101,11 +101,12 @@ describe('strict receipt array boundaries', () => {
 })
 
 describe('offline receipt-to-review adapter', () => {
-  it('preserves observations independently, never chooses merchant/place/context/time defaults', () => {
+  it('preserves observations independently, starts unpinned and never invents merchant/payment/category/time', () => {
     const raw = one(), before = structuredClone(raw), draft = receiptToReviewDraft(raw)
     expect(draft.observations).toEqual(before)
-    expect(draft.review).toMatchObject({ source: 'receipt', provenance: 'user-reviewed', merchantId: '', placeId: '', channel: '', date: '', payment: '', category: '', baseAmount: '' })
-    expect(errors(draft)).toMatchObject({ merchantId: 'required', channel: 'required', date: 'date', payment: 'required', category: 'required' })
+    expect(draft.review).toMatchObject({ source: 'receipt', provenance: 'user-reviewed', merchantId: '', placeId: '', channel: 'unknown', date: '', payment: '', category: '', baseAmount: '' })
+    expect(errors(draft)).toMatchObject({ merchantId: 'required', date: 'date', payment: 'required', category: 'required' })
+    expect(errors(draft)).not.toHaveProperty('channel')
     draft.review.lines[0].name = 'Explicit edit'
     raw.lines[0].name = 'Changed source'
     expect(draft.observations.lines[0].name).toBe(before.lines[0].name)

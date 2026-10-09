@@ -1388,3 +1388,189 @@ index; cumulative tree remains dirty with prior work. Main refs/entry next-env/
 15,657-file entry snapshot preserved outside manifest; owned3130server stopped.
 No credentials, provider calls, billing/Vercel action, commit/push/deployment.
 Next gate: separate final-payable checkpoint review; any inference remains gated.
+
+## 2026-10-09 — Structured Gemini receipt preparation (offline, uncommitted)
+
+Prepared the separate minimal-baseline JSON-mode candidate (`gemini-3.8-flash`,
+`responseMimeType: application/json`, combined output/thinking cap 4096), strict
+small-contract validation and mock-only Capture → editable review → explicit P1
+save/reload. No geometry parser, live transport/key reader, live reservation or
+provider call. Missing facts remain unresolved; original observations stay transient.
+Printed lines and final payable remain distinct; their difference is nonblocking,
+with no receipt-level discount allocation. Old request/financial validators unchanged.
+
+Final QA: 286/286 guarded unit tests; 13/13 synthetic production-browser tests
+(39.111s); application/focused QA typechecks and production build pass. Inspected
+17 fictional EN/HE screenshots at 360/390/430/1280 widths. Owned servers stopped.
+Exact next-env entry/HEAD bytes, all 100 protected snapshot artifact hashes and
+minimal freezes' 49/57 dependency hashes preserved. Ignored tsconfig.tsbuildinfo
+was regenerated. Earlier handoff text and unrelated source work preserved.
+
+Real structured admission, extraction/item coverage and real save readiness remain
+unverified. Minimal HTTP 200 proves only image/plain-text compatibility; repeated
+HTTP 400 cause remains unknown. Next gate: separately authorize one fixed native
+structured validation of the approved 2013 receipt, existing private project/key
+verification and Prepay, no retries/fallback/autosave. Planning cost US$0.03540
+(<$0.10; pricing reviewed 2026-10-09, recheck by 2027-01-01). No executable native
+launcher here. See COLLEGE_GEMINI_STRUCTURED_RECEIPT.md for the exact 12-file task
+manifest, request comparison, evidence, contract limits and activation requirements.
+
+Git: feature/spendscape-rebuild; HEAD 52902b13a8493ed616cc35ccb084a3edeecaf590;
+index empty; cumulative 8 tracked modifications / 122 individual untracked files.
+Main/origin-main eee0d26b55e5061f87ac664938df0c195800b74f unchanged; cached origin
+feature 66fb4204154c88789e9e0401e317f9000b6b5e18 (ahead 18/behind 0; no fetch).
+All task files uncommitted. Vercel untouched; pause not independently rechecked.
+No billing/account changes, commit, push or deployment. Stop for checkpoint review.
+
+
+## 2026-10-09 — Authorized native structured run prepared; private launch pending
+
+Separate fixed run structured-validation-20261009-one prepared for ONE approved
+2013 crop/one Gemini request on existing Prepay,≤US$0.10. Original contract/prompt/
+JSON mode/4096 cap unchanged; no geometry parser. New transport verifies serialized
+request SHA256 1c9420c3…; exclusive fsynced reservation and durable lifecycle precede
+transmission. Default/unknown/hosted/CI disabled; no retry/fallback/autosave.
+User-only launcher performs existing private gcloud/key/project match; agent has
+not accessed credentials. Current count0, native reservation absent; waiting for
+private launch, not an extraction result. Keep all historical consumed locks.
+
+QA125/125 guarded unit,25/25 guarded Node,3/3 focused production-browser mocks
+(12.468s), application/focused TS and production build pass. Initial browser sandbox
+failure and evidence-directory invocation error retained separately; fresh final
+mock run passed. Owned mock servers stopped; next-env entry bytes preserved.
+Current official cost estimateUS$0.03540 incl thinking margin,expiry2027-01-01;
+existing Prepay/Auto-reload Off are user-confirmed via launch flags,not remeasured.
+All101 protected entry hashes and minimal freezes49/57 deps preserved. Original
+candidate freeze intentionally detects only the activated route; kept unchanged.
+Separate activation freeze131 source/history+449 build files verifies local preflight.
+
+Exact11-file activation manifest/instructions in COLLEGE_GEMINI_STRUCTURED_RECEIPT.md
+and qa/receipt-structured/activation/README.md. All uncommitted; HEAD52902b13,
+feature/spendscape-rebuild,main refs unchanged,index empty. Vercel untouched.
+After private readiness: native/unused check, ONE normal Capture Read, safe durable
+status and transient field classification; no correction/save. Real structured
+extraction/accuracy/save/reload remain unverified until actually observed.
+
+
+## 2026-10-09 — Native structured validation: editable draft, review required
+
+Run structured-validation-20261009-one consumed exactly ONE Capture inference;
+private user launcher/key-project match, native/unused status checked before Read.
+Approved crop/frozen request unchanged. Durable HTTP200 → parsing-complete →
+review-response-complete at11746ms (server key check/request/validation/preparation,
+not isolated model latency; excludes private gcloud verification and upload).
+Real editable five-row draft appeared; all product descriptions/quantities/prices/
+printed line amounts matched, seven units, promotions excluded, barcodes unknown,
+final payable matched. Address prefix needs review. Printed date/time matched in
+observations but DMY date did not populate datetime-local; Hebrew currency notation
+did not populate ISO select. Five units unresolved; required purchase context and
+explicit timezone unresolved. No manual corrections/save/reload, no inferred facts.
+Reference arithmetic: approved product amounts sum60.45, not60.55; payable60.50.
+No allocation or rewrite. Live totals notice remains unverified while currency is
+blank; mocks passed. User draft/tab and user-owned server3156 retained for review;
+owned mock servers stopped; consumed reservation prevents another inference.
+QA125/125 unit,25/25 Node,3/3 browser mocks; TS/build pass. Cost boundUS$0.03540,
+actual charge not measured. Exact11-file activation manifest and detailed findings
+in COLLEGE_GEMINI_STRUCTURED_RECEIPT.md. All task changes uncommitted; historical
+locks/evidence, main refs and entry next-env preserved. Vercel untouched. No retry,
+provider/schema fix, billing action, commit/push/deploy. Next gate is checkpoint/
+compatibility review; no further call authorized.
+
+Final Git verification: 8 tracked modifications / 130 individual untracked files,
+index empty, ahead18/behind0 versus cached origin feature; no fetch. All101 protected
+entry artifacts and activation freeze131 source/history+449 build hashes match.
+Only task docs/route and ignored tsconfig.tsbuildinfo differ from entry; unrelated
+entry files preserved. next-env matches entry and HEAD. Whitespace checks pass.
+
+
+## 2026-10-09 — Receipt observation/editor compatibility, offline QA complete
+
+Strict ISO/DMY four-digit calendar conversion plus exact supported ILS notation now
+populate receipt review controls; originals remain separate. Missing/ambiguous time,
+units, currency, timezone and place require explicit review. Address is editable
+only in transient review memory; no persistence/location inference. Existing
+structured Gemini request/model/prompt/JSON mode/transport and financial/store
+validators unchanged. Correct approved evaluation sum60.45/payable60.50; independent
+product values and final total retained, difference nonblocking. No receipt-discount
+allocation. Historical scores/freezes and older synthetic60.55 controls unchanged.
+
+QA259/259 guarded focused unit,6/6 final synthetic production-browser tests25.467s,
+application/focused TS and isolated production build pass. Initial browser2/6 had
+four incorrect unit-first focus expectations: existing validation focuses quantity
+while unit is unresolved. New tests verify that focus, keyboard unit access/errors;
+no source safeguard changed. Failure artifacts retained. Fourteen fictional EN/HE
+screenshots;360/390/430 mobile and1280 desktop, save/reload/duplicates/Undo,12 pins
+and one MapLibre verified. No broad suite or physical-device claim.
+
+User chose to leave real draft open: verified visible, no Save/reload or field edits.
+User-owned native3156 server/build retained; isolated fictional3160 server stopped.
+New code is not applied to the already loaded real page; reloading would discard
+its draft. Real save/reload remains unverified. No provider call/new reservation,
+credentials, billing, dependency, commit/push/deploy or Vercel action.
+
+Exact8-file task manifest/rules/results in COLLEGE_RECEIPT_EDITOR_COMPATIBILITY.md;
+evidence artifacts/receipt-editor-ak98df2a/. All103 protected entry hashes and449
+native build hashes preserved, original freezes/locks byte-identical. Source freeze
+intentionally detects new editor/adapter code; it was not regenerated. HEAD52902b13,
+feature/spendscape-rebuild, index empty; main refs/entry next-env unchanged, unrelated
+dirty/untracked work preserved. All task changes uncommitted. Next gate: checkpoint
+review; eventual real Save remains the user's explicit action.
+
+Final cumulative Git state:8 tracked modifications/134 individual untracked files,
+index empty,ahead18/behind0 versus cached origin feature; no fetch. Four new task
+files/four edited entry files; zero unrelated entry changes. Whitespace checks pass.
+
+## 2026-10-09 — Complete receipt prefill and actual save blockers (offline)
+
+HEAD52902b13/feature-spendscape-rebuild unchanged; all task work uncommitted.
+See COLLEGE_RECEIPT_PREFILL.md for exact15-file manifest and evidence under
+artifacts/receipt-prefill-d37rrqyn/. Existing strict date/currency prefill retained;
+partial date/time now keeps the supported part. Observed merchant name prefills
+explicit creation, address stays editable/transient and can prefill an explicitly
+created place. Unknown channel permits an unpinned save without coordinates.
+No automatic merchant/place match or invented context. Actual prepareReceiptReview
+errors drive live blockers; missing-unit presentation coalesces dependent quantity
+errors/focuses unit without altering validators. Summary uses meaningful facts.
+Printed product values/payable remain independent; difference nonblocking.
+
+Payment/category/units/confirmed timestamp have no unknown persisted alternatives;
+if unknown, keep draft. Unresolved-place address cannot persist without a separate
+contract change. Request/model/prompt/JSON/transport, store schema and financial
+validators unchanged. QA264/264 guarded focused unit,12/12 final combined synthetic
+browser44.8s, application/focused TS and isolated production build pass;24 fictional
+EN/HE screenshots. Explicit mock save/reload/duplicates/Undo,12 pins/one map verified.
+Initial failures recorded in checkpoint; no broad-suite/physical-device claim.
+
+Real draft verified still open in older loaded UI; no edits/save/reload/native restart.
+Reload would discard it, so improvements were tested on separate credential-free
+mock3161, now stopped. User-owned3156 remains; real save/reload unverified.
+152 protected evidence/449 native build hashes, main refs,index,entry next-env and
+unrelated work preserved. No call/new reservation, credentials,billing,dependency,
+commit/push/deploy or Vercel action. Next gate: checkpoint review.
+
+Final cumulative state13 tracked modifications/138 individual untracked files,
+index empty,ahead18/behind0;11 entry files edited/four new task files, zero unrelated
+entry changes. Tracked and untracked-task whitespace checks pass.
+
+
+## 2026-10-09 — Self-contained native mocks / final receipt-flow review
+
+Proposed43-file checkpoint now passes in a fresh HEAD52902b13 source projection:
+native23/23, guarded aggregate222/222, application/strict-native-test TS and whitespace.
+Earlier214/222 (eight ignored-history ENOENT failures) retained byte-identically in
+receipt-flow-review-q_4xde_r. Test-only synthetic history/digest substitution exercises
+the unchanged production fixed-path SHA256, durable reservation and lifecycle code;
+missing/tampered records still reject. Fresh temp roots cleaned; no real/ignored
+history, receipt, credential or research dependency. Extra strict test typing's six
+NODE_ENV errors corrected only in synthetic environments; initial evidence retained.
+
+Exact43-file/hunk patch, final checks and preservation:
+artifacts/receipt-flow-final-7vfalg9y/. This correction changes only native test,
+COLLEGE_RECEIPT_PREFILL.md and this appended section. Application/dependencies unchanged;
+retained12/12 EN/HE browser/build evidence reused. Prior dirty handoff sections and
+three Vision run-config files excluded from the proposal. No staging/commit.
+Real old-UI draft still open/untouched; real save/reload unverified. Printed line
+sum60.45/payable60.50 independent. No calls, credentials, new locks, billing/Vercel
+change or publication. Main refs, historical evidence, consumed locks and entry
+next-env preserved. Next gate: separate commit approval for
+`feat(receipts): complete local structured extraction and reviewed save flow`.

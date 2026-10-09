@@ -1,8 +1,9 @@
 import { validateBarcode, type BarcodeIdentity } from './barcode-domain'
 import {
-  blankReview, lineMinorTotal, minorAmount, reviewCurrencies, validateReview,
+  blankReview, lineMinorTotal, minorAmount, validateReview,
   type PurchaseReviewInput, type ReviewContext, type ReviewErrors, type ReviewLine,
 } from './session-purchase-domain'
+import { receiptEditorCurrency } from './receipt-editor-values'
 
 // Plain observed strings are never repaired. Null means missing; candidates
 // retain ambiguous observations without choosing an answer for the user.
@@ -13,6 +14,8 @@ export interface ReceiptLineObservation {
   unit: ReceiptObservation
   unitPrice: ReceiptObservation
   lineAmount: ReceiptObservation
+  // Printed code only; never a verified barcode or persisted identifier.
+  printedIdentifier?: ReceiptObservation
   // Absence means no printed discount. A supplied null is unresolved, not zero.
   discount?: ReceiptObservation
   barcode?: { original: ReceiptObservation; format: ReceiptObservation } | null
@@ -81,7 +84,8 @@ export function validateReceiptObservations(raw: unknown): raw is ReceiptObserva
   return object(raw) && keys(raw, [...headerKeys, ...taxKeys, 'lines'], [...headerKeys, 'lines']) &&
     headerKeys.every(key => observation(raw[key])) && taxKeys.every(key => !own(raw, key) || observation(raw[key])) &&
     denseArray(raw.lines, 50) && raw.lines.every(line => object(line) &&
-      keys(line, [...lineKeys, 'discount', 'barcode'], lineKeys) && lineKeys.every(key => observation(line[key])) &&
+      keys(line, [...lineKeys, 'discount', 'barcode', 'printedIdentifier'], lineKeys) && lineKeys.every(key => observation(line[key])) &&
+      (!own(line, 'printedIdentifier') || observation(line.printedIdentifier)) &&
       (!own(line, 'discount') || observation(line.discount)) && (!own(line, 'barcode') || barcode(line.barcode)))
 }
 
@@ -90,7 +94,6 @@ const observed = (value: ReceiptObservation): string => typeof value === 'string
 export function receiptToReviewDraft(raw: unknown): ReceiptReviewDraft {
   if (!validateReceiptObservations(raw)) throw new Error('receipt-observations-invalid')
   const observations = structuredClone(raw)
-  const currency = observed(observations.currency)
   return {
     observations,
     barcodes: observations.lines.map(line => {
@@ -100,9 +103,11 @@ export function receiptToReviewDraft(raw: unknown): ReceiptReviewDraft {
     }),
     review: {
       ...blankReview(), source: 'receipt', provenance: 'user-reviewed',
+      // Unknown is an existing unpinned state, not an inferred physical place.
+      channel: 'unknown',
       // Printed wall-clock date/time is preserved above. The existing save
       // model expects UTC minutes; no timezone or missing time is inferred.
-      date: '', currency: reviewCurrencies.find(value => value === currency) ?? '',
+      date: '', currency: receiptEditorCurrency(observations.currency),
       amount: observed(observations.finalAmount),
       lines: observations.lines.map(line => {
         const unit = observed(line.unit)

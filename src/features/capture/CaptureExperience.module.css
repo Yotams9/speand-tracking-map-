@@ -344,3 +344,8 @@
 .imageQa label { display: grid; gap: 8px; }
 .imageQa select { padding: 12px; color: #fff; background: #1b2631; border: 1px solid #647585; border-radius: 10px; }
 .receiptImage :is(button, select):focus-visible { outline: 2px solid #b8f0dd; outline-offset: 3px; }
+
+.receiptBlockers { margin-block: 16px; padding: 16px; border: 1px solid #3b4657; border-radius: 12px; background: #111925; font-size: .8rem; line-height: 1.6; overflow-wrap: anywhere; }
+.receiptBlockers h3 { margin: 0 0 8px; font-size: .88rem; }
+.receiptBlockers ul { margin-block: 8px; padding-inline-start: 22px; }
+.receiptBlockers small { display: block; color: #b8c2d2; }

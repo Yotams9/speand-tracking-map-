@@ -15,21 +15,28 @@ export function ReceiptImageIntake({ locale, onDraft }: { locale: LocaleCode; on
   const [state, setState] = useState<ImageState>({ phase: 'idle', preview: null, code: null })
   const [qa, setQa] = useState(false)
   const [live, setLive] = useState(false)
+  const directFailure = useRef<HTMLParagraphElement>(null)
+  const [direct, setDirect] = useState(false), [directQa, setDirectQa] = useState(false), [directError, setDirectError] = useState<{httpStatus?:number;code:string}|null>(null)
   const [inspectionAvailable,setInspectionAvailable]=useState(false),[inspection,setInspection]=useState<ParserInspection|null>(null)
   const inspectOptIn=useRef(false)
   const fixture = useRef<'one' | 'fifteen'>('one'), complete = useRef(onDraft), session = useRef<ReceiptImageSession | null>(null)
   complete.current = onDraft
   const t = copy[locale], photo = useRef<HTMLInputElement>(null), upload = useRef<HTMLInputElement>(null), read = useRef<HTMLButtonElement>(null)
   useEffect(() => {
-    const optedIn = ['localhost','127.0.0.1','[::1]'].includes(location.hostname) && new URLSearchParams(location.search).get('receiptImageQa') === '1'
-    const liveOpted = !optedIn && ['localhost','127.0.0.1','[::1]'].includes(location.hostname) && new URLSearchParams(location.search).get('receiptVisionLocal') === '1'
+    const local = ['localhost','127.0.0.1','[::1]'].includes(location.hostname)
+    const structuredOpted = local && new URLSearchParams(location.search).get('receiptStructuredLocal') === '1'
+    const directOpted = structuredOpted || local && new URLSearchParams(location.search).get('receiptGeminiLocal') === '1'
+    const directEndpoint = structuredOpted ? '/api/receipt-structured' : '/api/receipt-direct'
+    const optedIn = !directOpted && ['localhost','127.0.0.1','[::1]'].includes(location.hostname) && new URLSearchParams(location.search).get('receiptImageQa') === '1'
+    const liveOpted = !directOpted && !optedIn && ['localhost','127.0.0.1','[::1]'].includes(location.hostname) && new URLSearchParams(location.search).get('receiptVisionLocal') === '1'
     const capability = new AbortController()
     let available = false
     if (liveOpted) void fetch('/api/receipt-ocr', { cache: 'no-store', credentials: 'omit', redirect: 'error', signal: capability.signal, headers: { 'x-spendscape-local-vision': '1' } }).then(async res => { const value = await res.json(); if (!capability.signal.aborted && res.ok && value.code === 'local-vision-ready') { available = true; setLive(true);setInspectionAvailable(value.inspectionAvailable===true) } }).catch(() => {})
+    if (directOpted) void fetch(directEndpoint, {cache:'no-store',credentials:'omit',redirect:'error',signal:capability.signal,headers:{'x-spendscape-local-gemini':'1'}}).then(async res=>{const v=await res.json();if(!capability.signal.aborted && res.ok && v.code==='local-gemini-ready' && ['native','fictional-qa'].includes(v.mode)){available=true;setDirect(true);setDirectQa(v.mode==='fictional-qa')}}).catch(()=>{})
     setQa(optedIn)
-    const current = new ReceiptImageSession({ inspect: inspectReceiptImage, createUrl: file => URL.createObjectURL(file), revokeUrl: url => URL.revokeObjectURL(url), state: value=>{if(['idle','validating','reading'].includes(value.phase))setInspection(null);setState(value)}, complete: draft => complete.current(draft), extract: async (signal, file) => {
-      if (!optedIn && (!liveOpted || !available)) throw new Error('ocr-unavailable')
-      const res = await fetch('/api/receipt-ocr', { method: 'POST', cache: 'no-store', credentials: 'omit', redirect: 'error', signal, headers: optedIn ? { 'Content-Type': 'application/json', 'x-spendscape-local-qa': '1' } : { 'Content-Type': file.type, 'x-spendscape-local-vision': '1',...(inspectOptIn.current?{'x-spendscape-parser-inspection':'1'}:{}) }, body: optedIn ? JSON.stringify({ fixture: fixture.current }) : file })
+    const current = new ReceiptImageSession({ inspect: inspectReceiptImage, createUrl: file => URL.createObjectURL(file), revokeUrl: url => URL.revokeObjectURL(url), state: value=>{if(['idle','validating','reading'].includes(value.phase)){setInspection(null);setDirectError(null)}setState(value)}, complete: draft => complete.current(draft), extract: async (signal, file) => {
+      if (!optedIn && (!(liveOpted||directOpted) || !available)) throw new Error('ocr-unavailable')
+      const res = await fetch(directOpted?directEndpoint:'/api/receipt-ocr', { method: 'POST', cache: 'no-store', credentials: 'omit', redirect: 'error', signal, headers: directOpted ? {'Content-Type':file.type,'x-spendscape-local-gemini':'1','x-spendscape-direct-fixture':fixture.current} : optedIn ? { 'Content-Type': 'application/json', 'x-spendscape-local-qa': '1' } : { 'Content-Type': file.type, 'x-spendscape-local-vision': '1',...(inspectOptIn.current?{'x-spendscape-parser-inspection':'1'}:{}) }, body: optedIn ? JSON.stringify({ fixture: fixture.current }) : file })
       // Bound response bytes before JSON parsing; no provider payload reaches UI.
       const reader = res.body?.getReader(); if (!reader) throw new Error('ocr-invalid')
       let body = '', count = 0
@@ -38,16 +45,18 @@ export function ReceiptImageIntake({ locale, onDraft }: { locale: LocaleCode; on
       if (signal.aborted) throw new Error('cancelled')
       const value = JSON.parse(body)
       if(inspectOptIn.current && validateParserInspection(value.inspection)){if(document.hidden)throw new Error('cancelled');setInspection(value.inspection);throw new Error(value.code==='parser-inspection'?'parser-inspection':'layout-unsupported')}
-      if (!res.ok || value.code !== (optedIn ? 'synthetic-qa' : 'vision-observations')) throw new Error(value.code === 'ocr-unavailable' ? 'ocr-unavailable' : 'ocr-invalid')
+      if(directOpted && !res.ok){const codes=['attempt-consumed','pilot-stopped','authentication-failed','transport-failed','recognition-failed','diagnostics-unavailable','image-not-approved','ocr-invalid','cancelled'];if(codes.includes(value.code))setDirectError({code:value.code,...(Number.isInteger(value.httpStatus)&&value.httpStatus>=100&&value.httpStatus<=599?{httpStatus:value.httpStatus}:{})})}
+      if (!res.ok || value.code !== (directOpted?'direct-observations':optedIn ? 'synthetic-qa' : 'vision-observations')) throw new Error(value.code === 'ocr-unavailable' ? 'ocr-unavailable' : 'ocr-invalid')
       return value.observations
-    } }, liveOpted ? 30_000 : 15_000)
+    } }, directOpted ? 50_000 : liveOpted ? 30_000 : 15_000)
     session.current = current
     // Listen before a response exists. Cancellation invalidates this generation
     // even if the tab becomes visible again before the response arrives.
-    const clearHidden = () => { if (document.hidden) { setInspection(null); if (inspectOptIn.current) current.cancel() } }
+    const clearHidden = () => { if (document.hidden) { setInspection(null); if (inspectOptIn.current || directOpted) current.cancel() } }
     document.addEventListener('visibilitychange', clearHidden)
     return () => { document.removeEventListener('visibilitychange', clearHidden); capability.abort(); current.dispose(); if (session.current === current) session.current = null }
   }, [])
+  useEffect(()=>{if(directError){directFailure.current?.focus({preventScroll:true});directFailure.current?.scrollIntoView({block:'nearest'})}},[directError])
   useEffect(()=>{if(!inspection)return;const timer=setTimeout(()=>setInspection(null),INSPECTION_MS);return()=>clearTimeout(timer)},[inspection])
   useEffect(() => {
     if (state.phase !== 'ready') return
@@ -58,8 +67,9 @@ export function ReceiptImageIntake({ locale, onDraft }: { locale: LocaleCode; on
   const choose = (input: HTMLInputElement) => { const file = input.files?.[0]; input.value = ''; if (file) void session.current?.select(file) }
   const message = state.code === 'parser-inspection' ? (locale==='he'?'הבדיקה הזמנית הושלמה. לא נוצרה טיוטה לשמירה.':'Temporary inspection complete. No purchase draft was created.') : state.code === 'ocr-unavailable' ? t.unavailable : state.code === 'image-format' ? t.format : state.code === 'image-size' ? t.size : state.code === 'timeout' ? t.timeout : state.code ? t.failed : state.phase === 'validating' ? t.validating : state.phase === 'reading' ? t.reading : state.phase === 'ready' ? t.ready : ''
   return <div className={`${styles.scrollBody} ${styles.receiptImage}`} data-testid="receipt-image-intake" data-phase={state.phase}>
-    <h2 id="capture-title">{t.title}</h2><p id="capture-description">{live ? (locale === 'he' ? 'בדיקה מקומית אחת בלבד: לחיצה על קריאת קבלה תשלח רק את הצילום החתוך שאושר ל־Google Vision. הצילום והתצפיות זמניים. נדרשת בדיקה מפורשת לפני שמירה.' : 'One local validation only: Read receipt sends only the approved cropped photo to Google Vision. The photo and observations are temporary. Explicit review is required before saving.') : t.body}</p>
-    {qa && <div className={styles.imageQa} data-testid="receipt-image-qa"><p>{t.qa}</p><label>{locale === 'he' ? 'דוגמה בדיונית' : 'Fictional fixture'}<select data-testid="receipt-image-fixture" defaultValue="one" onChange={e => { session.current?.cancel(); fixture.current = e.target.value as 'one' | 'fifteen' }}><option value="one">1 item</option><option value="fifteen">15 items</option></select></label></div>}
+    <h2 id="capture-title">{t.title}</h2><p id="capture-description">{directQa ? (locale==='he'?'בדיקה מקומית עם תצפיות בדיוניות בלבד. שום צילום לא נשלח לספק. יש לבדוק ולתקן לפני שמירה.':'Local QA with fictional observations only. No photo is sent to a provider. Review and correct before saving.') : direct ? (locale==='he'?'בדיקה מקומית מוגבלת: קריאת קבלה שולחת את הצילום שאושר ל־Gemini. בשכבה החינמית Google עשויה להשתמש בתוכן לשיפור מוצרים. אין שמירת צילום במכשיר. יש להשוות כל פריט ומספר ולתקן לפני שמירה.':'Bounded local pilot: Read receipt sends the approved crop to Gemini. Google may use Free-tier content to improve products. The photo is not retained on this device. Compare every item and number and correct them before saving.') : live ? (locale === 'he' ? 'בדיקה מקומית אחת בלבד: לחיצה על קריאת קבלה תשלח רק את הצילום החתוך שאושר ל־Google Vision. הצילום והתצפיות זמניים. נדרשת בדיקה מפורשת לפני שמירה.' : 'One local validation only: Read receipt sends only the approved cropped photo to Google Vision. The photo and observations are temporary. Explicit review is required before saving.') : t.body}</p>
+    {(qa||directQa) && <div className={styles.imageQa} data-testid="receipt-image-qa"><p>{directQa?(locale==='he'?'בדיקה מקומית בלבד · תוצאת מודל בדיונית; ללא קריאת ספק.':'Local QA only · fictional model output; no provider call.'):t.qa}</p><label>{locale === 'he' ? 'דוגמה בדיונית' : 'Fictional fixture'}<select data-testid="receipt-image-fixture" defaultValue="one" onChange={e => { session.current?.cancel(); fixture.current = e.target.value as 'one' | 'fifteen' }}><option value="one">1 item</option><option value="fifteen">15 items</option></select></label></div>}
+    {directError && <p ref={directFailure} tabIndex={-1} role="alert" data-testid="receipt-direct-error">{locale==='he'?'הניסיון נעצר. אין לנסות שוב.':'The attempt stopped. Do not retry.'} <bdi>{directError.httpStatus?`HTTP ${directError.httpStatus} · `:''}{directError.code}</bdi></p>}
     {inspectionAvailable && <label><input type="checkbox" data-testid="parser-inspection-opt-in" disabled={state.phase==='reading'} onChange={e=>{inspectOptIn.current=e.target.checked;setInspection(null)}} />{locale==='he'?'בדיקת שורות מקומית וזמנית בלבד — ללא שמירה':'Temporary local row inspection only — no saving'}</label>}
     {inspection && <section aria-label={locale==='he'?'בדיקת שורות זמנית':'Temporary row inspection'} data-testid="parser-inspection" dir={locale==='he'?'rtl':'ltr'}>
       <p>{locale==='he'?'תוכן זמני בלבד. יימחק תוך שתי דקות או בסגירה. שורה שלא סווגה עשויה להיות שורה שטרם נבדקה.':'Memory only. Cleared after two minutes or on close. Unassigned can also mean not yet reached.'}</p>

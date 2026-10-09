@@ -39,7 +39,7 @@ describe('reviewed final payable, independent of product sum', () => {
   })
   it('requires context and preserves original observations during correction, without side effects', () => {
     const draft = receiptToReviewDraft(payableReceipt)
-    expect(prepareReceiptReview(draft, data)).toMatchObject({ ready: false, errors: { date: 'date', channel: 'required', payment: 'required', merchantId: 'required' } })
+    expect(prepareReceiptReview(draft, data)).toMatchObject({ ready: false, errors: { date: 'date', payment: 'required', merchantId: 'required' } })
     const corrected = completed(); corrected.review.amount = '60.40'
     expect(prepareReceiptReview(corrected, data)).toMatchObject({ ready: true, input: { amount: '60.40' } })
     expect(corrected.observations.finalAmount).toBe('60.50')
