@@ -152,9 +152,22 @@ Screenshots, recordings, and run output belong only in the ignored local
   CSV preview, Gmail future explanation, manual/cash, and failure/retry states
 - confirm-first receipt review with nested arithmetic, place-suggestion truth
   language, fixed synthetic FX provenance, and no retained photo value
-- separate in-memory session additions that update Purchases, Analytics, and
-  canonical place aggregates without mutating the checked-in fixture graph;
-  reload resets them and online/unresolved additions remain unpinned
+- separate added purchases that update Purchases, Analytics, and canonical
+  place aggregates without mutating the checked-in fixture graph; since
+  2026-10-02 they are kept in this browser's `localStorage` on the device and
+  survive reload until removed; online/unresolved additions remain unpinned
+- real barcodes outside the demo catalog show the published shelf prices of
+  every Tel Aviv Shufersal, Rami Levy and Osher Ad store that sells them,
+  served by `/api/catalog/[gtin]` from `data/catalog/tel-aviv.json`; rebuild the
+  snapshot with `python tools/nearby-prices/build_catalog.py` (source: the
+  chains' price transparency files; promotions and club prices not applied)
+- `Find the store I'm in` suggests the closest of the 34 located Tel Aviv
+  supermarkets (store addresses geocoded once with OpenStreetMap Nominatim,
+  © OpenStreetMap contributors, ODbL) and fills that store's published price
+  for a scanned item; the location is read only on press and never stored
+- stores the user adds in the review form, pinned only from a location the
+  user explicitly reads on the device, and a two-press removal of an added
+  purchase from its detail panel
 - one typed material-uncertainty Smart Inbox case linked to the existing
   unresolved purchase and two existing canonical place candidates, with no
   score, GPS claim, provider fact, or second fixture source
@@ -192,8 +205,8 @@ map interaction/backgrounding pauses playback. Close/Escape/Back restore entry
 camera/query/selection/mode; Forward opens a fresh paused player at the first
 event (Replay-only dates, speed and progress are intentionally ephemeral).
 Temporary camera positions
-do not overwrite normal persistence. Reload exits Replay; the existing in-memory
-Capture/Inbox reset policy remains unchanged. Ask and Replay cannot execute
+do not overwrite normal persistence. Reload exits Replay and resets Inbox
+decisions; added purchases are restored from the device. Ask and Replay cannot execute
 concurrently, and Ask Undo is preserved through Replay open/close.
 
 Production QA: build, then `npm run start -- --hostname 127.0.0.1` and
