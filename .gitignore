@@ -15,3 +15,9 @@ Thumbs.db
 # No credentials belong in this repository. Phase 1 needs none at all.
 .env
 .env.*
+
+# Real receipts for the local R1 benchmark never go into git.
+/tools/receipt-benchmark/local-receipts/
+
+.vercel
+.env*
