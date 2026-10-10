@@ -98,7 +98,7 @@ describe('reviewed final payable, independent of product sum', () => {
     }
     const forged = structuredClone(disk); forged.records[0].purchase.items[0].lineTotal = 9.95
     expect(() => validateLocalPurchases(forged, data)).toThrow('invalid')
-    expect(() => validateLocalPurchases({ ...disk, version: 4 }, data)).toThrow('invalid')
+    expect(() => validateLocalPurchases({ ...disk, version: 5 }, data)).toThrow('invalid')
   })
   it('counts payable in composed spend/pins, preserves item totals and suppresses demo comparisons', () => {
     const record = reviewedRecord(input(), 1, data), graph = [...data.purchases, record.purchase]

@@ -3,10 +3,10 @@
 import type { Feature, FeatureCollection, Point } from 'geojson'
 
 export type LocaleCode = 'en' | 'he'
-export type PurchaseCategory = 'groceries' | 'food' | 'retail' | 'travel'
+export type PurchaseCategory = 'groceries' | 'food' | 'retail' | 'travel' | 'unknown'
 export type CurrencyCode = 'ILS' | 'EUR' | 'GBP' | 'USD' | 'JPY' | 'AUD' | 'MXN' | 'ZAR'
 export type PurchaseChannel = 'physical' | 'online' | 'unknown'
-export type PaymentMode = 'card' | 'cash' | 'manual'
+export type PaymentMode = 'card' | 'cash' | 'manual' | 'unknown'
 export type PurchaseResolution = 'confirmed' | 'unresolved'
 export type EvidenceKind = 'card-record' | 'receipt' | 'email-receipt' | 'manual-entry'
 

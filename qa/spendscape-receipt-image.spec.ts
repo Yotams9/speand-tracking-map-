@@ -51,7 +51,7 @@ for(const [width,height,he,fixture] of [[360,640,false,'one'],[360,640,true,'fif
     await page.screenshot({path:`${out}/correction-${width}-${he?'he':'en'}.png`})
     await page.getByTestId('review-printedAmount-0').fill(fixture==='one'?'12.50':'6.00')
     await page.getByTestId('capture-confirm').click();await expect(page.getByTestId('capture-success')).toBeVisible();await count(page,43)
-    const d=await stored(page);expect(d.version).toBe(3);expect(d.records[0].purchase.items).toHaveLength(fixture==='one'?1:15)
+    const d=await stored(page);expect(d.version).toBe(4);expect(d.records[0].purchase.items).toHaveLength(fixture==='one'?1:15)
     expect(d.records[0].purchase.originalAmount).toBe(fixture==='one'?12.50:41);expect(JSON.stringify(d)).not.toMatch(/blob:|base64|fictional-private-marker|observations|vatRate/)
     if(fixture==='fifteen')expect(d.records[0].purchase.items[0]).toMatchObject({unitPrice:3.25,discountMinor:50,lineTotal:6})
     expect(await page.evaluate(()=>JSON.stringify([...Object.values(sessionStorage),history.state,location.href]))).not.toMatch(/blob:|fictional-private-marker|Fictional Demo Market/)

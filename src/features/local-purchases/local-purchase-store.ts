@@ -6,8 +6,8 @@ import type { SmartInboxDecision } from '../inbox/smart-inbox-domain'
 
 export const LOCAL_DB = 'spendscape-local-purchases'
 export const LOCAL_CHANNEL = 'spendscape-local-purchases-changed'
-export interface LocalPurchases { version: 3; directory: LocalDirectory; revision: number; records: readonly SessionCaptureRecord[]; nextSequence: number; decisions: readonly SmartInboxDecision[] }
-export const emptyLocalPurchases = (): LocalPurchases => ({ version: 3, directory: emptyDirectory(), revision: 0, records: [], nextSequence: 1, decisions: [] })
+export interface LocalPurchases { version: 4; directory: LocalDirectory; revision: number; records: readonly SessionCaptureRecord[]; nextSequence: number; decisions: readonly SmartInboxDecision[] }
+export const emptyLocalPurchases = (): LocalPurchases => ({ version: 4, directory: emptyDirectory(), revision: 0, records: [], nextSequence: 1, decisions: [] })
 export class LocalStoreError extends Error {
   constructor(public readonly code: 'invalid' | 'unavailable' | 'conflict' | 'capacity' | 'rejected') { super(code) }
 }
@@ -24,8 +24,10 @@ export function validateLocalPurchases(raw: unknown, context: SpendscapeDataSnap
   try {
     if (!raw || typeof raw !== 'object' || !exactObject(raw, Object.keys(raw)) || JSON.stringify(raw).length > 2_000_000) throw 0
     const data = raw as Omit<LocalPurchases, 'version'> & { version: number }
-    if ((data.version !== 1 && data.version !== 2 && data.version !== 3) || !Number.isSafeInteger(data.revision) || data.revision < 0 || !Number.isSafeInteger(data.nextSequence) || data.nextSequence < 1 || !denseArray(data.records, 1000) || !denseArray(data.decisions, context.smartInboxCases.length)) throw 0
-    const directory = data.version === 3 ? validateDirectory(data.directory, context, data.nextSequence) : emptyDirectory()
+    if ((data.version !== 1 && data.version !== 2 && data.version !== 3 && data.version !== 4) || !Number.isSafeInteger(data.revision) || data.revision < 0 || !Number.isSafeInteger(data.nextSequence) || data.nextSequence < 1 || !denseArray(data.records, 1000) || !denseArray(data.decisions, context.smartInboxCases.length)) throw 0
+    const directory = data.version >= 3 ? validateDirectory(data.directory, context, data.nextSequence) : emptyDirectory()
+    // Legacy envelopes did not support unknown context; never reinterpret them.
+    if (data.version < 4 && (directory.merchants.some(m => m.category === 'unknown') || data.records.some(r => r.purchase.paymentMode === 'unknown' || r.purchase.category === 'unknown'))) throw 0
     const graph = composeDirectory(context, directory)
     const sequences = new Set<number>()
     const records = data.records.map((r: SessionCaptureRecord) => {
@@ -62,10 +64,10 @@ export function validateLocalPurchases(raw: unknown, context: SpendscapeDataSnap
       if (!same(d, clean)) throw 0
       return clean
     })
-    const clean: LocalPurchases = { version: 3, directory, revision: data.revision, records, nextSequence: data.nextSequence, decisions }
+    const clean: LocalPurchases = { version: 4, directory, revision: data.revision, records, nextSequence: data.nextSequence, decisions }
     // Historical envelopes are validated before an in-memory-only migration.
     const { directory: _directory, ...legacy } = clean
-    if (!same(data, data.version === 3 ? clean : { ...legacy, version: data.version })) throw 0
+    if (!same(data, data.version >= 3 ? { ...clean, version: data.version } : { ...legacy, version: data.version })) throw 0
     if (!same(directory, pruneDirectory(directory, records.map(r => r.purchase)))) throw 0
     return clean
   } catch { throw new LocalStoreError('invalid') }

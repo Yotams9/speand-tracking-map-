@@ -5,7 +5,7 @@ import { validateBarcode, type BarcodeIdentity } from './barcode-domain'
 import { composeDirectory, emptyDirectory, previewSequence, proposeDirectory, pruneDirectory, type DirectoryIntent, type LocalDirectory } from '../local-purchases/local-directory'
 
 export const reviewCurrencies: CurrencyCode[] = ['ILS', 'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'MXN', 'ZAR']
-export const reviewCategories: PurchaseCategory[] = ['groceries', 'food', 'retail', 'travel']
+export const reviewCategories: PurchaseCategory[] = ['groceries', 'food', 'retail', 'travel', 'unknown']
 export interface ReviewLine { demoProductId?: string; name: string; quantity: string; unit: 'item' | 'kg'; price: string; discount?: string; originalLabel?: { en: string; he: string } }
 export interface PurchaseReviewInput {
   source: CaptureDraft['source']
@@ -80,7 +80,7 @@ export function validateReview(input: PurchaseReviewInput, context: ReviewContex
   const amount = minorAmount(input.amount, input.currency)
   if (amount === null) errors.amount = 'amount'
   if (!reviewCurrencies.includes(input.currency as CurrencyCode)) errors.currency = 'required'
-  if (!['card', 'cash', 'manual'].includes(input.payment)) errors.payment = 'required'
+  if (!['card', 'cash', 'manual', 'unknown'].includes(input.payment)) errors.payment = 'required'
   if (!reviewCategories.includes(input.category as PurchaseCategory)) errors.category = 'required'
   if (!['physical', 'online', 'unknown'].includes(input.channel)) errors.channel = 'required'
   const date = new Date(input.date + ':00Z')

@@ -8,7 +8,7 @@ export interface DirectoryIntent {
   place?: { branch: string; city: string; country: string; address: string; longitude: string; latitude: string; confirmed: boolean; separate: boolean }
 }
 type Context = { merchants: readonly Merchant[]; places: readonly Place[] }
-const categories = ['groceries', 'food', 'retail', 'travel']
+const categories = ['groceries', 'food', 'retail', 'travel', 'unknown']
 export const emptyDirectory = (): LocalDirectory => ({ merchants: [], places: [] })
 // Reject getters, sparse arrays, inherited values and unknown media/metadata.
 export function exactObject(value: unknown, keys: readonly string[]): value is Record<string, unknown> {

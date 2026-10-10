@@ -35,7 +35,7 @@ describe('actual receipt save blockers, not a parallel validator', () => {
     expect(fields(d)).toContain('quantity-0')
     d.review.lines[0].quantity = '2'; d.review.lines[0].printedAmount = '9.99'
     expect(fields(d)).toContain('printedAmount-0')
-    d.review.payment = 'unknown' as any; d.review.category = 'unknown' as any
+    d.review.payment = 'wire' as any; d.review.category = 'other' as any
     expect(fields(d)).toEqual(expect.arrayContaining(['payment', 'category']))
   })
   it('coalesces only actual dependent errors, bounds field labels and keeps other failures', () => {

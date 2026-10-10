@@ -1574,3 +1574,62 @@ sum60.45/payable60.50 independent. No calls, credentials, new locks, billing/Ver
 change or publication. Main refs, historical evidence, consumed locks and entry
 next-env preserved. Next gate: separate commit approval for
 `feat(receipts): complete local structured extraction and reviewed save flow`.
+
+
+## 2026-10-10 — Explicit unknown receipt context (offline)
+
+User confirmed old draft gone. Same-origin 3156 read-only validated hydration:
+ready, zero local purchases, baseline 42/pins 12, no draft. Temporary tab closed;
+no reconstruction/re-extraction/save. Real save/reload remains unverified.
+
+Explicit unknown payment/purchase category/new-merchant category now supported;
+blank remains a blocker. EN/HE guidance, summary/details, filters/Stats/Replay
+show unknown context. Strict known values/financial checks unchanged. Envelope v4
+validates v1/v2/v3 then migrates in memory only; next explicit atomic/revision-guarded
+save persists v4. Legacy unknown values/future versions reject; old builds cannot
+read v4. Units/currency/date/time/timezone and valid product facts still required.
+Unresolved location stays unpinned; its address stays transient. Independent
+printed product sum/final payable, observations, duplicates and eight-second Undo
+preserved. Successful Gemini request/model/prompt/JSON/transport unchanged.
+
+See COLLEGE_RECEIPT_UNKNOWN_CONTEXT.md: exact 23-file manifest, migration limits,
+real-status evidence and proposed new one-call gate. Fresh evidence:
+artifacts/receipt-real-save-8gzwwmyg/. Guarded focused 191/191; final combined
+synthetic production-browser 9/9 (34.9s), app/new focused-test TS, isolated build and
+whitespace pass. Additional migration/structured regressions 8/8 (31.3s); total17
+checks across two fresh runs. Eight old version assertions/one title updated only.
+EN360/HE390 save/Undo/reload/duplicates and read-only v3 migration
+verified; 12 pins/one map retained. Rendered fictional mobile/desktop checks pass.
+Initial setup/browser failures retained; historical store-test snapshot TS errors
+remain outside focused strict scope. No broad-suite or real save claim.
+
+Owned mock3162 stopped; user-native3156/build untouched. No provider request,
+credentials, new namespace/reservation, billing/dependency/commit/push/deploy or
+Vercel action; Vercel paused. 694 protected hashes, entry next-env, main refs and
+unrelated work preserved. All 23 task files uncommitted; index empty. Next gate:
+checkpoint review, then separate one-new-scan approval/launcher; unchanged
+Gemini3.8Flash planning allowance US$0.03540 vs proposed US$0.10 ceiling. Recheck
+pricing/key/project/account privately before any dispatch. Never reuse old launcher.
+
+Final Git:23 tracked modifications/108 individual untracked files; cached ahead19/
+behind0, no fetch; index empty. Task scope20 edited/three new files. Exact hashes
+and bounded diff: manifest.json/TASK.diff; zero unrelated entry changes.
+
+
+### Unknown receipt context — independent review, 2026-10-10
+
+Pass for the exact23-file candidate. No production defect/request change found;
+review adds10 legacy/required-fact unit controls and extends the three browser
+scenarios for Unknown Stats/filtering and v3 abort-after-put rollback. Fresh
+artifacts/unknown-context-review-qe1789eh: isolated intended-files201/201 guarded
+units, app/focused TS, production build and3/3 synthetic browser pass. Reuse prior
+9/9+8/8 browser evidence against identical application source; broader historical
+QA typing limits remain. V1–v3 validate before memory-only v4 migration, preserving
+IDs/discounts/directory/revision/decisions; aborted migration leaves disk unchanged.
+No blank/default unknown, relaxed printed-line check or unresolved-location pin.
+Gemini request unchanged. Real draft gone; real save/reload remains unverified.
+Exact patch/hunks: PROPOSED.diff/manifest.json; earlier dirty handoff excluded.
+Next: separate local commit approval (`feat(receipts): support explicit unknown
+review context`), then one fresh scan/save approval, unchanged request, estimated
+US$0.03540≤US$0.10 subject to activation recheck. No provider/credential/billing/
+namespace/reservation/staging/commit/push/deployment; Vercel paused.

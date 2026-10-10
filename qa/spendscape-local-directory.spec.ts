@@ -30,7 +30,7 @@ for(const [width,height,he] of [[360,640,false],[360,640,true],[390,844,true],[4
   if(width===360){await page.setViewportSize({width,height:420});await expect(page.locator('#review-error-place-confirmed')).toBeInViewport({ratio:1});await expect(page.getByTestId('capture-confirm')).toBeInViewport({ratio:1});await page.screenshot({path:`${out}/keyboard-${he?'he':'en'}.png`});await page.setViewportSize({width,height})}
   await page.getByTestId('review-place-confirmed').check();await page.getByTestId('review-merchantName').focus();await expect(page.getByTestId('review-merchantName')).toBeInViewport({ratio:1});await page.screenshot({path:`${out}/review-${width}-${he?'he':'en'}.png`});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
   await page.getByTestId('capture-review').evaluate((f:HTMLFormElement)=>{f.requestSubmit();f.requestSubmit()});await expect(page.getByTestId('capture-success')).toBeVisible();await counts(page,43,13)
-  const d=await stored(page);expect(d.version).toBe(3);expect(d.directory.merchants).toHaveLength(1);expect(d.directory.places).toHaveLength(1);expect(d.directory.places[0]).toMatchObject({source:'user-confirmed',locationMethod:'manual-coordinates',coordinates:[34.75,32.1]});expect(d.records[0].purchase.merchantId).toBe('local_merchant_1');expect(d.records[0].purchase.timestamp).toBe('2026-10-03T06:15:00.000Z');expect(JSON.stringify(d)).not.toMatch(/observations|printedAmount|vatRate|timeZone|image/)
+  const d=await stored(page);expect(d.version).toBe(4);expect(d.directory.merchants).toHaveLength(1);expect(d.directory.places).toHaveLength(1);expect(d.directory.places[0]).toMatchObject({source:'user-confirmed',locationMethod:'manual-coordinates',coordinates:[34.75,32.1]});expect(d.records[0].purchase.merchantId).toBe('local_merchant_1');expect(d.records[0].purchase.timestamp).toBe('2026-10-03T06:15:00.000Z');expect(JSON.stringify(d)).not.toMatch(/observations|printedAmount|vatRate|timeZone|image/)
   await page.reload();await ready(page);await counts(page,43,13);expect(await stored(page)).toEqual(d);await expect(page.getByTestId('session-undo')).toHaveCount(0)
   const storage=await page.evaluate(()=>JSON.stringify({...sessionStorage})+JSON.stringify(history.state)+location.href);expect(storage).not.toMatch(/Fictional|בדויה|רחוב|local_place_/);expect(writes).toEqual([]);expect(forbidden).toEqual([]);expect(errors).toEqual([])
  })
@@ -57,11 +57,11 @@ test('atomic rollback and stale cross-tab revision cannot create directories',as
  await page.getByTestId('capture-confirm').click();await expect(page.getByTestId('capture-review').getByRole('status').last()).toContainText('Not saved');await counts(page,42,12);expect(await stored(page)).toBeUndefined();await page.evaluate(()=>(window as any).__restorePut());await save(page);await counts(page,43,13)
  await expect(other.getByRole('dialog')).toContainText('Data changed in another tab');expect((await stored(other)).directory.places).toHaveLength(1);await other.close()
 })
-test('legacy v1/v2 hydration never writes and explicit save migrates to v3',async({page})=>{
+test('legacy v1/v2 hydration never writes and explicit save migrates to v4',async({page})=>{
  await page.goto('/?receiptReviewQa=1');await ready(page);await open(page);await inject(page);await context(page,'unknown');await page.getByTestId('review-merchantId').selectOption('merchant_unresolved');await save(page)
  const modern=await stored(page),{directory:_directory,...legacy}=modern
  for(const version of [1,2]){const old={...legacy,version};await overwrite(page,old);await page.reload();await ready(page);expect(await stored(page)).toEqual(old);await counts(page,43,12)}
- await open(page);await inject(page);await context(page,'unknown');await merchant(page);await save(page);expect((await stored(page)).version).toBe(3);await counts(page,44,12)
+ await open(page);await inject(page);await context(page,'unknown');await merchant(page);await save(page);expect((await stored(page)).version).toBe(4);await counts(page,44,12)
  const corrupt=await stored(page);corrupt.directory.merchants[0].id='missing';await overwrite(page,corrupt);await page.reload();await expect(page.locator('main')).toHaveAttribute('data-local-state','invalid');expect(await stored(page)).toEqual(corrupt)
 })
 test('eight-second Undo expiry retains the purchase and its directory',async({page})=>{

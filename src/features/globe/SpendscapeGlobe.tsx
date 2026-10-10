@@ -532,7 +532,7 @@ const copy = {
     purchaseDetail: 'Purchase detail', placeDetail: 'Place detail', receiptItems: 'Receipt items',
     noReceiptItems: 'No nested receipt lines for this record.', sourceEvidence: 'Evidence',
     originalAmount: 'Original amount', baseAmount: 'Illustrative ILS conversion', fxProvenance: 'Conversion provenance',
-    cash: 'Cash', card: 'Card', manual: 'Manual', confirmedStatus: 'Confirmed', unresolvedStatus: 'Unresolved',
+    unknown: 'Unknown', cash: 'Cash', card: 'Card', manual: 'Manual', confirmedStatus: 'Confirmed', unresolvedStatus: 'Unresolved',
     openPurchase: 'Open purchase', backToHistory: 'Back to history', viewPlace: 'View place',
     selectedMonth: 'Selected month', clearTimeline: 'Clear timeline', showTimeline: 'Open timeline',
     noPurchases: 'No purchases match this view', noPurchasesBody: 'Adjust the shared search, filters, or timeline.',
@@ -577,7 +577,7 @@ const copy = {
     purchaseDetail: 'פרטי רכישה', placeDetail: 'פרטי מקום', receiptItems: 'פריטי קבלה',
     noReceiptItems: 'לרשומה זו אין שורות קבלה מקוננות.', sourceEvidence: 'ראיות',
     originalAmount: 'סכום מקורי', baseAmount: 'המרת ש״ח להמחשה', fxProvenance: 'מקור ההמרה',
-    cash: 'מזומן', card: 'כרטיס', manual: 'ידני', confirmedStatus: 'מאומת', unresolvedStatus: 'לא פתור',
+    unknown: 'לא ידוע', cash: 'מזומן', card: 'כרטיס', manual: 'ידני', confirmedStatus: 'מאומת', unresolvedStatus: 'לא פתור',
     openPurchase: 'פתיחת רכישה', backToHistory: 'חזרה להיסטוריה', viewPlace: 'הצגת מקום',
     selectedMonth: 'חודש נבחר', clearTimeline: 'ניקוי ציר הזמן', showTimeline: 'פתיחת ציר הזמן',
     noPurchases: 'אין רכישות התואמות לתצוגה', noPurchasesBody: 'אפשר לשנות חיפוש, מסננים או ציר זמן משותפים.',
@@ -587,7 +587,7 @@ const copy = {
 } as const
 
 const categoryLabels: Record<CategoryFilter, keyof typeof copy.en> = {
-  all: 'all', groceries: 'groceries', food: 'food', retail: 'retail', travel: 'travel',
+  all: 'all', groceries: 'groceries', food: 'food', retail: 'retail', travel: 'travel', unknown: 'unknown',
 }
 
 const channelLabels: Record<ChannelFilter, keyof typeof copy.en> = {

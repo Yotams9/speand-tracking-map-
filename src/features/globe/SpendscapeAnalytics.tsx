@@ -49,7 +49,7 @@ const copy = {
     channelBody: 'Physical, online, and unresolved records reconcile to the current result set.',
     physical: 'Physical', online: 'Online', unresolved: 'Unresolved',
     categoryTitle: 'Category shape', categoryBody: 'Amount and count stay visible, so color is never the only signal.',
-    groceries: 'Groceries', food: 'Food', retail: 'Retail', travel: 'Travel',
+    unknown: 'Unknown', groceries: 'Groceries', food: 'Food', retail: 'Retail', travel: 'Travel',
     placesTitle: 'Top physical places', placesBody: 'Repeated purchases aggregate into one canonical place.',
     openGlobe: 'Open on globe', visits: 'purchases', noPlaces: 'No physical places in this view.',
     provenanceTitle: 'Currency and source provenance',
@@ -73,7 +73,7 @@ const copy = {
     channelBody: 'רשומות פיזיות, אונליין ולא פתורות מסתכמות בדיוק לתוצאות הנוכחיות.',
     physical: 'פיזי', online: 'אונליין', unresolved: 'לא פתור',
     categoryTitle: 'מבנה הקטגוריות', categoryBody: 'הסכום והכמות תמיד מוצגים, כך שהצבע אינו האות היחיד.',
-    groceries: 'מכולת', food: 'אוכל', retail: 'קמעונאות', travel: 'נסיעות',
+    unknown: 'לא ידוע', groceries: 'מכולת', food: 'אוכל', retail: 'קמעונאות', travel: 'נסיעות',
     placesTitle: 'מקומות פיזיים מובילים', placesBody: 'רכישות חוזרות מתאחדות למקום קנוני יחיד.',
     openGlobe: 'פתיחה בגלובוס', visits: 'רכישות', noPlaces: 'אין מקומות פיזיים בתצוגה זו.',
     provenanceTitle: 'מקור מטבע וראיות',
@@ -87,7 +87,7 @@ const copy = {
 } as const
 
 const categoryLabels: Record<PurchaseCategory, keyof typeof copy.en> = {
-  groceries: 'groceries', food: 'food', retail: 'retail', travel: 'travel',
+  groceries: 'groceries', food: 'food', retail: 'retail', travel: 'travel', unknown: 'unknown',
 }
 
 const channelLabels = {
