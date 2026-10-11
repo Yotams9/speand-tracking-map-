@@ -411,3 +411,81 @@ those edits. Corrected address/location accuracy remains unverified; a separatel
 authorized bounded search is needed. No production-source, deployment or account
 change. Current task changes only these checkpoint/handoff appendices. Historical
 query outcome and consumed marker preserved, not rewritten as a successful match.
+
+### Corrected-address one-search validation — prepared 2026-10-11
+
+HEAD b7ce7f8615c2162eec4817729aac31595c90afda/feature-spendscape-rebuild verified.
+User authorizes one new forward request on the existing saved purchase; current
+Spendscape Free/remaining credit/no concurrent use/no paid overage confirmed by user.
+Corrected address reviewed separately in transient form; not injected into provider
+selection or retained in diagnostics. No new search yet. Historical consumed run and
+its launcher/freeze unchanged. Fixed new run geoapify-corrected-address-validation-
+20261011-one; unknown runs disabled. Separate qa/address-search-corrected launcher,
+reservation/lifecycle directory and519-file source/build freeze. Build from committed
+HEAD plus four directly required run changes; excludes unrelated dirty recovery code.
+OCR/LLM flags/keys omitted. No arbitrary path override, retries or automatic save.
+
+Fresh artifacts/geoapify-corrected-20261011:163/163 guarded units,5/5 launcher mocks,
+app TypeScript/build pass; isolated committed-source unit repeat also163/163.
+New tests verify exclusive concurrency/restart, historical-marker preservation and
+new freeze/head/build checks. Existing EN/HE19/19 browser evidence reused: no UI or
+financial/persistence behavior change. Private launcher preparation check:unused,0
+requests. Next:user stop old3172, hidden-key fresh launcher, independent native/unused
+GET, user explicit Search once; candidate/point/address confirmation then user Save.
+Real corrected-address match, place confirmation/reload/pin/Show place pending.
+Free quota is soft; expected$0 only within user-confirmed allowance. Vercel paused,
+Nearby Prices deferred. No credential access/account/billing/staging/commit/deploy.
+
+### Corrected run — private launch and normal form ready
+
+User stopped old launcher and reports ready with the new private launcher. Independent
+local GET:HTTP200,native,geoapify-corrected-address-validation-20261011-one,available/
+unused,0 dispatch initiations. No provider request/key access by agent. New committed
+UI/build loaded on same origin3172; one saved local purchase/same card ID hydrated,
+five rows and12 baseline pins. Private DOM comparisons:merchant/items/amount ledger/
+payment-category context/provenance unchanged after loading. No direct IDB export.
+Corrected user address/city/country prefilled only transiently; search consent and
+physical confirmation unchecked,no point. Awaiting explicit user Search once.
+Candidate match, physical confirmation and place-save/reload remain pending.
+
+### Corrected run — single search completed, awaiting user place confirmation
+
+User reports Search submitted. Independent local durable GET:native,correct fixed
+run,consumed,1 dispatch initiation; provider HTTP200 at1298ms,completed/results
+at1313ms. These timings are lifecycle-from-reservation, not isolated provider latency.
+Five suggestions displayed; candidates now include the corrected street/number/city,
+plus other-city alternatives. Address-level matching is not store verification or
+proof of historical occupancy. No automatic selection. UI showed12 baseline pins,
+no proposed point and unchecked physical confirmation at observation. User guided
+to preview the matching candidate, inspect/adjust point and address, name the branch,
+then explicitly confirm/save only if trustworthy. No further request authorized.
+Real place confirmation/persistence/Show place still pending. No query/candidate
+coordinates/receipt/provider-message/key content retained in artifacts.
+
+### Corrected run — user-confirmed place saved and reload verified
+
+User explicitly reports location saved after candidate preview, point/address review
+and physical-location confirmation. Observed form closed; same purchase card ID,
+one local purchase, five product rows/seven units. Private transient DOM comparisons
+before update, after save and after same-origin reload match merchant, printed item
+values, amount ledger, payment/category context and original provenance. Product
+line sum and final payable remain independently preserved. No receipt text or point
+coordinates retained in QA evidence; transient comparison variables cleared.
+
+After reload, local hydration ready, same purchase appears once; confirmed branch/city
+association preserved. View place opens that associated place on the existing map,
+including after reload:13 canonical pins versus12 baseline, one MapLibre instance,
+map ready. Persistence is verified through rehydrated UI, not a direct IDB export.
+One new canonical place pin; no duplicate purchase. Geographic accuracy is the user's
+confirmation, not independently established; current address matching does not prove
+2013 store occupancy. Search success, user confirmation and reload are distinct facts.
+
+Only the authorized search was dispatched:fixed run remains consumed, HTTP200,
+completed/results,1 dispatch initiation. No retry or extraction. Final task manifest:
+11 files/17 hunks in artifacts/geoapify-corrected-20261011/manifest.json and TASK.diff.
+163/163 guarded units,5/5 launcher mocks, isolated units163/163, app typecheck/build
+passed before live use; existing19/19 EN/HE browser evidence reused. No new source
+changes after those checks. HEAD unchanged; task edits uncommitted,index empty.
+Protected measured files/refs/entry next-env bytes unchanged. Vercel paused;
+Nearby Prices not connected. User-owned local server may be stopped with Ctrl+C;
+never rerun its consumed launcher. No credentials/account/billing/commit/push/deploy.

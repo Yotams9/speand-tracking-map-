@@ -3,6 +3,7 @@ import {mkdir,open,readFile,stat} from 'node:fs/promises'
 import {join} from 'node:path'
 import {createHash} from 'node:crypto'
 import {allowedAddressOrigin,createAddressSearchHandler,createGeoapifyTransport} from './address-search-boundary'
+import {addressRun,addressRuns,type AddressRun} from './address-search-runs'
 import {searchErrors,type SearchResult} from '../features/local-purchases/address-search'
 
 export const ADDRESS_ROOT='/Users/testing.user/Documents/Codex/2026-08-28/referenced-chatgpt-conversation-this-is-an/work/spendscape-worktree'
@@ -23,7 +24,8 @@ const safeEvent=(v:unknown):v is Event=>{
 // Exclusive fsynced marker; uncertainty consumes rather than resets the run.
 // Events are separate exclusive/fsynced files. Nothing received from the provider
 // is used as a file name or journal string. No candidate/address content is retained.
-export function addressJournal(directory:string) {
+export function addressJournal(directory:string,run:AddressRun=ADDRESS_RUN) {
+ if(!addressRun(run))throw Error('run-disabled')
  const marker=join(directory,'reservation.json')
  let started=performance.now(),sequence=0,queue=Promise.resolve(),closed=false
  const durable=async(path:string,value:unknown)=>{
@@ -42,14 +44,14 @@ export function addressJournal(directory:string) {
  return {
   consumed,record,
   reserve:async()=>{
-   try{started=performance.now();await mkdir(directory,{recursive:true,mode:0o700});await durable(marker,{version:1,run:ADDRESS_RUN,maximumRequests:1});await record('reserved');return true}catch{return false}
+   try{started=performance.now();await mkdir(directory,{recursive:true,mode:0o700});await durable(marker,{version:1,run,maximumRequests:1});await record('reserved');return true}catch{return false}
   },
   status:async()=>{
    if(!await consumed())return {status:'unused' as const,dispatchInitiations:0}
    const events:Event[]=[]
    try{
     const m=JSON.parse(await readFile(marker,'utf8'))
-    if(JSON.stringify(m)!==JSON.stringify({version:1,run:ADDRESS_RUN,maximumRequests:1}))throw Error()
+    if(JSON.stringify(m)!==JSON.stringify({version:1,run,maximumRequests:1}))throw Error()
     for(let i=1;i<=5;i++){
      let data:Buffer;try{data=await readFile(join(directory,`event-${i}.json`))}catch(e){if((e as NodeJS.ErrnoException).code==='ENOENT')break;throw e}
      if(data.length>256)throw Error()
@@ -62,8 +64,9 @@ export function addressJournal(directory:string) {
 }
 
 // Internal dependency injection is for offline tests, never request/env paths.
-export function createNativeAddressHandler(ports:{directory:string;getKey:()=>string;send:typeof fetch;integrity:()=>Promise<boolean>},timeoutMs=10_000) {
- const journal=addressJournal(ports.directory)
+export function createNativeAddressHandler(ports:{directory:string;getKey:()=>string;send:typeof fetch;integrity:()=>Promise<boolean>;run?:AddressRun},timeoutMs=10_000) {
+ const run=ports.run??ADDRESS_RUN
+ const journal=addressJournal(ports.directory,run)
  let sent=false
  const transport=createGeoapifyTransport(ports.getKey,async(url,options)=>{
   if(sent||options?.signal?.aborted)throw Error('stopped')
@@ -79,7 +82,7 @@ export function createNativeAddressHandler(ports:{directory:string;getKey:()=>st
   if(!allowedAddressOrigin(request))return Response.json({status:'disabled'},{status:503,headers:{'cache-control':'no-store'}})
   if(request.method==='GET'){
    const state=await journal.status()
-   return Response.json({mode:'native',run:ADDRESS_RUN,status:state.status==='unused'?(await ports.integrity()?'available':'disabled'):'consumed',diagnostics:state},{headers:{'cache-control':'no-store'}})
+   return Response.json({mode:'native',run,status:state.status==='unused'?(await ports.integrity()?'available':'disabled'):'consumed',diagnostics:state},{headers:{'cache-control':'no-store'}})
   }
   let owns=false
   const handler=createAddressSearchHandler({enabled:true,reserve:async()=>{owns=await ports.integrity()&&await journal.reserve();return owns},search:transport},timeoutMs)
@@ -97,14 +100,16 @@ export function createNativeAddressHandler(ports:{directory:string;getKey:()=>st
  }
 }
 
-export async function verifyAddressFreeze(root:string,digest:string):Promise<boolean>{
+export async function verifyAddressFreeze(root:string,digest:string,run:AddressRun=ADDRESS_RUN):Promise<boolean>{
  try{
-  const bytes=await readFile(join(root,'qa/address-search-native/freeze.json'))
+  if(!addressRun(run))return false
+  const config=addressRuns[run]
+  const bytes=await readFile(join(root,config.freeze))
   if(hash(bytes)!==digest)return false
   const f=JSON.parse(bytes.toString())
-  if(f.version!==1||f.head!=='cbf62a12acbd8be2e649a44d17064acaf82d6482'||f.maximumRequests!==1||f.maximumCredits!==1||f.run!==ADDRESS_RUN||f.build!==ADDRESS_BUILD||!Array.isArray(f.files)||f.files.length<1||f.files.length>2500)return false
+  if(f.version!==1||f.head!==config.head||f.maximumRequests!==1||f.maximumCredits!==1||f.run!==run||f.build!==config.build||!Array.isArray(f.files)||f.files.length<1||f.files.length>2500)return false
   for(const x of f.files){
-   if(!x||typeof x.path!=='string'||!/^[A-Za-z0-9_.\/()[\]@-]+$/.test(x.path)||x.path.split('/').includes('..')||!['src/','package','next.config','tsconfig','qa/address-search-native/',`${ADDRESS_BUILD}/`].some(p=>x.path.startsWith(p))||!/^\w{64}$/.test(x.sha256)||hash(await readFile(join(root,x.path)))!==x.sha256)return false
+   if(!x||typeof x.path!=='string'||!/^[A-Za-z0-9_.\/()[\]@-]+$/.test(x.path)||x.path.split('/').includes('..')||!['src/','package','next.config','tsconfig',config.launcher,`${config.build}/`].some(p=>x.path.startsWith(p))||!/^\w{64}$/.test(x.sha256)||hash(await readFile(join(root,x.path)))!==x.sha256)return false
   }
   return true
  }catch{return false}

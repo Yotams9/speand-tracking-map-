@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os'
 import {join} from 'node:path'
 import {createHash} from 'node:crypto'
 import {addressJournal,createNativeAddressHandler,verifyAddressFreeze,ADDRESS_BUILD,ADDRESS_RUN} from './address-search-native'
+import {addressRun,addressRuns} from './address-search-runs'
 import {createLocalAddressHandler} from './address-search-local'
 const key='SYNTHETIC_KEY_SECRET_1234567890',secret='SYNTHETIC_RECEIPT_SECRET_329_87'
 const input={address:'Fictional street 12, Fictional city, Fictional country',locale:'en'}
@@ -15,6 +16,36 @@ const directory=()=>mkdtemp(join(tmpdir(),'spendscape-address-native-synthetic-'
 const make=(dir:string,send:typeof fetch,integrity=async()=>true,timeout=1000)=>createNativeAddressHandler({directory:dir,getKey:()=>key,send,integrity},timeout)
 async function bytes(dir:string){return (await Promise.all((await readdir(dir)).map(f=>readFile(join(dir,f),'utf8')))).join('')}
 describe('fixed one-search native reservation and safe status',()=>{
+ it('corrected fixed run has its own exclusive marker; historical marker remains untouched',async()=>{
+  const run='geoapify-corrected-address-validation-20261011-one' as const
+  expect(addressRun(run)).toBe(run)
+  for(const name of ['unknown','constructor','__proto__','../secret'])expect(addressRun(name)).toBeNull()
+  const old=await directory(),fresh=await directory()
+  const historical=addressJournal(old);expect(await historical.reserve()).toBe(true)
+  const oldBytes=await bytes(old),send=vi.fn(async()=>Response.json(provider()))
+  const makeFresh=()=>createNativeAddressHandler({run,directory:fresh,getKey:()=>key,send,integrity:async()=>true})
+  const responses=await Promise.all([makeFresh()(request()),makeFresh()(request())])
+  expect(responses.map(r=>r.status).sort()).toEqual([200,409])
+  expect((await makeFresh()(request())).status).toBe(409)
+  expect(await (await makeFresh()(get())).json()).toMatchObject({run,status:'consumed',diagnostics:{dispatchInitiations:1}})
+  expect(send).toHaveBeenCalledOnce();expect(await bytes(old)).toBe(oldBytes)
+  expect(await addressJournal(fresh).status()).toMatchObject({record:'unavailable'})
+  expect(await addressJournal(fresh,run).status()).toMatchObject({status:'consumed',dispatchInitiations:1})
+  expect(await bytes(fresh)).not.toContain(secret)
+ })
+ it('corrected freeze requires its exact head/build/run and fails closed before dispatch',async()=>{
+  const run='geoapify-corrected-address-validation-20261011-one' as const,config=addressRuns[run]
+  const root=await directory();await mkdir(join(root,'qa/address-search-corrected'),{recursive:true});await mkdir(join(root,'src'))
+  const data=Buffer.from('synthetic corrected source'),sha=(b:Buffer)=>createHash('sha256').update(b).digest('hex')
+  await writeFile(join(root,'src/fictional.ts'),data)
+  const f={version:1,head:config.head,maximumRequests:1,maximumCredits:1,run,build:config.build,files:[{path:'src/fictional.ts',sha256:sha(data)}]}
+  const install=async(v:unknown)=>{const b=Buffer.from(JSON.stringify(v));await writeFile(join(root,config.freeze),b);return sha(b)}
+  expect(await verifyAddressFreeze(root,await install(f),run)).toBe(true)
+  for(const bad of [{...f,head:'old'},{...f,run:ADDRESS_RUN},{...f,build:ADDRESS_BUILD},{...f,maximumRequests:2}])expect(await verifyAddressFreeze(root,await install(bad),run)).toBe(false)
+  const d=await directory(),send=vi.fn(async()=>Response.json(provider()))
+  const h=createNativeAddressHandler({run,directory:d,getKey:()=>key,send,integrity:async()=>false})
+  expect((await h(request())).status).toBe(409);expect(send).not.toHaveBeenCalled();expect(await readdir(d)).toEqual([])
+ })
  it('verifies frozen bytes and rejects drift, bad limits and unsafe paths',async()=>{const root=await directory();await mkdir(join(root,'qa/address-search-native'),{recursive:true});await mkdir(join(root,'src'));const data=Buffer.from('synthetic source'),sha=(b:Buffer)=>createHash('sha256').update(b).digest('hex');await writeFile(join(root,'src/fictional.ts'),data);const f={version:1,head:'cbf62a12acbd8be2e649a44d17064acaf82d6482',maximumRequests:1,maximumCredits:1,run:ADDRESS_RUN,build:ADDRESS_BUILD,files:[{path:'src/fictional.ts',sha256:sha(data)}]};const install=async(v:unknown)=>{const b=Buffer.from(JSON.stringify(v));await writeFile(join(root,'qa/address-search-native/freeze.json'),b);return sha(b)};expect(await verifyAddressFreeze(root,await install(f))).toBe(true);await writeFile(join(root,'src/fictional.ts'),'changed');expect(await verifyAddressFreeze(root,await install(f))).toBe(false);expect(await verifyAddressFreeze(root,await install({...f,maximumRequests:2}))).toBe(false);expect(await verifyAddressFreeze(root,await install({...f,files:[{path:'../secret',sha256:sha(data)}]}))).toBe(false)})
  it('defaults/hosted/unknown/unfrozen native modes attach no transport',async()=>{for(const env of [{},{GEOAPIFY_API_KEY:key},{SPENDSCAPE_GEOAPIFY_RUN:'arbitrary'},{SPENDSCAPE_GEOAPIFY_RUN:ADDRESS_RUN,VERCEL:'1'}])expect((await createLocalAddressHandler(env)(get())).status).toBe(503)})
  it('GET is native/unused; origin restrictions occur before reservation',async()=>{const dir=await directory(),send=vi.fn(async()=>Response.json(provider())),h=make(dir,send);expect(await (await h(get())).json()).toMatchObject({status:'available',mode:'native',diagnostics:{status:'unused'}});expect((await h(new Request('http://evil.invalid/api/address-search'))).status).toBe(503);expect(send).not.toHaveBeenCalled();expect(await readdir(dir)).toEqual([])})
