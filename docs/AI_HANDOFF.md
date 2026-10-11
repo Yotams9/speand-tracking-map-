@@ -1883,3 +1883,34 @@ research changes excluded; index empty. Main refs, entry next-env, measured evid
 and consumed locks preserved. Next: checkpoint review, then separately bounded
 price-source currency/terms/branch/fresh-file qualification; no live collection
 authorized here.
+
+
+## College final product — Milestone 1 (2026-10-11)
+
+Authorized implementation/QA/local commit from `efd29158cceb2d4667bf9611d917fa151acbc417`.
+Ordinary application now starts with zero purchases/pins and composes only strictly
+validated user-reviewed IndexedDB records and their referenced directory. Historical
+references, synthetic stored additions and decisions remain unchanged for strict
+v1–v4 compatibility; no schema change or hydration write. Demo sources/catalog
+lookup, Ask/Inbox simulations and illustrative savings are isolated behind explicit
+loopback QA opt-in. Retained views use the reviewed graph; latest-place action uses
+actual confirmed data. Manual/receipt review, Unknown context, independent printed
+line/payable totals, confirmation, atomic persistence, location, duplicates and Undo
+remain intact. Provider requests and consumed launchers are unchanged/default-off.
+
+Isolated candidate: `artifacts/college-m1-u5ep1sgr/`. Focused 47/47; full serial
+951/951 (47 files); final production-browser 40/40 (13 ordinary + 27 fixture),
+application/focused QA typechecks, build and whitespace passed. EN/HE mobile and
+desktop synthetic renders inspected. Retain the earlier parallel Vision timer
+failure and browser harness/setup failures; no assertion/timeout was weakened.
+Exact 20-file scope/results/remaining gates:
+`docs/spendscape/COLLEGE_FINAL_MILESTONES.md`; manifest and staged patch in the
+artifact directory. Only this appended section belongs to the milestone commit;
+earlier uncommitted handoff and server/research changes remain excluded.
+
+Real user's purchase and port 3172 untouched. Owned QA server stopped. Protected
+refs, entry next-env bytes, historical evidence and consumed locks preserved.
+Vercel unchanged/paused; no providers, credentials, accounts, dependencies or push.
+Next milestone: separately approved bounded repeat receipt capture activation and
+new-photo accuracy/save validation; current one-shot pilots cannot be reused.
+Current verified prices and cloud sync remain unavailable.

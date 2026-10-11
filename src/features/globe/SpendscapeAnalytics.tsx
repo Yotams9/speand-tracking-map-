@@ -16,6 +16,7 @@ import {
 import styles from './SpendscapeAnalytics.module.css'
 
 interface SpendscapeAnalyticsProps {
+  syntheticQa?: boolean
   analytics: PurchaseAnalytics
   places: readonly Place[]
   locale: LocaleCode
@@ -138,11 +139,17 @@ function chartGeometry(months: PurchaseAnalytics['months']) {
 }
 
 export function SpendscapeAnalytics({
-  analytics, places, locale, query, activeFilterCount, onClose, onSearch, onOpenFilters,
+  syntheticQa = false, analytics, places, locale, query, activeFilterCount, onClose, onSearch, onOpenFilters,
   onOpenTimeline, onReset, onOpenPurchases, onSelectCategory, onSelectChannel,
   onSelectCurrency, onSelectMonth, onSelectPlace, initialView,
 }: SpendscapeAnalyticsProps) {
-  const t = copy[locale]
+  const t = syntheticQa ? copy[locale] : { ...copy[locale],
+    total: locale === 'he' ? 'סכום בש״ח · המרות בדיווח שלכם' : 'ILS total · reported conversions',
+    eyebrow: locale === 'he' ? 'נתונים מהרכישות שלכם' : 'From your saved purchases',
+    normalizedNote: locale === 'he' ? 'סכומי ש״ח נשמרו בדיווח שלכם. המרות למטבעות אחרים לא אומתו כמחירי שוק.' : 'ILS amounts are recorded from your review. Other-currency conversions are user-reported, not verified market rates.',
+    base: locale === 'he' ? 'ש״ח בדיווח שלכם' : 'reported ILS',
+    emptyBody: locale === 'he' ? 'הוסיפו רכישה דרך Capture כדי לראות נתונים. אם יש רכישות, בדקו את המסננים.' : 'Add a purchase through Capture to see your stats. If purchases exist, check the filters.',
+  }
   const chart = chartGeometry(analytics.months)
   const hasActiveQuery = Boolean(
     query.search || query.category !== 'all' || query.currency !== 'all' ||
@@ -165,7 +172,7 @@ export function SpendscapeAnalytics({
     <section className={styles.panel} aria-labelledby="analytics-title" data-testid="analytics-panel">
       <header className={styles.header}>
         <div>
-          <p>{analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'דוגמה + רכישות מקומיות' : 'Sample + local purchases') : t.eyebrow}</p>
+          <p>{syntheticQa && analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'דוגמה + רכישות מקומיות' : 'Sample + local purchases') : t.eyebrow}</p>
           <h2 id="analytics-title">{t.title}</h2>
           <span>{t.intro}</span>
         </div>
@@ -206,7 +213,7 @@ export function SpendscapeAnalytics({
           <article className={styles.totalMetric}>
             <span>{t.total}</span>
             <strong data-testid="analytics-total">{formatMoney(analytics.totalBaseAmountIls, locale)}</strong>
-            <small>{analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הסיכום משלב נתוני הדגמה ותוספות שלך. המרות לתוספות דווחו על ידך ולא אומתו.' : 'Totals combine demo data and your local purchases. Conversions for your additions are user-reported, not verified.') : t.normalizedNote}</small>
+            <small>{syntheticQa && analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הסיכום משלב נתוני הדגמה ותוספות שלך. המרות לתוספות דווחו על ידך ולא אומתו.' : 'Totals combine demo data and your local purchases. Conversions for your additions are user-reported, not verified.') : t.normalizedNote}</small>
           </article>
           <article>
             <span>{t.purchases}</span>

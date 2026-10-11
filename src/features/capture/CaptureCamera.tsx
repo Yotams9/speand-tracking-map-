@@ -49,8 +49,9 @@ const copy = {
   },
 } as const
 
-export function CaptureCamera({ locale, onDemo, onSources, onManual, onCandidate }: {
+export function CaptureCamera({ locale, syntheticQa = false, onDemo, onSources, onManual, onCandidate }: {
   locale: LocaleCode
+  syntheticQa?: boolean
   onDemo: () => void
   onSources: () => void
   onManual: () => void
@@ -69,7 +70,13 @@ export function CaptureCamera({ locale, onDemo, onSources, onManual, onCandidate
     hadResult.current = Boolean(barcode.identity)
   }, [barcode.identity, barcode.state])
   const startCamera = () => { method.current = 'camera'; start() }
-  const t = copy[locale]
+  const t = syntheticQa ? copy[locale] : { ...copy[locale],
+    body: locale === 'he' ? 'פענוח ברקוד מקומי. התמונות זמניות במכשיר; פרטי המוצר דורשים בדיקה שלכם.' : 'Decode a barcode locally. Frames stay temporary on this device; product details require your review.',
+    demo: locale === 'he' ? 'צילום / העלאת קבלה' : 'Receipt photo / upload',
+    missing: locale === 'he' ? 'לא נמצאה מצלמה מתאימה. השתמשו בהזנה ידנית.' : 'No suitable camera was found. Use manual entry.',
+    insecure: locale === 'he' ? 'גישה למצלמה דורשת HTTPS או localhost. הזנה ידנית זמינה.' : 'Camera access requires HTTPS or localhost. Manual entry is available.',
+    unsupported: locale === 'he' ? 'גישה למצלמה אינה זמינה בדפדפן הזה. השתמשו בהזנה ידנית.' : 'Camera access is unavailable in this browser. Use manual entry.',
+  }
   const running = state === 'live' || state === 'requesting'
   const leave = (navigate: () => void) => { barcode.cancel(); navigate() }
   return (
@@ -95,7 +102,7 @@ export function CaptureCamera({ locale, onDemo, onSources, onManual, onCandidate
         <button type="button" className={styles.secondary} onClick={() => leave(onManual)} data-testid="capture-camera-manual">{t.manual}</button>
         <button type="button" className={styles.secondary} onClick={() => leave(onSources)} data-testid="capture-sources-open">{t.sources}</button>
       </div>
-      <CaptureBarcode locale={locale} state={barcode.state} identity={barcode.identity}
+      <CaptureBarcode syntheticQa={syntheticQa} locale={locale} state={barcode.state} identity={barcode.identity}
         onManual={(code, format) => { method.current = 'manual'; barcode.manual(code, format) }}
         onDemo={(code, format) => { method.current = 'demo'; barcode.manual(code, format) }}
         onCandidate={(name, syntheticCatalog) => { if (barcode.identity) { const identity = { ...barcode.identity }; leave(() => onCandidate({ name, identification: { identity, method: method.current, syntheticCatalog } })) } }} onCancel={barcode.cancel}

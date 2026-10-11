@@ -1,38 +1,28 @@
-# Spendscape — college demo and completed Scanner A/B
+# Spendscape — on-device purchase review
 
-Spendscape is a globe-first purchase-intelligence concept. This branch currently
-implements completed Phase 1 Slices 1A–1C.1, 1D.1, 1D.2, the accepted globe
-fidelity correction, bounded Slice 1D.3 synthetic Universal Scanner/Capture,
-and checkpointed Slice 1D.4 material-uncertainty Smart Inbox simulation. The current foundation includes
-the Next.js shell, real MapLibre globe, canonical synthetic purchase graph,
-Purchases/history/detail, shared discovery state, and deterministic
-Analytics/Stats and Smart Inbox. Slice 1D.5 synthetic Ask, runtime validation,
-focus/history corrections and `Globe · Capture · Purchases · Stats` are
-completed. Details-first synthetic Life Replay is completed with no automatic
-camera travel and explicit `Show place` as its only camera-moving action. Phase
-1 through Slice 1D.6 is checkpointed at
-`95d865f1c255e9bfd68d9f69bbe0caf0d8b343fa`. No Phase 1 product
-implementation slice is active. The bounded Phase 1E critical review passed
-with no remaining Blocker or High defect and is recorded by the current local
-documentation checkpoint. No later phase is active.
+The ordinary application starts empty and displays only user-reviewed purchases
+stored in this browser. Purchases, Stats, search, Replay and globe pins use that
+same validated graph. Physical places appear only after explicit confirmation;
+online and unresolved purchases have no pin. Manual entry, receipt review,
+editable printed values, final payable totals, explicit Unknown context, atomic
+IndexedDB saving, deletion and Undo are supported. Photos are temporary. There
+is no cloud synchronization or backup.
 
-The canonical purchase graph remains synthetic. Scanner A provides explicit
-video-only camera access; Scanner B identifies a local barcode/product candidate
-without creating or saving a purchase. Both slices are completed, reviewed,
-committed and pushed; latest checkpoint: `33a34afb2668f58b89431e3cb7bc5f3c292ebb8d`.
+Receipt extraction and address search remain default-off, local-only provider
+boundaries. Activation requires a separately approved run; consumed one-shot
+launchers cannot be reused. External product lookup, current verified prices,
+AI Ask and automatic insights are unavailable in ordinary flows. Historical
+receipt prices are never current-price or savings evidence. Vercel remains
+paused; this local checkpoint does not publish or deploy the application.
 
-The existing [college demo](https://spendscape-college-demo.vercel.app) is active
-in SkDev / sk-dev3 on Vercel Hobby. Its Production label is the separately
-approved first-deployment bootstrap, not a general commercial release. Physical
-iPhone 17 Pro / iOS 26.6.1 Safari Scanner A/B smoke testing has a **user-reported
-pass**, not an independently instrumented device test. See
-[the current handoff](docs/spendscape/CONVERSATION_HANDOFF.md#scanner-ab-and-college-demo-reconciliation)
-for exact evidence, deployment identity and the minor “Try demo product” clarity
-issue. The action loads Demo Oats for candidate review only.
-
-No implementation slice is active. Scanner D, Scanner E, optional Scanner C,
-backend, database, application authentication and real provider integrations
-remain separately gated. No location history or financial account is connected.
+Synthetic purchases, catalogs and simulations are isolated QA fixtures only.
+They require `SPENDSCAPE_SYNTHETIC_QA=1`, an exact loopback host and explicit
+`?syntheticQa=1` (or the QA suite's `x-spendscape-synthetic-qa: 1` header). Ordinary
+use ignores those fixtures. Historical directory and Inbox references remain
+available to strict storage validation so existing records are not discarded.
+See [the college milestone checkpoint](docs/spendscape/COLLEGE_FINAL_MILESTONES.md)
+and [current technical handoff](docs/AI_HANDOFF.md) for acceptance evidence and
+remaining gates. Earlier concept-demo checkpoints below are historical.
 
 ## Local requirements
 
@@ -51,8 +41,8 @@ Open <http://localhost:3000>.
 ### Test from a phone on the same network
 
 These LAN instructions are for local display checks. Camera access on an iPhone
-requires a trusted HTTPS origin; the existing college-demo URL above is the
-recorded physical scanner smoke-test target.
+requires a trusted HTTPS origin. Physical scanner checks require a separately
+authorized trusted HTTPS origin.
 
 The installed Next.js 16.3.3 CLI defaults both `next dev` and `next start` to
 `0.0.0.0`; the explicit mobile scripts make that LAN binding visible and
@@ -88,8 +78,8 @@ comparison.
 Globe initialization loads the self-hosted RTL runtime and Liberty style in
 parallel. It aborts a Liberty style request after 12 seconds, stops waiting for
 RTL initialization after 8 seconds, and bounds MapLibre readiness at 18
-seconds. A failure leaves Purchases, Capture, Stats, filters, and session-only
-synthetic data intact and offers one explicit Retry; it never retries forever
+seconds. A failure leaves Purchases, Capture, Stats, filters, and saved on-device
+purchase data intact and offers one explicit Retry; it never retries forever
 or silently changes provider.
 
 Verification commands:
@@ -108,6 +98,11 @@ npm run qa:replay
 npm run qa:load
 ```
 
+The legacy concept suites above require the explicit fixture QA gate described
+at the top of this file. They are not ordinary-user acceptance evidence. The
+Milestone 1 production suite uses `qa/college-m1.config.ts`, a separate port and
+a fresh `SPENDSCAPE_M1_QA_OUT` artifact directory.
+
 Most Playwright commands start the configured local server when needed. Replay
 QA intentionally requires an already-built `next start` production server.
 Screenshots, recordings, and run output belong only in the ignored local
@@ -119,8 +114,8 @@ Screenshots, recordings, and run output belong only in the ignored local
 - `src/data/spendscape-*`: canonical fixtures, repository contract, domain
   types, and deterministic purchase/map/analytics derivations.
 - `src/features/`: the active globe, Capture, Inbox, Ask, Replay, local
-  purchase storage, and illustrative nearby comparison. English/Hebrew copy
-  lives with these features.
+  purchase storage, and saved-receipt comparison preview (verified prices
+  unavailable). English/Hebrew copy lives with these features.
 - `public/`: PWA icons/manifest and required MapLibre, RTL, and barcode assets.
 - `qa/` and `tools/`: browser regression suites and isolated receipt/price
   experiments; these are supporting code, not application routes.
@@ -158,7 +153,7 @@ review screenshots were inspected across phone sizes and desktop. Existing
 uncommitted experiments and handoff edits were preserved. No commit, push,
 merge, deployment, dependency, or provider change was made.
 
-## Accepted implementation through Slice 1D.6
+## Historical concept implementation through Slice 1D.6
 
 - Next.js App Router + TypeScript migration with pinned runtime dependencies
 - responsive desktop/mobile shell, dark-premium tokens, safe-area support,
@@ -217,7 +212,7 @@ merge, deployment, dependency, or provider change was made.
   keyboard order as **Globe · Capture · Purchases · Stats**; Ask Spendscape
   remains a secondary row inside Globe Tools rather than a fifth destination
 
-## Completed Slice 1D.6 — Life Replay
+## Historical Slice 1D.6 — Life Replay
 
 Open Timeline → Life Replay; on mobile use Globe Tools → Timeline. The compact
 non-modal player opens paused over the same mounted globe. Play/Pause,
@@ -246,7 +241,7 @@ Production QA: build, then `npm run start -- --hostname 127.0.0.1` and
 does not start development mode. Screenshots/results belong only in ignored
 `artifacts/spendscape-slice-1d6/`. Browser emulation is not physical Safari QA.
 
-## Intentionally not implemented
+## Historical Phase 1 limitations
 
 Phase 1 adds only deterministic, frontend-only simulations to the accepted
 globe, purchase, analytics, Capture, Smart Inbox, Ask, and Life Replay

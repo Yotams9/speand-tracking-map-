@@ -5,7 +5,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Spendscape — your purchase world',
-  description: 'A globe-first purchase-intelligence concept using synthetic data only.',
+  description: 'Review and save purchases on this device, and see confirmed places on your globe. No cloud synchronization.',
   applicationName: 'Spendscape',
   manifest: '/manifest.webmanifest',
   icons: {

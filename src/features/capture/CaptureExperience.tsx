@@ -19,6 +19,7 @@ import type { DemoComparison } from '../nearby-demo/comparison'
 import styles from './CaptureExperience.module.css'
 
 interface CaptureExperienceProps {
+  syntheticQa?: boolean
   receiptDraft?: ReceiptReviewDraft
   locale: LocaleCode
   places: readonly Place[]
@@ -139,6 +140,7 @@ function formatAmount(value: number, currency: string, locale: LocaleCode): stri
 }
 
 export function CaptureExperience({
+  syntheticQa = false,
   receiptDraft,
   locale,
   places,
@@ -220,7 +222,7 @@ export function CaptureExperience({
   }, [onClose])
 
   useEffect(() => {
-    if (step !== 'processing' || !state.source) return
+    if (!syntheticQa || step !== 'processing' || !state.source) return
     const timer = window.setTimeout(() => {
       const draft = demoDraftForSource(state.source!)
       if (!draft) return
@@ -229,7 +231,7 @@ export function CaptureExperience({
       onNavigate('review', 'replace')
     }, reducedMotion ? 90 : 720)
     return () => window.clearTimeout(timer)
-  }, [onNavigate, reducedMotion, state.source, step, locale])
+  }, [syntheticQa, onNavigate, reducedMotion, state.source, step, locale])
 
   const announce = step === 'processing'
     ? t.statusProcessing
@@ -240,6 +242,7 @@ export function CaptureExperience({
         : ''
 
   const chooseSource = (source: CaptureSource) => {
+    if (!syntheticQa && source !== 'manual') return
     if (source === 'manual') prepareReview(blankReview())
     else { receiptActive.current = false; setActiveReceipt(undefined); setReviewInput(null) }
     dispatch({ type: 'choose-source', source })
@@ -320,7 +323,7 @@ export function CaptureExperience({
         <header className={styles.header}>
           <div className={styles.headerLead}>
             {showBack && <button type="button" className={styles.back} onClick={onBack} aria-label={t.back}>←</button>}
-            <div><p>{step === 'scanner' ? (locale === 'he' ? 'Capture · מצלמה והדגמות' : 'Capture · camera & demos') : reviewInput?.provenance === 'user-reviewed' ? (locale === 'he' ? 'Capture · שמירה במכשיר' : 'Capture · on-device') : t.eyebrow}</p><strong>Spendscape</strong></div>
+            <div><p>{step === 'scanner' ? (locale === 'he' ? 'Capture · במכשיר הזה' : 'Capture · on this device') : reviewInput?.provenance === 'user-reviewed' ? (locale === 'he' ? 'Capture · שמירה במכשיר' : 'Capture · on-device') : syntheticQa ? t.eyebrow : (locale === 'he' ? 'Capture · במכשיר הזה' : 'Capture · on this device')}</p><strong>Spendscape</strong></div>
           </div>
           <button ref={closeRef} type="button" className={styles.close} onClick={onClose} aria-label={t.close}>×</button>
         </header>
@@ -331,7 +334,8 @@ export function CaptureExperience({
           <CaptureCamera
             key={scannerGeneration}
             locale={locale}
-            onDemo={() => chooseSource('receipt')}
+            syntheticQa={syntheticQa}
+            onDemo={() => syntheticQa ? chooseSource('receipt') : onNavigate('receipt-image', 'push')}
             onSources={() => onNavigate('sources', 'push')}
             onManual={() => chooseSource('manual')}
             onCandidate={(candidate) => {
@@ -348,13 +352,13 @@ export function CaptureExperience({
         {step === 'sources' && (
           <div className={styles.scrollBody} data-testid="capture-sources">
             <div className={styles.stageCopy}>
-              <p className={styles.kicker}>{t.simulated}</p>
+              <p className={styles.kicker}>{syntheticQa ? t.simulated : (locale === 'he' ? 'פרטים לבדיקה שלכם' : 'Details for your review')}</p>
               <h2 id="capture-title">{dialogTitle}</h2>
-              <p id="capture-description">{t.sourceBody}</p>
+              <p id="capture-description">{syntheticQa ? t.sourceBody : (locale === 'he' ? 'הוספה ידנית או צילום קבלה זמני. זיהוי קבלות דורש הפעלה מקומית מאושרת.' : 'Manual entry or a temporary receipt photo. Receipt recognition requires an approved local activation.')}</p>
             </div>
             <div className={styles.sourceGrid}>
-              <button type="button" className={styles.sourceCard} onClick={() => { receiptActive.current = false; setActiveReceipt(undefined); setReviewInput(null); onNavigate('receipt-image', 'push') }} data-testid="capture-source-receipt-image"><strong>{locale === 'he' ? 'צילום / העלאת קבלה' : 'Receipt photo / upload'}</strong><small>{locale === 'he' ? 'צילום זמני · זיהוי עדיין לא פעיל' : 'Temporary photo · recognition not activated'}</small></button>
-              {sourceOrder.map((source, index) => (
+              <button type="button" className={styles.sourceCard} onClick={() => { receiptActive.current = false; setActiveReceipt(undefined); setReviewInput(null); onNavigate('receipt-image', 'push') }} data-testid="capture-source-receipt-image"><strong>{locale === 'he' ? 'צילום / העלאת קבלה' : 'Receipt photo / upload'}</strong><small>{locale === 'he' ? 'צילום זמני · הזמינות נבדקת מקומית' : 'Temporary photo · availability checked locally'}</small></button>
+              {(syntheticQa ? sourceOrder : ['manual'] as CaptureSource[]).map((source, index) => (
                 <button
                   type="button"
                   key={source}

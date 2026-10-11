@@ -38,12 +38,16 @@ const copy = {
   },
 } as const
 
-export function CaptureBarcode({ locale, state, identity, onManual, onDemo, onCandidate, onCancel, onRetry, onReset }: {
-  locale: LocaleCode; state: DecoderState; identity: BarcodeIdentity | null
+export function CaptureBarcode({ locale, syntheticQa = false, state, identity, onManual, onDemo, onCandidate, onCancel, onRetry, onReset }: {
+  syntheticQa?: boolean; locale: LocaleCode; state: DecoderState; identity: BarcodeIdentity | null
   onDemo: (code: string, format: string) => void; onCandidate: (name: string, syntheticCatalog: boolean) => void
   onManual: (code: string, format: string) => void; onCancel: () => void; onRetry: () => void; onReset: () => void
 }) {
-  const t = copy[locale]
+  const t = syntheticQa ? copy[locale] : { ...copy[locale],
+    unknownBody: locale === 'he' ? 'הקוד תקין. חיפוש פרטי מוצר אינו מחובר; הזינו שם מוצר שבדקתם.' : 'The code is valid. Product lookup is not connected; enter a product name you have checked.',
+    'load-error': locale === 'he' ? 'לא ניתן לטעון את הקורא. נסו שוב או הזינו קוד.' : 'The reader could not load. Retry or enter the code.',
+    'decode-error': locale === 'he' ? 'לא ניתן לקרוא את הקוד. נסו שוב או הזינו קוד.' : 'The code could not be read. Retry or enter the code.',
+  }
   const [editing, setEditing] = useState(false)
   const [code, setCode] = useState('')
   const [format, setFormat] = useState<BarcodeFormat>('EAN13')
@@ -51,7 +55,7 @@ export function CaptureBarcode({ locale, state, identity, onManual, onDemo, onCa
   const [demoLoaded, setDemoLoaded] = useState(false)
   const input = useRef<HTMLInputElement>(null)
   const result = useRef<HTMLDivElement>(null)
-  const product = identity ? lookupDemoProduct(identity) : undefined
+  const product = syntheticQa && identity ? lookupDemoProduct(identity) : undefined
   // Locale changes must not overwrite a name the user edited.
   useEffect(() => { setName(product?.name[locale] ?? ''); setDemoLoaded(false) }, [identity, product])
   useEffect(() => {
@@ -75,10 +79,10 @@ export function CaptureBarcode({ locale, state, identity, onManual, onDemo, onCa
       <p>{t.note}</p>
       <button type="button" className={styles.primary} data-testid="barcode-review-purchase" onClick={() => onCandidate(name, Boolean(product))}>{t.continue}</button>
     </div>}
-    {(demoLoaded || product?.id === barcodeDemoCatalog[0].id) && <p role="status" data-testid="barcode-demo-loaded">{t.loaded}</p>}
+    {syntheticQa && (demoLoaded || product?.id === barcodeDemoCatalog[0].id) && <p role="status" data-testid="barcode-demo-loaded">{t.loaded}</p>}
     <div className={styles.barcodeActions}>
       <button type="button" className={styles.secondary} data-testid="barcode-manual-open" aria-expanded={editing} onClick={() => { onCancel(); setEditing((value) => !value) }}>{t.manual}</button>
-      <button type="button" className={styles.secondary} data-testid="barcode-demo" disabled={product?.id === barcodeDemoCatalog[0].id} onClick={() => { const demo = barcodeDemoCatalog[0]; onDemo(demo.barcode, demo.format); setDemoLoaded(true) }}>{t.demo}</button>
+      {syntheticQa && <button type="button" className={styles.secondary} data-testid="barcode-demo" disabled={product?.id === barcodeDemoCatalog[0].id} onClick={() => { const demo = barcodeDemoCatalog[0]; onDemo(demo.barcode, demo.format); setDemoLoaded(true) }}>{t.demo}</button>}
       {['empty', 'invalid', 'load-error', 'decode-error', 'found'].includes(state) && <button type="button" className={styles.secondary} data-testid="barcode-retry" onClick={onRetry}>{t.retry}</button>}
       {identity && <button type="button" className={styles.secondary} data-testid="barcode-reset" onClick={() => { onReset(); setCode(''); setName(''); setEditing(false) }}>{t.reset}</button>}
     </div>

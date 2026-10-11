@@ -8,7 +8,7 @@ import {
   type SmartInboxCase,
 } from './spendscape-globe'
 
-export type SpendscapeRepositoryAdapter = 'fixture' | 'backend'
+export type SpendscapeRepositoryAdapter = 'fixture' | 'backend' | 'local'
 
 export interface SpendscapeProfileSnapshot {
   id: string
