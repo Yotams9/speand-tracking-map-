@@ -54,6 +54,10 @@ import { ReceiptPayableSummary } from '@/features/capture/ReceiptPayableSummary'
 import { NearbyDemoCard } from '@/features/nearby-demo/NearbyDemoCard'
 import { demoComparison } from '@/features/nearby-demo/comparison'
 import { useLocalPurchases } from '@/features/local-purchases/useLocalPurchases'
+import { AddressAttribution } from '@/features/local-purchases/AddressSearch'
+import type { LocalPlace } from '@/features/local-purchases/local-directory'
+import { PurchaseLocationReview } from '@/features/local-purchases/PurchaseLocationReview'
+import { resolvePurchaseLocation, undoPurchaseLocation, type PurchaseLocationIntent, type LocationUndo } from '@/features/local-purchases/purchase-location'
 import { LocalDataPanel } from '@/features/local-purchases/LocalDataPanel'
 import { restoredLedger } from '@/features/local-purchases/local-purchase-store'
 import { composeDirectory } from '@/features/local-purchases/local-directory'
@@ -897,6 +901,14 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const { merchants: globeMerchants, places: globePlaces } = directoryGraph
   const globePlacesRef = useRef(globePlaces)
   globePlacesRef.current = globePlaces
+  const [locationPurchaseId, setLocationPurchaseId] = useState<string | null>(null)
+  const [locationPicking, setLocationPicking] = useState(false)
+  const locationPickingRef = useRef(false)
+  const locationUndoRef = useRef<(LocationUndo & { deadline: number }) | null>(null)
+  const [locationUndoSeconds, setLocationUndoSeconds] = useState(0)
+  const locationWriteRef = useRef(false)
+  const locationViewRef = useRef(locationPurchaseId)
+  locationViewRef.current = locationPurchaseId
   const [deletePurchaseId, setDeletePurchaseId] = useState<string | null>(null)
   const sessionCaptureRecords = sessionLedger.records
   const [comparisonReadyId, setComparisonReadyId] = useState<string | null>(null)
@@ -1178,6 +1190,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       if (remaining > 0) return
       const expired = expireSessionPurchaseUndo(sessionLedgerRef.current, undoId)
       if (expired === sessionLedgerRef.current) return
+      if (locationUndoRef.current?.after === sessionLedgerRef.current) locationUndoRef.current.after = expired
       sessionLedgerRef.current = expired
       setSessionLedger(expired)
       setComparisonReadyId(undoId)
@@ -1487,6 +1500,12 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   }, [applyNavigation, askOpen, captureDepth, captureStep, inboxCaseId, selectedPlaceId, selectedPurchaseId, surface])
 
   const closeTopLayer = useCallback(() => {
+    if (locationPurchaseId) {
+      if (locationWriteRef.current) return
+      setLocationPurchaseId(null); setLocationPicking(false); locationPickingRef.current = false
+      requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-testid="purchase-resolve-location"]')?.focus())
+      return
+    }
     if (replaySessionRef.current) {
       replayControllerRef.current?.pause()
       window.history.back()
@@ -1533,10 +1552,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         suppressSearchFocusOpenRef.current = false
       })
     }
-  }, [applyNavigation, askOpen, filtersOpen, inboxCaseId, mobileToolsOpen, searchOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
+  }, [applyNavigation, askOpen, filtersOpen, inboxCaseId, locationPurchaseId, mobileToolsOpen, searchOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
 
   useEffect(() => {
     const restoreNavigation = (event: PopStateEvent) => {
+      setLocationPurchaseId(null); setLocationPicking(false); locationPickingRef.current = false
       if (!isNavigationSnapshot(event.state)) return
       const pendingReplay = pendingReplayNavigationRef.current
       pendingReplayNavigationRef.current = null
@@ -2172,6 +2192,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           map.triggerRepaint()
 
           map.on('click', CLUSTER_LAYER, async (event) => {
+            if (locationPickingRef.current) return
             const feature = event.features?.[0]
             const clusterId = Number(feature?.properties?.cluster_id)
             const source = map.getSource(SOURCE_ID) as GeoJSONSource
@@ -2203,6 +2224,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           })
 
           map.on('click', PIN_LAYER, (event) => {
+            if (locationPickingRef.current) return
             const placeId = String(event.features?.[0]?.properties?.placeId ?? '')
             if (placeId) selectPlace(placeId)
           })
@@ -2210,7 +2232,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 16 })
           let hoveredFeatureId: string | number | null = null
           map.on('mouseenter', PIN_LAYER, (event) => {
-            if (replaySessionRef.current) return
+            if (replaySessionRef.current || locationPickingRef.current) return
             map.getCanvas().style.cursor = 'pointer'
             const feature = event.features?.[0]
             if (!feature) return
@@ -2245,7 +2267,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           map.on('mouseenter', CLUSTER_LAYER, () => { map.getCanvas().style.cursor = 'pointer' })
           map.on('mouseleave', CLUSTER_LAYER, () => { map.getCanvas().style.cursor = '' })
           map.on('click', (event: MapMouseEvent) => {
-            if (replaySessionRef.current) return
+            if (replaySessionRef.current || locationPickingRef.current) return
             const hit = map.queryRenderedFeatures(event.point, { layers: [CLUSTER_LAYER, PIN_LAYER] })
             if (hit.length === 0) {
               setSelectedPlaceId(null)
@@ -2846,6 +2868,55 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-testid="history-search"]')?.focus({ preventScroll: true }))
   }
 
+  useEffect(() => {
+    if (!locationUndoSeconds) return
+    const timer = window.setInterval(() => {
+      const undo = locationUndoRef.current
+      const seconds = undo && sessionLedgerRef.current === undo.after ? Math.max(0, Math.ceil((undo.deadline - performance.now()) / 1000)) : 0
+      setLocationUndoSeconds(seconds)
+      if (!seconds) locationUndoRef.current = null
+    }, 200)
+    return () => window.clearInterval(timer)
+  }, [locationUndoSeconds])
+
+  const confirmPurchaseLocation = async (purchaseId: string, intent: PurchaseLocationIntent): Promise<Record<string, string>> => {
+    if (locationWriteRef.current || localData.phase !== 'ready') return { location: 'storage' }
+    const before = sessionLedgerRef.current
+    const result = resolvePurchaseLocation(before, purchaseId, intent, { merchants: baselineMerchants, places: baselinePlaces })
+    if (result.code === 'invalid' || result.code === 'protected') return result.errors
+    if (result.code === 'unchanged') { setLocationPurchaseId(null); return {} }
+    locationWriteRef.current = true
+    try {
+      if (!await localData.commit(result.ledger, inboxDecisionsRef.current)) return { location: 'storage' }
+      const after = { ...result.ledger, undoId: sessionLedgerRef.current.undoId }
+      sessionLedgerRef.current = after; setSessionLedger(after)
+      locationUndoRef.current = { before, after, deadline: performance.now() + 8_000 }; setLocationUndoSeconds(8)
+      if (locationViewRef.current !== purchaseId) return {} // Durable write survives Back; late completion must not replace newer navigation.
+      setLocationPurchaseId(null); setLocationPicking(false); locationPickingRef.current = false
+      // No camera command: Show place remains the explicit navigation action.
+      updateSelectedFilter(null); setSelectedPlaceId(null); setComparisonReadyId(null)
+      setAskUndoSnapshot(null)
+      setStatus(locale === 'he' ? 'מקום הרכישה נשמר במכשיר הזה' : 'Purchase place saved on this device')
+      requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-testid="purchase-show-place"]')?.focus())
+      return {}
+    } finally { locationWriteRef.current = false }
+  }
+
+  const undoLocation = async () => {
+    const undo = locationUndoRef.current
+    if (!undo || performance.now() >= undo.deadline || locationWriteRef.current) return
+    const next = undoPurchaseLocation(sessionLedgerRef.current, undo)
+    if (!next) { setLocationUndoSeconds(0); return }
+    locationWriteRef.current = true
+    try {
+      if (!await localData.commit(next, inboxDecisionsRef.current)) return
+      sessionLedgerRef.current = next; setSessionLedger(next)
+      locationUndoRef.current = null; setLocationUndoSeconds(0)
+      updateSelectedFilter(null); setSelectedPlaceId(null); setComparisonReadyId(null); setAskUndoSnapshot(null)
+      setStatus(locale === 'he' ? 'עדכון המקום בוטל' : 'Place update undone')
+    } finally { locationWriteRef.current = false }
+  }
+
   const resetSessionCaptures = async () => {
     closeCapture()
     setPrivacyOpen(true)
@@ -3161,6 +3232,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     <main
       inert={localData.busy || localData.phase !== 'ready'}
       data-local-state={localData.phase}
+      data-location-editing={!!locationPurchaseId}
+      data-location-picking={locationPicking}
       className={styles.app}
       data-locale={locale}
       data-map-ready={mapAvailable}
@@ -3552,6 +3625,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             <p className={styles.panelLocation}>
               {localized(selectedPlace.branch, locale)} · {localized(selectedPlace.city, locale)}
             </p>
+            {(selectedPlace as LocalPlace).addressSearch && <><p>{locale === 'he' ? 'נקודה שאישרתם מתוך הצעת כתובת; לא אימות נוכחות היסטורית.' : 'Point you confirmed from an address suggestion; not historical occupancy verification.'}</p><AddressAttribution/></>}
             <div className={styles.panelStats}>
               <span><strong>{selectedFeature.properties.visitCount}</strong>{t.visits}</span>
               <span><strong>{formatMoney(selectedFeature.properties.totalBaseAmountIls, locale)}</strong>{t.normalized}</span>
@@ -3673,7 +3747,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         />
       )}
 
-      {!replay && selectedPurchase && selectedMerchant && (
+      {!replay && !locationPurchaseId && selectedPurchase && selectedMerchant && (
         <aside className={styles.purchaseDetailPanel} aria-labelledby="purchase-title" data-testid="purchase-detail">
           <button ref={purchaseDetailBackRef} type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.backToHistory}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
@@ -3732,11 +3806,22 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           {sessionCaptureRecords.some(r => r.purchase.id === selectedPurchase.id) && <div className={styles.localDelete}>
             {deletePurchaseId === selectedPurchase.id ? <><p role="status">{locale === 'he' ? 'למחוק רכישה זו מהמכשיר? אי אפשר לבטל. מקומות שעדיין בשימוש יישארו.' : 'Delete this purchase from this device? This cannot be undone. Places still in use will remain.'}</p><button type="button" data-testid="local-purchase-delete-confirm" onClick={() => removeLocalPurchase(selectedPurchase.id)}>{locale === 'he' ? 'כן, למחוק רכישה' : 'Yes, delete purchase'}</button><button type="button" onClick={() => setDeletePurchaseId(null)}>{locale === 'he' ? 'ביטול' : 'Cancel'}</button></> : <button type="button" data-testid="local-purchase-delete" onClick={() => setDeletePurchaseId(selectedPurchase.id)}>{locale === 'he' ? 'מחיקת רכישה מהמכשיר' : 'Delete purchase from device'}</button>}
           </div>}
+          {sessionCaptureRecords.some(r => r.purchase.id === selectedPurchase.id) && selectedPurchase.channel !== 'online' && !selectedMerchant.onlineOnly && <button type="button" className={styles.viewPlaceButton} data-testid="purchase-resolve-location" onClick={() => { stopSpin(false); setDeletePurchaseId(null); setLocationPurchaseId(selectedPurchase.id) }}>{locale === 'he' ? 'אישור או שינוי מקום הרכישה' : 'Confirm or change purchase place'}</button>}
           {selectedPurchase.placeId && (
-            <button type="button" className={styles.viewPlaceButton} onClick={() => selectPlace(selectedPurchase.placeId!)}>{t.viewPlace}</button>
+            <button type="button" className={styles.viewPlaceButton} data-testid="purchase-show-place" onClick={() => selectPlace(selectedPurchase.placeId!)}>{t.viewPlace}</button>
           )}
         </aside>
       )}
+
+      {locationPurchaseId && selectedPurchase?.id === locationPurchaseId && selectedMerchant && <div className={styles.locationHost}>
+        <PurchaseLocationReview key={locationPurchaseId} locale={locale} merchant={selectedMerchant} places={globePlaces} currentPlaceId={selectedPurchase.placeId} mapAvailable={mapAvailable}
+          onPicking={value => { locationPickingRef.current = value; setLocationPicking(value); stopSpin(false) }}
+          previewPoint={point => { const map = mapRef.current; if (!map || !mapAvailable) return; stopSpin(false); map.jumpTo({center:point,zoom:15}) }}
+          getMapPoint={() => { if (!mapAvailable || !mapRef.current) return null; const center = mapRef.current.getCenter(); const longitude = ((center.lng + 180) % 360 + 360) % 360 - 180; return [Number(longitude.toFixed(6)), Number(center.lat.toFixed(6))] }}
+          moveMap={action => { const map = mapRef.current; if (!map || !mapAvailable) return; stopSpin(false); if (action === 'in' || action === 'out') map.zoomTo(map.getZoom() + (action === 'in' ? 1 : -1), { duration: 0 }); else map.panBy(action === 'north' ? [0,-100] : action === 'south' ? [0,100] : action === 'east' ? [100,0] : [-100,0], { duration: 0 }) }}
+          onCancel={closeTopLayer} onConfirm={intent => confirmPurchaseLocation(locationPurchaseId, intent)} />
+      </div>}
+      {!locationPurchaseId && locationUndoSeconds > 0 && locationUndoRef.current?.after === sessionLedger && <button type="button" className={styles.locationUndo} data-testid="location-undo" onClick={undoLocation}>{locale === 'he' ? 'ביטול עדכון המקום' : 'Undo place update'} · {locationUndoSeconds}{locale === 'he' ? ' שנ׳' : 's'}</button>}
 
       {filtersOpen && (
         <>

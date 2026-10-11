@@ -1,0 +1,28 @@
+.host { position: absolute; inset: 0; z-index: 80; pointer-events: none; color: #eff5ff; }
+.panel, .picker { pointer-events: auto; position: absolute; background: #141b26; border: 1px solid #637a94; border-radius: 22px; box-shadow: 0 20px 70px #0009; padding: 20px; }
+.panel { inset-block: max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-bottom)); inset-inline-end: 16px; inline-size: min(460px,calc(100% - 32px)); overflow-y: auto; overscroll-behavior: contain; }
+.panel[hidden] { display: none; }
+.panel header { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+.panel h2 { font-size: 1.35rem; margin: 0; }
+.panel p, .picker p { line-height: 1.5; font-size: .9rem; }
+.panel label { display: flex; flex-direction: column; gap: 6px; margin-block: 12px; }
+.panel input:not([type=checkbox]), .panel select { inline-size: 100%; min-block-size: 44px; padding: 10px; border: 1px solid #6b8095; border-radius: 10px; background: #0d131d; color: inherit; font: inherit; }
+.panel input[aria-invalid=true], .panel select[aria-invalid=true] { border-color: #ffb3a7; }
+.host button { min-block-size: 44px; border: 1px solid #6b8095; border-radius: 10px; color: inherit; background: #22334b; font: inherit; padding: 10px 14px; cursor: pointer; }
+.host button:disabled { opacity: .6; cursor: default; }
+.host :focus-visible { outline: 3px solid #8eccff; outline-offset: 3px; }
+.panel small { display: block; margin-block: 8px; }
+.panel .confirm { display: grid; grid-template-columns: 24px 1fr; align-items: start; line-height: 1.5; }
+.confirm input { inline-size: 22px; block-size: 22px; }
+.panel footer { position: sticky; bottom: -20px; background: #141b26; display: flex; flex-wrap: wrap; gap: 10px; padding-block: 14px; }
+.panel [role=alert] { color: #ffd0c7; }
+.crosshair { position: absolute; inset-inline-start: 50%; inset-block-start: 50%; transform: translate(-50%,-50%); color: white; text-shadow: 0 0 3px #000,0 0 3px #000; font-size: 40px; }
+.picker { inset-inline: 12px; inset-block-end: max(12px,env(safe-area-inset-bottom)); max-inline-size: 520px; margin-inline: auto; }
+.controls { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 8px; }
+.picker > button { margin-inline-end: 6px; margin-block-start: 6px; }
+@media(max-width: 760px) { .panel { inset-inline: 8px; inset-block: 8px; inline-size: calc(100% - 16px); padding: 16px; } .panel footer { bottom: -16px; } }
+.search { margin-block: 16px; padding-block: 12px; border-block: 1px solid #637a94; }
+.search ul { padding-inline-start: 20px; }
+.search li { margin-block: 12px; }
+.search a, .panel a { color: #a9d8ff; overflow-wrap: anywhere; }
+.search p { overflow-wrap: anywhere; }

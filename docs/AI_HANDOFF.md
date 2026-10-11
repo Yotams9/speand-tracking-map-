@@ -1633,3 +1633,147 @@ Next: separate local commit approval (`feat(receipts): support explicit unknown
 review context`), then one fresh scan/save approval, unchanged request, estimated
 US$0.03540≤US$0.10 subject to activation recheck. No provider/credential/billing/
 namespace/reservation/staging/commit/push/deployment; Vercel paused.
+
+
+### Saved purchase to confirmed place — local checkpoint, 2026-10-10
+
+HEAD cbf62a12acbd8be2e649a44d17064acaf82d6482 unchanged. Existing-purchase location
+editor: same-merchant reuse or confirmed branch, existing MapLibre crosshair/keyboard
+controls and known-point alternative; no GPS/geocoder. Atomic revision-guarded IDB
+update preserves purchase ID/facts/evidence, discounts and both totals. One pin/place;
+explicit Show place, duplicate checks, orphan cleanup and eight-second Undo.
+Fixtures/online protected. v4 map-selection provenance; strict read-only legacy
+validation retained. Exact 11-file manifest:COLLEGE_PURCHASE_PLACE_RESOLUTION.md.
+Task changes uncommitted; pre-existing server/research changes excluded.
+
+Fresh artifacts/purchase-place-t4drwbom:103/103 guarded units, app/focused TS,
+isolated production build,6/6 new EN/HE mobile cases +12/12 directory regressions.
+Earlier assertion/setup/sandbox failures retained; no full-suite claim. Outside-scope
+entry files, locks/evidence, main refs and next-env bytes unchanged; index empty.
+No provider/credential/account/billing/dependency/commit/push/deploy action;
+Vercel remains paused.
+
+Real receipt independently hydrated at3172 and survived same-origin reload: one local
+purchase/five rows/independent totals,12 baseline pins. Actual user Save not witnessed;
+no direct IDB export claim. User stopped old scan server; tested provider-disabled
+build now serves3172 (all extraction capabilities unavailable). Location form shown;
+location unchanged/unresolved. User cannot choose point manually; address search
+needed. Real location-save/geographic accuracy unverified. Next: checkpoint review,
+then separately approved offline Geoapify search preparation and bounded live readiness.
+Nearby Prices requires explicit item/package matches and qualified source currency/
+freshness;2013 prices historical. QA server stopped;3172 left for review; no scan rerun.
+
+### Location review + address-search preparation — 2026-10-11 (offline)
+
+HEAD cbf62a12acbd8be2e649a44d17064acaf82d6482 unchanged. Original11-file/24-hunk
+location candidate verified at entry; review fixes pending-write inertness, late-Back
+navigation and form/map/link focus trapping. Address search prepared: explicit edited
+address POST, ≤5 validated Geoapify/OSM candidates, precision and existing-map preview;
+selection never saves. Area/partial matches require explicit point selection, then
+physical-place confirmation. Coordinate input uses bounded eight-decimal representation
+(including near-zero points), not a geographic accuracy claim. Atomic update preserves purchase ID/facts/both totals,
+revisions/duplicates/Undo; new fixed provenance only. Strict legacy hydration retained.
+Native route disabled with no credential access/transport; fictional local QA opt-in
+only. Provider/account/quota/geographic accuracy remain unverified. No live search.
+
+Checkpoint + exact combined20-file proposal:COLLEGE_PURCHASE_PLACE_RESOLUTION.md;
+artifacts/address-search-mptjgxxk/manifest.json and PROPOSED.diff. Fresh guarded144/144
+units, app/focused TS, isolated build;17/17 combined location/search browser +12/12
+neighboring directory regressions. Final verification/earlier failures and screenshots
+retained in fresh artifact paths; no historical output regenerated. Review endpoint
+host correction additionally verified through actual synthetic local HTTP route.
+Printed financial behavior, one MapLibre and unresolved/no-pin alternatives preserved.
+No real purchase/location change or reload; old provider-disabled3172 left untouched.
+Native activation requires separate one-request/one-credit Free/$0 gate, verified
+allowance and user-private key setup, fixed durable reservation/frozen launcher.
+No account, credentials, billing, dependency, staging, commit, push, deploy or Vercel
+change. Nearby Prices deferred. Entry next-env/main refs/locks/evidence preserved;
+one ignored generated tsconfig.tsbuildinfo cache changed by initial root typecheck.
+
+### One Geoapify search — native prepared, 2026-10-11
+
+HEAD cbf62a12acbd8be2e649a44d17064acaf82d6482 unchanged. User authorizes1 forward
+request/credit. Spendscape Free/remaining credit/no concurrent use/no paid overage
+confirmed by user only; key/project console association not independently verified.
+Soft quotas are not a hard $0 cap. Hidden user-run launcher qa/address-search-native
+freezes517 source/build files; literal worktree/build/run only, OCR/LLM disabled.
+Run geoapify-address-validation-20261011-one has separate unused durable marker;
+no search or real credential access yet. Exclusive fsynced reservation/events,
+fixed stages/HTTP/time/outcomes only; dispatch initiation is not provider receipt.
+Native repeat/restart/cancel/late-result guards; local safe GET status survives browser
+loss. Candidate preview never confirms/saves; approximate point requires adjustment.
+Explicit user confirmation precedes unchanged atomic in-place purchase/place update.
+
+Fresh artifacts/geoapify-live-8jiueeim:161/161 guarded units,5/5 launcher tests,
+app/focused TS and isolated build;19/19 EN/HE production mock browser. GET-only
+synthetic-key native smoke:unused,3 extraction endpoints503,0 provider requests.
+Initial tracing/sandbox failures retained. Exact incremental12/combined27-file
+manifests/patches/checkpoint:COLLEGE_PURCHASE_PLACE_RESOLUTION.md. Everything new
+uncommitted; excluded recovery configs/research, main refs,next-env,evidence/locks
+preserved,index empty. Old real form/purchase untouched. Next: user-private launch,
+verify native/unused, user Search once; then user point/address confirmation/save,
+independent same-origin reload/pin/Show place checks. Real location outcome pending;
+current match cannot prove2013 occupancy. Nearby Prices deferred;Vercel paused.
+
+User-private Geoapify launcher now running3172. Independent GET:correct native run,
+unused,0 dispatch initiations. New same-origin browser tab hydrated1 local purchase/
+5 rows/12 baseline pins, unresolved/no Show place. User-provided commercial address
+prefilled transiently; search consent/place confirmation unchecked,no point/save.
+Awaiting user explicit Search once; no provider request/key access by agent.
+
+### Authorized search outcome — 2026-10-11
+
+User reports Search submitted once. Independent local durable status: native run
+geoapify-address-validation-20261011-one consumed; one dispatch initiation; provider
+HTTP200 at1445ms; completed/results at1460ms. Timing is reservation-through-provider/
+completion, not isolated geocoding latency. Five candidate suggestions appeared.
+None of the displayed street names matches the reviewed submitted street; no exact
+store association is established, regardless of provider address-level match labels.
+No candidate selected, point confirmed or place saved at this observation. One local
+purchase/five rows and12 baseline pins remain; location unresolved. Request allowance
+is consumed; no further search/retry authorized. Awaiting user recognition or cancel.
+No receipt, key, candidate coordinates or unrestricted provider message retained.
+Protected branch/main/remote refs unchanged; Codex-managed turn-diff refs rotated.
+19,136 measured outside-manifest entry files unchanged; index empty,next-env unchanged.
+Real place save/reload/Show place remains unverified. Nearby Prices deferred.
+
+### User cancellation and same-origin reload — completed
+
+User confirmed none of the five suggestions is independently verified and requested
+cancel/unresolved. Agent used Cancel without changes; no candidate/point selected
+and no location save. Same purchase remains unresolved, no Show place,12 baseline
+pins. Before/after-cancel and after same-origin reload, private DOM comparisons of
+merchant, five printed item rows, amount ledger, payment/category context and original
+provenance match. One local purchase/same card ID hydrated once before opening details;
+no duplicate. Comparisons output booleans only; temporary comparison content released.
+No direct IndexedDB export or new place-save/geographic-accuracy claim. Existing
+purchase persistence survives reload; location association and Show place remain
+unverified because no trustworthy candidate was confirmed. The optional payable
+summary test selector was absent; its equality is not additional verification.
+
+Final verdict: bounded native search executed once (HTTP200/results), location
+unresolved by explicit user decision. No further search authorized. Next smallest
+gate: establish a trustworthy commercial address/point independently, then separately
+authorize any further provider request if needed. Nearby Prices remains deferred.
+All12 incremental files/13 hunks and cumulative27 files/42 hunks remain uncommitted;
+no staging/push/deployment, Vercel unchanged/paused. Source/build freeze not regenerated.
+User-owned private launcher may be stopped with Ctrl+C; never rerun consumed launcher.
+
+### Address correction and local integration clarification — 2026-10-11
+
+User corrected the commercial street name previously used in the authorized query:
+the name is a person's given name, not the street-type expansion used for that query.
+The earlier results establish transport/results only; they do not test the corrected
+address or establish accurate store geocoding. User requests local integration only.
+Existing prepared implementation already connects the saved purchase location form
+to explicit search, bounded candidates, single mounted map preview and confirmed
+atomic place saving. No further implementation defect established by this correction.
+
+Agent reopened the same purchase's local form and prefilled the user's corrected
+address/city/country transiently. Verified corrected input, no point, unchecked
+physical confirmation, consumed-search message and12 baseline pins. No search, save,
+new namespace or reservation reset. Unsaved form stays open for review; reload loses
+those edits. Corrected address/location accuracy remains unverified; a separately
+authorized bounded search is needed. No production-source, deployment or account
+change. Current task changes only these checkpoint/handoff appendices. Historical
+query outcome and consumed marker preserved, not rewritten as a successful match.

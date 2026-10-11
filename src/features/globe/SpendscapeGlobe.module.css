@@ -1777,3 +1777,9 @@
 .localDelete p { font-size: 13px; line-height: 1.5; }
 .localDelete button { padding: 12px; min-height: 44px; color: #fff; background: #3a292e; border: 1px solid #946877; border-radius: 12px; }
 .localDelete button:focus-visible { outline: 2px solid #b8f0dd; outline-offset: 3px; }
+
+/* Keep the existing map mounted while a purchase place is being reviewed. */
+.locationHost { position: absolute; inset: 0; z-index: 80; pointer-events: none; }
+.app[data-location-editing='true'] > :not(.map):not(.locationHost) { visibility: hidden; pointer-events: none; }
+.locationUndo { position: absolute; inset-inline-end: 20px; inset-block-end: 216px; z-index: 73; border: 1px solid #6b8095; border-radius: 12px; background: #152131; color: #eaf5ff; min-block-size: 44px; padding: 12px; font: inherit; cursor: pointer; }
+.locationUndo:focus-visible { outline: 3px solid #8eccff; outline-offset: 3px; }

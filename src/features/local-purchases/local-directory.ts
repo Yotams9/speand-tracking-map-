@@ -1,7 +1,10 @@
+import {denseArray,exactObject} from './local-structure'
+export {denseArray,exactObject} from './local-structure'
+import { needsPointAdjustment, validSearchProvenance, type AddressSearchProvenance } from './address-search'
 import type { Merchant, Place, PurchaseCategory } from '../../data/spendscape-globe'
 
 export interface LocalMerchant extends Merchant { source: 'user-confirmed' }
-export interface LocalPlace extends Place { source: 'user-confirmed'; locationMethod: 'manual-coordinates'; address: string }
+export interface LocalPlace extends Place { source: 'user-confirmed'; locationMethod: 'manual-coordinates' | 'map-selection' | 'address-search'; address: string; addressSearch?: AddressSearchProvenance }
 export interface LocalDirectory { merchants: readonly LocalMerchant[]; places: readonly LocalPlace[] }
 export interface DirectoryIntent {
   merchant?: { name: string; category: PurchaseCategory | ''; separate: boolean }
@@ -10,17 +13,6 @@ export interface DirectoryIntent {
 type Context = { merchants: readonly Merchant[]; places: readonly Place[] }
 const categories = ['groceries', 'food', 'retail', 'travel', 'unknown']
 export const emptyDirectory = (): LocalDirectory => ({ merchants: [], places: [] })
-// Reject getters, sparse arrays, inherited values and unknown media/metadata.
-export function exactObject(value: unknown, keys: readonly string[]): value is Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) return false
-  const own = Reflect.ownKeys(value)
-  return own.length === keys.length && keys.every(k => Object.hasOwn(value, k) && Object.hasOwn(Object.getOwnPropertyDescriptor(value, k)!, 'value')) && own.every(k => typeof k === 'string' && keys.includes(k))
-}
-export function denseArray(value: unknown, limit: number): value is unknown[] {
-  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length > limit || Reflect.ownKeys(value).length !== value.length + 1) return false
-  for (let i = 0; i < value.length; i++) if (!Object.hasOwn(value, i) || !Object.hasOwn(Object.getOwnPropertyDescriptor(value, String(i))!, 'value')) return false
-  return true
-}
 const text = (value: unknown, optional = false): value is string => typeof value === 'string' && value.length <= 100 && (optional || value.trim().length > 0) && value === value.trim() && !/[\u0000-\u001f\u007f]/.test(value)
 const localized = (value: unknown) => exactObject(value, ['en', 'he']) && text(value.en) && value.en === value.he
 const suffix = (id: string, kind: 'merchant' | 'place') => { const m = new RegExp(`^local_${kind}_([1-9][0-9]*)$`).exec(id); return m ? Number(m[1]) : NaN }
@@ -91,9 +83,9 @@ export function validateDirectory(raw: unknown, context: Context, nextSequence: 
   }
   const merchants = [...context.merchants, ...raw.merchants as unknown as LocalMerchant[]]
   for (const rawPlace of raw.places) {
-    if (!exactObject(rawPlace, ['id', 'merchantId', 'name', 'branch', 'city', 'country', 'coordinates', 'category', 'address', 'source', 'locationMethod'])) throw new Error('directory-invalid')
+    if (!exactObject(rawPlace, ['id', 'merchantId', 'name', 'branch', 'city', 'country', 'coordinates', 'category', 'address', 'source', 'locationMethod', ...(rawPlace && typeof rawPlace === 'object' && Object.hasOwn(rawPlace,'addressSearch') ? ['addressSearch'] : [])])) throw new Error('directory-invalid')
     const p = rawPlace as unknown as LocalPlace, n = suffix(p.id, 'place'), m = merchants.find(m => m.id === p.merchantId)
-    if (!Number.isSafeInteger(n) || n >= nextSequence || placeIds.has(p.id) || !m || m.onlineOnly || !localized(p.branch) || !localized(p.city) || !localized(p.country) || !exactObject(p.name, ['en', 'he']) || p.name.en !== m.name.en || p.name.he !== m.name.he || p.category !== m.category || !text(p.address, true) || p.source !== 'user-confirmed' || p.locationMethod !== 'manual-coordinates' || !denseArray(p.coordinates, 2) || p.coordinates.length !== 2 || p.coordinates.some((c,i) => typeof c !== 'number' || !Number.isFinite(c) || Math.abs(c) > (i ? 90 : 180))) throw new Error('directory-invalid')
+    if (!Number.isSafeInteger(n) || n >= nextSequence || placeIds.has(p.id) || !m || m.onlineOnly || !localized(p.branch) || !localized(p.city) || !localized(p.country) || !exactObject(p.name, ['en', 'he']) || p.name.en !== m.name.en || p.name.he !== m.name.he || p.category !== m.category || !text(p.address, true) || p.source !== 'user-confirmed' || !['manual-coordinates', 'map-selection', 'address-search'].includes(p.locationMethod) || (p.addressSearch !== undefined && (!validSearchProvenance(p.addressSearch) || needsPointAdjustment(p.addressSearch))) || (p.locationMethod === 'address-search' && !p.addressSearch) || !denseArray(p.coordinates, 2) || p.coordinates.length !== 2 || p.coordinates.some((c,i) => typeof c !== 'number' || !Number.isFinite(c) || Math.abs(c) > (i ? 90 : 180))) throw new Error('directory-invalid')
     placeIds.add(p.id)
   }
   return structuredClone(raw) as unknown as LocalDirectory
