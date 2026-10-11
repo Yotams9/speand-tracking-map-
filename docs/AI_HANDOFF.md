@@ -1855,3 +1855,31 @@ changes after those checks. HEAD unchanged; task edits uncommitted,index empty.
 Protected measured files/refs/entry next-env bytes unchanged. Vercel paused;
 Nearby Prices not connected. User-owned local server may be stopped with Ctrl+C;
 never rerun its consumed launcher. No credentials/account/billing/commit/push/deploy.
+
+## Saved receipt Nearby Prices — offline preview checkpoint (2026-10-11)
+
+HEAD remains 0c781287054c98a9bc0ac3cda5032dc3695a0029, feature/spendscape-rebuild.
+Receipt details now open a lazy Nearby Prices panel using the confirmed canonical
+place, 5 km straight-line radius. Native/current prices remain unavailable; only
+explicit loopback QA accepts fictional snapshots. Runtime read contract validates
+source/currency/freshness, branch evidence, identity/package and ordinary prices.
+Per-row explicit identity/package confirmation; item quantities only, no inferred
+GTIN/unit conversion, substitutions, stock or historical/current savings. Missing
+facts and partial coverage stay visible. Matches are transient; no purchase/schema
+mutation, pin creation or automatic camera movement. Old demo stays separate.
+
+181/181 focused units; app and focused QA typechecks; isolated production build;
+22/22 combined production-browser checks (comparison/location/new receipt path),
+then 6/6 preview visual checks at 360/390/430 EN/HE and desktop. Initial desktop QA
+selector failure retained and corrected. Synthetic persistence, Undo/conflicts,
+unchanged financial values, one MapLibre instance and pin count verified. No real
+price source or real-purchase comparison claimed. User port3172 left untouched;
+owned3183 QA server stopped. Vercel paused. No providers/credentials/commit/push.
+
+12-file task manifest, patch, source/build hashes and preservation evidence:
+artifacts/nearby-preview-updvse96/{manifest.json,TASK.diff,preservation.json}.
+Checkpoint: docs/spendscape/COLLEGE_RECEIPT_NEARBY_PRICES.md. Prior handoff/server
+research changes excluded; index empty. Main refs, entry next-env, measured evidence
+and consumed locks preserved. Next: checkpoint review, then separately bounded
+price-source currency/terms/branch/fresh-file qualification; no live collection
+authorized here.

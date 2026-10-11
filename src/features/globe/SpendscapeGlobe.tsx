@@ -100,6 +100,8 @@ import {
 } from './globe-map-config'
 import styles from './SpendscapeGlobe.module.css'
 
+const NearbyPricesReview = dynamic(() => import('@/features/nearby-prices/NearbyPricesReview').then(module => module.NearbyPricesReview), { ssr: false })
+
 const CaptureExperience = dynamic(
   () => import('@/features/capture/CaptureExperience').then((module) => module.CaptureExperience),
   {
@@ -893,6 +895,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const [surface, setSurface] = useState<ProductSurface>('globe')
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [selectedPurchaseId, setSelectedPurchaseId] = useState<string | null>(null)
+  const [nearbyPurchaseId, setNearbyPurchaseId] = useState<string | null>(null)
+  useEffect(() => { setNearbyPurchaseId(null) }, [selectedPurchaseId, surface])
   const [captureStep, setCaptureStep] = useState<CaptureStep | null>(null)
   const [captureDepth, setCaptureDepth] = useState(0)
   const [sessionLedger, setSessionLedger] = useState(emptySessionLedger)
@@ -1500,6 +1504,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   }, [applyNavigation, askOpen, captureDepth, captureStep, inboxCaseId, selectedPlaceId, selectedPurchaseId, surface])
 
   const closeTopLayer = useCallback(() => {
+    if (nearbyPurchaseId) {
+      setNearbyPurchaseId(null)
+      requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-testid="purchase-nearby-prices"]')?.focus())
+      return
+    }
     if (locationPurchaseId) {
       if (locationWriteRef.current) return
       setLocationPurchaseId(null); setLocationPicking(false); locationPickingRef.current = false
@@ -1552,7 +1561,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         suppressSearchFocusOpenRef.current = false
       })
     }
-  }, [applyNavigation, askOpen, filtersOpen, inboxCaseId, locationPurchaseId, mobileToolsOpen, searchOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
+  }, [applyNavigation, askOpen, filtersOpen, inboxCaseId, locationPurchaseId, nearbyPurchaseId, mobileToolsOpen, searchOpen, selectedPlaceId, selectedPurchaseId, surface, timelineOpen])
 
   useEffect(() => {
     const restoreNavigation = (event: PopStateEvent) => {
@@ -3747,7 +3756,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         />
       )}
 
-      {!replay && !locationPurchaseId && selectedPurchase && selectedMerchant && (
+      {!replay && !locationPurchaseId && !nearbyPurchaseId && selectedPurchase && selectedMerchant && (
         <aside className={styles.purchaseDetailPanel} aria-labelledby="purchase-title" data-testid="purchase-detail">
           <button ref={purchaseDetailBackRef} type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.backToHistory}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
@@ -3807,11 +3816,14 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             {deletePurchaseId === selectedPurchase.id ? <><p role="status">{locale === 'he' ? 'למחוק רכישה זו מהמכשיר? אי אפשר לבטל. מקומות שעדיין בשימוש יישארו.' : 'Delete this purchase from this device? This cannot be undone. Places still in use will remain.'}</p><button type="button" data-testid="local-purchase-delete-confirm" onClick={() => removeLocalPurchase(selectedPurchase.id)}>{locale === 'he' ? 'כן, למחוק רכישה' : 'Yes, delete purchase'}</button><button type="button" onClick={() => setDeletePurchaseId(null)}>{locale === 'he' ? 'ביטול' : 'Cancel'}</button></> : <button type="button" data-testid="local-purchase-delete" onClick={() => setDeletePurchaseId(selectedPurchase.id)}>{locale === 'he' ? 'מחיקת רכישה מהמכשיר' : 'Delete purchase from device'}</button>}
           </div>}
           {sessionCaptureRecords.some(r => r.purchase.id === selectedPurchase.id) && selectedPurchase.channel !== 'online' && !selectedMerchant.onlineOnly && <button type="button" className={styles.viewPlaceButton} data-testid="purchase-resolve-location" onClick={() => { stopSpin(false); setDeletePurchaseId(null); setLocationPurchaseId(selectedPurchase.id) }}>{locale === 'he' ? 'אישור או שינוי מקום הרכישה' : 'Confirm or change purchase place'}</button>}
+          {sessionCaptureRecords.some(r => r.purchase.id === selectedPurchase.id && r.source === 'receipt') && <button type="button" className={styles.viewPlaceButton} data-testid="purchase-nearby-prices" onClick={() => { stopSpin(false); setDeletePurchaseId(null); setNearbyPurchaseId(selectedPurchase.id) }}>{locale === 'he' ? 'מחירים באזור' : 'Nearby Prices'}</button>}
           {selectedPurchase.placeId && (
             <button type="button" className={styles.viewPlaceButton} data-testid="purchase-show-place" onClick={() => selectPlace(selectedPurchase.placeId!)}>{t.viewPlace}</button>
           )}
         </aside>
       )}
+
+      {!replay && !captureStep && nearbyPurchaseId && selectedPurchase?.id === nearbyPurchaseId && <NearbyPricesReview key={nearbyPurchaseId} purchase={selectedPurchase} places={globePlaces} locale={locale} onClose={closeTopLayer} />}
 
       {locationPurchaseId && selectedPurchase?.id === locationPurchaseId && selectedMerchant && <div className={styles.locationHost}>
         <PurchaseLocationReview key={locationPurchaseId} locale={locale} merchant={selectedMerchant} places={globePlaces} currentPlaceId={selectedPurchase.placeId} mapAvailable={mapAvailable}
