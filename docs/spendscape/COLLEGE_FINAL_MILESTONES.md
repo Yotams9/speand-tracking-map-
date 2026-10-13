@@ -133,3 +133,31 @@ address lookup and current price sources remain separately gated/default-off;
 no cloud synchronization or backup. Real user data was not edited during QA.
 Next: separately approve Milestone 2's bounded repeat-capture activation, provider
 budget/privacy and new-photo validation. No existing consumed launcher is reusable.
+
+
+## Current college milestone sequence — user revision2026-10-13
+
+Scanner checkpoint is closed in7c4ec31c74d236297791d9edbf8322cda901de0b.
+Verified real extraction/editable review/user Save/reload/date correction recorded;
+repeat-capture duplicate prevention remains unverified. User explicitly stops
+further scanner validation; this is not a complete Milestone2 acceptance pass.
+
+Current Milestone3: ordinary saved-purchase reviewed address → explicit bounded
+search → candidate/map preview → user-confirmed point/address → atomic same-ID
+association → one canonical pin → View place → reload. Preserve products, amounts,
+date/context/provenance, prior records/pin, duplicate-place protection and Undo.
+Manual coordinates are optional Advanced only; unknown/uncertain locations stay
+unresolved. One fresh Geoapify forward request/credit maximum, Free-only current
+user readiness, private server key, fresh exclusive journal, no retry/fallback.
+Commit/report Milestone ready only after actual user place Save and inspected reload
+persistence pass. Nearby Prices becomes the next separate deferred milestone; no
+live prices implementation/collection is authorized here. Vercel remains paused.
+
+
+Milestone3 acceptance passed2026-10-13: user-confirmed place Save, same saved
+purchase/financial facts/date, one new canonical pin, View place and same-origin
+reload verified.3purchases/2pins/1MapLibre, older records intact; one authorized
+Geoapify search consumed. Geographic accuracy is user-confirmed, not independently
+measured. Exact checkpoint COLLEGE_ADDRESS_TO_PIN_MILESTONE.md. Local commit
+authorized after final preservation/scope verification. Live Nearby Prices remains
+the next separate milestone; no current prices/collection approved by this outcome.

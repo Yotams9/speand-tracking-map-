@@ -12,6 +12,12 @@ export const addressRuns = Object.freeze({
   freeze:'qa/address-search-corrected/freeze.json',
   launcher:'qa/address-search-corrected/',
  }),
+ 'geoapify-college-m3-validation-20261013-one': Object.freeze({
+  head:'7c4ec31c74d236297791d9edbf8322cda901de0b',
+  build:'artifacts/college-m3-address-pin-_pl2vht4/app',
+  freeze:'qa/address-search-m3/freeze.json',
+  launcher:'qa/address-search-m3/',
+ }),
 })
 export type AddressRun = keyof typeof addressRuns
 export function addressRun(value:unknown):AddressRun|null {

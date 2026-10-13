@@ -2268,3 +2268,46 @@ last production build verified,14 matching browser checks reused. Scope51files/
 88hunks. Initial accidental dirty-workspace run1106/1108 (2 unrelated untracked
 direct-image research failures) and isolated executable-path typo retained; no
 claim of a clean full working-tree suite or strict all-historical-QA typecheck.
+
+### Milestone3 address-to-pin — prepared2026-10-13
+
+Scanner closed by latest user approval: local commit7c4ec31c74d236297791d9edbf8322cda901de0b,
+exact51files/88hunks, empty index; prior dirty handoff/recovery/research preserved.
+Real extraction/review/user Save/reload/date correction verified; repeat duplicate
+prevention still UNVERIFIED; no further Gemini reads. New authorized M3 targets
+saved unpinned receipt_04, address reviewed separately/user Free readiness confirmed.
+Existing ordinary location/search/map/atomic-confirmation flow reused; Advanced
+coordinates optional; no automatic pin. New fixed one-search run
+geoapify-college-m3-validation-20261013-one and private qa/address-search-m3 launcher,
+410-file source/build freeze.109 focused +5 launcher/app TS/build pass;14 matching
+EN/HE browser checks reused. No new provider requests yet. User-only search/point
+confirmation/place Save, same-ID facts/one pin/View place/reload remain pending.
+COLLEGE_ADDRESS_TO_PIN_MILESTONE.md and artifacts/college-m3-address-pin-_pl2vht4/
+contain exact10-file scope/results. Keep Vercel paused/Nearby Prices deferred.
+
+M3 user private launcher ready; independent native/unused0dispatch status verified,
+all4 receipt endpoints503.410freeze hashes match. Safely loaded same-origin build
+after no unsaved form;3purchase IDs/pin1, prior cards/target financial/date/provenance
+unchanged. Reviewed commercial address prefills transient ordinary location form;
+no point, unchecked search/physical confirmations, Advanced closed. Await user Search
+once, then candidate/point review and user-only place Save. No provider call yet;
+acceptance/commit pending. Sandbox-local GET denial retained as environment check.
+
+M3 one native search consumed: independent safe GET confirms1dispatch, HTTP200
+at1291ms/completed-results1308ms (journal/request timing). User reports suggestions.
+Browser auto-review blocked result inspection to protect transient suggestions;
+no bypass/reload. User now reviews matching address/map point and alone confirms
+place Save, or stays unresolved. Actual candidate precision/count/geographic
+accuracy not independently verified. Pin/View place/reload/commit still pending.
+No second request, OCR, receipt-content screenshots/logs or credential access.
+
+M3 acceptance PASSED after user location Save: form closed/same receipt_04; target
+merchant/products/amounts/independent-payable/date/provenance digest matches;3IDs,
+prior01/03 cards unchanged,2pins versus1, single MapLibre. View place opens saved
+association before/after same-origin reload; same place panel/date/facts preserved.
+UI rehydration proof, not raw DB export; geography confirmed by user only. Temporary
+comparison content cleared/no screenshots. Exactly1 Geoapify HTTP200/results request,
+no retry/Gemini. Source/build unchanged since109focused/5launcher/TS/build +14matching
+browser evidence. Final10-file scoped local M3 commit now authorized; default/hosted
+search off/this native run consumed. Scanner repeat guard remains unverified.
+Next separate task Nearby Prices; no live data collection/implementation yet.
