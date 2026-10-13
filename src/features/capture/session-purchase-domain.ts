@@ -148,7 +148,7 @@ export function reviewedRecord(input: PurchaseReviewInput, sequence: number, con
 }
 export interface SessionPurchaseLedger { directory: LocalDirectory; records: readonly SessionCaptureRecord[]; consumed: readonly string[]; nextSequence: number; undoId: string | null }
 export const emptySessionLedger = (): SessionPurchaseLedger => ({ directory: emptyDirectory(), records: [], consumed: [], nextSequence: 1, undoId: null })
-function fingerprint(p: GlobePurchase) {
+export function purchaseFingerprint(p: GlobePurchase) {
   return JSON.stringify([p.merchantId, p.placeId, p.channel, p.timestamp, p.originalCurrency, p.originalAmount, p.paymentMode, p.category, p.items.map(i => [i.label.en, i.quantity, i.unit, i.unitPrice, i.discountMinor ?? 0, i.lineTotal])])
 }
 export type SaveReviewResult = { code: 'saved'; purchaseId: string } | { code: 'invalid'; errors: ReviewErrors } | { code: 'duplicate' | 'consumed' | 'storage' | 'capacity' }
@@ -167,7 +167,7 @@ export function saveReviewedPurchase(ledger: SessionPurchaseLedger, operationId:
     context = composeDirectory(context, proposal.directory)
   }
   const record = reviewedRecord(resolved, ledger.nextSequence, context)
-  if (!allowDuplicate && [...baseline, ...ledger.records.map(r => r.purchase)].some(p => fingerprint(p) === fingerprint(record.purchase))) return { ledger, result: { code: 'duplicate' } }
+  if (!allowDuplicate && [...baseline, ...ledger.records.map(r => r.purchase)].some(p => purchaseFingerprint(p) === purchaseFingerprint(record.purchase))) return { ledger, result: { code: 'duplicate' } }
   return { ledger: { directory, records: [...ledger.records, record], consumed: [...ledger.consumed, operationId], nextSequence: ledger.nextSequence + 1, undoId: record.purchase.id }, result: { code: 'saved', purchaseId: record.purchase.id } }
 }
 export function undoSessionPurchase(ledger: SessionPurchaseLedger): SessionPurchaseLedger {

@@ -16,6 +16,7 @@ import { CaptureCamera } from './CaptureCamera'
 import { ReceiptImageIntake } from '../receipt-image/ReceiptImageIntake'
 import { NearbyDemoCard } from '../nearby-demo/NearbyDemoCard'
 import type { DemoComparison } from '../nearby-demo/comparison'
+import type { ReceiptPlaceSeed } from './receipt-place-seed'
 import styles from './CaptureExperience.module.css'
 
 interface CaptureExperienceProps {
@@ -39,6 +40,7 @@ interface CaptureExperienceProps {
   onResetSession: () => Promise<boolean>
   onViewPurchase: (purchaseId: string) => void
   onShowOnGlobe: (placeId: string) => void
+  onResolveLocation?: (purchaseId: string, seed?: ReceiptPlaceSeed) => void
 }
 
 const sourceOrder: CaptureSource[] = [
@@ -160,6 +162,7 @@ export function CaptureExperience({
   onResetSession,
   onViewPurchase,
   onShowOnGlobe,
+  onResolveLocation,
 }: CaptureExperienceProps) {
   const [state, dispatch] = useReducer(captureReducer, initialCaptureState)
   const [scannerGeneration] = useState(0)
@@ -167,12 +170,13 @@ export function CaptureExperience({
   const [activeReceipt, setActiveReceipt] = useState<ReceiptReviewDraft | undefined>()
   const receiptActive = useRef(false)
   const [operationId, setOperationId] = useState('')
-  const prepareReview = (input: PurchaseReviewInput) => { receiptActive.current = false; setActiveReceipt(undefined); setOperationId(allocateReviewOperationId()); setReviewInput(input) }
+  const prepareReview = (input: PurchaseReviewInput) => { savedLocationSeed.current = null; receiptActive.current = false; setActiveReceipt(undefined); setOperationId(allocateReviewOperationId()); setReviewInput(input) }
   const dialogRef = useRef<HTMLElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
   const t = copy[locale]
   const saveGeneration = useRef(0)
+  const savedLocationSeed = useRef<{ purchaseId: string; seed: ReceiptPlaceSeed } | null>(null)
   // Invalidate the submitting view on step/operation changes and unmount.
   // Durable completion belongs to the ledger; it must not replace newer navigation.
   useLayoutEffect(() => () => { saveGeneration.current++ }, [step, operationId])
@@ -256,10 +260,11 @@ export function CaptureExperience({
     onNavigate(nextStep, 'push')
   }
 
-  const saveReview = async (input: PurchaseReviewInput, allowDuplicate: boolean): Promise<SaveReviewResult> => {
+  const saveReview = async (input: PurchaseReviewInput, allowDuplicate: boolean, locationSeed?: ReceiptPlaceSeed): Promise<SaveReviewResult> => {
     const generation = saveGeneration.current
     const result = await onConfirm(operationId, input, allowDuplicate)
     if (result.code === 'saved' && generation === saveGeneration.current) {
+      savedLocationSeed.current = locationSeed ? { purchaseId: result.purchaseId, seed: { ...locationSeed } } : null
       dispatch({ type: 'confirm', purchaseId: result.purchaseId })
       onNavigate('success', 'replace')
     }
@@ -269,6 +274,7 @@ export function CaptureExperience({
   // Runtime-validated observations enter this detached in-memory draft boundary.
   const acceptReceiptDraft = (draft: ReceiptReviewDraft) => {
     saveGeneration.current++
+    savedLocationSeed.current = null
     const detached = structuredClone(draft)
     receiptActive.current = true
     setActiveReceipt(detached); setReviewInput(detached.review)
@@ -434,6 +440,7 @@ export function CaptureExperience({
             {comparison?.purchaseId === lastRecord.purchase.id && <NearbyDemoCard comparison={comparison} locale={locale} onDismiss={() => { onDismissComparison(); closeRef.current?.focus({ preventScroll: true }) }} />}
             <div className={styles.actions}>
               <button type="button" className={styles.primary} onClick={() => onViewPurchase(lastRecord.purchase.id)} data-testid="capture-view-purchase">{t.viewPurchase}</button>
+              {lastRecord.source === 'receipt' && lastRecord.purchase.channel !== 'online' && onResolveLocation && <button type="button" className={styles.secondary} data-testid="capture-confirm-location" onClick={() => onResolveLocation(lastRecord.purchase.id, savedLocationSeed.current?.purchaseId === lastRecord.purchase.id ? savedLocationSeed.current.seed : undefined)}>{locale === 'he' ? 'רשות: חיפוש כתובת ואישור סיכה' : 'Optional: address search and confirm a pin'}</button>}
               {lastRecord.purchase.placeId && <button type="button" className={styles.secondary} onClick={() => onShowOnGlobe(lastRecord.purchase.placeId!)}>{t.showGlobe}</button>}
               <button type="button" className={styles.secondary} data-testid="capture-done" onClick={onClose}>{t.done}</button>
             </div>
@@ -443,7 +450,7 @@ export function CaptureExperience({
         {sessionRecords.length > 0 && (
           <footer className={styles.sessionFooter}>
             <span>{sessionRecords.length} {t.sessionCount}</span>
-            {canUndo && <button type="button" data-testid="capture-undo" aria-label={locale === 'he' ? `ביטול ההוספה האחרונה, נותרו ${undoSeconds} שניות` : `Undo last addition, ${undoSeconds} seconds remaining`} onClick={async () => { if (await onUndo()) { setReviewInput(null); onNavigate('sources', 'replace') } }}>{locale === 'he' ? 'ביטול ההוספה האחרונה' : 'Undo last addition'} <span aria-hidden="true">{undoSeconds}{locale === 'he' ? ' שנ׳' : 's'}</span></button>}
+            {canUndo && <button type="button" data-testid="capture-undo" aria-label={locale === 'he' ? `ביטול ההוספה האחרונה, נותרו ${undoSeconds} שניות` : `Undo last addition, ${undoSeconds} seconds remaining`} onClick={async () => { if (await onUndo()) { savedLocationSeed.current = null; setReviewInput(null); onNavigate('sources', 'replace') } }}>{locale === 'he' ? 'ביטול ההוספה האחרונה' : 'Undo last addition'} <span aria-hidden="true">{undoSeconds}{locale === 'he' ? ' שנ׳' : 's'}</span></button>}
             <button type="button" onClick={() => { void onResetSession() }}>{t.reset}</button>
           </footer>
         )}

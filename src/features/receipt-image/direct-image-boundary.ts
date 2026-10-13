@@ -1,3 +1,4 @@
+import {receiptFailureFrom} from './receipt-failure'
 import {MAX_RECEIPT_BYTES,receiptImageHeader} from './image-input'
 import {directResponse} from './direct-image-contract'
 import type {ReceiptObservations} from '../capture/receipt-review-adapter'
@@ -68,11 +69,12 @@ export function createDirectHandler(ports:DirectPorts,timeoutMs=DIRECT_JOB_MS,de
       const message=error instanceof Error?error.message:''
       const allowed=['image-format','image-size','image-not-approved','attempt-consumed','pilot-stopped','pilot-wait','authentication-failed','transport-failed','recognition-failed','diagnostics-unavailable']
       const code=signal.aborted?'cancelled':allowed.includes(message)?message:'ocr-invalid'
-      if(attempt)try{await attempt.emit(signal.aborted?'interrupted':'failure',{code})}catch{/* Incomplete durable records block further calls. */}
+      const detail=signal.aborted?undefined:receiptFailureFrom(error)
+      if(attempt)try{await attempt.emit(signal.aborted?'interrupted':'failure',{code,...(detail?{receiptFailure:detail}:{})})}catch{/* Incomplete durable records block further calls. */}
       // Safe HTTP information can be inspected even after browser disconnect.
       let httpStatus:number|undefined,googleStatus:string|undefined
       try{const events=(await slot?.diagnostics.status())?.events;const http=events?.filter(e=>e.stage==='provider-http').at(-1);httpStatus=http?.httpStatus;googleStatus=http?.googleStatus}catch{}
-      return reply(code,['attempt-consumed','pilot-stopped','pilot-wait'].includes(code)?409:signal.aborted?408:422,{...(httpStatus!==undefined?{httpStatus}:{}),...(googleStatus?{googleStatus}:{})})
+      return reply(code,['attempt-consumed','pilot-stopped','pilot-wait'].includes(code)?409:signal.aborted?408:422,{...(httpStatus!==undefined?{httpStatus}:{}),...(googleStatus?{googleStatus}:{}),...(detail?{receiptFailure:detail}:{})})
     }finally{clearTimeout(timer);signal.removeEventListener('abort',abortRead);reader?.releaseLock();bytes?.fill(0);for(const c of chunks)c.fill(0)}
   }
 }

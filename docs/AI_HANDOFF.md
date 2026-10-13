@@ -1914,3 +1914,357 @@ Vercel unchanged/paused; no providers, credentials, accounts, dependencies or pu
 Next milestone: separately approved bounded repeat receipt capture activation and
 new-photo accuracy/save validation; current one-shot pilots cannot be reused.
 Current verified prices and cloud sync remain unavailable.
+
+## College Milestone 2 — repeat Capture offline checkpoint (2026-10-12)
+
+HEAD remains `acc8f12d57eacd9098158bb6a908b50737289c80`, branch
+`feature/spendscape-rebuild`. Offline preparation only; **real validation pending**.
+No provider calls, credential access, new native session/reservation or commit.
+Standing milestone commit authorization applies only after authorized real QA passes.
+
+Separate server-only `/api/receipt-capture-session` reuses successful unchanged
+Gemini 3.8 Flash JSON builder/decoder and existing receipt review/IDB v4 save.
+Ordinary local Capture discovers privately activated session without per-receipt
+launcher/query. Explicit Read/Save; default/hosted-off. Finite count/cost, 2h expiry,
+60s reservation interval, durable exclusive sequential journals and salted image
+fingerprints; concurrency/replay/restart/failure guards fail closed. No retry,
+fallback or automatic save. Content transient; safe status survives disconnect.
+Read waits for capability check; historical Vision/direct/QA timeouts preserved.
+
+Evidence: `artifacts/college-m2-39cf1rhr/`. Isolated candidate, excluded dirty work
+absent. Focused 189/189; complete serial 968/968 (48 files); launcher pure mocks
+5/5; app/focused QA typecheck and production build pass. New browser coverage
+13/13 across current-state runs (12 passes + expired unused mock-session failure
+in `browser-final.log`; fresh-session actual repeat flow 1/1 in
+`browser-repeat-verified.log`). Neighboring 13/13: v1–v4 read-only hydration,
+empty users, manual/receipt save, strict arithmetic, unknown context, duplicate,
+Undo, shared confirmed places, Show place/reload. EN/HE mobile 360/390/430 and
+1280 EN rendered synthetic QA inspected. No real data tested/edited. Earlier
+failure logs retained; no claim that legacy parallel test timing/full QA typecheck
+issues disappeared. Owned 3192 mock server stopped; user3172 untouched.
+
+Exact 15-file task boundary/patch: artifact `manifest.json` and `TASK.diff`;
+checkpoint `docs/spendscape/COLLEGE_REPEAT_RECEIPT_CAPTURE.md`. Only this appended
+handoff section belongs to a future milestone commit. All task files uncommitted;
+earlier handoff/native configurations/research stay excluded.
+
+Proposal: separately approve two reads in one private session, weighted one-item
+attached original and previously approved five-row receipt as duplicate control.
+Existing Prepay, US$0.0354/read estimate, US$0.0708 total, US$0.10 configured ceiling;
+pricing checked 2026-10-12, guard stops at 2027 rates. Local limit is not Cloud
+Billing hard cap; no billing changes. Private key/project verification and startup,
+image hashes/privacy, acceptance and approval wording are in checkpoint. No native
+launcher executed. User reviews/Save; same-origin reload, preserved existing IDs,
+places, independent product/payable totals and no duplicate must pass before
+Milestone ready/commit. Preserve protected refs, next-env, evidence and locks.
+Vercel unchanged/paused. Nearby Prices remains separately deferred.
+
+
+### Milestone 2 authorized native validation — failed (2026-10-12)
+
+User authorized 2 reads/US$0.10 existing Prepay/no retries, ran private startup;
+keyMatch/project confirmed privately. Prepared candidate/build/image hashes and
+native used=0 independently verified. Session `af2da3b5c2ceebb1e9a55e0de270000c`.
+Exactly **1** approved one-item Read dispatched through Capture. Provider HTTP200
+at 27064ms; parsing-start 27074ms; **ocr-invalid** at 27080ms. Timing includes
+attempt authentication/request/decoding, excludes launcher/intake/review. Native
+journal consumed/failed, session stopped; second allowance unused and blocked.
+No retry/fallback/new image, no editable draft, no Save, no milestone commit.
+Response discarded; exact rejected field and accuracy remain unknown. Safe source
+inspection shows candidate/finish/parts, JSON syntax and observation validators
+all collapse to this code; do not assume any one cause.
+
+Image/preview/intake cleared. Prior real purchase still appears once with unchanged
+card after same-origin reload; existing pin1/mapcanvas1, no new purchase. This is
+preservation, not successful new scan/save/reload. Safe live evidence:
+`artifacts/college-m2-live-9f3c9fdf/`. Original offline 15-file/19-hunk proposal/QA
+unchanged; updated task-only live manifest includes documentation outcome only.
+User confirmed Ctrl+C; port3172 listener independently absent. No credentials/content
+in new artifacts. File chooser took ~149s; prefer manual selection if it stalls.
+
+Milestone 2 remains incomplete. Next: separately approved offline actual-predicate
+response rejection codes, including allowlisted finish/truncation vs JSON/contract
+failure; no request/schema/financial relaxation. Any future native retry needs new
+authorization; current consumed records cannot be reset. Vercel unchanged/paused.
+
+### Milestone 2 offline response diagnosis checkpoint (2026-10-12)
+
+HEAD acc8f12d57eacd9098158bb6a908b50737289c80 unchanged, branch feature/spendscape-rebuild.
+No provider/credential/native activation, retry or milestone commit. Real HTTP200 /
+ocr-invalid response remains discarded; precise cause/accuracy unknown. Consumed
+first request and unused blocked second allowance preserved, not backfilled.
+
+Operational request is byte-identical to successful structured transport in a
+mocked wire comparison (same endpoint/model/prompt/base64/JSON mode/output cap).
+New separate operational decoder diagnoses actual envelope/finish/JSON/contract
+predicates. Demonstrated defect: original one-text-part restriction rejects a
+supported multipart text response. Operational path joins non-thought text exactly
+in order, then retains existing strict observation/financial validation. Original
+successful builder/decoder and frozen launchers remain unchanged. This does not
+prove the discarded live failure was multipart.
+
+Fixed content-free categories/paths, bounded counts, allowlisted finish/block
+reasons and strict metadata validation flow into durable failure diagnostics before
+disposal. Unknown observation field stays unknown. Later review/domain error
+projection remains transient in form attributes, without journal/storage writes;
+missing facts still yield editable review. Per-line checks and independent payable
+unchanged. No raw text/values/images/tokens/provider messages in new artifacts.
+
+Exact14-file scope/evidence: docs/spendscape/COLLEGE_RECEIPT_CAPTURE_FAILURES.md and
+artifacts/m2-failure-diagnostics-d3ba64c9/manifest.json / TASK.diff. Complete serial
+unit1002/1002 (50files); application/focused QA TS and isolated build pass. Synthetic
+browser failures, multipart actual mock route, EN/HE correction/explicit Save/reload
+verified; final combined browser13/13 (11.7s), mock3193 server stopped. Earlier syntax/render/setup
+logs retained. Legacy full-QA TypeScript/parallel timer caveats unchanged. Mock3193
+only, real purchase/pin/browser3172 untouched. All excluded work/history/locks/main
+refs/next-env/index preserved; all task changes uncommitted. Vercel paused.
+
+Next gate: separately approve one new frozen operational read of approved crop,
+existing Prepay, US$0.10 ceiling (estimate0.0354), no retries. Inspect new safe signature
+or user-reviewed Save/reload. Do not reuse consumed launcher/unused old slot.
+Milestone2 remains incomplete until real repeated capture, explicit Save and reload
+acceptance passes; no milestone-completion commit yet.
+
+### Milestone 2 corrected-decoder live preparation (2026-10-12)
+
+User authorized exactly one fresh operational request/US$0.10, not a retry or old
+slot reuse. HEAD acc8f12d57eacd9098158bb6a908b50737289c80 unchanged. Reviewed14-file
+diagnostic hashes verified. Fresh isolated copy/freeze: artifacts/m2-corrected-live-zu6wlt8n/;
+reviewed production build reused, unrelated native configurations excluded. New
+launcher mock checks5/5; prior1002-unit/13-browser matching evidence reused. Current
+official standard pricing rechecked: estimateUS$0.0354, including conservative
+image/output/thinking allowances. No provider call or credentials access performed.
+Private one-request launcher supplied; native reservation is established only after
+private key/project match. Awaiting explicit receipt selection and user startup.
+No extraction/draft/save/reload result yet. Consumed prior request and unused blocked
+second allowance unchanged. Milestone2 incomplete; one successful read alone cannot
+establish real repeat capture. Vercel unchanged/paused; no commit/push/deployment.
+
+Corrected-decoder preflight: user selected the previously approved weighted crop;
+SHA2566d61a6ef399da271c3af29e5a2719ce69b9660fee00ac002d5202c159c1669bd
+verified, JPEG1378x2048. User reported ready, but3172 connection refused and fresh
+app has no native session record. No dispatch performed. Asked only for safe
+launcher status; no rerun requested. Readiness unresolved, validation paused before
+transmission; all previous consumed/blocked reservations preserved. Evidence:
+artifacts/m2-corrected-live-zu6wlt8n/preflight-stopped.json.
+
+Corrected-decoder native outcome: fresh session258a9b447f464411236fec71dbd8d9e1
+verified mode=native/unused/max1/US$0.10 before intake. User selected approved crop
+and pressed Read. Durable salted fingerprint matches approved image. Exactly1
+request; HTTP200 at23354ms, parsing-complete23372ms, review-response-complete23378ms
+(reservation/authentication/request/decoding/response preparation, not isolated
+provider latency). Editable real draft appeared. Safe checks matched printed
+date/time, quantity, unit price, line amount and final payable; address street,
+number,city matched. Full merchant/product-label review pending; currency/unit
+unresolved. No auto-corrections or Save. Asked user for review and explicit context
+choices; draft kept open. Existing purchase1/pin1/mapcanvas1 verified before Read.
+Session exhausted, no second call. Milestone2 incomplete: user-confirmed new Save/
+reload and repeated real captures still pending. Safe evidence: fresh artifact
+outcome-pending-review.json. No request/parser/schema change, commit or deployment.
+
+### User-requested receipt review defaults — offline (2026-10-12)
+
+Observed merchant fields now open prefilled; confirmed-place proposal copies its
+name and reviewed address, but never invents coordinates/pins. User-requested
+Asia/Jerusalem default resolves only valid unique printed wall times; ILS applies
+only to absent currency, preserves known/ambiguous observations and corrections.
+Save remains explicit; units/categories/payment not guessed. Originals, per-line
+arithmetic and independent payable stay intact. Manual-entry initialization unchanged.
+
+Exact9-file incremental scope: docs/spendscape/COLLEGE_RECEIPT_REVIEW_DEFAULTS.md;
+artifacts/receipt-israel-defaults-c1sk1slt/manifest.json / TASK.diff. Focused172/172,
+isolated complete serial1018/1018; app/new-QA TS and build pass; production-browser
+EN/HE prefill, address/place proposal, explicit Save/reload, duplicate reuse/gate and
+Undo4/4. Synthetic renders inspected; earlier browser/type-narrowing failure evidence
+retained. No provider call or credential access. Prior full-QA/timing caveats unchanged.
+
+Real corrected-decoder draft remains on old frozen3172 build. Attempted existing-tab
+edit was blocked by automatic approval review; no reload/reconnect workaround. User
+must finish current context manually or deliberately finish/discard before loading
+new UI. No new real Save/reload verified; one request exhausted, no retry. Milestone2
+incomplete; no commit. Historical locks/evidence/main/index/next-env and unrelated
+work preserved. Owned3194 QA server stopped;3172 left running. Vercel paused.
+
+Safe native status rechecked after offline QA: session expired, used1/remaining0,
+same completed journal. No extra request. Draft availability was not re-inspected
+after the browser block; no reload/restart/disposal was performed by this task.
+
+### Milestone 2 receipt/location UX correction — offline (2026-10-13)
+
+Receipt review no longer exposes inline branch/city/country/coordinates as save
+requirements. Default unresolved path and explicit "Keep location unresolved" retain
+merchant choice, save without pin. After durable user Save, optional success action
+connects existing address-search/map form, carrying edited name/address in memory
+only. City/country proposals limited to explicit supported comma-address layout;
+unknowns stay blank, never inferred from Israel defaults. Advanced coordinates remain
+optional; point/physical confirmation and approximate-match adjustment gate retained.
+Cancelled handoff disposed, no duplicate purchase, one existing MapLibre instance.
+Summary recomputes with valid currency/context. Originals, strict printed-line checks,
+independent final payable, duplicate/revision/atomic save protections and Undo intact.
+
+Exact12-file incremental scope/evidence: docs/spendscape/COLLEGE_RECEIPT_LOCATION_UX.md;
+artifacts/receipt-location-ux-jsgglraj/manifest.json / TASK.diff. Focused139/139, isolated
+serial1029/1029; app/new-QA TS and build pass. Final synthetic browser8/8: EN/HE
+no-coordinate Save/reload, summary, duplicate, Undo, optional mock search/map/pin,
+cancel/seed cleanup and durable-save failure. Renders inspected; earlier locator
+failure retained. Actual isolated capability GETs disabled; no provider or credential
+access. Legacy broader QA/timer caveats unchanged. Owned3195 QA server stopped.
+
+Open real draft and3172 server were not reconnected/reloaded/restarted; no real data
+modified. Save it manually via unresolved channel, or explicitly discard before
+loading tested provider-disabled same-origin UI per artifact LOAD_UPDATED_UI.md.
+Never reuse exhausted launchers/reconstruct a draft. Real new Save/reload/repeated
+capture still unverified: Milestone2 incomplete, no commit. Historical locks/evidence,
+protected refs/index/next-env and unrelated changes preserved. Vercel paused.
+
+### Real receipt persistence + updated UI loaded (2026-10-13)
+
+User reports Saved; read-only UI after confirmation showed no draft/pending Capture.
+New receipt_03 once + prior receipt_01; quantity/price/printed line/payable match crop,
+one item. Same-origin reload preserved private card/details comparisons. New purchase
+unresolved/no pin; prior confirmed place/Show place preserved, pin1/mapinstance1.
+This is rehydrated UI verification, not a DB export or geographic-accuracy claim.
+
+After verification, gracefully stopped exact old frozen3172 listener and started
+reviewed provider-disabled serve-offline.mjs per LOAD_UPDATED_UI.md. Same-origin
+updated UI reload preserved both purchases and prior location. New optional form
+Advanced coordinates hidden, confirmation waits for point; checked then cancelled
+without Save. Local GETs: OCR unavailable/search disabled. Zero additional provider
+requests/reservations/credential actions. Protected history/locks/next-env match;
+private comparison text cleared, no real receipt content/screenshots in evidence.
+
+Evidence artifacts/receipt-ui-load-crmkge3q/. Server remains running, owned session70963;
+updated127.0.0.1:3172 shows saved receipt. Real one-receipt scan/user Save/reload verified.
+Repeated real captures in one session still unverified: Milestone2 incomplete, no
+commit/push/deploy. Consumed launchers untouched; Vercel paused. Next separate gate:
+bounded real repeat validation using updated UI, with explicit user Save and reload.
+
+
+### Milestone 2 repeated validation — prepared (2026-10-13)
+
+Authorized up to two native reads in one session; US$0.10/read / US$0.20 total,
+user-only Save, no retries/fallback. No inference or reservation yet; awaiting two
+explicit crop paths and current Prepay/no-concurrent-use confirmation. Existing
+provider-disabled3172 server unchanged; visible baseline has two saved purchases,
+one confirmed pin, one MapLibre instance and no open draft.
+
+`artifacts/m2-repeat-live-st_6g4uw/`: isolated 40-file /73-hunk cumulative proposal
+(only M2 handoff), 1029/1029 unit tests, fresh build, 51 focused +5 launcher tests,
+typecheck and whitespace pass. Reuse matching 8/8 EN/HE browser evidence. New freeze
+187 source /232 build files; 45 protected hashes/main refs/next-env/index preserved.
+Official pricing rechecked: estimate US$0.0354/read /US$0.0708/two, including
+conservative image/output/thinking allowances. No runtime source change. Exact
+task source manifest: checkpoint status/append + this handoff append; artifacts
+contain only safe preparation metadata/logs. Repeated real scan/save/reload and
+completion commit remain pending; do not call Milestone 2 ready.
+
+
+### Milestone 2 revised same-receipt validation — private startup pending (2026-10-13)
+
+User revises acceptance to approved short real original Read/user Save/reload, then
+same-image repeat within the same operational session. Pre-dispatch duplicate block
+counts as protection; no bypass/forced separate purchase. Existing unspent maximum
+two /US$0.10each /US$0.20total unchanged. Distinct-real-receipt accuracy remains
+unverified; fictional artifact excluded from ordinary history and real evidence.
+
+Hash and current freeze verified; two existing purchases unchanged, pin1/map1/no
+draft. User confirms current Prepay/auto-reload-off/no-concurrent-use. Stopped owned
+provider-disabled server70963 safely; private user-run startup provided for frozen
+commit-candidate on same origin3172. Await native/keyMatch/unused readiness. Zero
+inference/new reservation/commit so far. Runtime untouched; revision scope is these
+two documentation appends. Conditional milestone completion requires actual revised
+real checks and exact cumulative manifest/staging verification.
+
+
+### Revised M2 real Read — draft available, awaiting user Save (2026-10-13)
+
+Native sessione8bdbeb175a287666ea0810d53cb36cb, max2 /US$0.20; approved crop
+fingerprint matches. One explicit Read → HTTP200 → decoder passed → one-row editable
+draft; preview released. Independent durable stages complete at7167ms including
+auth/request/decode/preparation. One request consumed, one remaining; no retry.
+
+Visible blockers: payment/category/date/merchantCategory/unit-0. User review/Save
+and field accuracy/persistence/repeat duplicate remain pending. Auto-review denied
+bulk value retention then browser-origin re-access while draft unsaved; no bypass.
+Guided user manually without reload; wait for Saved before browser verification.
+Safe evidence execution-progress.json in m2-repeat-live-st_6g4uw; no raw receipt
+content/response/images/credentials. Do not commit or call milestone ready yet.
+
+
+### College date policy/address-to-pin — offline verified (2026-10-13)
+
+Explicit user policy: supported zero-padded DMY two-digit years00–99 →2000–2099;
+strict calendar, original observation and four-digit years preserved. New editable
+wall-date prefill and visible EN/HE notice; editing/zone changes need confirmation.
+No financial/provider/storage change. Existing optional post-Save reviewed-address
+search/map/confirmed-pin path reverified with mocks, same purchaseID, no coordinates
+required ordinarily. Real geocoding remains separately gated.
+
+COLLEGE_RECEIPT_DATE_POLICY.md + artifacts/receipt-date-policy-ux3av7zs/:9-file
+incremental manifest;212 focused /1049 isolated units; app/QA TS/build; final9/9
+production-browser EN/HE/large-phone/desktop and renders pass (RTL range corrected).
+45 protected hashes/current consumed session/main/index/next-env preserved. Only
+owned3195 QA server stopped; open3172 draft/server untouched. No new provider calls.
+
+User confirms26 means2026 for current old-UI draft; browser auto-review still blocks
+agent filling because reconnecting could lose it. No bypass. Guided manual one-time
+date confirmation/context/user Save; await Saved before persistence/repeat checks.
+New prefill only synthetically verified so far; milestone incomplete/no commit.
+
+
+### Saved receipt timestamp correction — awaiting explicit correction Save (2026-10-13)
+
+User initial Save verified:3 purchases, targetsession_purchase_receipt_04 one row/
+payable match, previous01/03 unchanged, pin1. Actual storedUTC after safe updated-UI
+reload:2026-10-30T07:26:00.000Z (local09:26), not user-confirmedSep30 15:47.
+Date-only editor now filled with2026-09-30T15:47 Asia/Jerusalem; canonical target
+UTC12:47. Proposal/native+React values verified; not yet saved. Auto-review blocks
+reconnecting unsaved correction; no bypass. User must check confirmation and press
+Confirm and save date correction, then inspect persistence before reload.
+
+COLLEGE_PURCHASE_TIME_CORRECTION.md / artifacts/purchase-time-fix-xyju3gq7/:11files
+incremental;1063 final units, app/QA TS/build,5 new +9 neighbor browser/render pass.
+Preserves ID/products/discounts/final payable/context/location/provenance; only date
+and required derived timestamps update. Atomic guarded writes/8sec Undo. Earlier
+fixture/type/CJS/immediate-canvas failures retained and corrected.44 protected hashes/
+main refs/index/next-env/current expired-session bytes preserved.
+
+Stopped exact expired3172 child after no draft; provider-disabled tested server now
+owned session90350 on same origin. OCR unavailable/search disabled; no new calls.
+Initial request1 consumed, second unused but expired; repeat guard unverified. Real
+corrected Save/reload and milestone completion remain pending; no commit.
+
+
+### Saved receipt date correction — real Save/reload verified (2026-10-13)
+
+User confirmed correction Save. Independently inspected UTC2026-09-30T12:47:00.000Z
+(30 September2026 15:47 Asia/Jerusalem) before/after same-origin reload. Same ID04,
+non-date detail digest unchanged;3 distinct purchases/pin1, prior01/03 rendered cards
+and confirmed place unchanged. Temporary comparisons cleared; no real screenshots,
+DB export or provider calls. Corrected details remain open on provider-disabled3172.
+11-file/18-hunk incremental checkpoint and exact hashes refreshed in
+artifacts/purchase-time-fix-xyju3gq7/manifest.json; prior1063 units/14 browser checks,
+app/focusedQA TS/build results reused (documentation-only verification update).
+Milestone2 still incomplete: expired native session consumed1, unused1 blocked;
+real same-session repeat/duplicate guard not verified. No completion commit.
+
+
+### Scanner checkpoint closed by user — 2026-10-13
+
+User stops further scanner validation and explicitly authorizes cumulative scoped
+checkpoint commit. Verified real extraction/editable review/user Save/reload for
+receipt_03/04 and in-place corrected date/reload for04;3 purchases/1 existing pin
+preserved. Repeated real capture/duplicate prevention remains UNVERIFIED (session
+expired); not a full Milestone2 acceptance pass. No further Gemini reads. Exact
+51-file scope, M2 handoff only, in artifacts/scanner-close-ucxk2sek/manifest.json
+/PROPOSED.diff; unrelated prior dirty handoff/recovery/research excluded. Latest
+1063 units/14 browser/typecheck/build evidence reused only with matching source.
+Next approved slice is saved-purchase reviewed-address/explicit confirmed pin,
+with one fresh Geoapify request maximum, current Free readiness/user Save required.
+Keep Vercel paused and live Nearby Prices deferred. Historical locks unchanged.
+
+Fresh scoped checkout1063/1063 +5 launcher tests/app TS pass; runtime parity with
+last production build verified,14 matching browser checks reused. Scope51files/
+88hunks. Initial accidental dirty-workspace run1106/1108 (2 unrelated untracked
+direct-image research failures) and isolated executable-path typo retained; no
+claim of a clean full working-tree suite or strict all-historical-QA typecheck.

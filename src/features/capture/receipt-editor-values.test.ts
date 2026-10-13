@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { receiptEditorCurrency, receiptEditorDate, receiptEditorWall } from './receipt-editor-values'
+import { receiptEditorCurrency, receiptEditorDate, receiptEditorWall, receiptEditorUsesCollegeYear } from './receipt-editor-values'
 import { receiptToReviewDraft, prepareReceiptReview, type ReceiptObservations } from './receipt-review-adapter'
 import { createFixtureSpendscapeRepository } from '../../data/spendscape-repository'
 const data = await createFixtureSpendscapeRepository().loadSnapshot()
@@ -13,9 +13,23 @@ describe('explicit printed date/currency editor conversion', () => {
     expect(receiptEditorDate(printed)).toBe(iso)
   })
   it.each([null, '', '29/02/2023', '29/02/1900', '29/02/2100', '31/04/2026', '00/01/2026', '01/00/2026',
-    '01/13/2026', '2026-02-30', '2026-00-01', '01/01/1899', '01/01/2101', '30/09/13', '09/30/2013',
+    '01/13/2026', '2026-02-30', '2026-00-01', '01/01/1899', '01/01/2101', '09/30/2013',
     '1/2/2026', '01/02-2026', '2026/01/02', '2026-01-02T00:00Z', '01.02.2026', { candidates: ['01/02/2026','02/01/2026'] }])('leaves invalid/unsupported date %j unresolved', printed => {
     expect(receiptEditorDate(printed)).toBe('')
+  })
+  it.each([['30-09-26', '2026-09-30'], ['30/09/13', '2013-09-30'], ['01/01/00', '2000-01-01'],
+    ['31-12-99', '2099-12-31'], ['29/02/00', '2000-02-29'], ['29-02-04', '2004-02-29']])('applies the explicit college century policy to %s', (printed, iso) => {
+    expect(receiptEditorDate(printed)).toBe(iso)
+    expect(receiptEditorUsesCollegeYear(printed)).toBe(true)
+    expect(receiptEditorWall(printed, '15:47')).toBe(`${iso}T15:47`)
+  })
+  it.each(['29/02/01', '29/02/99', '31/04/26', '00/09/26', '30/00/26', '30/13/26',
+    '30/09-26', '30.09.26', '30/09/026', '9/30/26', { candidates: ['30/09/26', '01/10/26'] }])('does not repair invalid or unsupported two-digit dates %j', printed => {
+    expect(receiptEditorDate(printed)).toBe('')
+    expect(receiptEditorUsesCollegeYear(printed)).toBe(false)
+  })
+  it.each(['30/09/1926', '30/09/2026', '2026-09-30'])('never applies the two-digit policy to four-digit %s', printed => {
+    expect(receiptEditorUsesCollegeYear(printed)).toBe(false)
   })
   it.each(['00:00', '23:59', ' 09:07 '])('keeps explicitly observed clock %s without choosing a zone', time => {
     expect(receiptEditorWall('29/02/2024', time)).toBe(`2024-02-29T${time.trim()}`)
