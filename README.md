@@ -6,7 +6,7 @@ same validated graph. Physical places appear only after explicit confirmation;
 online and unresolved purchases have no pin. Manual entry, receipt review,
 editable printed values, final payable totals, explicit Unknown context, atomic
 IndexedDB saving, deletion and Undo are supported. Photos are temporary. There
-is no cloud synchronization or backup.
+is no cloud synchronization or cloud backup.
 
 Receipt extraction and address search remain default-off, local-only provider
 boundaries. Receipt capture has a privately configured, bounded operational
@@ -21,8 +21,9 @@ savings evidence. Vercel remains paused; this checkpoint does not publish or dep
 
 For the current local submission workflow, pin reconciliation, acceptance gaps and
 completion plan, see [College submission readiness](docs/spendscape/COLLEGE_SUBMISSION_READINESS.md).
-Backup/restore is not implemented; do not clear site data or change browser/origin
-expecting records to transfer. The closed scanner checkpoint does not establish
+Local JSON backup and empty-only restore are available from **On-device data &
+privacy** after loading this build. See [backup instructions and limits](docs/spendscape/COLLEGE_PURCHASE_BACKUP.md).
+Records do not transfer automatically between browsers or origins. The closed scanner checkpoint does not establish
 real same-session repeated-capture duplicate prevention.
 
 Synthetic purchases, catalogs and simulations are isolated QA fixtures only.

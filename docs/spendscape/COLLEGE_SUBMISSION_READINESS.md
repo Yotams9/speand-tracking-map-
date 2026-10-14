@@ -190,3 +190,29 @@ Evidence: artifacts/college-m5-readiness-xsy4fm81/.
 Exact documentation scope: README.md (current capability copy/link only), this
 file, and only appended M5 audit sections in docs/AI_HANDOFF.md and
 COLLEGE_FINAL_MILESTONES.md. No runtime, request, schema or financial-rule changes.
+
+
+## Milestone 5 slice 1 — local backup/restore ready (2026-10-15)
+
+Versioned private JSON export and strictly validated, explicitly confirmed,
+empty-only atomic IndexedDB restore are implemented. Preserve IDs, printed item
+values and final payable independently, dates, unknown context, saved decisions,
+merchant/place associations and existing provenance; no confirmation upgrades.
+8 MiB file cap; existing 2,000,000-character ledger validation unchanged. No
+images, credentials, diagnostic journals or temporary product matches exported.
+Checksum detects corruption, not authenticity. Historical references require an
+exact compatible baseline. Destination revision/sequence protection is retained.
+
+Fresh isolated candidate: 108/108 focused tests, app/QA typechecks, production
+build, 10/10 browser scenarios including abort/conflict/reload, EN/HE mobile
+inspection. Retained earlier failures were corrected, not erased. No provider
+calls or scanner retesting. Real ledger and running port 3172 left untouched;
+no real backup/restore claimed. See COLLEGE_PURCHASE_BACKUP.md for the exact
+16-file scope, limits and evidence artifacts/college-backup-6tqostgv/.
+
+This supersedes the earlier audit's absent-backup status and proposed 2 MB file
+limit only. Full Milestone 5 remains incomplete: reusable address-search startup,
+separately approved fresh prices if needed, physical-mobile and submission checks
+remain. Scanner's real same-session duplicate check remains unverified and closed;
+city comparison's radius requirement remains deferred. Vercel paused; no push or
+deployment. Unrelated work, main refs, next-env.d.ts and historical locks preserved.

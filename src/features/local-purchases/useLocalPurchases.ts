@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { SpendscapeDataSnapshot } from '../../data/spendscape-repository'
 import type { SessionPurchaseLedger } from '../capture/session-purchase-domain'
 import type { SmartInboxDecision } from '../inbox/smart-inbox-domain'
-import { emptyLocalPurchases, LOCAL_CHANNEL, LocalStoreError, readLocalPurchases, writeLocalPurchases, type LocalPurchases } from './local-purchase-store'
+import { emptyLocalPurchases, emptyRestoreDestination, LOCAL_CHANNEL, LocalStoreError, readLocalPurchases, restoreLocalPurchases, writeLocalPurchases, type LocalPurchases } from './local-purchase-store'
+import { exportPurchaseBackup, inspectPurchaseBackup, PurchaseBackupError } from './purchase-backup'
 
 export function useLocalPurchases(context: SpendscapeDataSnapshot, onRestore: (data: LocalPurchases) => void) {
   const [phase, setPhase] = useState<'loading' | 'ready' | 'invalid' | 'unavailable' | 'conflict'>('loading')
@@ -52,5 +53,28 @@ export function useLocalPurchases(context: SpendscapeDataSnapshot, onRestore: (d
       return false
     } finally { lock.current = false; if (alive.current) setBusy(false) }
   }
-  return { phase, busy, writeError, lastFailure, commit }
+  const exportBackup = async () => {
+    if (lock.current || phase !== 'ready') throw new PurchaseBackupError('unavailable')
+    try {
+      const saved = await readLocalPurchases(context)
+      if (saved.revision !== current.current.revision) { setPhase('conflict'); throw new PurchaseBackupError('conflict') }
+      return await exportPurchaseBackup(saved, context)
+    } catch (error) {
+      if (error instanceof PurchaseBackupError) throw error
+      throw new PurchaseBackupError('storage')
+    }
+  }
+  const restoreBackup = async (data: LocalPurchases) => {
+    if (lock.current || phase !== 'ready') throw new PurchaseBackupError('unavailable')
+    lock.current = true; setBusy(true)
+    try {
+      const saved = await restoreLocalPurchases(data, context, current.current.revision)
+      current.current = saved
+      restore.current(saved)
+      try { channel.current?.postMessage({ changed: true }) } catch { /* No purchase data in notifications. */ }
+    } catch (error) {
+      throw new PurchaseBackupError(error instanceof LocalStoreError && error.code === 'not-empty' ? 'not-empty' : error instanceof LocalStoreError && error.code === 'conflict' ? 'conflict' : 'storage')
+    } finally { lock.current = false; if (alive.current) setBusy(false) }
+  }
+  return { phase, busy, writeError, lastFailure, commit, exportBackup, restoreBackup, inspectBackup: (text: string) => inspectPurchaseBackup(text, context), emptyDestination: emptyRestoreDestination(current.current) }
 }

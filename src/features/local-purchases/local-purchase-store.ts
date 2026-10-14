@@ -9,7 +9,7 @@ export const LOCAL_CHANNEL = 'spendscape-local-purchases-changed'
 export interface LocalPurchases { version: 4; directory: LocalDirectory; revision: number; records: readonly SessionCaptureRecord[]; nextSequence: number; decisions: readonly SmartInboxDecision[] }
 export const emptyLocalPurchases = (): LocalPurchases => ({ version: 4, directory: emptyDirectory(), revision: 0, records: [], nextSequence: 1, decisions: [] })
 export class LocalStoreError extends Error {
-  constructor(public readonly code: 'invalid' | 'unavailable' | 'conflict' | 'capacity' | 'rejected') { super(code) }
+  constructor(public readonly code: 'invalid' | 'unavailable' | 'conflict' | 'capacity' | 'rejected' | 'not-empty') { super(code) }
 }
 function same(a: unknown, b: unknown): boolean {
   if (a === b) return true
@@ -114,22 +114,37 @@ export function validateLocalPurchaseWrite(next: LocalPurchases, context: Spends
   catch { throw new LocalStoreError('rejected') }
 }
 export async function writeLocalPurchases(next: LocalPurchases, context: SpendscapeDataSnapshot, erase = false): Promise<LocalPurchases> {
+  return persistLocalPurchases(next, context, erase ? 'erase' : 'write')
+}
+export function emptyRestoreDestination(data: LocalPurchases): boolean {
+  return data.records.length === 0 && data.directory.merchants.length === 0 && data.directory.places.length === 0 && data.decisions.length === 0
+}
+export async function restoreLocalPurchases(data: LocalPurchases, context: SpendscapeDataSnapshot, expectedRevision: number): Promise<LocalPurchases> {
+  // Validate all imported facts before opening a write transaction. Only the
+  // destination's revision may participate in its concurrency protection.
+  const clean = validateLocalPurchases(data, context)
+  return persistLocalPurchases({ ...clean, revision: expectedRevision }, context, 'restore')
+}
+async function persistLocalPurchases(next: LocalPurchases, context: SpendscapeDataSnapshot, mode: 'write' | 'erase' | 'restore'): Promise<LocalPurchases> {
+  const erase = mode === 'erase'
   const clean = validateLocalPurchaseWrite(next, context)
   const db = await openDatabase()
   try {
     return await new Promise((resolve, reject) => {
       const tx = db.transaction('state', 'readwrite'), store = tx.objectStore('state')
-      let result = clean, reason: 'conflict' | 'invalid' | 'unavailable' = 'unavailable'
+      let result = clean, reason: 'conflict' | 'invalid' | 'unavailable' | 'not-empty' = 'unavailable'
       const timer = setTimeout(() => { try { tx.abort() } catch { /* already finished */ } }, 5000)
       const request = store.get('current')
       request.onsuccess = () => {
         try {
           const current = erase ? request.result : request.result === undefined ? emptyLocalPurchases() : validateLocalPurchases(request.result, context)
+          if (mode === 'restore' && !emptyRestoreDestination(current)) { reason = 'not-empty'; tx.abort(); return }
+          if (mode === 'restore' && current.revision === Number.MAX_SAFE_INTEGER) { tx.abort(); return }
           if (!erase && current.revision !== clean.revision) { reason = 'conflict'; tx.abort(); return }
           // Keep an empty revision tombstone after explicit deletion so a stale
           // tab cannot recreate deleted purchases. It contains no purchase data.
           const revision = Number.isSafeInteger(current?.revision) && current.revision < Number.MAX_SAFE_INTEGER ? current.revision + 1 : 1
-          result = { ...(erase ? emptyLocalPurchases() : clean), revision }
+          result = { ...(erase ? emptyLocalPurchases() : clean), revision, ...(mode === 'restore' ? { nextSequence: Math.max(clean.nextSequence, current.nextSequence) } : {}) }
           store.put(result, 'current')
         } catch (e) { reason = e instanceof LocalStoreError && e.code === 'invalid' ? 'invalid' : 'unavailable'; tx.abort() }
       }

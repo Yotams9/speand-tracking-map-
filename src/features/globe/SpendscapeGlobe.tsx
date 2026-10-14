@@ -4052,7 +4052,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         </button>
       </nav>
     </main>
-    <LocalDataPanel locale={locale} open={privacyOpen} phase={localData.phase} busy={localData.busy} writeError={localData.writeError} onClose={() => setPrivacyOpen(false)} onErase={() => localData.commit(emptySessionLedger(), [], true)} />
+    <LocalDataPanel locale={locale} open={privacyOpen} phase={localData.phase} busy={localData.busy} writeError={localData.writeError} onClose={() => setPrivacyOpen(false)} onErase={() => localData.commit(emptySessionLedger(), [], true)} emptyDestination={localData.emptyDestination} onExport={localData.exportBackup} onInspect={localData.inspectBackup} onRestore={localData.restoreBackup} />
     </>
   )
 }
