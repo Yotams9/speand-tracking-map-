@@ -175,3 +175,18 @@ EN/HE QA separately pass. City-based Milestone4 acceptance met. Four-product cat
 24h publication expiry/no refresh, no stock or historical savings are limitations.
 Exact checkpoint/manifest: COLLEGE_CITY_PRICES.md and college-m4-city-7o5_9swt.
 No additional provider calls or deployment; Vercel paused. Radius remains deferred.
+
+
+## Milestone 5 — submission readiness audit, 2026-10-14
+
+M5A audit/local QA/submission-plan acceptance passed. Three real place links are
+receipt_01/place2, receipt_04/place5 and weighted receipt_03/place6; unique IDs,
+no comparison pin/write. Historical M3 two-pin count is preserved. Additional
+place confirmation method/time and coordinate coincidence remain unknown.
+161 focused tests/5 launcher tests/typecheck and9 fresh synthetic EN/HE browser
+scenarios pass; unchanged M4 build/expiry QA reused. No native provider execution.
+Closed scanner repeat/duplicate limitation stays unverified; M4 city-based acceptance
+remains completed, radius deferred. Full M5 is NOT ready: backup/restore and normal
+bounded address-search session absent. Next local slices and separate provider/
+backend/deployment gates are detailed in COLLEGE_SUBMISSION_READINESS.md.
+Exact4doc scope; commit this completed audit only, no broader readiness claim.

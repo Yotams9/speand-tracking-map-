@@ -9,11 +9,21 @@ IndexedDB saving, deletion and Undo are supported. Photos are temporary. There
 is no cloud synchronization or backup.
 
 Receipt extraction and address search remain default-off, local-only provider
-boundaries. Activation requires a separately approved run; consumed one-shot
-launchers cannot be reused. External product lookup, current verified prices,
-AI Ask and automatic insights are unavailable in ordinary flows. Historical
-receipt prices are never current-price or savings evidence. Vercel remains
-paused; this local checkpoint does not publish or deploy the application.
+boundaries. Receipt capture has a privately configured, bounded operational
+session; address search still uses fixed one-request validation runs. Activation
+requires separate approval, and consumed historical launchers cannot be reused.
+Ordinary city comparison uses a qualified, limited Shufersal snapshot while its
+publications are within 24 hours; expired or unmatched prices are unavailable.
+Product/package matching is explicit and temporary. Distances and radius-based
+comparison remain deferred. External product lookup, AI Ask and automatic
+insights are unavailable. Historical receipt prices are never current-price or
+savings evidence. Vercel remains paused; this checkpoint does not publish or deploy.
+
+For the current local submission workflow, pin reconciliation, acceptance gaps and
+completion plan, see [College submission readiness](docs/spendscape/COLLEGE_SUBMISSION_READINESS.md).
+Backup/restore is not implemented; do not clear site data or change browser/origin
+expecting records to transfer. The closed scanner checkpoint does not establish
+real same-session repeated-capture duplicate prevention.
 
 Synthetic purchases, catalogs and simulations are isolated QA fixtures only.
 They require `SPENDSCAPE_SYNTHETIC_QA=1`, an exact loopback host and explicit
@@ -114,8 +124,8 @@ Screenshots, recordings, and run output belong only in the ignored local
 - `src/data/spendscape-*`: canonical fixtures, repository contract, domain
   types, and deterministic purchase/map/analytics derivations.
 - `src/features/`: the active globe, Capture, Inbox, Ask, Replay, local
-  purchase storage, and saved-receipt comparison preview (verified prices
-  unavailable). English/Hebrew copy lives with these features.
+  purchase storage, and qualified city-based saved-receipt comparison
+  (limited catalog, explicit matching and publication expiry). English/Hebrew copy lives with these features.
 - `public/`: PWA icons/manifest and required MapLibre, RTL, and barcode assets.
 - `qa/` and `tools/`: browser regression suites and isolated receipt/price
   experiments; these are supporting code, not application routes.

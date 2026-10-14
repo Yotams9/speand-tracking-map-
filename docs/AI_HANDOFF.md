@@ -2338,3 +2338,31 @@ artifacts/college-m4-city-7o5_9swt/ contain manifest/patch/source freeze/QA.
 City acceptance passed; local completion commit authorized. Provider-disabled3172
 available. Fresh snapshots expire, broad catalog and radius remain deferred.
 Vercel paused; no push/deployment; historical locks/main/next-env protected.
+
+
+## College M5 — readiness audit and completion plan (2026-10-14)
+
+Entry HEAD ad6091d5de8fd393eae7804c71e38edbae3f86c2. Read-only pin audit:
+receipt_01→local_place_2 (earlier Ramat Gan Geoapify confirmation), receipt_04→
+local_place_5 (M3 Petah Tikva Geoapify confirmation), weighted receipt_03→
+local_place_6 (additional saved physical place; street/search attribution absent).
+M3 2pins remains its historical verified count; M4 first walkthrough already3.
+Three distinct IDs/links, one visit each; no duplicate purchase/repeated place ID.
+Third place confirmation time/method/actor and coordinate coincidence remain
+unknown; no invented origin or data correction. All opened location forms cancelled.
+161/161 focused HEAD-only tests, 5 launcher controls, app typecheck;188 runtime files
+match prior successful build. Fresh production mock browser9/9 EN/HE passes on3195:
+prefill/Unknown/unresolved save, duplicate-save guard, Undo/reload, strict dates,
+optional address/map confirmation, cancellation/write failure. M4 city/expiry5/5
+reused for unchanged source. Sandbox Chrome launch failures and verifier cwd error
+retained; corrected runs pass. No provider/credential/real-data writes;3172 untouched.
+Scanner checkpoint stays closed; real repeated Capture/duplicate unverified. M4 city
+comparison completed; radius/distances/branch coords deferred. Snapshot expiry honest,
+no hidden refresh. Normal reusable Geo session and purchase backup/restore absent.
+COLLEGE_SUBMISSION_READINESS.md sets concrete ordered acceptance: local structured
+backup to empty destination/strict atomic restore; bounded reusable Geo session;
+separate live/provider freshness approval; mobile/submission checks. No backend
+needed for proposed local slices; hosted activation/cloud sync/deployment separately
+gated. No new runtime implementation authorized/executed by this audit. README
+corrected stale unavailable-price copy. Exact4doc scope, M5append only. Audit slice
+ready for local commit; full M5 NOT ready. Vercel paused; no push/deployment.
