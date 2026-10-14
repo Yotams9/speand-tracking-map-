@@ -161,3 +161,17 @@ Geoapify search consumed. Geographic accuracy is user-confirmed, not independent
 measured. Exact checkpoint COLLEGE_ADDRESS_TO_PIN_MILESTONE.md. Local commit
 authorized after final preservation/scope verification. Live Nearby Prices remains
 the next separate milestone; no current prices/collection approved by this outcome.
+
+
+## Milestone 4 amendment — city-based acceptance, 2026-10-14
+
+Two official Shufersal physical branches in Petah Tikva replace the original 5km
+criterion. Coordinates, distances and retailer pins are deferred, not completed.
+Retained Stores + two fresh PriceFull publications qualify branch/city/ILS/product/
+package evidence; 19/22 attempts consumed, three unspent. Explicit Mango500ml user
+match covers the target receipt row at both branches. Real ordinary UI comparison,
+close/reload and saved detail/count/pin preservation pass; synthetic IndexedDB and
+EN/HE QA separately pass. City-based Milestone4 acceptance met. Four-product catalog,
+24h publication expiry/no refresh, no stock or historical savings are limitations.
+Exact checkpoint/manifest: COLLEGE_CITY_PRICES.md and college-m4-city-7o5_9swt.
+No additional provider calls or deployment; Vercel paused. Radius remains deferred.

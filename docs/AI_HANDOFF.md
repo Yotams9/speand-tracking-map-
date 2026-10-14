@@ -2311,3 +2311,30 @@ no retry/Gemini. Source/build unchanged since109focused/5launcher/TS/build +14ma
 browser evidence. Final10-file scoped local M3 commit now authorized; default/hosted
 search off/this native run consumed. Scanner repeat guard remains unverified.
 Next separate task Nearby Prices; no live data collection/implementation yet.
+
+
+## College M4 — city comparison completion (2026-10-14)
+
+Latest approval replaces 5km with two official Petah Tikva branches; radius/coords,
+distances and branch pins remain deferred. Retained Stores plus fresh PriceFull
+104/285 qualify exact chain/subchain/store, city/address, ILS decimals, GTIN/package.
+19/22 HTTP attempts consumed; 3 unused. No additional Geo/Gemini/private data sent.
+Publisher HTTP Last-Modified UTC is publication clock; fetch/filename/item-change
+remain separate, 24h expiry/no hidden refresh. Vendor BikoretNo discrepancy retained,
+not used as branch identity. Ordinary limited four-product Monster500ml catalog;
+explicit temporary match, partial coverage/unavailable states, no stock/promotion/
+historical savings. Legacy fictional data only explicit loopback QA.
+User confirmed Mango500ml. Real same-origin3172 walkthrough quotes 3cans ILS29.70 in
+both branches, 1/1 rows priced. Target detail unchanged after close/reload, 3purchases/
+3existing pins/oneMap preserved; match clears, no writes/new barcode. Real read-only
+IndexedDB API unavailable; rehydrated detail/count inspection verified, synthetic
+full envelope equality separately passes. No real screenshot/private snapshot kept.
+Isolated42/42 focused tests/typecheck/build; XML4/4, preflight4/4, download1/1;
+production browser5/5 EN/HE mobile/desktop, expiry/reload/independent-total controls.
+Initial failed import/build-directory evidence retained. Exact11file candidate,
+Globe label hunk + only these appended handoff/milestone sections; excludes earlier
+branch-point research, server runs and dirty history. COLLEGE_CITY_PRICES.md and
+artifacts/college-m4-city-7o5_9swt/ contain manifest/patch/source freeze/QA.
+City acceptance passed; local completion commit authorized. Provider-disabled3172
+available. Fresh snapshots expire, broad catalog and radius remain deferred.
+Vercel paused; no push/deployment; historical locks/main/next-env protected.

@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "city": {
+    "en": "Petah Tikva",
+    "he": "פתח תקווה"
+  },
+  "directoryHash": "2ba51734a0a9c85969d5e4eb820e430e915464a2f2550a98d57de5c0bb1470e7",
+  "cityEvidence": "Official StoreName פ\"ת abbreviation, raw City7900; not a coordinate/boundary claim",
+  "snapshot": {
+    "version": 1,
+    "classification": "qualified",
+    "source": {
+      "id": "shufersal-city-20261014",
+      "label": "Shufersal public PriceFull",
+      "hash": "7fc805d4f0ad5bdf0518bf74d739248565c01a505ba073c54c1703cfb1af515a",
+      "publishedAt": "2026-10-14T10:18:33.000Z",
+      "fetchedAt": "2026-10-14T14:53:05.720Z",
+      "currency": "ILS",
+      "currencyEvidence": "2015 regulator ItemPrice / shekels-agorot mapping",
+      "coverage": "partial"
+    },
+    "products": [
+      {
+        "id": "shufersal-5060639128051",
+        "label": {
+          "en": "מונסטר אנרגי אולטרה500מ",
+          "he": "מונסטר אנרגי אולטרה500מ"
+        },
+        "brand": "מונסטר",
+        "variant": "מונסטר אנרגי אולטרה500מ",
+        "package": {
+          "quantity": 500,
+          "unit": "ml",
+          "count": 1
+        },
+        "gtin": "5060639128051"
+      },
+      {
+        "id": "shufersal-5060639129102",
+        "label": {
+          "en": "מונסטר מנגו 500 מ\"ל",
+          "he": "מונסטר מנגו 500 מ\"ל"
+        },
+        "brand": "מונסטר",
+        "variant": "מונסטר מנגו 500 מ\"ל",
+        "package": {
+          "quantity": 500,
+          "unit": "ml",
+          "count": 1
+        },
+        "gtin": "5060639129102"
+      },
+      {
+        "id": "shufersal-5060751219033",
+        "label": {
+          "en": "מונסטר אנרגי פרדייס500מ",
+          "he": "מונסטר אנרגי פרדייס500מ"
+        },
+        "brand": "מונסטר",
+        "variant": "מונסטר אנרגי פרדייס500מ",
+        "package": {
+          "quantity": 500,
+          "unit": "ml",
+          "count": 1
+        },
+        "gtin": "5060751219033"
+      },
+      {
+        "id": "shufersal-5060896625249",
+        "label": {
+          "en": "מונסטר אולטה פייסטה 500",
+          "he": "מונסטר אולטה פייסטה 500"
+        },
+        "brand": "מונסטר",
+        "variant": "מונסטר אולטה פייסטה 500",
+        "package": {
+          "quantity": 500,
+          "unit": "ml",
+          "count": 1
+        },
+        "gtin": "5060896625249"
+      }
+    ],
+    "stores": [
+      {
+        "id": "shufersal-104",
+        "retailerId": "7290027600007",
+        "label": {
+          "en": "שלי פ\"ת- גד מכנס",
+          "he": "שלי פ\"ת- גד מכנס"
+        },
+        "coordinates": null,
+        "coordinateEvidence": null
+      },
+      {
+        "id": "shufersal-285",
+        "retailerId": "7290027600007",
+        "label": {
+          "en": "אקספרס סוקולוב פ\"ת",
+          "he": "אקספרס סוקולוב פ\"ת"
+        },
+        "coordinates": null,
+        "coordinateEvidence": null
+      }
+    ],
+    "prices": [
+      {
+        "storeId": "shufersal-104",
+        "productId": "shufersal-5060639128051",
+        "unitMinor": 990,
+        "basis": "package"
+      },
+      {
+        "storeId": "shufersal-285",
+        "productId": "shufersal-5060639128051",
+        "unitMinor": 990,
+        "basis": "package"
+      },
+      {
+        "storeId": "shufersal-104",
+        "productId": "shufersal-5060639129102",
+        "unitMinor": 990,
+        "basis": "package"
+      },
+      {
+        "storeId": "shufersal-285",
+        "productId": "shufersal-5060639129102",
+        "unitMinor": 990,
+        "basis": "package"
+      },
+      {
+        "storeId": "shufersal-104",
+        "productId": "shufersal-5060751219033",
+        "unitMinor": 990,
+        "basis": "package"
+      },
+      {
+        "storeId": "shufersal-285",
+        "productId": "shufersal-5060751219033",
+        "unitMinor": 990,
+        "basis": "package"
+      },
+      {
+        "storeId": "shufersal-104",
+        "productId": "shufersal-5060896625249",
+        "unitMinor": 990,
+        "basis": "package"
+      },
+      {
+        "storeId": "shufersal-285",
+        "productId": "shufersal-5060896625249",
+        "unitMinor": 990,
+        "basis": "package"
+      }
+    ]
+  },
+  "publications": [
+    {
+      "storeId": "shufersal-104",
+      "address": "רוטשילד 180",
+      "cityCode": "7900",
+      "directoryName": "שלי פ\"ת- גד מכנס",
+      "source": "https://pricesprodpublic.blob.core.windows.net/pricefull/PriceFull7290027600007-001-104-20261014-121701.gz",
+      "hash": "f6a9d7de8819fc3b47c037dc2922d9f938013e74460d4ad7534994b5b5a5933c",
+      "publishedAt": "2026-10-14T10:18:33.000Z",
+      "fetchedAt": "2026-10-14T14:50:57.386Z",
+      "filenamePublicationRaw": "20261014121701"
+    },
+    {
+      "storeId": "shufersal-285",
+      "address": "סוקולוב 26",
+      "cityCode": "7900",
+      "directoryName": "אקספרס סוקולוב פ\"ת",
+      "source": "https://pricesprodpublic.blob.core.windows.net/pricefull/PriceFull7290027600007-007-285-20261014-121701.gz",
+      "hash": "f2bf22b292ab7f58f84114a712e3f9f69ac4a76715fed43d0cdedc348daa80ab",
+      "publishedAt": "2026-10-14T10:20:47.000Z",
+      "fetchedAt": "2026-10-14T14:53:05.720Z",
+      "filenamePublicationRaw": "20261014121701"
+    }
+  ],
+  "itemUpdates": [
+    {
+      "storeId": "shufersal-104",
+      "productId": "shufersal-5060639128051",
+      "updatedRaw": "2025-05-19T07:16:00"
+    },
+    {
+      "storeId": "shufersal-285",
+      "productId": "shufersal-5060639128051",
+      "updatedRaw": "2025-05-18T07:53:00"
+    },
+    {
+      "storeId": "shufersal-104",
+      "productId": "shufersal-5060639129102",
+      "updatedRaw": "2025-05-19T07:16:00"
+    },
+    {
+      "storeId": "shufersal-285",
+      "productId": "shufersal-5060639129102",
+      "updatedRaw": "2025-05-18T07:53:00"
+    },
+    {
+      "storeId": "shufersal-104",
+      "productId": "shufersal-5060751219033",
+      "updatedRaw": "2025-05-19T07:16:00"
+    },
+    {
+      "storeId": "shufersal-285",
+      "productId": "shufersal-5060751219033",
+      "updatedRaw": "2025-05-18T07:53:00"
+    },
+    {
+      "storeId": "shufersal-104",
+      "productId": "shufersal-5060896625249",
+      "updatedRaw": "2025-05-19T07:16:00"
+    },
+    {
+      "storeId": "shufersal-285",
+      "productId": "shufersal-5060896625249",
+      "updatedRaw": "2025-05-18T07:53:00"
+    }
+  ],
+  "catalogScope": "Shared explicitly packaged Monster 500 ml products only"
+}
