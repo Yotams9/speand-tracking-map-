@@ -19,7 +19,7 @@ const copy = {
     cancelled: 'Barcode scanning cancelled. You can enter a code or start the camera again.',
     manual: 'Enter barcode', format: 'Barcode format', code: 'Barcode digits', identify: 'Check barcode',
     demo: 'Load demo product for review', loaded: 'Demo product loaded — review only', continue: 'Continue to purchase details', provenance: 'Synthetic demo catalog · fictional product',
-    unknown: 'Unknown barcode', unknownBody: 'The code is valid, but is not in this small demo catalog. No real product lookup was made.',
+    unknown: 'Unknown barcode',
     real: 'Found in Tel Aviv published prices', checking: 'Checking the Tel Aviv price files…', missing: 'Not in the Tel Aviv price files of Shufersal, Rami Levy and Osher Ad. Type the product name below.', lookupError: 'The price files could not be checked right now. Type the product name below.',
     prices: 'Published shelf prices in Tel Aviv', stores: 'stores', cheapest: 'Cheapest', perKg: 'per kg', more: 'more stores · up to', priceNote: 'From the chains’ official price files ({date}). Promotions and club prices are not applied; the price you pay may differ.',
     name: 'Product name for review', note: 'Identification only. Nothing is added to your purchases. The price you paid, store, date and place are unknown.',
@@ -35,7 +35,7 @@ const copy = {
     cancelled: 'סריקת הברקוד בוטלה. אפשר להזין קוד או להפעיל שוב את המצלמה.',
     manual: 'הזנת ברקוד', format: 'סוג ברקוד', code: 'ספרות הברקוד', identify: 'בדיקת ברקוד',
     demo: 'טעינת מוצר הדגמה לבדיקה', loaded: 'מוצר ההדגמה נטען — לבדיקה בלבד', continue: 'המשך לפרטי רכישה', provenance: 'קטלוג הדגמה סינתטי · מוצר בדיוני',
-    unknown: 'ברקוד לא מוכר', unknownBody: 'הקוד תקין, אך אינו בקטלוג ההדגמה הקטן. לא בוצע חיפוש מוצר אמיתי.',
+    unknown: 'ברקוד לא מוכר',
     real: 'נמצא במחירוני תל אביב', checking: 'בודקים במחירוני תל אביב…', missing: 'המוצר לא נמצא במחירונים של שופרסל, רמי לוי ואושר עד בתל אביב. הקלידו את שם המוצר למטה.', lookupError: 'לא ניתן לבדוק במחירונים כרגע. הקלידו את שם המוצר למטה.',
     prices: 'מחירי מדף מפורסמים בתל אביב', stores: 'סניפים', cheapest: 'הכי זול', perKg: 'לק״ג', more: 'סניפים נוספים · עד', priceNote: 'מתוך קובצי המחירים הרשמיים של הרשתות ({date}). מבצעים ומחירי מועדון אינם כלולים; המחיר בקופה עשוי להיות שונה.',
     name: 'שם מוצר לבדיקה', note: 'זיהוי בלבד. דבר לא נוסף לרכישות. המחיר ששילמתם, החנות, התאריך והמקום אינם ידועים.',
@@ -49,7 +49,6 @@ export function CaptureBarcode({ locale, syntheticQa = false, state, identity, o
   onManual: (code: string, format: string) => void; onCancel: () => void; onRetry: () => void; onReset: () => void
 }) {
   const t = syntheticQa ? copy[locale] : { ...copy[locale],
-    unknownBody: locale === 'he' ? 'הקוד תקין. חיפוש פרטי מוצר אינו מחובר; הזינו שם מוצר שבדקתם.' : 'The code is valid. Product lookup is not connected; enter a product name you have checked.',
     'load-error': locale === 'he' ? 'לא ניתן לטעון את הקורא. נסו שוב או הזינו קוד.' : 'The reader could not load. Retry or enter the code.',
     'decode-error': locale === 'he' ? 'לא ניתן לקרוא את הקוד. נסו שוב או הזינו קוד.' : 'The code could not be read. Retry or enter the code.',
   }
@@ -96,7 +95,7 @@ export function CaptureBarcode({ locale, syntheticQa = false, state, identity, o
     <p role="status" aria-live="polite" aria-atomic="true" id="barcode-status" data-testid="barcode-status">{identity && !product ? (real ? t.real : t.unknown) : t[state]}</p>
     {identity && <div ref={result} tabIndex={-1} className={styles.barcodeResult} data-testid="barcode-result" aria-label={product ? product.name[locale] : real ? real.name : t.unknown}>
       <strong>{product ? t.provenance : real ? t.real : t.unknown}</strong>
-      <p>{product ? `${product.category[locale]} · ${product.size[locale]}` : real ? [real.manufacturer, real.quantity].filter(Boolean).join(' · ') || real.name : lookup?.state === 'missing' ? t.missing : lookup?.state === 'error' ? t.lookupError : lookup ? t.checking : t.unknownBody}</p>
+      <p>{product ? `${product.category[locale]} · ${product.size[locale]}` : real ? [real.manufacturer, real.quantity].filter(Boolean).join(' · ') || real.name : lookup?.state === 'missing' ? t.missing : lookup?.state === 'error' ? t.lookupError : t.checking}</p>
       {real && <div className={styles.catalogPrices} data-testid="catalog-prices">
         <p>{t.prices} · {real.prices.length}/{real.storesInArea} {t.stores}</p>
         <ul>{real.prices.slice(0, 5).map(entry => {
