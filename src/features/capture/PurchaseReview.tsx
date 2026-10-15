@@ -26,9 +26,10 @@ const CATALOG = 'catalog:'
 // published price, so a later store change can tell it from typed values.
 type EditableReview = Omit<PurchaseReviewInput, 'lines'> & { lines: (PurchaseReviewInput['lines'][number] | ReceiptReviewDraft['review']['lines'][number])[]; publishedFill?: PublishedFill; setAside?: DirectoryIntent }
 const reviewInput = ({ publishedFill: _fill, setAside: _aside, ...form }: EditableReview) => form as PurchaseReviewInput
-const withFill = (input: PurchaseReviewInput, fill: PublishedFill | null): EditableReview => ({ ...(input as EditableReview), ...(fill ? { publishedFill: fill } : {}) })
-const followStore = (current: EditableReview, storeId: string | null): EditableReview => { const next = followPublishedPrice(reviewInput(current), storeId, current.publishedFill ?? null); return withFill(next.input, next.fill) }
-const followEdit = (current: EditableReview): EditableReview => { const next = followLineEdit(reviewInput(current), current.publishedFill ?? null); return withFill(next.input, next.fill) }
+// Form-only state travels with the form: the new fill, and any store set aside.
+const withFill = (input: PurchaseReviewInput, fill: PublishedFill | null, setAside: DirectoryIntent | undefined): EditableReview => ({ ...(input as EditableReview), ...(fill ? { publishedFill: fill } : {}), ...(setAside ? { setAside } : {}) })
+const followStore = (current: EditableReview, storeId: string | null): EditableReview => { const next = followPublishedPrice(reviewInput(current), storeId, current.publishedFill ?? null); return withFill(next.input, next.fill, current.setAside) }
+const followEdit = (current: EditableReview): EditableReview => { const next = followLineEdit(reviewInput(current), current.publishedFill ?? null); return withFill(next.input, next.fill, current.setAside) }
 const calculatedLine = (line: EditableReview['lines'][number], currency: string) => line.unit ? lineMinorTotal(line as PurchaseReviewInput['lines'][number], currency) : null
 const receiptFeedbackTarget = (control: HTMLElement) => control.closest<HTMLElement>('[data-review-feedback]') ?? control.closest('label') ?? control
 
