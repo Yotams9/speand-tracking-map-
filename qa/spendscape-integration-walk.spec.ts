@@ -162,7 +162,9 @@ for (const [width, height] of [[390, 844], [1280, 900]] as const) {
       await expect(page.getByTestId('receipt-observations')).toBeVisible()
       await shot(page, '14-receipt-review')
       await page.getByTestId('review-channel').selectOption('unknown')
-      await page.getByTestId('review-merchantId').selectOption('merchant_unresolved')
+      // Receipt review proposes the observed store name; its category is an explicit choice.
+      await expect(page.getByTestId('review-merchantName')).toHaveValue(oneReceipt.merchantName as string)
+      await page.getByTestId('review-merchantCategory').selectOption('groceries')
       await page.getByTestId('review-payment').selectOption('cash')
       await page.getByTestId('review-category').selectOption('groceries')
       await page.getByTestId('receipt-timezone').selectOption('Asia/Jerusalem')

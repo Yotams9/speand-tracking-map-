@@ -65,7 +65,11 @@ for (const [width, he] of [[1280, false], [360, false], [360, true], [390, false
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await card.getByRole('button').click()
     await expect(card).toHaveCount(0)
-    expect(await context.storageState()).toEqual({ cookies: [], origins: [] })
+    // Integration: a language the person chose is remembered (spendscape.locale.v1);
+    // it is a device preference, never purchase data. Nothing else may be stored.
+    const state = await context.storageState()
+    expect(state.cookies).toEqual([])
+    expect(state.origins.flatMap(origin => origin.localStorage.map(entry => entry.name)).filter(name => name !== 'spendscape.locale.v1')).toEqual([])
     expect(writes).toEqual([]); expect(prohibited).toEqual([]); expect(errors).toEqual([])
     await page.clock.resume()
     await page.reload(); await page.waitForFunction(() => (window as any).__SPENDSCAPE_QA__?.ready)

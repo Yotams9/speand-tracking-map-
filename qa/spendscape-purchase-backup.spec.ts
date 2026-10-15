@@ -63,7 +63,8 @@ for (const [he, width] of [[false, 360], [true, 390], [false, 430], [false, 1280
     expect(await disk(page)).toEqual(fixture)
     await expect(page.getByTestId('backup-nonempty')).toBeVisible()
 
-    const fresh = await browser.newContext({ viewport: { width, height: 844 }, baseURL: 'http://127.0.0.1:3196', acceptDownloads: true })
+    // Integration: a fresh profile now starts in Hebrew; this suite's baseline is English.
+    const fresh = await browser.newContext({ viewport: { width, height: 844 }, baseURL: 'http://127.0.0.1:3196', acceptDownloads: true, storageState: { cookies: [], origins: [{ origin: 'http://127.0.0.1:3196', localStorage: [{ name: 'spendscape.locale.v1', value: 'en' }] }] } })
     const target = await fresh.newPage()
     await start(target, he, width); await open(target); await inspect(target, actual)
     await expect(target.getByTestId('backup-preview')).toBeVisible()
