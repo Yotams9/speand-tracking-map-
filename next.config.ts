@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/catalog/[gtin]': ['./data/catalog/*.json'],
     '/api/catalog/stores': ['./data/catalog/*.json'],
+    '/api/savings': ['./data/catalog/*.json'],
   },
 }
 

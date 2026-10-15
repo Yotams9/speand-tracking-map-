@@ -1,0 +1,38 @@
+.panel { margin-block-start: 18px; padding: 14px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.035); }
+.panel h3 { margin: 0 0 10px; font-size: 0.78rem; font-weight: 680; }
+.panel h4 { margin: 0 0 6px; color: #c9d0da; font-size: 0.72rem; font-weight: 650; }
+.panel p { margin: 0; }
+
+/* Mint is reserved for the saving and the cheapest store. */
+.hero { display: grid; gap: 6px; padding: 12px; border: 1px solid rgba(110, 231, 195, 0.45); border-radius: 12px; background: var(--accent-soft); }
+.heroAmount { color: var(--accent); font-size: 1.7rem; font-weight: 780; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.calm { display: grid; gap: 6px; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; background: rgba(255, 255, 255, 0.03); }
+.calmTitle { font-size: 0.92rem; font-weight: 700; line-height: 1.35; }
+.heroStore { font-size: 0.9rem; font-weight: 650; overflow-wrap: anywhere; }
+.heroMeta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; color: var(--text-muted); font-size: 0.74rem; }
+.heroMeta strong { color: #f4f7fa; font-variant-numeric: tabular-nums; }
+.basis { color: #c9d0da; font-size: 0.72rem; line-height: 1.4; }
+
+.group { margin-block-start: 12px; }
+.group ul { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; }
+.group li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 2px; border-block-end: 1px solid rgba(255, 255, 255, 0.07); font-size: 0.8rem; }
+.group li > span { min-inline-size: 0; display: flex; flex-direction: column; gap: 2px; }
+.group li small { color: var(--text-muted); font-size: 0.7rem; }
+.storeName { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.amount { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.primary, .secondary { inline-size: 100%; min-block-size: 44px; margin-block-start: 10px; padding-inline: 14px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 680; cursor: pointer; }
+.primary { border: 0; background: var(--cloud); color: #090a0d; }
+.secondary { border: 1px solid rgba(255, 255, 255, 0.18); background: transparent; color: #f4f7fa; }
+.primary:focus-visible, .secondary:focus-visible, .link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.link { padding: 0; border: 0; background: none; color: #f4f7fa; font: inherit; text-decoration: underline; cursor: pointer; }
+
+.locate { display: grid; gap: 6px; font-size: 0.78rem; }
+.locate small, .note, .muted { color: #9aa3b1; font-size: 0.7rem; line-height: 1.45; }
+.muted { font-size: 0.76rem; }
+.note { margin-block-start: 10px !important; }
+
+/* Barcode result additions */
+.branchLabel { display: grid; gap: 4px; margin-block-start: 8px; color: #c9d0da; font-size: 0.74rem; font-weight: 650; }
+.branchLabel select { min-block-size: 44px; padding-inline: 10px; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: var(--radius-sm); background: rgba(10, 12, 17, 0.6); color: #f4f7fa; font: inherit; font-weight: 500; }
+.cheaperBy { margin-block-start: 8px !important; color: var(--accent); font-size: 0.86rem; font-weight: 720; }
