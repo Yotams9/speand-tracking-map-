@@ -206,9 +206,10 @@ merge, deployment, dependency, or provider change was made.
 - confirm-first receipt review with nested arithmetic, place-suggestion truth
   language, fixed synthetic FX provenance, and no retained photo value
 - separate added purchases that update Purchases, Analytics, and canonical
-  place aggregates without mutating the checked-in fixture graph; since
-  2026-10-02 they are kept in this browser's `localStorage` on the device and
-  survive reload until removed; online/unresolved additions remain unpinned
+  place aggregates without mutating the checked-in fixture graph; they are
+  saved in this browser's IndexedDB store (integration of 2026-10-15; the
+  earlier `localStorage` ledger is imported once and retired) and survive
+  reload until deleted; online/unresolved additions remain unpinned
 - real barcodes outside the demo catalog show the published shelf prices of
   every Tel Aviv Shufersal, Rami Levy and Osher Ad store that sells them,
   served by `/api/catalog/[gtin]` from `data/catalog/tel-aviv.json`; rebuild the
@@ -218,9 +219,11 @@ merge, deployment, dependency, or provider change was made.
   supermarkets (store addresses geocoded once with OpenStreetMap Nominatim,
   © OpenStreetMap contributors, ODbL) and fills that store's published price
   for a scanned item; the location is read only on press and never stored
-- stores the user adds in the review form, pinned only from a location the
-  user explicitly reads on the device, and a two-press removal of an added
-  purchase from its detail panel
+- stores the user adds in the review form (`＋ New store…`), saved as
+  confirmed directory places; the device location only fills editable
+  coordinates on press and still needs explicit confirmation; a chosen Tel
+  Aviv chain branch becomes a confirmed place with its catalog store ID and
+  published address; purchases are deleted with a confirmed delete
 - one typed material-uncertainty Smart Inbox case linked to the existing
   unresolved purchase and two existing canonical place candidates, with no
   score, GPS claim, provider fact, or second fixture source

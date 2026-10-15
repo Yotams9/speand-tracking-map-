@@ -2448,3 +2448,22 @@ not claimed. Proposed separate approval:2 explicit forward searches/2credits,
 30minutes, current exact-project/Free/allowance/no-concurrent/no-paid-overage
 confirmation, private key, no retry/fallback/user-only location Save. Fresh prices
 need separate bounded collection approval. Vercel paused; no push/deployment.
+
+
+## Integration — Spendscape final merge, phase 1 (2026-10-15)
+
+Branch `integration/final` = origin/feature/spendscape-rebuild (Shon) + merge of
+origin/feature/gal-cleanup-and-look (Yotam), authorized by the project owner for
+this branch only (no main push, no deployment, no provider quota). Shon's
+IndexedDB store, validation and safety logic stay authoritative; Yotam's
+presentation (Hebrew default, Store/חנות wording, Heebo/Inter, tokens, empty
+states, month card) is kept. The localStorage ledger is retired: a one-time,
+all-or-nothing migration (`legacy-device-migration.ts`) imports
+`spendscape.device-purchases.v1` into an empty IndexedDB store through the
+reviewed-save boundary and never rewrites the old key. Tel Aviv chain branches
+become confirmed directory places (`locationMethod: 'catalog-store'`, catalog
+store ID + published address as provenance). The demo toggle is view-only
+(`demoHistory` prop); synthetic data never enters IndexedDB, backups, the
+purchase form or the month card. The loopback QA gate keeps English and its
+synthetic snapshot. feature/receipt-r1 was not merged. Full conflict-by-conflict
+record, tests and results: docs/spendscape/INTEGRATION_REPORT.md.
