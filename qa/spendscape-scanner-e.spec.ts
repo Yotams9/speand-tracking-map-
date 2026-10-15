@@ -241,10 +241,12 @@ for (const he of [false, true]) {
   }
 }
 
-test('actual insecure HTTP origin supports manual saves, cancellation and repeated Capture mounts', async ({ context, page }) => {
+test('actual insecure HTTP origin supports manual saves, cancellation and repeated Capture mounts', async ({ context, page, baseURL }) => {
+  // Forward to whichever server the config points at (scanner-e config, integration proxy, ...).
+  const server = new URL(baseURL ?? 'http://127.0.0.1:3000').origin
   await context.route('http://spendscape-review.invalid/**', async route => {
     const requested = new URL(route.request().url())
-    const response = await route.fetch({ url: `http://127.0.0.1:3000${requested.pathname}${requested.search}` })
+    const response = await route.fetch({ url: `${server}${requested.pathname}${requested.search}` })
     await route.fulfill({ response })
   })
   const errors: number[] = []; page.on('pageerror', () => errors.push(1))
