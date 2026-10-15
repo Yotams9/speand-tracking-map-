@@ -7,6 +7,7 @@ export const DIRECT_JOB_MS=45_000
 export interface DirectSlot { diagnostics:AttemptDiagnostics; consumed:()=>Promise<boolean>; reserve:()=>Promise<void> }
 export interface DirectPorts {
   enabled:boolean; fictionalQa:boolean
+  allowRequest?:(request:Request)=>boolean
   hash:(bytes:Uint8Array)=>string
   slot:(hash:string,request:Request)=>Promise<DirectSlot|null>
   status:()=>Promise<unknown>
@@ -28,7 +29,7 @@ export function directLocal(request:Request) {
 const reply=(code:string,status:number,extra={})=>Response.json({code,...extra},{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}})
 export function createDirectHandler(ports:DirectPorts,timeoutMs=DIRECT_JOB_MS,decode:(raw:unknown)=>ReceiptObservations=directResponse) {
   return async(request:Request)=>{
-    if(!ports.enabled || !directLocal(request))return reply('ocr-unavailable',503)
+    if(!ports.enabled || !(ports.allowRequest ?? directLocal)(request))return reply('ocr-unavailable',503)
     if(request.method==='GET')try{return reply('local-gemini-ready',200,{mode:ports.fictionalQa?'fictional-qa':'native',attempts:await ports.status()})}catch{return reply('diagnostics-unavailable',503)}
     if(request.method!=='POST')return reply('request-invalid',400)
     const mime=request.headers.get('content-type')

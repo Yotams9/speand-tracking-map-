@@ -7,6 +7,8 @@ import type { LocalPurchases } from './local-purchase-store'
 export function LocalDataPanel({ locale, open, phase, busy, writeError, onClose, onErase, emptyDestination, onExport, onInspect, onRestore, legacyPresent = false }: { legacyPresent?: boolean; locale: 'en' | 'he'; open: boolean; phase: string; busy: boolean; writeError: boolean; onClose: () => void; onErase: () => Promise<boolean>; emptyDestination: boolean; onExport: () => Promise<string>; onInspect: (text: string) => Promise<BackupPreview>; onRestore: (data: LocalPurchases) => Promise<void> }) {
   const he = locale === 'he', dialog = useRef<HTMLDialogElement>(null)
   const [confirm, setConfirm] = useState(false)
+  const [privateDemo, setPrivateDemo] = useState(false)
+  useEffect(() => { setPrivateDemo(document.documentElement.dataset.spendscapePrivateDemo === 'true') }, [])
   const blocked = phase !== 'ready'
   useEffect(() => {
     const d = dialog.current
@@ -17,6 +19,7 @@ export function LocalDataPanel({ locale, open, phase, busy, writeError, onClose,
     {busy && <div className={styles.busy} role="status">{he ? 'שומרים במכשיר…' : 'Saving on this device…'}</div>}
     <dialog ref={dialog} className={styles.panel} dir={he ? 'rtl' : 'ltr'} aria-labelledby="local-data-title" onKeyDown={e => { if (e.key === 'Escape') e.stopPropagation() }} onCancel={e => { if (blocked || busy) e.preventDefault(); else onClose() }}>
       <h2 id="local-data-title">{he ? 'נתונים במכשיר ופרטיות' : 'On-device data & privacy'}</h2>
+      {privateDemo && <p><a href="/demo-access">{he ? 'ניהול הגישה הפרטית וסיום ההפעלה' : 'Private access and sign out'}</a></p>}
       {phase === 'loading' ? <p role="status">{he ? 'טוענים רכישות שנשמרו…' : 'Loading saved purchases…'}</p> : <>
         <p>{he ? 'רכישות, בתי עסק, מקומות מאושרים (כולל קואורדינטות ידניות וכתובות שאישרת) והחלטות תיבת הדואר נשמרים בדפדפן הזה במכשיר הזה. הן נשארות לאחר רענון. אין חשבון, סנכרון או גיבוי בענן.' : 'Reviewed purchases, merchants, confirmed places (including manual coordinates and reviewed addresses) and Inbox decisions are saved in this browser on this device and survive reload. There is no account, sync or cloud backup.'}</p>
         <p>{he ? 'תמונות, פריימים, טיוטות וטקסט חיפוש אינם נשמרים. זיהוי קבלות וחיפוש כתובת אינם פעילים ללא הפעלה נפרדת ושליחה מפורשת. המפה טוענת אריחים חיצוניים. נתונים מקומיים אינם מוצפנים באמצעות סיסמת משתמש; מי שמשתמש בפרופיל הדפדפן הזה יכול לראותם. ניקוי נתוני אתר או מצב גלישה פרטית עלולים למחוק אותם.' : 'Images, frames, drafts and search text are not retained. Receipt recognition and address search are disabled unless separately activated and explicitly submitted. The map loads external tiles. Local data is not encrypted with a user password; anyone using this browser profile can see it. Clearing site data or using private browsing can remove it.'}</p>

@@ -28,6 +28,8 @@ export function ReceiptImageIntake({ locale, onDraft }: { locale: LocaleCode; on
   const t = copy[locale], photo = useRef<HTMLInputElement>(null), upload = useRef<HTMLInputElement>(null), read = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     const local = ['localhost','127.0.0.1','[::1]'].includes(location.hostname)
+    const privateDemo = document.documentElement.dataset.spendscapePrivateDemo === 'true'
+    const captureCredentials: RequestCredentials = privateDemo ? 'same-origin' : 'omit'
     const captureQa = local && new URLSearchParams(location.search).get('receiptCaptureQa') === '1'
     const captureHeaders = {'x-spendscape-local-gemini':'1',...(captureQa?{'x-spendscape-capture-qa':'1'}:{})}
     const structuredOpted = local && new URLSearchParams(location.search).get('receiptStructuredLocal') === '1'
@@ -41,13 +43,13 @@ export function ReceiptImageIntake({ locale, onDraft }: { locale: LocaleCode; on
     let check: Promise<unknown> | null = null
     if (liveOpted) check = fetch('/api/receipt-ocr', { cache: 'no-store', credentials: 'omit', redirect: 'error', signal: capability.signal, headers: { 'x-spendscape-local-vision': '1' } }).then(async res => { const value = await res.json(); if (!capability.signal.aborted && res.ok && value.code === 'local-vision-ready') { available = true; setLive(true);setInspectionAvailable(value.inspectionAvailable===true) } }).catch(() => {})
     if (directOpted) check = fetch(directEndpoint, {cache:'no-store',credentials:'omit',redirect:'error',signal:capability.signal,headers:{'x-spendscape-local-gemini':'1'}}).then(async res=>{const v=await res.json();if(!capability.signal.aborted && res.ok && v.code==='local-gemini-ready' && ['native','fictional-qa'].includes(v.mode)){available=true;setDirect(true);setDirectQa(v.mode==='fictional-qa')}}).catch(()=>{})
-    if (local && !directOpted && !liveOpted && !optedIn) check = fetch('/api/receipt-capture-session', {cache:'no-store',credentials:'omit',redirect:'error',signal:capability.signal,headers:captureHeaders}).then(async res=>{const v=await res.json();if(!capability.signal.aborted && res.ok && v.code==='local-capture-ready' && (v.mode==='native'||captureQa&&v.mode==='fictional-qa')){available=true;operationalAvailable=true;directEndpoint='/api/receipt-capture-session';setOperational(true);setDirect(true);setDirectQa(v.mode==='fictional-qa');setBudget(v.session)}}).catch(()=>{})
+    if ((local || privateDemo) && !directOpted && !liveOpted && !optedIn) check = fetch('/api/receipt-capture-session', {cache:'no-store',credentials:captureCredentials,redirect:'error',signal:capability.signal,headers:captureHeaders}).then(async res=>{const v=await res.json();if(!capability.signal.aborted && res.ok && v.code==='local-capture-ready' && (v.mode==='native'||captureQa&&v.mode==='fictional-qa')){available=true;operationalAvailable=true;directEndpoint='/api/receipt-capture-session';setOperational(true);setDirect(true);setDirectQa(v.mode==='fictional-qa');setBudget(v.session)}}).catch(()=>{})
     if (check) void check.finally(() => { if (!capability.signal.aborted) setCapabilityChecked(true) })
     else setCapabilityChecked(true)
     setQa(optedIn)
     const current = new ReceiptImageSession({ inspect: inspectReceiptImage, createUrl: file => URL.createObjectURL(file), revokeUrl: url => URL.revokeObjectURL(url), state: value=>{if(['idle','validating','reading'].includes(value.phase)){setInspection(null);setDirectError(null)}setState(value)}, complete: draft => complete.current(draft), extract: async (signal, file) => {
       if (!optedIn && (!(liveOpted||directOpted||operationalAvailable) || !available)) throw new Error('ocr-unavailable')
-      const res = await fetch((directOpted||operationalAvailable)?directEndpoint:'/api/receipt-ocr', { method: 'POST', cache: 'no-store', credentials: 'omit', redirect: 'error', signal, headers: (directOpted||operationalAvailable) ? {'Content-Type':file.type,...captureHeaders,'x-spendscape-direct-fixture':fixture.current} : optedIn ? { 'Content-Type': 'application/json', 'x-spendscape-local-qa': '1' } : { 'Content-Type': file.type, 'x-spendscape-local-vision': '1',...(inspectOptIn.current?{'x-spendscape-parser-inspection':'1'}:{}) }, body: optedIn ? JSON.stringify({ fixture: fixture.current }) : file })
+      const res = await fetch((directOpted||operationalAvailable)?directEndpoint:'/api/receipt-ocr', { method: 'POST', cache: 'no-store', credentials: captureCredentials, redirect: 'error', signal, headers: (directOpted||operationalAvailable) ? {'Content-Type':file.type,...captureHeaders,'x-spendscape-direct-fixture':fixture.current} : optedIn ? { 'Content-Type': 'application/json', 'x-spendscape-local-qa': '1' } : { 'Content-Type': file.type, 'x-spendscape-local-vision': '1',...(inspectOptIn.current?{'x-spendscape-parser-inspection':'1'}:{}) }, body: optedIn ? JSON.stringify({ fixture: fixture.current }) : file })
       // Bound response bytes before JSON parsing; no provider payload reaches UI.
       const reader = res.body?.getReader(); if (!reader) throw new Error('ocr-invalid')
       let body = '', count = 0
@@ -55,12 +57,12 @@ export function ReceiptImageIntake({ locale, onDraft }: { locale: LocaleCode; on
       try { while (true) { const chunk = await reader.read(); if (chunk.done) break; count += chunk.value.byteLength; if (count > (inspectOptIn.current?256_000:64_000)) { await reader.cancel(); throw new Error('ocr-invalid') }; body += decoder.decode(chunk.value, { stream: true }) }; body += decoder.decode() } finally { reader.releaseLock() }
       if (signal.aborted) throw new Error('cancelled')
       const value = JSON.parse(body)
-      if(operationalAvailable) void fetch(directEndpoint,{cache:'no-store',credentials:'omit',redirect:'error',signal:capability.signal,headers:captureHeaders}).then(async r=>{const v=await r.json();if(!capability.signal.aborted && r.ok)setBudget(v.session)}).catch(()=>{})
+      if(operationalAvailable) void fetch(directEndpoint,{cache:'no-store',credentials:captureCredentials,redirect:'error',signal:capability.signal,headers:captureHeaders}).then(async r=>{const v=await r.json();if(!capability.signal.aborted && r.ok)setBudget(v.session)}).catch(()=>{})
       if(inspectOptIn.current && validateParserInspection(value.inspection)){if(document.hidden)throw new Error('cancelled');setInspection(value.inspection);throw new Error(value.code==='parser-inspection'?'parser-inspection':'layout-unsupported')}
       if((directOpted||operationalAvailable) && !res.ok){const codes=['attempt-consumed','pilot-wait','pilot-stopped','authentication-failed','transport-failed','recognition-failed','diagnostics-unavailable','image-not-approved','ocr-invalid','cancelled'];if(codes.includes(value.code))setDirectError({code:value.code,...(operationalAvailable&&validReceiptFailure(value.receiptFailure)?{receiptFailure:value.receiptFailure}:{}),...(Number.isInteger(value.httpStatus)&&value.httpStatus>=100&&value.httpStatus<=599?{httpStatus:value.httpStatus}:{})})}
       if (!res.ok || value.code !== ((directOpted||operationalAvailable)?'direct-observations':optedIn ? 'synthetic-qa' : 'vision-observations')) throw new Error(value.code === 'ocr-unavailable' ? 'ocr-unavailable' : 'ocr-invalid')
       return value.observations
-    } }, directOpted || local && !liveOpted && !optedIn ? 50_000 : liveOpted ? 30_000 : 15_000)
+    } }, directOpted || (local || privateDemo) && !liveOpted && !optedIn ? 50_000 : liveOpted ? 30_000 : 15_000)
     session.current = current
     // Listen before a response exists. Cancellation invalidates this generation
     // even if the tab becomes visible again before the response arrives.

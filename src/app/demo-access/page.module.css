@@ -1,0 +1,10 @@
+.screen { min-height: 100dvh; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); background: radial-gradient(ellipse at 75% 0%, #213746 0%, #10151d 45%, #090b10 100%); color: #f2f5f8; }
+.panel { width: min(100%, 480px); padding: clamp(24px, 5vw, 40px); border: 1px solid #46515e; border-radius: 24px; background: #151c25; box-shadow: 0 20px 80px #0005; }
+.brand { font-size: 12px; letter-spacing: .18em; color: #b4d3e1; }
+.panel h1 { font-size: clamp(26px, 5vw, 36px); line-height: 1.15; margin: 24px 0; }
+.panel p { line-height: 1.6; color: #c2cbd5; overflow-wrap: anywhere; }
+.panel [role='alert'] { color: #ffd0c3; }
+.panel label { display: block; margin: 28px 0 10px; font-weight: 600; }
+.panel input { width: 100%; min-height: 52px; padding: 12px; border: 1px solid #687988; border-radius: 10px; background: #0c131b; color: white; font-size: 16px; box-sizing: border-box; }
+.panel button { width: 100%; min-height: 52px; margin-top: 14px; padding: 12px; border: 0; border-radius: 10px; background: #f2f5f8; color: #101820; font: inherit; font-weight: 650; cursor: pointer; }
+.panel :is(input, button):focus-visible { outline: 3px solid #83ded0; outline-offset: 4px; }

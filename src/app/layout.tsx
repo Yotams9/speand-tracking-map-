@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import './globals.css'
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Spendscape — your purchase world',
@@ -25,7 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en" dir="ltr" data-spendscape-private-demo={process.env.SPENDSCAPE_HOSTED_MODE === 'protected-demo' ? 'true' : undefined}>
       <head>
         <link rel="preconnect" href="https://tiles.openfreemap.org" crossOrigin="anonymous" />
       </head>

@@ -1,0 +1,6 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": ["../src/server/demo-access.ts", "../src/server/demo-access.test.ts", "../src/server/demo-quota.ts", "../src/server/demo-quota.test.ts", "../src/server/hosted-demo.ts", "../src/server/hosted-demo.test.ts", "../src/proxy.ts", "./fixtures/hosted-demo.ts"],
+  "exclude": ["../node_modules"]
+}
