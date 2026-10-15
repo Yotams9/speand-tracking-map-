@@ -33,6 +33,9 @@ export function useLocalPurchases(context: SpendscapeDataSnapshot, onRestore: (d
           const migrated = await migrateLegacyPurchases({ storage, current: data, context, loadStores: loadCatalogStores, restore: next => restoreLocalPurchases(next, context, data.revision) })
           if (!active) return
           if (migrated.saved) { data = migrated.saved; try { channel.current?.postMessage({ changed: true }) } catch { /* No purchase data in notifications. */ } }
+          // Another tab may have written meanwhile: never present the pre-import snapshot as current.
+          else if (migrated.outcome.status === 'skipped-not-empty' || migrated.outcome.status === 'deferred') data = await readLocalPurchases(context)
+          if (!active) return
           setMigration(migrated.outcome)
           current.current = data; restore.current(data); setPhase('ready')
         }

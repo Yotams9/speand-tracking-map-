@@ -63,6 +63,7 @@ import { correctPurchaseTime, type PurchaseTimeIntent } from '@/features/local-p
 import type { ReceiptPlaceSeed } from '@/features/capture/receipt-place-seed'
 import { resolvePurchaseLocation, undoPurchaseLocation, type PurchaseLocationIntent, type LocationUndo } from '@/features/local-purchases/purchase-location'
 import { LocalDataPanel } from '@/features/local-purchases/LocalDataPanel'
+import { dismissLegacyNotice, legacyNotice } from '@/features/local-purchases/legacy-device-migration'
 import { restoredLedger } from '@/features/local-purchases/local-purchase-store'
 import { composeDirectory } from '@/features/local-purchases/local-directory'
 import { deleteLocalPurchase, emptySessionLedger, expireSessionPurchaseUndo, saveReviewedPurchase, undoSessionPurchase } from '@/features/capture/session-purchase-domain'
@@ -864,6 +865,9 @@ const noDemo = Object.freeze({ purchases: Object.freeze([]), evidence: Object.fr
 
 export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: SpendscapeGlobeProps) {
   const syntheticQa = initialData.source.classification === 'synthetic'
+  // Ordinary users start in Hebrew; the loopback-only synthetic QA gate starts in English.
+  // A language the person chose (spendscape.locale.v1) applies in both.
+  const initialLocale: LocaleCode = syntheticQa ? 'en' : DEFAULT_LOCALE
   // Demo purchases stay hidden until the person loads them (remembered on this device).
   // The server QA gate keeps its own synthetic snapshot and ignores the toggle.
   const [demoData, setDemoData] = useState(false)
@@ -928,7 +932,7 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
   const sessionUndoDeadlineRef = useRef(0)
   const [undoSeconds, setUndoSeconds] = useState(0)
   const loadStartRef = useRef(0)
-  const localeRef = useRef<LocaleCode>(DEFAULT_LOCALE)
+  const localeRef = useRef<LocaleCode>(initialLocale)
   const modeRef = useRef<MapMode>('pins')
   const mapInstanceCountRef = useRef(0)
   const mapConstructionCountRef = useRef(0)
@@ -936,7 +940,7 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
   const captureDismissedRef = useRef(false)
   const captureResumeSpinRef = useRef(false)
 
-  const [locale, setLocale] = useState<LocaleCode>(DEFAULT_LOCALE)
+  const [locale, setLocale] = useState<LocaleCode>(initialLocale)
   const [query, setQuery] = useState<PurchaseQuery>(defaultPurchaseQuery)
   const [mode, setMode] = useState<MapMode>('pins')
   const [surface, setSurface] = useState<ProductSurface>('globe')
@@ -1000,11 +1004,12 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
   })
   // One-time report of the earlier on-device ledger import (see legacy-device-migration.ts).
   const [migrationDismissed, setMigrationDismissed] = useState(false)
-  const migration = localData.migration
-  const migrationNotice = migrationDismissed || !migration ? null
-    : migration.status === 'imported' && migration.purchases > 0 ? (locale === 'he' ? `${migration.purchases} רכישות שנשמרו קודם במכשיר הזה הועברו לאחסון המקומי החדש.${migration.demoSkipped ? ` ${migration.demoSkipped} רכישות דמו לא הועברו.` : ''}` : `${migration.purchases} purchases saved earlier on this device were moved to the new local store.${migration.demoSkipped ? ` ${migration.demoSkipped} demo purchases were not moved.` : ''}`)
-    : migration.status === 'skipped-invalid' ? (locale === 'he' ? 'רכישות שנשמרו קודם במכשיר הזה לא הועברו כי לא עברו בדיקה. הן לא נמחקו ולא שונו.' : 'Purchases saved earlier on this device were not moved because they did not pass validation. They were not deleted or changed.')
-    : null
+  const notice = migrationDismissed ? null : legacyNotice(localData.migration)
+  const migrationNotice = !notice ? null
+    : notice.kind === 'imported' ? (locale === 'he' ? `${notice.purchases} רכישות שנשמרו קודם במכשיר הזה הועברו לאחסון המקומי החדש.${notice.demoSkipped ? ` ${notice.demoSkipped} רכישות דמו לא הועברו.` : ''}` : `${notice.purchases} purchases saved earlier on this device were moved to the new local store.${notice.demoSkipped ? ` ${notice.demoSkipped} demo purchases were not moved.` : ''}`)
+    : notice.kind === 'not-empty' ? (locale === 'he' ? `${notice.purchases} רכישות שנשמרו קודם במכשיר הזה לא הועברו, כי באחסון המקומי כבר יש נתונים. הן לא נמחקו ולא שונו.` : `${notice.purchases} purchases saved earlier on this device were not moved because local storage already holds data. They were not deleted or changed.`)
+    : notice.capacity ? (locale === 'he' ? `${notice.purchases} רכישות שנשמרו קודם במכשיר הזה לא הועברו: הן חורגות ממגבלת 1,000 הרכישות המקומיות. הן לא נמחקו ולא שונו.` : `${notice.purchases} purchases saved earlier on this device were not moved: they exceed the 1,000 local purchase limit. They were not deleted or changed.`)
+    : (locale === 'he' ? `${notice.purchases} רכישות שנשמרו קודם במכשיר הזה לא הועברו כי לא עברו בדיקה (למשל חנות דמו בדיונית או סניף שכבר אינו במחירון). הן לא נמחקו ולא שונו.` : `${notice.purchases} purchases saved earlier on this device were not moved because they did not pass validation (for example a fictional demo store or a branch no longer in the price catalog). They were not deleted or changed.`)
   const [askOpen, setAskOpen] = useState(false)
   const [replay, setReplay] = useState<ReplaySession | null>(null)
   const [askUndoSnapshot, setAskUndoSnapshot] = useState<AskUndoSnapshot | null>(null)
@@ -1021,7 +1026,7 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
   replayMapAvailableRef.current = mapAvailable
   const [autoSpin, setAutoSpin] = useState(true)
   const [reducedMotion, setReducedMotion] = useState(false)
-  const [status, setStatus] = useState<string>(copy[DEFAULT_LOCALE].loading)
+  const [status, setStatus] = useState<string>(copy[initialLocale].loading)
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false)
   const [compactViewport, setCompactViewport] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -1324,11 +1329,6 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
     stored.query = { ...stored.query, search: '' }
     window.sessionStorage.setItem(EXPERIENCE_STORAGE_KEY, JSON.stringify(stored))
   }, [locale, mode, query, selectedPlaceId, selectedPurchaseId, stateRestored, surface])
-
-  useEffect(() => {
-    if (!stateRestored) return
-    try { writeLocalePreference(window.localStorage, locale) } catch { /* storage blocked */ }
-  }, [locale, stateRestored])
 
   useEffect(() => {
     const dismissed = askWasOpenRef.current && !askOpen
@@ -3458,7 +3458,7 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
       data-data-version={initialData.source.version}
     >
       {localData.writeError && captureStep !== 'review' && captureStep !== 'manual' && (localData.lastFailure.current !== 'capacity' || !captureStep) && <div role="alert" style={{ position: 'fixed', bottom: 90, left: 12, right: 12, zIndex: 300, background: '#311b1b', color: 'white', padding: 12 }}>{localData.lastFailure.current === 'capacity' ? (locale === 'he' ? 'מגבלת האחסון המקומי הושגה. הרכישות הקיימות לא השתנו.' : 'Local storage limit reached. Existing purchases are unchanged.') : (locale === 'he' ? 'השינוי לא נשמר. בדקו את האחסון ונסו שוב.' : 'Change not saved. Check storage and retry.')}</div>}
-      {migrationNotice && <div role="status" className={styles.migrationNotice} data-testid="legacy-migration-notice" data-migration-status={localData.migration?.status}><p>{migrationNotice}</p><button type="button" onClick={() => setMigrationDismissed(true)}>{locale === 'he' ? 'הבנתי' : 'Got it'}</button></div>}
+      {migrationNotice && <div role="status" className={styles.migrationNotice} data-testid="legacy-migration-notice" data-migration-status={localData.migration?.status}><p>{migrationNotice}</p><button type="button" onClick={() => { setMigrationDismissed(true); dismissLegacyNotice((() => { try { return window.localStorage } catch { return null } })()) }}>{locale === 'he' ? 'הבנתי' : 'Got it'}</button></div>}
       <div ref={mapNodeRef} className={styles.map} data-testid="map-canvas" />
       <div className={styles.vignette} aria-hidden="true" />
 
@@ -3506,7 +3506,13 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
           <button
             type="button"
           className={styles.languageButton}
-            onClick={() => { stopSpin(false); setLocale((current) => current === 'en' ? 'he' : 'en') }}
+            onClick={() => {
+              stopSpin(false)
+              const next: LocaleCode = locale === 'en' ? 'he' : 'en'
+              // The language choice is remembered only when the person makes it.
+              try { writeLocalePreference(window.localStorage, next) } catch { /* storage blocked: lasts this visit */ }
+              setLocale(next)
+            }}
             aria-label={t.language}
           >
             {locale === 'en' ? 'עב' : 'EN'}

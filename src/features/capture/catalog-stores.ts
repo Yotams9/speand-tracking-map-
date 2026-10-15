@@ -8,7 +8,7 @@ export const NEAREST_STORE_METERS = 200
 let pending: Promise<CatalogStoreSummary[]> | null = null
 // One small request per page; a failure is retried on the next form.
 export function loadCatalogStores(): Promise<CatalogStoreSummary[]> {
-  pending ??= fetch('/api/catalog/stores')
+  pending ??= fetch('/api/catalog/stores', { signal: AbortSignal.timeout(15_000) })
     .then(response => response.ok ? response.json() as Promise<{ stores: CatalogStoreSummary[] }> : Promise.reject(new Error('stores')))
     .then(body => body.stores)
   pending.catch(() => { pending = null })

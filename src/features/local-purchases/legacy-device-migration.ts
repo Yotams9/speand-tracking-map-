@@ -19,10 +19,14 @@ export type LegacyPlan =
   | { kind: 'ready'; data: LocalPurchases; purchases: number; demoSkipped: number }
   | { kind: 'invalid'; reason: string }
   | { kind: 'needs-catalog' }
-export type LegacyMigrationOutcome =
-  | { status: 'not-needed' | 'already-done' | 'deferred' | 'skipped-not-empty' }
-  | { status: 'skipped-invalid'; reason: string }
+export type RecordedOutcome =
+  | { status: 'skipped-not-empty'; legacyPurchases: number }
+  | { status: 'skipped-invalid'; reason: string; legacyPurchases: number }
   | { status: 'imported'; purchases: number; demoSkipped: number }
+export type LegacyMigrationOutcome =
+  | { status: 'not-needed' | 'deferred' }
+  | RecordedOutcome
+  | { status: 'already-done'; previous: (RecordedOutcome & { dismissed?: boolean }) | null }
 
 type Raw = Record<string, unknown>
 const isObject = (value: unknown): value is Raw => typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -80,7 +84,9 @@ export function planLegacyImport(raw: string, context: SpendscapeDataSnapshot, c
     const directoryMerchants: LocalMerchant[] = [], directoryPlaces: LocalPlace[] = []
     const mapMerchant = (id: string): string => {
       if (merchantIds.has(id)) return merchantIds.get(id)!
-      if (context.merchants.some(m => m.id === id)) return id
+      // Fictional demo stores are never imported as the person's own; only the
+      // built-in "store not identified" choice may be referenced.
+      if (context.merchants.some(m => m.id === id)) return id === 'merchant_unresolved' ? id : fail('fixture-reference')
       const legacy = merchants.get(id) ?? fail('missing-merchant')
       const chain = chainMerchant.exec(id)?.[1] as CatalogChain | undefined
       let local: LocalMerchant
@@ -96,7 +102,7 @@ export function planLegacyImport(raw: string, context: SpendscapeDataSnapshot, c
     }
     const mapPlace = (id: string, merchantId: string): string => {
       if (placeIds.has(id)) return placeIds.get(id)!
-      if (context.places.some(p => p.id === id)) return id
+      if (context.places.some(p => p.id === id)) return fail('fixture-reference')
       const legacy = places.get(id) ?? fail('missing-place')
       if (legacy.merchantId !== merchantId) return fail('place-merchant')
       const merchant = directoryMerchants.find(m => m.id === merchantIds.get(merchantId)) ?? fail('place-merchant')
@@ -107,8 +113,9 @@ export function planLegacyImport(raw: string, context: SpendscapeDataSnapshot, c
         const chain = store[1] as CatalogChain, storeId = `${chain}-${store[2]}`
         if (!catalogChains.includes(chain) || merchant.catalogChain !== chain || !isObject(legacy.branch) || legacy.branch.en !== legacy.branch.he || typeof legacy.branch.en !== 'string') return fail('store-place')
         if (!catalogStores) throw new NeedsCatalog()
-        const published = catalogStores.find(s => s.id === storeId)
-        const address = published ? catalogText(published.address) : ''
+        // A branch must still be in the published catalog; no address is invented.
+        const published = catalogStores.find(s => s.id === storeId) ?? fail('unknown-store')
+        const address = catalogText(published.address)
         local = { id: `local_place_${next++}`, merchantId: merchant.id, name: { ...merchant.name }, branch: { en: catalogText(legacy.branch.en), he: catalogText(legacy.branch.en) }, city: { ...catalogArea.city }, country: { ...catalogArea.country }, coordinates, category: merchant.category, address, source: 'user-confirmed', locationMethod: 'catalog-store', catalogStore: { storeId, chain, publishedAddress: address } }
       } else {
         if (merchant.catalogChain) return fail('device-place')
@@ -161,30 +168,65 @@ export interface LegacyMigrationDeps {
   now?: () => Date
 }
 
+// Purchases the person saved in the old ledger (demo records are never theirs to import).
+function legacyPurchaseCount(raw: string): number {
+  try { const stored = JSON.parse(raw) as { records?: unknown }; return Array.isArray(stored.records) ? stored.records.filter(r => isObject(r) && r.synthetic === false).length : 0 } catch { return 0 }
+}
+// Some loads must never wait forever for the published store list.
+const withTimeout = <T>(promise: Promise<T>, ms: number) => Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))])
+
 export async function migrateLegacyPurchases(deps: LegacyMigrationDeps): Promise<{ outcome: LegacyMigrationOutcome; saved?: LocalPurchases }> {
   const read = (key: string) => { try { return deps.storage?.getItem(key) ?? null } catch { return null } }
-  const mark = (outcome: LegacyMigrationOutcome) => {
+  const mark = (outcome: RecordedOutcome) => {
     try { deps.storage?.setItem(LEGACY_MIGRATION_KEY, JSON.stringify({ ...outcome, at: (deps.now?.() ?? new Date()).toISOString() })) } catch { /* the empty-destination rule still prevents a second import */ }
     return { outcome }
   }
-  if (read(LEGACY_MIGRATION_KEY) !== null) return { outcome: { status: 'already-done' } }
+  const marker = read(LEGACY_MIGRATION_KEY)
+  if (marker !== null) {
+    let previous: (RecordedOutcome & { dismissed?: boolean }) | null = null
+    try { const parsed = JSON.parse(marker); if (isObject(parsed) && typeof parsed.status === 'string') previous = parsed as unknown as RecordedOutcome & { dismissed?: boolean } } catch { previous = null }
+    return { outcome: { status: 'already-done', previous } }
+  }
   const raw = read(LEGACY_DEVICE_KEY)
   if (raw === null) return { outcome: { status: 'not-needed' } }
-  if (!emptyRestoreDestination(deps.current)) return mark({ status: 'skipped-not-empty' })
+  const legacyPurchases = legacyPurchaseCount(raw)
+  if (!emptyRestoreDestination(deps.current)) return mark({ status: 'skipped-not-empty', legacyPurchases })
   let plan = planLegacyImport(raw, deps.context, null)
   if (plan.kind === 'needs-catalog') {
     let stores: readonly CatalogStoreSummary[]
-    try { stores = await deps.loadStores() } catch { return { outcome: { status: 'deferred' } } }
+    try { stores = await withTimeout(deps.loadStores(), 10_000) } catch { return { outcome: { status: 'deferred' } } }
     plan = planLegacyImport(raw, deps.context, stores)
   }
-  if (plan.kind === 'invalid') return mark({ status: 'skipped-invalid', reason: plan.reason })
+  if (plan.kind === 'invalid') return mark({ status: 'skipped-invalid', reason: plan.reason, legacyPurchases })
   if (plan.kind !== 'ready') return { outcome: { status: 'deferred' } }
   if (plan.purchases === 0) return mark({ status: 'imported', purchases: 0, demoSkipped: plan.demoSkipped })
   try {
     const saved = await deps.restore(plan.data)
     return { ...mark({ status: 'imported', purchases: plan.purchases, demoSkipped: plan.demoSkipped }), saved }
   } catch (error) {
-    if (error instanceof LocalStoreError && error.code === 'not-empty') return mark({ status: 'skipped-not-empty' })
+    if (error instanceof LocalStoreError && error.code === 'not-empty') return mark({ status: 'skipped-not-empty', legacyPurchases })
     return { outcome: { status: 'deferred' } }
   }
+}
+
+// What the person is told. A successful import is reported once; a skipped
+// import of their own purchases stays visible until they dismiss it.
+export type LegacyNotice = { kind: 'imported'; purchases: number; demoSkipped: number } | { kind: 'invalid'; purchases: number; capacity: boolean } | { kind: 'not-empty'; purchases: number }
+export function legacyNotice(outcome: LegacyMigrationOutcome | null): LegacyNotice | null {
+  if (!outcome) return null
+  if (outcome.status === 'imported') return outcome.purchases > 0 ? { kind: 'imported', purchases: outcome.purchases, demoSkipped: outcome.demoSkipped } : null
+  const recorded = outcome.status === 'already-done' ? (outcome.previous?.dismissed ? null : outcome.previous) : outcome
+  if (!recorded || !('legacyPurchases' in recorded) || !(recorded.legacyPurchases > 0)) return null
+  if (recorded.status === 'skipped-invalid') return { kind: 'invalid', purchases: recorded.legacyPurchases, capacity: recorded.reason === 'capacity' }
+  if (recorded.status === 'skipped-not-empty') return { kind: 'not-empty', purchases: recorded.legacyPurchases }
+  return null
+}
+// Dismissal updates only this module's own marker; the old ledger stays untouched.
+export function dismissLegacyNotice(storage: Preferences | null): void {
+  try {
+    const marker = storage?.getItem(LEGACY_MIGRATION_KEY)
+    if (!marker) return
+    const parsed = JSON.parse(marker)
+    if (isObject(parsed)) storage?.setItem(LEGACY_MIGRATION_KEY, JSON.stringify({ ...parsed, dismissed: true }))
+  } catch { /* storage blocked: the notice returns next time */ }
 }

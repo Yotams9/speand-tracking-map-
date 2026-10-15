@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { DirectoryIntent } from '../local-purchases/local-directory'
 import type { ReviewContext, ReviewErrors } from './session-purchase-domain'
 import type { LocaleCode } from '../../data/spendscape-globe'
@@ -10,6 +10,9 @@ export function MerchantPlaceReview({ intent, merchantId, channel, context, loca
 }) {
   const he = locale === 'he'
   const [locating, setLocating] = useState<'idle' | 'pending' | 'failed'>('idle')
+  // The location can arrive seconds later: apply it to the latest form, not the one at the press.
+  const latest = useRef(intent), latestChange = useRef(onChange)
+  latest.current = intent; latestChange.current = onChange
   const labels = he ? { merchantName: 'שם החנות', merchantCategory: 'קטגוריית החנות', branch: 'שם הסניף', city: 'עיר', country: 'מדינה', address: 'כתובת שאישרת (רשות)', longitude: 'קו אורך', latitude: 'קו רוחב' } : { merchantName: 'Store name', merchantCategory: 'Store category', branch: 'Branch name', city: 'City', country: 'Country', address: 'Reviewed address (optional)', longitude: 'Longitude', latitude: 'Latitude' }
   const errorText = (field: string) => errors[field] === 'duplicate' ? (he ? 'כבר קיים שם או מקום דומה. בחרו בו או אשרו שמדובר בישות נפרדת.' : 'A similar name or place exists. Reuse it or confirm this is a separate entity.') : errors[field] === 'coordinate' ? (he ? 'הזינו קו אורך בין ‎-180 ל־180 וקו רוחב בין ‎-90 ל־90.' : 'Enter longitude between -180 and 180 and latitude between -90 and 90.') : errors[field] === 'location' ? (he ? 'יש לאשר במפורש את המיקום.' : 'Explicitly confirm this location.') : (he ? 'יש להשלים את השדה.' : 'Complete this field.')
   const attrs = (field: string) => ({ id: `review-${field}`, 'data-testid': `review-${field}`, 'aria-invalid': Boolean(errors[field]), 'aria-describedby': errors[field] ? `review-error-${field}` : undefined })
@@ -23,7 +26,8 @@ export function MerchantPlaceReview({ intent, merchantId, channel, context, loca
     setLocating('pending')
     navigator.geolocation.getCurrentPosition(position => {
       setLocating('idle')
-      if (intent.place) onChange({ ...intent, place: { ...intent.place, longitude: position.coords.longitude.toFixed(6), latitude: position.coords.latitude.toFixed(6), confirmed: false, separate: false } })
+      const current = latest.current
+      if (current?.place) latestChange.current({ ...current, place: { ...current.place, longitude: position.coords.longitude.toFixed(6), latitude: position.coords.latitude.toFixed(6), confirmed: false, separate: false } })
     }, () => setLocating('failed'), { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 })
   }
   return <fieldset className={styles.directoryReview} data-testid="merchant-place-review"><legend>{he ? 'חנות ומיקום במכשיר הזה' : 'Store and place on this device'}</legend>

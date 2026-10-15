@@ -7,7 +7,7 @@ import type { CatalogStoreSummary } from '../../data/price-catalog'
 import { validateBarcode } from '../capture/barcode-domain'
 import { demoDraftForSource } from '../capture/capture-domain'
 import { blankReview, reviewedRecord, reviewFromDemo, type PurchaseReviewInput } from '../capture/session-purchase-domain'
-import { LEGACY_DEVICE_KEY, LEGACY_MIGRATION_KEY, migrateLegacyPurchases, planLegacyImport } from './legacy-device-migration'
+import { dismissLegacyNotice, LEGACY_DEVICE_KEY, LEGACY_MIGRATION_KEY, legacyNotice, migrateLegacyPurchases, planLegacyImport } from './legacy-device-migration'
 import { composeDirectory } from './local-directory'
 import { emptyLocalPurchases, LocalStoreError, validateLocalPurchases, type LocalPurchases } from './local-purchase-store'
 
@@ -77,7 +77,7 @@ describe('one-time import of the earlier localStorage ledger', () => {
   })
   it('reads ledgers written before stores existed', async () => {
     const ctx = await context()
-    const online = legacyRecord({ ...base(), channel: 'online', merchantId: 'merchant_serein', amount: '12.00', category: 'retail' }, 1)
+    const online = legacyRecord({ ...base(), channel: 'unknown', merchantId: 'merchant_unresolved', amount: '12.00', category: 'retail' }, 1)
     const plan = planLegacyImport(JSON.stringify({ version: 1, nextSequence: 2, records: [online] }), ctx, null)
     expect(plan).toMatchObject({ kind: 'ready', purchases: 1 })
   })
@@ -100,6 +100,11 @@ describe('one-time import of the earlier localStorage ledger', () => {
       broken(l => { l.merchants[1].name = { en: 'Rami', he: 'רמי' } }),
       broken(l => { l.merchants[0].id = canonicalSpendscapeData.merchants[0].id }),
       broken(l => { l.records = l.records.concat(Array.from({ length: 1000 }, () => l.records[0])) }),
+      // Fictional demo stores never become the person's own places.
+      planLegacyImport(JSON.stringify({ version: 1, nextSequence: 2, records: [legacyRecord({ ...base(), channel: 'online', merchantId: 'merchant_serein', amount: '12.00', category: 'retail' }, 1)] }), ctx, stores),
+      planLegacyImport(JSON.stringify({ version: 1, nextSequence: 2, records: [legacyRecord({ ...base(), channel: 'physical', merchantId: 'merchant_shuk', placeId: 'place_shuk_bograshov', amount: '12.00' }, 1)] }), ctx, stores),
+      // A chain branch no longer in the published catalog gets no invented address.
+      planLegacyImport(JSON.stringify(legacyLedger()), ctx, []),
     ]) expect(plan.kind).toBe('invalid')
   })
   it('asks for the published store list before importing a chain branch', async () => {
@@ -117,13 +122,15 @@ describe('migration run', () => {
     const raw = JSON.stringify(legacyLedger()), store = storage({ [LEGACY_DEVICE_KEY]: raw })
     const first = await run(store)
     expect(first.outcome).toEqual({ status: 'imported', purchases: 3, demoSkipped: 1 })
+    expect(legacyNotice(first.outcome)).toEqual({ kind: 'imported', purchases: 3, demoSkipped: 1 })
     expect(first.restore).toHaveBeenCalledTimes(1)
     expect(first.saved?.records).toHaveLength(3)
     expect(store.writes.map(([key]) => key)).toEqual([LEGACY_MIGRATION_KEY])
     expect(store.map.get(LEGACY_DEVICE_KEY)).toBe(raw)
     // A repeat run is a no-op, even if the store were empty again.
     const second = await run(store)
-    expect(second.outcome).toEqual({ status: 'already-done' })
+    expect(second.outcome).toMatchObject({ status: 'already-done', previous: { status: 'imported', purchases: 3 } })
+    expect(legacyNotice(second.outcome)).toBeNull()
     expect(second.restore).not.toHaveBeenCalled()
   })
   it('repeat run without the marker still cannot duplicate: the destination is no longer empty', async () => {
@@ -131,7 +138,7 @@ describe('migration run', () => {
     const first = await run(store)
     store.map.delete(LEGACY_MIGRATION_KEY)
     const again = await run(store, first.saved!)
-    expect(again.outcome).toEqual({ status: 'skipped-not-empty' })
+    expect(again.outcome).toEqual({ status: 'skipped-not-empty', legacyPurchases: 3 })
     expect(again.restore).not.toHaveBeenCalled()
   })
   it('leaves a non-empty destination untouched', async () => {
@@ -139,22 +146,30 @@ describe('migration run', () => {
     const plan = planLegacyImport(JSON.stringify(legacyLedger()), await context(), stores)
     if (plan.kind !== 'ready') throw new Error('plan')
     const result = await run(store, { ...plan.data, revision: 3 })
-    expect(result.outcome).toEqual({ status: 'skipped-not-empty' })
+    expect(result.outcome).toEqual({ status: 'skipped-not-empty', legacyPurchases: 3 })
     expect(result.restore).not.toHaveBeenCalled()
     expect(JSON.parse(store.map.get(LEGACY_MIGRATION_KEY)!)).toMatchObject({ status: 'skipped-not-empty' })
+    // The person is told on every load until they dismiss it; dismissal never touches the old key.
+    const later = await run(store)
+    expect(legacyNotice(later.outcome)).toEqual({ kind: 'not-empty', purchases: 3 })
+    const raw = store.map.get(LEGACY_DEVICE_KEY)
+    dismissLegacyNotice(store)
+    expect(legacyNotice((await run(store)).outcome)).toBeNull()
+    expect(store.map.get(LEGACY_DEVICE_KEY)).toBe(raw)
   })
   it('reports invalid legacy data, imports nothing and keeps the old key', async () => {
     const ledger: any = legacyLedger(); ledger.records[2].purchase.originalCurrency = 'QQQ'
     const raw = JSON.stringify(ledger), store = storage({ [LEGACY_DEVICE_KEY]: raw })
     const result = await run(store)
-    expect(result.outcome).toMatchObject({ status: 'skipped-invalid' })
+    expect(result.outcome).toMatchObject({ status: 'skipped-invalid', legacyPurchases: 3 })
+    expect(legacyNotice(result.outcome)).toEqual({ kind: 'invalid', purchases: 3, capacity: false })
     expect(result.restore).not.toHaveBeenCalled()
     expect(store.map.get(LEGACY_DEVICE_KEY)).toBe(raw)
   })
   it('a concurrent write or storage failure is retried on a later load', async () => {
     const store = storage({ [LEGACY_DEVICE_KEY]: JSON.stringify(legacyLedger()) })
     const busy = await run(store, emptyLocalPurchases(), vi.fn(async () => { throw new LocalStoreError('not-empty') }))
-    expect(busy.outcome).toEqual({ status: 'skipped-not-empty' })
+    expect(busy.outcome).toEqual({ status: 'skipped-not-empty', legacyPurchases: 3 })
     const other = storage({ [LEGACY_DEVICE_KEY]: JSON.stringify(legacyLedger()) })
     const failed = await run(other, emptyLocalPurchases(), vi.fn(async () => { throw new LocalStoreError('unavailable') }))
     expect(failed.outcome).toEqual({ status: 'deferred' })
