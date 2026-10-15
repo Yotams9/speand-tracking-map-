@@ -7,7 +7,7 @@ import type { CatalogStoreSummary } from '../../data/price-catalog'
 import { validateBarcode } from '../capture/barcode-domain'
 import { demoDraftForSource } from '../capture/capture-domain'
 import { blankReview, reviewedRecord, reviewFromDemo, type PurchaseReviewInput } from '../capture/session-purchase-domain'
-import { dismissLegacyNotice, LEGACY_DEVICE_KEY, LEGACY_MIGRATION_KEY, legacyNotice, migrateLegacyPurchases, planLegacyImport } from './legacy-device-migration'
+import { dismissLegacyNotice, LEGACY_DEVICE_KEY, LEGACY_MIGRATION_KEY, legacyNotice, migrateLegacyPurchases, planLegacyImport, skipLegacyImport } from './legacy-device-migration'
 import { composeDirectory } from './local-directory'
 import { emptyLocalPurchases, LocalStoreError, validateLocalPurchases, type LocalPurchases } from './local-purchase-store'
 
@@ -147,8 +147,7 @@ describe('one-time import of the earlier localStorage ledger', () => {
 })
 
 describe('migration run', () => {
-  const run = async (store: ReturnType<typeof storage>, current: LocalPurchases = emptyLocalPurchases(), restore = vi.fn(async (data: LocalPurchases) => ({ ...data, revision: 1 }))) => {
-    const loadStores = vi.fn(async () => stores)
+  const run = async (store: ReturnType<typeof storage>, current: LocalPurchases = emptyLocalPurchases(), restore = vi.fn(async (data: LocalPurchases) => ({ ...data, revision: 1 })), loadStores = vi.fn(async (): Promise<readonly CatalogStoreSummary[]> => stores)) => {
     const result = await migrateLegacyPurchases({ storage: store, current, context: await context(), loadStores, restore, now: () => new Date('2026-10-15T08:00:00Z') })
     return { ...result, restore, loadStores }
   }
@@ -223,6 +222,49 @@ describe('migration run', () => {
     const failed = await run(other, emptyLocalPurchases(), vi.fn(async () => { throw new LocalStoreError('unavailable') }))
     expect(failed.outcome).toEqual({ status: 'deferred' })
     expect(other.writes).toEqual([])
+  })
+  const unavailable = () => vi.fn(async (): Promise<readonly CatalogStoreSummary[]> => { throw new Error('503') })
+  it('store list unavailable: writes nothing and keeps the store empty; a retry then imports', async () => {
+    const raw = JSON.stringify(legacyLedger()), store = storage({ [LEGACY_DEVICE_KEY]: raw })
+    const waiting = await run(store, emptyLocalPurchases(), undefined, unavailable())
+    expect(waiting.outcome).toEqual({ status: 'catalog-unavailable', legacyPurchases: 3 })
+    expect(waiting.restore).not.toHaveBeenCalled()
+    expect(waiting.saved).toBeUndefined()
+    // No marker, no notice: the app shows Try again / Continue without importing instead.
+    expect(store.writes).toEqual([])
+    expect(legacyNotice(waiting.outcome)).toBeNull()
+    // Try again, the list is back: one import into the still-empty store, all purchases.
+    const retried = await run(store)
+    expect(retried.outcome).toEqual({ status: 'imported', purchases: 3, demoSkipped: 1, fixtureSkipped: 0, invalidSkipped: 0 })
+    expect(retried.restore).toHaveBeenCalledTimes(1)
+    expect(retried.saved?.records).toHaveLength(3)
+    expect(store.map.get(LEGACY_DEVICE_KEY)).toBe(raw)
+  })
+  it('store list unavailable: continuing without importing is recorded and reported until dismissed', async () => {
+    const raw = JSON.stringify(legacyLedger()), store = storage({ [LEGACY_DEVICE_KEY]: raw })
+    const waiting = await run(store, emptyLocalPurchases(), undefined, unavailable())
+    if (waiting.outcome.status !== 'catalog-unavailable') throw new Error('state')
+    const skipped = skipLegacyImport(store, waiting.outcome.legacyPurchases, new Date('2026-10-15T08:00:00Z'))
+    expect(skipped).toEqual({ status: 'skipped-by-user', legacyPurchases: 3 })
+    expect(legacyNotice(skipped)).toEqual({ kind: 'not-moved', purchases: 3 })
+    expect(JSON.parse(store.map.get(LEGACY_MIGRATION_KEY)!)).toEqual({ status: 'skipped-by-user', legacyPurchases: 3, at: '2026-10-15T08:00:00.000Z' })
+    // Later loads never import, even into an empty store, and keep telling the person until dismissed.
+    const later = await run(store)
+    expect(later.outcome).toMatchObject({ status: 'already-done', previous: { status: 'skipped-by-user' } })
+    expect(later.restore).not.toHaveBeenCalled()
+    expect(legacyNotice(later.outcome)).toEqual({ kind: 'not-moved', purchases: 3 })
+    dismissLegacyNotice(store)
+    expect(legacyNotice((await run(store)).outcome)).toBeNull()
+    // The old ledger was only ever read.
+    expect(store.writes.every(([key]) => key === LEGACY_MIGRATION_KEY)).toBe(true)
+    expect(store.map.get(LEGACY_DEVICE_KEY)).toBe(raw)
+  })
+  it('continuing without importing keeps an import another tab already finished', async () => {
+    const store = storage({ [LEGACY_DEVICE_KEY]: JSON.stringify(legacyLedger()) })
+    await run(store)
+    const before = store.map.get(LEGACY_MIGRATION_KEY)
+    expect(skipLegacyImport(store, 3)).toMatchObject({ status: 'already-done', previous: { status: 'imported', purchases: 3 } })
+    expect(store.map.get(LEGACY_MIGRATION_KEY)).toBe(before)
   })
   it('does nothing without an old ledger', async () => {
     const store = storage()

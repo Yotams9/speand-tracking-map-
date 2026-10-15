@@ -1009,6 +1009,7 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
     : notice.kind === 'imported' ? (locale === 'he'
       ? [notice.purchases ? `${notice.purchases} רכישות שנשמרו קודם במכשיר הזה הועברו לאחסון המקומי החדש.` : '', notice.skipped ? `${notice.skipped} רכישות שלך לא הועברו: הן שייכות לחנות דמו בדיונית או שלא עברו בדיקה. הן לא נמחקו ולא שונו.` : '', notice.demoSkipped ? `${notice.demoSkipped} רכישות דמו לא הועברו.` : ''].filter(Boolean).join(' ')
       : [notice.purchases ? `${notice.purchases} purchases saved earlier on this device were moved to the new local store.` : '', notice.skipped ? `${notice.skipped} of your purchases were not moved: they use a fictional demo store or did not pass validation. They were not deleted or changed.` : '', notice.demoSkipped ? `${notice.demoSkipped} demo purchases were not moved.` : ''].filter(Boolean).join(' '))
+    : notice.kind === 'not-moved' ? (locale === 'he' ? `${notice.purchases} רכישות ישנות לא הועברו לאחסון המקומי החדש. הן לא נמחקו ולא שונו.` : `${notice.purchases} old purchases were not moved to the new local store. They were not deleted or changed.`)
     : notice.kind === 'not-empty' ? (locale === 'he' ? `${notice.purchases} רכישות שנשמרו קודם במכשיר הזה לא הועברו, כי באחסון המקומי כבר יש נתונים. הן לא נמחקו ולא שונו.` : `${notice.purchases} purchases saved earlier on this device were not moved because local storage already holds data. They were not deleted or changed.`)
     : notice.capacity ? (locale === 'he' ? `${notice.purchases} רכישות שנשמרו קודם במכשיר הזה לא הועברו: הן חורגות ממגבלת 1,000 הרכישות המקומיות. הן לא נמחקו ולא שונו.` : `${notice.purchases} purchases saved earlier on this device were not moved: they exceed the 1,000 local purchase limit. They were not deleted or changed.`)
     : (locale === 'he' ? `${notice.purchases} רכישות שנשמרו קודם במכשיר הזה לא הועברו כי לא ניתן היה לקרוא את הנתונים השמורים. הן לא נמחקו ולא שונו.` : `${notice.purchases} purchases saved earlier on this device were not moved because the saved data could not be read. They were not deleted or changed.`)
@@ -3428,8 +3429,15 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
       essential: repositionWithoutMotion })
   }, [updateSelectedFilter])
 
+  // The earlier ledger is waiting for the published store list; the store stays empty and saving stays blocked.
+  const pendingImport = localData.phase === 'loading' && localData.migration?.status === 'catalog-unavailable' ? localData.migration.legacyPurchases : null
   return (
     <>
+    {pendingImport !== null && <div role="alert" className={`${styles.migrationNotice} ${styles.migrationPending}`} data-testid="legacy-migration-pending" aria-busy={localData.importing}>
+      <p>{locale === 'he' ? `${pendingImport} רכישות שנשמרו קודם במכשיר הזה ממתינות להעברה, אבל רשימת הסניפים אינה זמינה כרגע. עד שתבחרו, לא ניתן לשמור רכישות חדשות.` : `${pendingImport} purchases saved earlier on this device are waiting to be moved, but the store list is unavailable right now. New purchases cannot be saved until you choose.`}</p>
+      <button type="button" data-testid="legacy-migration-retry" disabled={localData.importing} onClick={() => { void localData.retryMigration() }}>{locale === 'he' ? 'נסו שוב' : 'Try again'}</button>
+      <button type="button" data-testid="legacy-migration-continue" disabled={localData.importing} onClick={() => { void localData.continueWithoutImport() }}>{locale === 'he' ? 'המשך בלי להעביר' : 'Continue without importing'}</button>
+    </div>}
     <main
       inert={localData.busy || localData.phase !== 'ready'}
       data-local-state={localData.phase}

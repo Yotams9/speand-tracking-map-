@@ -24,9 +24,14 @@ export type LegacyPlan =
 export type RecordedOutcome =
   | { status: 'skipped-not-empty'; legacyPurchases: number }
   | { status: 'skipped-invalid'; reason: string; legacyPurchases: number }
+  // The published store list was unavailable and the person chose to continue without the import.
+  | { status: 'skipped-by-user'; legacyPurchases: number }
   | ({ status: 'imported' } & ImportCounts)
 export type LegacyMigrationOutcome =
   | { status: 'not-needed' | 'deferred' }
+  // Nothing written: the store stays empty and saving stays blocked until the
+  // person retries or continues without importing (skipLegacyImport).
+  | { status: 'catalog-unavailable'; legacyPurchases: number }
   | RecordedOutcome
   | { status: 'already-done'; previous: (RecordedOutcome & { dismissed?: boolean }) | null }
 
@@ -201,18 +206,24 @@ function legacyPurchaseCount(raw: string): number {
 // Some loads must never wait forever for the published store list.
 const withTimeout = <T>(promise: Promise<T>, ms: number) => Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))])
 
+function alreadyDone(marker: string | null): Extract<LegacyMigrationOutcome, { status: 'already-done' }> | null {
+  if (marker === null) return null
+  let previous: (RecordedOutcome & { dismissed?: boolean }) | null = null
+  try { const parsed = JSON.parse(marker); if (isObject(parsed) && typeof parsed.status === 'string') previous = parsed as unknown as RecordedOutcome & { dismissed?: boolean } } catch { previous = null }
+  return { status: 'already-done', previous }
+}
+const writeMarker = (storage: Preferences | null, outcome: RecordedOutcome, now: Date) => {
+  try { storage?.setItem(LEGACY_MIGRATION_KEY, JSON.stringify({ ...outcome, at: now.toISOString() })) } catch { /* the empty-destination rule still prevents a second import */ }
+}
+
 export async function migrateLegacyPurchases(deps: LegacyMigrationDeps): Promise<{ outcome: LegacyMigrationOutcome; saved?: LocalPurchases }> {
   const read = (key: string) => { try { return deps.storage?.getItem(key) ?? null } catch { return null } }
   const mark = (outcome: RecordedOutcome) => {
-    try { deps.storage?.setItem(LEGACY_MIGRATION_KEY, JSON.stringify({ ...outcome, at: (deps.now?.() ?? new Date()).toISOString() })) } catch { /* the empty-destination rule still prevents a second import */ }
+    writeMarker(deps.storage, outcome, deps.now?.() ?? new Date())
     return { outcome }
   }
-  const marker = read(LEGACY_MIGRATION_KEY)
-  if (marker !== null) {
-    let previous: (RecordedOutcome & { dismissed?: boolean }) | null = null
-    try { const parsed = JSON.parse(marker); if (isObject(parsed) && typeof parsed.status === 'string') previous = parsed as unknown as RecordedOutcome & { dismissed?: boolean } } catch { previous = null }
-    return { outcome: { status: 'already-done', previous } }
-  }
+  const done = alreadyDone(read(LEGACY_MIGRATION_KEY))
+  if (done) return { outcome: done }
   const raw = read(LEGACY_DEVICE_KEY)
   if (raw === null) return { outcome: { status: 'not-needed' } }
   const legacyPurchases = legacyPurchaseCount(raw)
@@ -220,7 +231,7 @@ export async function migrateLegacyPurchases(deps: LegacyMigrationDeps): Promise
   let plan = planLegacyImport(raw, deps.context, null)
   if (plan.kind === 'needs-catalog') {
     let stores: readonly CatalogStoreSummary[]
-    try { stores = await withTimeout(deps.loadStores(), 10_000) } catch { return { outcome: { status: 'deferred' } } }
+    try { stores = await withTimeout(deps.loadStores(), 10_000) } catch { return { outcome: { status: 'catalog-unavailable', legacyPurchases } } }
     plan = planLegacyImport(raw, deps.context, stores)
   }
   if (plan.kind === 'invalid') return mark({ status: 'skipped-invalid', reason: plan.reason, legacyPurchases })
@@ -236,9 +247,21 @@ export async function migrateLegacyPurchases(deps: LegacyMigrationDeps): Promise
   }
 }
 
+// "Continue without importing": recorded once, reported until dismissed. Another
+// tab may have finished the import meanwhile; its marker is kept. The old key is not touched.
+export function skipLegacyImport(storage: Preferences | null, legacyPurchases: number, now = new Date()): LegacyMigrationOutcome {
+  let marker: string | null = null
+  try { marker = storage?.getItem(LEGACY_MIGRATION_KEY) ?? null } catch { marker = null }
+  const done = alreadyDone(marker)
+  if (done) return done
+  const outcome: RecordedOutcome = { status: 'skipped-by-user', legacyPurchases }
+  writeMarker(storage, outcome, now)
+  return outcome
+}
+
 // What the person is told. A successful import is reported once; any of their
 // own purchases that were not imported stay reported until they dismiss it.
-export type LegacyNotice = { kind: 'imported'; purchases: number; demoSkipped: number; skipped: number } | { kind: 'invalid'; purchases: number; capacity: boolean } | { kind: 'not-empty'; purchases: number }
+export type LegacyNotice = { kind: 'imported'; purchases: number; demoSkipped: number; skipped: number } | { kind: 'invalid'; purchases: number; capacity: boolean } | { kind: 'not-empty'; purchases: number } | { kind: 'not-moved'; purchases: number }
 const count = (value: unknown) => Number.isSafeInteger(value) && (value as number) > 0 ? value as number : 0
 export function legacyNotice(outcome: LegacyMigrationOutcome | null): LegacyNotice | null {
   if (!outcome) return null
@@ -252,6 +275,7 @@ export function legacyNotice(outcome: LegacyMigrationOutcome | null): LegacyNoti
   if (!recorded || !('legacyPurchases' in recorded) || !(recorded.legacyPurchases > 0)) return null
   if (recorded.status === 'skipped-invalid') return { kind: 'invalid', purchases: recorded.legacyPurchases, capacity: recorded.reason === 'capacity' }
   if (recorded.status === 'skipped-not-empty') return { kind: 'not-empty', purchases: recorded.legacyPurchases }
+  if (recorded.status === 'skipped-by-user') return { kind: 'not-moved', purchases: recorded.legacyPurchases }
   return null
 }
 // Dismissal updates only this module's own marker; the old ledger stays untouched.

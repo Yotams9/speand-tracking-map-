@@ -1871,3 +1871,6 @@
 /* One-time report of the earlier on-device ledger import. */
 .migrationNotice { position: fixed; z-index: 310; inset-inline: 12px; inset-block-start: calc(72px + env(safe-area-inset-top, 0px)); display: flex; gap: 12px; align-items: center; justify-content: space-between; max-inline-size: 560px; margin-inline: auto; padding: 12px 14px; color: #eef1f5; background: rgba(24, 28, 36, 0.94); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 16px; font-size: 0.875rem; line-height: 1.5; }
 .migrationNotice button { flex: none; min-block-size: 44px; padding: 0 14px; color: inherit; background: transparent; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 12px; font: inherit; cursor: pointer; }
+.migrationPending { flex-wrap: wrap; justify-content: flex-end; }
+.migrationPending p { flex: 1 0 100%; margin: 0; }
+.migrationPending button:disabled { opacity: 0.6; cursor: progress; }
