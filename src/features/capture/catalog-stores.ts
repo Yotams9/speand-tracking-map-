@@ -1,6 +1,6 @@
 import type { CatalogStoreSummary } from '@/data/price-catalog'
 import type { DirectoryIntent } from '../local-purchases/local-directory'
-import type { ReviewContext } from './session-purchase-domain'
+import type { PurchaseReviewInput, ReviewContext } from './session-purchase-domain'
 
 export type LocatedCatalogStore = CatalogStoreSummary & { location: NonNullable<CatalogStoreSummary['location']> }
 export const NEAREST_STORE_METERS = 200
@@ -47,4 +47,38 @@ export function catalogProposal(store: LocatedCatalogStore, context: ReviewConte
     place: { branch: store.name, address: store.address, city: 'תל אביב', country: 'ישראל', longitude: String(store.location.lon), latitude: String(store.location.lat), confirmed: false, separate: false, catalogStoreId: store.id },
   }
   return { merchantId: merchant?.id ?? '', placeId: '', directoryIntent }
+}
+
+
+type CatalogFields = Pick<PurchaseReviewInput, 'merchantId' | 'placeId' | 'directoryIntent'>
+export interface CatalogSelection { before: CatalogFields; applied: CatalogFields }
+const blankMerchant: NonNullable<DirectoryIntent['merchant']> = { name: '', category: '' as const, separate: false }
+const blankPlace: NonNullable<DirectoryIntent['place']> = { branch: '', address: '', city: '', country: '', longitude: '', latitude: '', confirmed: false, separate: false }
+
+/** Revert only unchanged catalog values. Prior facts and subsequent edits survive. */
+export function clearCatalogSelection(current: CatalogFields, selection: CatalogSelection): CatalogFields {
+  const { before, applied } = selection
+  function restore<T extends object>(value: T | undefined, prior: T | undefined, proposed: T | undefined, blank: T): T | undefined {
+    if (!value || !proposed) return value
+    const keys = Object.keys(blank) as (keyof T)[]
+    const edited = keys.some(key => key !== 'confirmed' && key !== 'separate' && value[key] !== proposed[key])
+    if (!prior && !edited) return undefined
+    const result = { ...value }
+    for (const key of keys) if (value[key] === proposed[key]) result[key] = (prior ?? blank)[key]
+    return result
+  }
+  const merchant = restore(current.directoryIntent?.merchant, before.directoryIntent?.merchant, applied.directoryIntent?.merchant, blankMerchant)
+  let place = restore(current.directoryIntent?.place, before.directoryIntent?.place, applied.directoryIntent?.place, blankPlace)
+  if (place && applied.directoryIntent?.place) {
+    const { catalogStoreId: _catalog, ...details } = place
+    const prior = before.directoryIntent?.place
+    const edited = Object.keys(blankPlace).some(key => current.directoryIntent?.place?.[key as keyof typeof blankPlace] !== applied.directoryIntent?.place?.[key as keyof typeof blankPlace])
+    // A partially cleared proposal needs a fresh confirmation; no stale catalog provenance.
+    place = { ...details, ...(prior?.catalogStoreId ? { catalogStoreId: prior.catalogStoreId } : {}), ...(edited ? { confirmed: false, separate: false } : {}) }
+  }
+  return {
+    merchantId: current.merchantId === applied.merchantId ? before.merchantId : current.merchantId,
+    placeId: current.placeId === applied.placeId ? before.placeId : current.placeId,
+    directoryIntent: merchant || place ? { ...(merchant ? { merchant } : {}), ...(place ? { place } : {}) } : undefined,
+  }
 }

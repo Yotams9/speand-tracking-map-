@@ -7,6 +7,7 @@ import { lineMinorTotal, minorAmount, usesFinalPayableTotal, reviewCategories, r
 import { prepareReceiptReview, type ReceiptReviewDraft } from './receipt-review-adapter'
 import { ReceiptReviewDetails, receiptCopy } from './ReceiptReviewDetails'
 import { CatalogStoreReview } from './CatalogStoreReview'
+import { clearCatalogSelection, type CatalogSelection } from './catalog-stores'
 import { MerchantPlaceReview } from './MerchantPlaceReview'
 import { ReceiptPayableSummary } from './ReceiptPayableSummary'
 import { receiptEditorWall } from './receipt-editor-values'
@@ -37,6 +38,7 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
   const preparation = receiptDraft ? prepareReceiptReview({ ...receiptDraft, review: input as ReceiptReviewDraft['review'] }, context) : null
   const blockers = preparation && !preparation.ready ? receiptBlockerFields(preparation.errors) : []
   const form = useRef<HTMLFormElement>(null), heading = useRef<HTMLHeadingElement>(null), saving = useRef(false)
+  const catalogSelection = useRef<CatalogSelection | null>(null)
   const directoryActive = useRef(Boolean(input.directoryIntent))
   directoryActive.current = Boolean(input.directoryIntent)
   const status = useRef<HTMLParagraphElement>(null)
@@ -144,7 +146,14 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
     <div className={styles.reviewColumns}><div className={styles.formGrid}>
       <label>{t.channel}<select {...attrs('channel')} value={input.channel} onChange={e => patch({ channel: e.target.value as PurchaseReviewInput['channel'], placeId: '', ...(receiptDraft ? { directoryIntent: input.directoryIntent?.merchant ? { merchant: input.directoryIntent.merchant } : undefined } : { merchantId: '', directoryIntent: undefined }) })}><option value="">{t.required}</option>{(['physical', 'online', 'unknown'] as const).map(key => <option key={key} value={key}>{t[key]}</option>)}</select>{error('channel')}</label>
       {!input.directoryIntent && (input.channel === 'physical' ? <label>{t.placeId}<select {...attrs('placeId')} value={input.placeId} onChange={e => { const p = context.places.find(p => p.id === e.target.value); patch({ placeId: p?.id ?? '', merchantId: p?.merchantId ?? '', directoryIntent: undefined }) }}><option value="">{t.required}</option>{context.places.map(p => <option key={p.id} value={p.id}>{localized(p.name, locale)} · {localized(p.branch, locale)}</option>)}</select>{error('placeId')}<small>{t.places}</small></label> : <label>{t.merchantId}<select {...attrs('merchantId')} value={input.merchantId} onChange={e => patch({ merchantId: e.target.value, directoryIntent: undefined })}><option value="">{t.required}</option>{context.merchants.map(m => <option key={m.id} value={m.id}>{localized(m.name, locale)}</option>)}</select>{error('merchantId')}</label>)}
-      <div className={styles.fullField}>{input.channel === 'physical' && <CatalogStoreReview locale={locale} context={context} onSelect={proposal => patch({ ...proposal, channel: 'physical' })} />}<MerchantPlaceReview intent={input.directoryIntent} merchantId={input.merchantId} channel={input.channel} context={context} locale={locale} errors={shownErrors} observedName={observedMerchant} reviewedAddress={receiptAddress} receiptMode={Boolean(receiptDraft)} onChooseMerchant={merchantId => patch({ merchantId, placeId: '', directoryIntent: undefined })} onChange={directoryIntent => patch({ directoryIntent, ...(directoryIntent ? { placeId: '', ...(directoryIntent.merchant ? { merchantId: '' } : {}) } : {}) })} /></div>
+      <div className={styles.fullField}>{input.channel === 'physical' && <CatalogStoreReview locale={locale} context={context} onSelect={proposal => {
+        const base = catalogSelection.current ? { ...input, ...clearCatalogSelection(input, catalogSelection.current) } : input
+        if (proposal) {
+          const applied = { ...base, ...proposal }
+          catalogSelection.current = { before: base, applied }
+          patch(applied)
+        } else { catalogSelection.current = null; patch(base) }
+      }} />}<MerchantPlaceReview intent={input.directoryIntent} merchantId={input.merchantId} channel={input.channel} context={context} locale={locale} errors={shownErrors} observedName={observedMerchant} reviewedAddress={receiptAddress} receiptMode={Boolean(receiptDraft)} onChooseMerchant={merchantId => patch({ merchantId, placeId: '', directoryIntent: undefined })} onChange={directoryIntent => patch({ directoryIntent, ...(directoryIntent ? { placeId: '', ...(directoryIntent.merchant ? { merchantId: '' } : {}) } : {}) })} /></div>
       {!receiptDraft && <label>{t.date}<input {...attrs('date')} type="datetime-local" step="60" dir="ltr" value={input.date} onChange={e => patch({ date: e.target.value })} />{error('date')}</label>}
       <label>{t.currency}<select {...attrs('currency')} value={input.currency} onChange={e => patch({ currency: e.target.value as PurchaseReviewInput['currency'], baseAmount: '' })}><option value="">{t.required}</option>{reviewCurrencies.map(c => <option key={c}>{c}</option>)}</select>{error('currency')}</label>
       <label>{t.payment}<select {...attrs('payment')} value={input.payment} onChange={e => patch({ payment: e.target.value as PurchaseReviewInput['payment'] })}><option value="">{t.required}</option>{(['card', 'cash', 'manual', 'unknown'] as const).map(p => <option key={p} value={p}>{p === 'unknown' ? t.unknownContext : t[p]}</option>)}</select>{error('payment')}</label>

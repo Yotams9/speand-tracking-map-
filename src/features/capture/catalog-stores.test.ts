@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { canonicalSpendscapeData as history } from '../../data/spendscape-fixtures'
 import type { CatalogStoreSummary } from '../../data/price-catalog'
-import { catalogProposal, distanceMeters, isLocated, nearestCatalogStore } from './catalog-stores'
+import { catalogProposal, clearCatalogSelection, distanceMeters, isLocated, nearestCatalogStore } from './catalog-stores'
 import { blankReview, emptySessionLedger, saveReviewedPurchase, undoSessionPurchase, validateReview } from './session-purchase-domain'
 import { composeDirectory } from '../local-purchases/local-directory'
 import { emptyLocalPurchases, validateLocalPurchases } from '../local-purchases/local-purchase-store'
@@ -41,5 +41,34 @@ describe('catalog selection through the canonical directory authority', () => {
     const stored = validateLocalPurchases({ ...emptyLocalPurchases(), directory: second.ledger.directory, records: second.ledger.records, nextSequence: second.ledger.nextSequence },fixtures)
     expect(stored.records.map(r => r.purchase.originalAmount)).toEqual([12.5,14])
     expect(undoSessionPurchase(second.ledger).records).toHaveLength(1)
+  })
+})
+
+
+describe('clearing only catalog-owned review values', () => {
+  const proposal = catalogProposal(store as Parameters<typeof catalogProposal>[0], context)
+  it('clears an untouched proposal, including merchant, address, coordinates and confirmation', () => {
+    const before = blankReview(), applied = { ...before, ...proposal }
+    const cleared = clearCatalogSelection(applied, { before, applied })
+    expect(cleared).toEqual({ merchantId: '', placeId: '', directoryIntent: undefined })
+  })
+  it('restores independently entered details present before catalog selection', () => {
+    const before = { ...blankReview(), merchantId: 'independent-merchant', directoryIntent: { place: { branch: 'User branch', city: 'User city', country: 'User country', address: 'User address', longitude: '1', latitude: '2', confirmed: true, separate: false } } }
+    const applied = { ...before, ...proposal }
+    expect(clearCatalogSelection(applied, { before, applied })).toEqual({ merchantId: before.merchantId, placeId: '', directoryIntent: before.directoryIntent })
+  })
+  it('keeps later independent edits, clears unchanged catalog values and requires reconfirmation', () => {
+    const before = blankReview(), applied = { ...before, ...proposal }
+    const edited = { ...applied, directoryIntent: { merchant: { ...applied.directoryIntent!.merchant!, name: 'Independent merchant', category: 'unknown' as const }, place: { ...applied.directoryIntent!.place!, address: 'Independent address', longitude: '1', latitude: '2', confirmed: true } } }
+    const result = clearCatalogSelection(edited, { before, applied })
+    expect(result.directoryIntent?.merchant).toMatchObject({ name: 'Independent merchant', category: 'unknown' })
+    expect(result.directoryIntent?.place).toMatchObject({ address: 'Independent address', longitude: '1', latitude: '2', branch: '', city: '', country: '', confirmed: false })
+    expect(result.directoryIntent?.place).not.toHaveProperty('catalogStoreId')
+    expect(edited.directoryIntent.place.catalogStoreId).toBe(store.id)
+  })
+  it('does not clear an independently chosen existing place or removed proposal', () => {
+    const before = blankReview(), applied = { ...before, ...proposal }
+    const current = { merchantId: 'user-merchant', placeId: 'user-place', directoryIntent: undefined }
+    expect(clearCatalogSelection(current, { before, applied })).toEqual(current)
   })
 })
