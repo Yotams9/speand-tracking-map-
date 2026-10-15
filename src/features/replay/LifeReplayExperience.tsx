@@ -52,6 +52,7 @@ export function LifeReplayExperience({ purchases, places, merchants, locale, map
     card: he ? 'תשלום בכרטיס' : 'Card payment',
     cash: he ? 'רכישת מזומן' : 'Cash purchase',
     manual: he ? 'קלט ידני' : 'Manual input',
+    unknown: he ? 'אמצעי תשלום לא ידוע' : 'Unknown payment context',
   }[event.paymentMode] : ''
   const itemSummary = event?.items.length
     ? `${event.items.length} ${he ? 'פריטי קבלה' : 'receipt items'} · ${event.items.slice(0, 2).map((item) => localized(item.label, locale)).join(', ')}${event.items.length > 2 ? ` +${event.items.length - 2}` : ''}`

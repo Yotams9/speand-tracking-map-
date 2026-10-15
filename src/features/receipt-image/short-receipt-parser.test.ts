@@ -1,0 +1,300 @@
+import {describe,it,expect} from 'vitest'
+import {parseVisionReceipt} from './short-receipt-parser'
+import {fictionalShortOcr} from './vision-fixtures'
+import {fictionalOcr} from './ocr-fixtures'
+import {receiptToReviewDraft,prepareReceiptReview} from '../capture/receipt-review-adapter'
+import {fixtureSpendscapeRepository} from '../../data/spendscape-repository'
+import {layoutReason,layoutRowRejection} from './layout-reason'
+import {safeAttemptEvent} from './vision-attempt'
+import {vi,afterEach,beforeEach} from 'vitest'
+beforeEach(()=>vi.stubGlobal('fetch',()=>{throw new Error('OFFLINE_NETWORK_GUARD')}))
+afterEach(()=>vi.unstubAllGlobals())
+describe('relative short printed receipt layout',()=>{
+  it.each([1,15])('preserves %s lines and unresolved facts without IDs, currency or units',async count=>{const doc=fictionalShortOcr(count),before=structuredClone(doc),r=parseVisionReceipt(doc);expect(r.observations).toMatchObject({merchantName:'בית בדוי',address:'Imaginary Street 8',date:'04-10-26',time:'10:35',currency:null,finalAmount:(count*7.5).toFixed(2)});expect(r.observations.lines).toHaveLength(count);expect(r.observations.lines[0]).toEqual({name:'מוצר בדוי',quantity:'3',unit:null,unitPrice:'2.50',lineAmount:'7.50'});expect(doc).toEqual(before);const draft=receiptToReviewDraft(r.observations);expect(prepareReceiptReview(draft,await fixtureSpendscapeRepository.loadSnapshot()).ready).toBe(false)})
+  it('preserves existing explicit table discounts and fully discounted lines',()=>{const doc=fictionalOcr('fifteen');expect(parseVisionReceipt(doc).observations).toEqual(parseVisionReceipt(structuredClone(doc)).observations);expect(parseVisionReceipt(doc).observations.lines[0].discount).toBe('0.50')})
+  it('uses translated/scaled geometry with no reference answer',()=>{const doc=fictionalShortOcr();doc.width=2000;doc.height=2000;doc.words=doc.words.map(w=>({...w,x:w.x*1.5+100,y:w.y*1.5+50,width:w.width*1.5,height:w.height*1.5}));const item=doc.words.find(w=>w.text==='7.50')!;item.text='7.49';expect(parseVisionReceipt(doc).observations.lines[0].lineAmount).toBe('7.49')})
+  it('leaves competing totals as candidates rather than repairing',()=>{const doc=fictionalShortOcr();const total=doc.words.filter(w=>w.y===425);doc.words.push(...total.map(w=>({...w,y:465,text:w.text==='7.50'?'7.49':w.text})));expect(parseVisionReceipt(doc).observations.finalAmount).toEqual({candidates:['7.50','7.49']})})
+  it('rejects neighboring number ambiguity, preserves malformed singleton',()=>{const doc=fictionalShortOcr(),w=doc.words.find(w=>w.text==='2.50')!;doc.words.push({...w,x:620,text:'99'});expect(parseVisionReceipt(doc).observations.lines[0].unitPrice).toBeNull()})
+  it('does not infer optional VAT, discount, units, currency or barcode',()=>{const r=parseVisionReceipt(fictionalShortOcr());expect(r.observations.lines[0]).not.toHaveProperty('barcode');expect(r.observations.lines[0]).not.toHaveProperty('discount');expect(r.observations).not.toHaveProperty('vatAmount');expect(r.observations.currency).toBeNull()})
+  it('preserves partial lines with absent numeric fields but rejects competing table headers',()=>{
+    for(const kind of ['header','row']){const doc=fictionalShortOcr();if(kind==='header')doc.words=doc.words.filter(w=>w.text!=='כמות');else doc.words=doc.words.filter(w=>w.y!==288);const line=parseVisionReceipt(doc).observations.lines[0];expect(line).toMatchObject({name:'מוצר בדוי',lineAmount:'7.50',quantity:null,unitPrice:null})}
+    const repeated=fictionalShortOcr();repeated.words.push(...repeated.words.filter(w=>w.y===180).map(w=>({...w,y:700})));expect(()=>parseVisionReceipt(repeated)).toThrow('layout-unsupported')
+  })
+  it('reconstructs adjacent printed total fragments without dropping characters', () => {
+    const doc = fictionalShortOcr()
+    const total = doc.words.find(w => w.y === 425 && w.text === '7.50')!
+    total.text = '7.'; total.width = 16
+    doc.words.push({ ...total, text: '50', x: 78, width: 16 })
+    expect(parseVisionReceipt(doc).observations.finalAmount).toBe('7.50')
+  })
+  it.each(['O.50', '99', '7.49'])('retains competing total evidence %s as unresolved', text => {
+    const doc = fictionalShortOcr()
+    doc.words.push({ text, x: 145, y: 425, width: 40, height: 20 })
+    expect(parseVisionReceipt(doc).observations.finalAmount).toBeNull()
+  })
+  it('preserves malformed single totals and rejects distant fragments or crossing boxes', () => {
+    const doc = fictionalShortOcr()
+    const total = doc.words.find(w => w.y === 425 && w.text === '7.50')!
+    total.text = 'O.50'
+    expect(parseVisionReceipt(doc).observations.finalAmount).toBe('O.50')
+    total.text = '7.'; total.width = 16
+    doc.words.push({ ...total, text: '50', x: 145 })
+    expect(parseVisionReceipt(doc).observations.finalAmount).toBeNull()
+    doc.words.pop()
+    doc.words.push({ ...total, text: '99', x: 540, width: 30 })
+    expect(parseVisionReceipt(doc).observations.finalAmount).toBeNull()
+  })
+  it('does not mask an unresolved repeated payable total', () => {
+    const doc = fictionalShortOcr()
+    doc.words.push(...doc.words.filter(w => w.y === 425).map(w => ({ ...w, y: 465, text: w.text === '7.50' ? '7.' : w.text })))
+    doc.words.push({ text: '50', x: 145, y: 465, width: 16, height: 20 })
+    expect(parseVisionReceipt(doc).observations.finalAmount).toBeNull()
+  })
+  it.each(['USD', 'ILS', 'EUR', 'GBP', '₪'])('does not use product/internal-code text %s as currency', text => {
+    const doc = fictionalShortOcr()
+    doc.words.find(w => w.y === 260 && w.text === 'בדוי')!.text = text
+    doc.words.find(w => w.y === 260 && w.text === '800000')!.text = text
+    expect(parseVisionReceipt(doc).observations.currency).toBeNull()
+  })
+  it.each(['Currency:', 'מטבע:'])('accepts only explicit currency header %s and rejects conflicting/malformed repeats', key => {
+    const doc = fictionalShortOcr()
+    doc.words.push({ text: key, x: 600, y: 140, width: 90, height: 20 }, { text: 'ILS', x: 500, y: 140, width: 24, height: 20 })
+    expect(parseVisionReceipt(doc).observations.currency).toBe('ILS')
+    doc.words.push({ text: key, x: 800, y: 140, width: 90, height: 20 })
+    expect(parseVisionReceipt(doc).observations.currency).toBeNull()
+  })
+  it.each(['04-10-26', '2026-10-04', '04/10/2026', '10:35', '123456'])('excludes standalone date/time/identifier %s from merchant and address', text => {
+    const doc = fictionalShortOcr()
+    doc.words = doc.words.filter(w => w.y !== 20 && w.y !== 60)
+    doc.words.push({ text, x: 580, y: 20, width: 120, height: 20 }, { text, x: 580, y: 60, width: 120, height: 20 })
+    const result = parseVisionReceipt(doc).observations
+    expect(result.merchantName).toBeNull(); expect(result.address).toBeNull()
+  })
+  it('excludes segmented date headers without shifting another row into merchant', () => {
+    const doc = fictionalShortOcr()
+    doc.words = doc.words.filter(w => w.y !== 20)
+    doc.words.push({ text: '04-', x: 580, y: 20, width: 24, height: 20 }, { text: '10-', x: 606, y: 20, width: 24, height: 20 }, { text: '26', x: 632, y: 20, width: 16, height: 20 })
+    const result = parseVisionReceipt(doc).observations
+    expect(result.merchantName).toBeNull(); expect(result.address).toBe('Imaginary Street 8')
+  })
+})
+
+describe('bounded short-layout variations and structural reasons',()=>{
+  it.each([5,10,12])('handles modest header/item baseline misalignment of %s pixels',delta=>{
+    const doc=fictionalShortOcr(2)
+    doc.words=doc.words.map(w=>({...w,y:w.y+(w.x>800?delta:0)}))
+    expect(parseVisionReceipt(doc).observations.lines).toHaveLength(2)
+    expect(parseVisionReceipt(doc).observations.lines[1]).toMatchObject({quantity:'3',unitPrice:'2.50',lineAmount:'7.50'})
+  })
+  it('recognizes split header words with punctuation without using expected item values',()=>{
+    const doc=fictionalShortOcr(),word=doc.words.find(w=>w.text==='יחידה')!
+    doc.words.splice(doc.words.indexOf(word),1,{...word,text:'דה',width:14},{...word,text:'יחי',x:541,width:24})
+    doc.words.find(w=>w.text==='2.50')!.text='2.47'
+    expect(parseVisionReceipt(doc).observations.lines[0].unitPrice).toBe('2.47')
+  })
+  it.each([1,3,15])('uses printed item starts for %s wrapped descriptions and variable spacing',count=>{
+    const doc=fictionalShortOcr(count)
+    const summaryY=290+count*65
+    doc.height=6000
+    doc.words=doc.words.map(w=>{
+      if(w.y>=summaryY)return {...w,y:w.y+count*80}
+      if(w.y<260)return w
+      const index=Math.floor((w.y-260)/65),isNumeric=(w.y-260)%65===28
+      return {...w,y:260+index*130+(isNumeric?70:0)}
+    })
+    for(let i=0;i<count;i++)doc.words.push({text:'Extended',x:500,y:290+i*130,width:70,height:20})
+    const result=parseVisionReceipt(doc)
+    expect(result.observations.lines).toHaveLength(count)
+    for(const line of result.observations.lines)expect(line).toMatchObject({name:'מוצר בדוי Extended',quantity:'3',unitPrice:'2.50',lineAmount:'7.50'})
+  })
+  it('keeps absent payable total unresolved while preserving observed items',()=>{
+    const doc=fictionalShortOcr();doc.words=doc.words.filter(w=>w.y<355)
+    expect(parseVisionReceipt(doc).observations).toMatchObject({finalAmount:null,lines:[{lineAmount:'7.50',quantity:'3'}]})
+  })
+  it('does not pair a distant numeric row or two competing numeric rows',()=>{
+    for(const kind of ['distant','competing']){
+      const doc=fictionalShortOcr();doc.height=2000
+      if(kind==='distant')doc.words=doc.words.map(w=>({...w,y:w.y===288?500:w.y>=355?w.y+600:w.y}))
+      else doc.words.push(...doc.words.filter(w=>w.y===288).map(w=>({...w,y:318,text:w.text==='3'?'4':w.text})))
+      const line=parseVisionReceipt(doc).observations.lines[0]
+      expect(line.quantity).toBeNull();expect(line.unitPrice).toBeNull();expect(line.lineAmount).toBe('7.50')
+    }
+  })
+  it('preserves two incomplete anchored items without shifting the next quantity into the first',()=>{
+    const doc=fictionalShortOcr(2);doc.words=doc.words.filter(w=>w.y!==288)
+    const lines=parseVisionReceipt(doc).observations.lines
+    expect(lines[0].quantity).toBeNull();expect(lines[1].quantity).toBe('3');expect(lines).toHaveLength(2)
+  })
+  it('preserves observed malformed numbers and arithmetic discrepancies through review',async()=>{
+    const doc=fictionalShortOcr();doc.words.find(w=>w.text==='2.50')!.text='O.50';doc.words.find(w=>w.y===260&&w.text==='7.50')!.text='7.49'
+    const observations=parseVisionReceipt(doc).observations
+    expect(observations.lines[0]).toMatchObject({unitPrice:'O.50',lineAmount:'7.49'})
+    expect(prepareReceiptReview(receiptToReviewDraft(observations),await fixtureSpendscapeRepository.loadSnapshot()).ready).toBe(false)
+  })
+  it.each(['missing','ambiguous','order','unassigned','no-items'])('emits fixed structural reason for %s',kind=>{
+    const doc=fictionalShortOcr()
+    const expected={missing:'table-header-missing',ambiguous:'table-header-ambiguous',order:'column-order-unsupported',unassigned:'item-row-unassigned','no-items':'item-anchor-missing'}[kind]
+    if(kind==='missing')doc.words=doc.words.filter(w=>w.text!=='תיאור')
+    if(kind==='ambiguous')doc.words.push(...doc.words.filter(w=>w.y===180).map(w=>({...w,y:700})))
+    if(kind==='order')doc.words.find(w=>w.y===180&&w.text==='סה״כ')!.x=750
+    if(kind==='unassigned')doc.words.push({text:'Unbound',x:10,y:245,width:50,height:20})
+    if(kind==='no-items')doc.words=doc.words.filter(w=>w.y!==260&&w.y!==288)
+    let caught:unknown;try{parseVisionReceipt(doc)}catch(e){caught=e}
+    expect(layoutReason(caught)).toBe(expected)
+    expect(safeAttemptEvent('failure',1,{code:'layout-unsupported',layoutReason:layoutReason(caught),message:'SYNTHETIC_SECRET'})).toEqual({stage:'failure',elapsedMs:1,code:'layout-unsupported',layoutReason:expected})
+  })
+  it('never accepts arbitrary diagnostic content or a reason on unrelated failure',()=>{
+    expect(safeAttemptEvent('failure',1,{code:'layout-unsupported',layoutReason:'SYNTHETIC_SECRET'})).not.toHaveProperty('layoutReason')
+    expect(safeAttemptEvent('failure',1,{code:'authentication-failed',layoutReason:'table-header-missing'})).not.toHaveProperty('layoutReason')
+  })
+  it('leaves repeated numeric header anchors unresolved rather than choosing one',()=>{
+    const doc=fictionalShortOcr();doc.words.push({text:'Quantity',x:740,y:215,width:70,height:20})
+    expect(parseVisionReceipt(doc).observations.lines[0]).toMatchObject({quantity:null,unitPrice:null,lineAmount:'7.50'})
+  })
+  it('keeps boundary-crossing line amounts unresolved without dropping competing evidence',()=>{
+    const doc=fictionalShortOcr();doc.words.push({text:'99',x:290,y:260,width:40,height:20})
+    expect(parseVisionReceipt(doc).observations.lines[0].lineAmount).toBeNull()
+  })
+  it('keeps overlapping or too distant description continuations unresolved/rejected',()=>{
+    const doc=fictionalShortOcr();doc.words.push({text:'Extra',x:510,y:260,width:40,height:20})
+    expect(parseVisionReceipt(doc).observations.lines[0].name).toBeNull()
+    const distant=fictionalShortOcr();distant.words.push({text:'Detached',x:500,y:340,width:70,height:5})
+    // An independently printed description cannot become a new item without anchors.
+    const result=parseVisionReceipt(distant).observations.lines
+    expect(result).toHaveLength(1)
+  })
+  it('rejects an unassigned amount/discount row instead of inventing a product or discount',()=>{
+    const doc=fictionalShortOcr();doc.words.push({text:'-1.00',x:60,y:320,width:50,height:20})
+    let error:unknown;try{parseVisionReceipt(doc)}catch(e){error=e}
+    expect(layoutReason(error)).toBe('item-row-unassigned')
+  })
+  it('preserves missing printed line amount rather than calculating it',()=>{
+    const doc=fictionalShortOcr();doc.words=doc.words.filter(w=>!(w.y===260&&w.x===60))
+    expect(parseVisionReceipt(doc).observations.lines[0]).toMatchObject({lineAmount:null,quantity:'3',unitPrice:'2.50'})
+  })
+  it('missing numeric header and row never borrows values from total or identifiers',()=>{
+    const doc=fictionalShortOcr();doc.words=doc.words.filter(w=>w.y!==215&&w.y!==288)
+    const line=parseVisionReceipt(doc).observations.lines[0]
+    expect(line).toMatchObject({quantity:null,unitPrice:null,unit:null,lineAmount:'7.50'})
+    expect(line).not.toHaveProperty('barcode');expect(line).not.toHaveProperty('discount')
+  })
+})
+
+ describe('reviewed item-anchor and discount evidence corrections',()=>{
+  it.each(['I.50','S.50','o.50'])('retains damaged price %s without creating another product',async text=>{
+    const doc=fictionalShortOcr();doc.words.find(w=>w.text==='2.50')!.text=text;
+    const result=parseVisionReceipt(doc).observations;
+    expect(result.lines).toHaveLength(1);expect(result.lines[0]).toMatchObject({name:'מוצר בדוי',quantity:'3',unitPrice:text,lineAmount:'7.50'});
+    expect(prepareReceiptReview(receiptToReviewDraft(result),await fixtureSpendscapeRepository.loadSnapshot()).ready).toBe(false)
+  })
+  it('does not append a damaged singleton price to the product label',()=>{
+    const doc=fictionalShortOcr();doc.words=doc.words.filter(w=>!(w.y===288&&w.text==='3'));doc.words.find(w=>w.text==='2.50')!.text='I.50';
+    expect(parseVisionReceipt(doc).observations.lines).toMatchObject([{name:'מוצר בדוי',unitPrice:'I.50',quantity:null}])
+  })
+  it('preserves split decimal fragments in numeric rows',()=>{
+    const doc=fictionalShortOcr(),word=doc.words.find(w=>w.text==='2.50')!;word.text='2.';word.width=16;doc.words.push({...word,text:'50',x:558,width:16});
+    expect(parseVisionReceipt(doc).observations.lines[0].unitPrice).toBe('2.50')
+  })
+  it('retains an unresolved percentage when numeric rows compete',()=>{
+    const doc=fictionalShortOcr();doc.words.push({text:'10%',x:540,y:320,width:30,height:20});
+    const result=parseVisionReceipt(doc).observations.lines;
+    expect(result).toHaveLength(1);expect(result[0]).toMatchObject({quantity:null,unitPrice:null,discount:null,lineAmount:'7.50'})
+  })
+  it('keeps a single numeric-row percentage unresolved and does not infer an amount',()=>{
+    const doc=fictionalShortOcr();doc.words.push({text:'10%',x:625,y:288,width:30,height:20});
+    expect(parseVisionReceipt(doc).observations.lines[0]).toHaveProperty('discount',null)
+  })
+  it('rejects an unrelated text row beside a short number without inventing an item',()=>{
+    const doc=fictionalShortOcr();doc.words.push({text:'Unassigned',x:540,y:320,width:70,height:20},{text:'3',x:875,y:320,width:20,height:20});
+    let error:unknown;try{parseVisionReceipt(doc)}catch(e){error=e};expect(layoutReason(error)).toBe('item-row-unassigned')
+  })
+})
+
+describe('bounded leading amount ownership',()=>{
+  const leading=(count=1,competing=false)=>{const d=fictionalShortOcr(count),a=d.words.find(w=>w.y===260&&w.x===60)!;if(competing)d.words.push({...a,y:240});else a.y=240;return d}
+  it.each([1,2,15])('associates a unique adjacent prefix without creating a row (%s items)',count=>{const d=leading(count),before=structuredClone(d),r=parseVisionReceipt(d);expect(r.observations.lines).toHaveLength(count);expect(r.observations.lines[0].lineAmount).toBe('7.50');expect(d).toEqual(before)})
+  it.each(['7.50','9.25'])('keeps competing amount %s unresolved even when equal',text=>{const d=leading(1,true);d.words.find(w=>w.y===240)!.text=text;const r=parseVisionReceipt(d);expect(r.observations.lines[0].lineAmount).toEqual({candidates:[text,'7.50']});expect(receiptToReviewDraft(r.observations).review.lines[0].printedAmount).toBe('')})
+  it('retains damaged singleton without repairing its characters',()=>{const d=leading();d.words.find(w=>w.y===240)!.text='I.50';expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('I.50')})
+  it('reconstructs only adjacent decimal fragments',()=>{const d=leading(),a=d.words.find(w=>w.y===240)!;a.text='7.';a.width=16;d.words.push({...a,x:78,text:'50'});expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('7.50');d.words.at(-1)!.x=145;expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toEqual({candidates:['7.','50']})})
+  it('keeps a column crossing unresolved and retains its inspection evidence',()=>{const d=leading(),a=d.words.find(w=>w.y===240)!;a.x=290;a.width=60;expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBeNull()})
+  it.each(['distant','intervening','multiple','unrelated','code-crossing','percent','two-prefixes'])('rejects unsupported %s ownership',kind=>{
+    const d=leading(),a=d.words.find(w=>w.y===240)!;
+    if(kind==='distant')for(const w of d.words)if(w.y>=260&&w.y<=288)w.y+=50
+    if(kind==='intervening')d.words.push({text:'Header',x:500,y:255,width:50,height:5})
+    if(kind==='multiple')d.words.push({text:'Other',x:500,y:278,width:50,height:5},{text:'999999',x:850,y:278,width:60,height:5})
+    if(kind==='unrelated')a.text='Identifier'
+    if(kind==='code-crossing'){a.x=290;a.width=450}
+    if(kind==='percent')a.text='10%'
+    if(kind==='two-prefixes')d.words.push({...a,y:232,height:5})
+    expect(()=>parseVisionReceipt(d)).toThrow('layout-unsupported')
+    try{parseVisionReceipt(d)}catch(e){expect(layoutReason(e)).toBe('item-row-unassigned')}
+  })
+  it('does not associate across an intervening summary',()=>{const d=leading();d.words.push({text:'VAT',x:550,y:250,width:40,height:5});try{parseVisionReceipt(d);throw Error('unexpected success')}catch(e){expect(layoutReason(e)).toBe('item-anchor-missing')}})
+  it('preserves missing fields and printed-line validation after association',async()=>{const d=leading();d.words.find(w=>w.y===240)!.text='7.49';const draft=receiptToReviewDraft(parseVisionReceipt(d).observations);expect(draft.observations.lines[0].lineAmount).toBe('7.49');expect(prepareReceiptReview(draft,await fixtureSpendscapeRepository.loadSnapshot()).ready).toBe(false)})
+})
+
+it('does not drop a competing item amount when leading fragments are damaged',()=>{const d=fictionalShortOcr();d.words.push({text:'7.',x:60,y:240,width:16,height:20},{text:'5O',x:145,y:240,width:16,height:20});expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toEqual({candidates:['7.','5O','7.50']})})
+it('accepts the two-height limit and rejects a larger gap without total matching',()=>{const d=fictionalShortOcr();const a=d.words.find(w=>w.y===260&&w.x===60)!;a.y=240;a.text='9.25';for(const w of d.words)if(w.y===260||w.y===288)w.y+=20;expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('9.25');for(const w of d.words)if(w.y===280||w.y===308)w.y+=1;expect(()=>parseVisionReceipt(d)).toThrow('layout-unsupported')})
+
+describe('typography-aware leading ownership',()=>{
+  function unequal(gap=10,variation=false){
+    const d=fictionalShortOcr(),a=d.words.find(w=>w.y===260&&w.x===60)!
+    a.y=240;a.height=10
+    for(const w of d.words)if(w.y===260){w.y=250+gap;w.height=30}
+    // Three anchor words retain one grouped row; the leftmost word no longer
+    // determines proximity. The median edges stay at 260/290 for gap=10.
+    if(variation){d.words.find(w=>w.x===500&&w.height===30)!.y-=2;d.words.find(w=>w.x===850&&w.height===30)!.y+=2}
+    return d
+  }
+  function signature(d:ReturnType<typeof unequal>){
+    let error:unknown;try{parseVisionReceipt(d)}catch(e){error=e}
+    expect(layoutReason(error)).toBe('item-row-unassigned')
+    return layoutRowRejection(error)!
+  }
+  it.each([false,true])('accepts unequal glyph heights with modest baseline variation=%s',variation=>{
+    const d=unequal(10,variation),before=structuredClone(d)
+    expect(parseVisionReceipt(d).observations.lines[0]).toEqual({name:'מוצר בדוי',quantity:'3',unit:null,unitPrice:'2.50',lineAmount:'7.50'})
+    expect(d).toEqual(before)
+  })
+  it.each([.5,1,2,3])('is invariant under uniform scale %s for both boundary outcomes',scale=>{
+    const transform=(d:ReturnType<typeof unequal>)=>({...d,width:d.width*scale,height:d.height*scale,words:d.words.map(w=>({...w,x:w.x*scale,y:w.y*scale,width:w.width*scale,height:w.height*scale}))})
+    expect(parseVisionReceipt(transform(unequal(10,true))).observations).toEqual(parseVisionReceipt(unequal(10,true)).observations)
+    expect(signature(transform(unequal(10.125,true)))).toEqual(signature(unequal(10.125,true)))
+  })
+  it('rejects just outside the observed gap bound with exactly the actual failed predicate',()=>{
+    const s=signature(unequal(10.125,true));expect(s.path).toBe('short-leading')
+    expect(Object.entries(s.checks).filter(([,value])=>!value).map(([key])=>key)).toEqual(['near-baseline'])
+  })
+  it('does not let one tall word inflate the representative row window',()=>{
+    const d=unequal(12);const code=d.words.find(w=>w.x===850&&w.height===30)!;code.y-=6;code.height+=12
+    expect(signature(d).checks['near-baseline']).toBe(false)
+  })
+  it('handles a taller prefix and smaller anchored text using the same edge rule',()=>{
+    const d=unequal();d.words.find(w=>w.y===240)!.height=30
+    for(const w of d.words)if(w.height===30&&w.y===260){w.y=280;w.height=10}
+    expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('7.50')
+    for(const w of d.words)if(w.y===280)w.y+=.125
+    expect(signature(d).checks['near-baseline']).toBe(false)
+  })
+  it('uses median edges when the leftmost anchor word varies within its grouped row',()=>{
+    const d=fictionalShortOcr(),a=d.words.find(w=>w.y===260&&w.x===60)!;a.y=240
+    for(const w of d.words)if(w.y===260)w.y=w.x===500?282:w.x===850?278:280
+    for(const w of d.words)if(w.y===288)w.y=308
+    expect(parseVisionReceipt(d).observations.lines[0].lineAmount).toBe('7.50')
+  })
+  it('checks a taller competing anchored item against the same shared window',()=>{
+    const d=unequal();d.words=d.words.filter(w=>w.y!==288);d.words.push({text:'Other',x:500,y:260,width:50,height:70},{text:'999999',x:850,y:260,width:60,height:70})
+    expect(signature(d).checks['unique-item']).toBe(false)
+  })
+  it('keeps a small competing anchor inside the shared window ambiguous',()=>{
+    const d=fictionalShortOcr();d.words.find(w=>w.y===260&&w.x===60)!.y=240
+    d.words.push({text:'Other',x:500,y:278,width:50,height:5},{text:'999999',x:850,y:278,width:60,height:5})
+    expect(signature(d).checks['unique-item']).toBe(false)
+  })
+  it('preserves damaged and competing observations rather than selecting a convenient amount',()=>{
+    const damaged=unequal();damaged.words.find(w=>w.y===240)!.text='I.50'
+    expect(parseVisionReceipt(damaged).observations.lines[0].lineAmount).toBe('I.50')
+    const competing=unequal();competing.words.push({text:'9.25',x:60,y:260,width:40,height:30})
+    expect(parseVisionReceipt(competing).observations.lines[0].lineAmount).toEqual({candidates:['7.50','9.25']})
+  })
+})

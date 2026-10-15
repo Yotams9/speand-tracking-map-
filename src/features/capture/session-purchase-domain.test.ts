@@ -128,3 +128,85 @@ describe('Scanner E reviewed session integration', () => {
   })
 
 })
+
+describe('P2C explicit line discounts', () => {
+  it('preserves gross price, whole-line discount and net without mutating legacy lines', () => {
+    const input = receipt(), original = reviewedRecord(input, 1, context)
+    input.lines[0].discount = '2.50'; input.amount = '84.40'
+    expect(validateReview(input, context)).toEqual({})
+    const record = reviewedRecord(input, 1, context)
+    expect(record.purchase.items[0]).toMatchObject({ unitPrice: 18.5, discountMinor: 250, lineTotal: 16 })
+    expect(original.purchase.items[0]).not.toHaveProperty('discountMinor')
+    expect(record.purchase.originalAmount).toBe(84.4)
+    expect(reviewFromDemo({ ...demoDraftForSource('receipt')!, items: record.purchase.items }, 'en').lines[0].discount).toBe('2.5')
+  })
+  it('rejects negative, excessive, malformed and unresolved discounts without repairing totals', () => {
+    for (const discount of ['-1', '18.51', '', ' ', '1e2', '1.001', '1O', null, NaN, 1] as unknown[]) {
+      const input = receipt(); input.lines[0].discount = discount as string
+      expect(validateReview(input, context)).toHaveProperty('discount-0')
+      expect(() => reviewedRecord(input, 1, context)).toThrow('review-invalid')
+    }
+    const input = receipt(); input.lines[0].discount = '1'
+    expect(validateReview(input, context).amount).toBe('arithmetic')
+  })
+  it('handles zero, full discounts, weighted rounding and JPY precision in minor units', () => {
+    const line = { name: 'Synthetic weight', unit: 'kg' as const, quantity: '1.235', price: '12.50', discount: '0.44' }
+    expect(lineMinorTotal(line, 'ILS')).toBe(1500)
+    expect(lineMinorTotal({ ...line, discount: '15.44' }, 'ILS')).toBe(0)
+    expect(lineMinorTotal({ ...line, discount: '15.45' }, 'ILS')).toBeNull()
+    expect(lineMinorTotal({ ...line, unit: 'item', quantity: '2', price: '100', discount: '20' }, 'JPY')).toBe(180)
+    expect(lineMinorTotal({ ...line, price: '100', discount: '0.01' }, 'JPY')).toBeNull()
+    const input = receipt(); input.lines[0].discount = '0'
+    expect(reviewedRecord(input, 1, context).purchase.originalAmount).toBe(86.9)
+    input.lines[0].discount = '18.5'; input.amount = '68.40'
+    expect(reviewedRecord(input, 1, context).purchase.items[0].lineTotal).toBe(0)
+  })
+  it('saves 25 separately identified repeated lines, exact totals, duplicate override and Undo', () => {
+    const input = { ...receipt(), provenance: 'user-reviewed' as const, amount: '475.00', lines: Array.from({ length: 25 }, (_, i) => ({ name: i % 2 ? 'פריט סינתטי' : 'Synthetic item', unit: 'item' as const, quantity: '2', price: '10', discount: '1' })) }
+    const saved = saveReviewedPurchase(emptySessionLedger(), 'discounted', input, context, context.purchases)
+    expect(saved.result.code).toBe('saved')
+    expect(saved.ledger.records[0].purchase.items).toHaveLength(25)
+    expect(saved.ledger.records[0].purchase.items.reduce((n, l) => n + l.lineTotal * 100, 0)).toBe(47500)
+    expect(saveReviewedPurchase(saved.ledger, 'other', input, context, context.purchases).result.code).toBe('duplicate')
+    const twice = saveReviewedPurchase(saved.ledger, 'other', input, context, context.purchases, true).ledger
+    expect(undoSessionPurchase(twice).records).toEqual(saved.ledger.records)
+    expect(saveReviewedPurchase(undoSessionPurchase(twice), 'other', input, context, context.purchases, true).result.code).toBe('consumed')
+    const purchases = combineSessionPurchases(context.purchases, saved.ledger.records)
+    expect(buildPlaceFeatureCollection(context.places, purchases).features).toHaveLength(12)
+    expect(derivePurchaseAnalytics(purchases, context.evidence).totalBaseAmountIls).toBe(7252.38)
+  })
+  it('treats explicit zero and absent discount as the same purchase for duplicates', () => {
+    const input = receipt(), saved = saveReviewedPurchase(emptySessionLedger(), 'one', input, context, context.purchases)
+    input.lines.forEach(l => { l.discount = '0' })
+    expect(saveReviewedPurchase(saved.ledger, 'two', input, context, context.purchases).result.code).toBe('duplicate')
+  })
+})
+
+it('atomically proposes local entities, reuses branches, and prunes only last references without recycling IDs', async () => {
+  const { composeDirectory } = await import('../local-purchases/local-directory')
+  const { deleteLocalPurchase } = await import('./session-purchase-domain')
+  const intent = { merchant: { name: 'Fictional new merchant', category: 'groceries' as const, separate: false }, place: { branch: 'Fictional branch', city: 'Fictional city', country: 'Fictional country', address: '', longitude: '34.75', latitude: '32.1', confirmed: true, separate: false } }
+  const input = { ...manual(), channel: 'physical' as const, merchantId: '', directoryIntent: intent }
+  const before = emptySessionLedger(), first = saveReviewedPurchase(before,'new',input,context,context.purchases)
+  expect(first.result.code).toBe('saved');expect(before.directory.places).toEqual([])
+  const graph = composeDirectory(context,first.ledger.directory)
+  const reuse = { ...manual(), channel: 'physical' as const, merchantId: 'local_merchant_1', placeId: 'local_place_1' }
+  expect(saveReviewedPurchase(first.ledger,'new',input,graph,context.purchases).result.code).toBe('consumed')
+  expect(saveReviewedPurchase(first.ledger,'duplicate',reuse,graph,context.purchases).result.code).toBe('duplicate')
+  const second = saveReviewedPurchase(first.ledger,'second',reuse,graph,context.purchases,true).ledger
+  const undone = undoSessionPurchase(second)
+  expect(undone.directory.places).toHaveLength(1);expect(undone.nextSequence).toBe(3)
+  const removed = deleteLocalPurchase(undone,undone.records[0].purchase.id)
+  expect(removed.directory).toEqual({merchants:[],places:[]});expect(removed.nextSequence).toBe(3)
+  expect(deleteLocalPurchase(second,context.purchases[0].id)).toBe(second)
+  const branch = saveReviewedPurchase(first.ledger,'branch',{ ...reuse, directoryIntent: {place:{...intent.place,branch:'Fictional south',longitude:'34.8'}} },graph,context.purchases)
+  expect(branch.result.code).toBe('saved');expect(branch.ledger.directory.merchants).toHaveLength(1);expect(branch.ledger.directory.places).toHaveLength(2)
+})
+it('keeps online-first local merchants usable later at an explicitly confirmed branch', async () => {
+  const { composeDirectory } = await import('../local-purchases/local-directory')
+  const first=saveReviewedPurchase(emptySessionLedger(),'online',{...manual(),merchantId:'',directoryIntent:{merchant:{name:'Fictional online first',category:'retail',separate:false}}},context,context.purchases)
+  expect(first.result.code).toBe('saved');expect(first.ledger.directory.places).toEqual([])
+  const graph=composeDirectory(context,first.ledger.directory)
+  const second=saveReviewedPurchase(first.ledger,'branch',{...manual(),merchantId:'local_merchant_1',channel:'physical',directoryIntent:{place:{branch:'Fictional branch',city:'Fictional city',country:'Fictional country',address:'',longitude:'0',latitude:'0',confirmed:true,separate:false}}},graph,context.purchases)
+  expect(second.result.code).toBe('saved')
+})

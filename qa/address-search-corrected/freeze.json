@@ -1,0 +1,2086 @@
+{
+  "version": 1,
+  "run": "geoapify-corrected-address-validation-20261011-one",
+  "head": "b7ce7f8615c2162eec4817729aac31595c90afda",
+  "build": "artifacts/geoapify-corrected-20261011/app",
+  "maximumRequests": 1,
+  "maximumCredits": 1,
+  "files": [
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/BUILD_ID",
+      "sha256": "d8af87eaa2127b3fb7805d35a7de72b98decc124934edccf944a15fd4f9503e3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/app-path-routes-manifest.json",
+      "sha256": "c6d88ec8bcc44835e0d7fe4a22b8f091bb15facea751f9a297b28275b4efeb30"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/build-manifest.json",
+      "sha256": "4a17ee35eed7332c612a834002d9c528766fb3aa69e17756103f0a53d62bb227"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/export-marker.json",
+      "sha256": "82356527db218adb95bd1eca0ede6f3391165b38b22d667d064e62e6b539d974"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/fallback-build-manifest.json",
+      "sha256": "1423813fdc381d109d193881ba2fedc07fa7a2dc3152579d69ce242764881b14"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/images-manifest.json",
+      "sha256": "89153990319006e8e53593d4cee9a741db8a01b9dd8897513bd4e0a4685d2f42"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/next-minimal-server.js.nft.json",
+      "sha256": "01b0f04a9d733e019f94bee01e55d49bf4347f2016fa446c0a5fe3c3c4d10828"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/next-server.js.nft.json",
+      "sha256": "8353a9087adbd41ed1ce6fdb858e53300eb7fe29c1a9fede2fdf23abded63ae4"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/package.json",
+      "sha256": "091a04fa67c7907b98e106fcff8b964e13129754fce72d24f3025b97c4887fa3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/prerender-manifest.json",
+      "sha256": "d8ba77222411e41b0dd4e4752e12989cecd5638c1436735bee05357ae7156429"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/required-server-files.js",
+      "sha256": "37e6adcf67707fb5e13ac651061f7b16c756c1d83d78a9b7540ae916686de9fb"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/required-server-files.json",
+      "sha256": "ccb1770aa0ce3dd130ba352b14b4e1eeb270930764f75339c515f4038c82159d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/routes-manifest.json",
+      "sha256": "cb76156816f01619385b15c5717b612325e1dd9ac34bf0da0b006f046dad2939"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error/page/app-paths-manifest.json",
+      "sha256": "67d788223a06e3479a7e8372879e18c1595dae22d20db1434676dfa06f2b154c"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error/page/build-manifest.json",
+      "sha256": "ef1be15fe492bee393a060c2d9f4f041283d2c8c5439e70f0df0d602b901e592"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error/page/next-font-manifest.json",
+      "sha256": "dc1719fb3b97327924884a5839c5cfa68896e28803f0cd5e969b7c20f519d1e5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error/page/react-loadable-manifest.json",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error/page/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error/page.js",
+      "sha256": "b4345ff2cc995929c0c01cb0ae325903289419b78f3650934779c1dfe91a6b9d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error/page.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error/page.js.nft.json",
+      "sha256": "9a769acc0bd25c7320aa5e9eb79e3979a17b34ef27bcc9106f4128793886134e"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error/page_client-reference-manifest.js",
+      "sha256": "9b6bab975eccb23798621b7fa5054458e455fc7ea9a92a3faeb349a781f35978"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error.html",
+      "sha256": "e2339bee3098e7132ac578f5550800e69dce7500634221068409c643c5f55694"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error.meta",
+      "sha256": "1b79091aa6e8d24c81528b77545f91fadaa80b601741ce2646f776bc89327c76"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error.rsc",
+      "sha256": "a87c483c4b49ee4a19e35922af1e2cce083d1202bde6dbfa0a906257a11d0c06"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error.segments/__PAGE__.segment.rsc",
+      "sha256": "991a7788d776bd351104b01e21c9a2bc8f547480685a23a959076f4e042888d7"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error.segments/_full.segment.rsc",
+      "sha256": "a87c483c4b49ee4a19e35922af1e2cce083d1202bde6dbfa0a906257a11d0c06"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_global-error.segments/_tree.segment.rsc",
+      "sha256": "6a07585d6d4669339e5e4413e3bd61e4f1c9aac48f6c9ef601f770528d523619"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found/page/app-paths-manifest.json",
+      "sha256": "e96e120dd8e4ae7f5c12a0e9695e528fd90b9b885af3e592cd2695ba972bebe1"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found/page/build-manifest.json",
+      "sha256": "ef1be15fe492bee393a060c2d9f4f041283d2c8c5439e70f0df0d602b901e592"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found/page/next-font-manifest.json",
+      "sha256": "dc1719fb3b97327924884a5839c5cfa68896e28803f0cd5e969b7c20f519d1e5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found/page/react-loadable-manifest.json",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found/page/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found/page.js",
+      "sha256": "3aa986ad659b392f45163338ab62c7b0494ca5921f6bdb0d685642ed5b6b45a4"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found/page.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found/page.js.nft.json",
+      "sha256": "803ba3a91c3c8361954add158b0f8169c6d8776cdc87b3cc81351677bacfd947"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found/page_client-reference-manifest.js",
+      "sha256": "71adf65ed49aa89e44dce907377a2655e478737f020e10d9e00f253685ce9f81"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found.html",
+      "sha256": "943be1654f2239ccd8e1689be4c43f98857441b88ef53ca380946228fa46cc02"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found.meta",
+      "sha256": "946026aa7bf14dbf3fe552a4e8ac164cec004f4fa9bebabd2551bbe35290ec60"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found.rsc",
+      "sha256": "856d4d20d876c98793b6eeb2c05be187c756e610a78fa335400b0dd22628c512"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found.segments/_full.segment.rsc",
+      "sha256": "856d4d20d876c98793b6eeb2c05be187c756e610a78fa335400b0dd22628c512"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found.segments/_not-found/__PAGE__.segment.rsc",
+      "sha256": "1b332290f14d2408d365900152579c295cd560b1d12d4c83c5cb2e28abe696af"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/_not-found.segments/_tree.segment.rsc",
+      "sha256": "83479f105b21304e4f9ec3aed248c82a2ddb095f64b41c0e744cf9540d21e2a6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/address-search/route/app-paths-manifest.json",
+      "sha256": "491a2b92e3d00749b3955323e7e538027f2705e17b5b5d3aa24505c340b978d2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/address-search/route/build-manifest.json",
+      "sha256": "e4bd095c1cd1f90f87a2e8a0687076d901758d47de688103471925b023ce71f7"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/address-search/route/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/address-search/route.js",
+      "sha256": "fb61ee7a0e1594e62e733ce4643667714d16a5bc30aae9ee3721961a73928a4b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/address-search/route.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/address-search/route.js.nft.json",
+      "sha256": "3d13f605aa8685126974c929f6acfb6af3a25b24a0fb2cb152424d1ec51145b4"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/address-search/route_client-reference-manifest.js",
+      "sha256": "61f0a43b3a0e62391188c157f7822e81351e7791e28329a62c596004a9c44695"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-direct/route/app-paths-manifest.json",
+      "sha256": "da0792fd2b5da993fcc64d4873754141259573f009fe56b319a092061bc8ac28"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-direct/route/build-manifest.json",
+      "sha256": "e4bd095c1cd1f90f87a2e8a0687076d901758d47de688103471925b023ce71f7"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-direct/route/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-direct/route.js",
+      "sha256": "7231e29fd9f4027269331ca258c8c2fbecc85520225e2ae9889374e8ee7bbcc0"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-direct/route.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-direct/route.js.nft.json",
+      "sha256": "65ef18118fc10baa22197f49ec8af3672749c20f0180bae08dcf1fc465dba341"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-direct/route_client-reference-manifest.js",
+      "sha256": "51daece5bb5393006b4be255aa5f8b354460dcae8f60e43fcfa960ad70004a38"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-ocr/route/app-paths-manifest.json",
+      "sha256": "52cfdd4f11a15f6326e2b24670f353c62cee958eaf55f0d26f80b0c13d827beb"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-ocr/route/build-manifest.json",
+      "sha256": "e4bd095c1cd1f90f87a2e8a0687076d901758d47de688103471925b023ce71f7"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-ocr/route/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-ocr/route.js",
+      "sha256": "2b9e3a66398be7d6c981e3e8eae0bfb0fead7d63afa19e0062ee50c47de66db7"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-ocr/route.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-ocr/route.js.nft.json",
+      "sha256": "fe099c9f785281d13268b0470b0455e5c10dc97a39da49d3d064259464ad8bca"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-ocr/route_client-reference-manifest.js",
+      "sha256": "fe5a6a48ede0a15c6677e7a852b18fe521f99419fe23535f5b01448c38b9d3d9"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-structured/route/app-paths-manifest.json",
+      "sha256": "02d236ee2613b2a3ab619f809280bea5c60a7611d7da6e142533cf224c7ea8d3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-structured/route/build-manifest.json",
+      "sha256": "e4bd095c1cd1f90f87a2e8a0687076d901758d47de688103471925b023ce71f7"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-structured/route/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-structured/route.js",
+      "sha256": "f6b7142161b05addafb5c8cc98cbafbbefde8d7c9fecb49ea8d92bb503df4af8"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-structured/route.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-structured/route.js.nft.json",
+      "sha256": "26b23fb14f65eb231b89d5469d9365ef9d9cdcc6a12c0f8ac7d019f2e8e7fd27"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/api/receipt-structured/route_client-reference-manifest.js",
+      "sha256": "4b8cc4378254181db47d15d9a90198aed32b0e880db774e6f4ef0733fd72a140"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/index.html",
+      "sha256": "808a341d4b9c6b6185a7676d7ebb0a2b1eed099217c4601c2500bae01c770e66"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/index.meta",
+      "sha256": "3be21fbb98c3dc277274ab620d7802d7035a29b1a58e80b4bb78f14cb002b01a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/index.rsc",
+      "sha256": "7d9d2cffe584377fea34ab2eac6a951d1964bd0532282c318072c185100b862b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/index.segments/__PAGE__.segment.rsc",
+      "sha256": "c0588bdc3b36ba8907932ee354115cabf64e1842c4905d1e7d7d6738f8817756"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/index.segments/_full.segment.rsc",
+      "sha256": "7d9d2cffe584377fea34ab2eac6a951d1964bd0532282c318072c185100b862b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/index.segments/_tree.segment.rsc",
+      "sha256": "ebf81e3863e02165c2d762bbb42fd437cafb02b56469e35fe6dd0250f61df28f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/page/app-paths-manifest.json",
+      "sha256": "e0be75c853555b01e1a9823abf81903c8d8934e5c7ca49e887afd6d00905d77a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/page/build-manifest.json",
+      "sha256": "ef1be15fe492bee393a060c2d9f4f041283d2c8c5439e70f0df0d602b901e592"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/page/next-font-manifest.json",
+      "sha256": "dc1719fb3b97327924884a5839c5cfa68896e28803f0cd5e969b7c20f519d1e5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/page/react-loadable-manifest.json",
+      "sha256": "2817aaf72f4930c6187cf85bc0ab4509bba5ad7182e14b38f2b80ee4acdf202b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/page/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/page.js",
+      "sha256": "4616131430ea79911b332690919401c51fd2e2139f88042765c85297d5dd98ab"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/page.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/page.js.nft.json",
+      "sha256": "e1ef17193599d7f2fcfcd02d40a57076a9e789e44d5c0b3644b701a7298da2e3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app/page_client-reference-manifest.js",
+      "sha256": "5cdf26a945c2a2e2a78dbddec6c1824f633d00e1f5f7f4cd14278572ee462746"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/app-paths-manifest.json",
+      "sha256": "d2b97adb57792706ff2397d22bed8e6ce1d0aeba2073052eb4dbc8e66373c23b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/0vgv_app__next-internal_server_app_api_address-search_route_actions_16p_h-4.js",
+      "sha256": "dbb4a1429e974d4a6de727aa262959655a4d4118a1728ea5cd3443233e10cb2d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/0vgv_app__next-internal_server_app_api_address-search_route_actions_16p_h-4.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/0vgv_app__next-internal_server_app_api_receipt-direct_route_actions_0rmrnaq.js",
+      "sha256": "6808dc36821fe1edf3cc1e7ac8bfd436588e96bb475e7dbc6730a7f3d727806a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/0vgv_app__next-internal_server_app_api_receipt-direct_route_actions_0rmrnaq.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/0vgv_app__next-internal_server_app_api_receipt-ocr_route_actions_1n3w8nx.js",
+      "sha256": "450a02d60b7bc0ec498534003fcf7ff8d0b7bb48d5c0fed4aee223c610c08480"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/0vgv_app__next-internal_server_app_api_receipt-ocr_route_actions_1n3w8nx.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/0vgv_app__next-internal_server_app_api_receipt-structured_route_actions_0otyars.js",
+      "sha256": "21382452403699eba89a7016527e1e81e9b35d941d20a320c73e5273a0ea8df4"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/0vgv_app__next-internal_server_app_api_receipt-structured_route_actions_0otyars.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[externals]__20ducz2._.js",
+      "sha256": "05a10c034c3adcd3341d6e8077d2f520f8db3b8b4d666a2237c0d6d5e6ce9137"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[externals]__20ducz2._.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__032vnnt._.js",
+      "sha256": "4b38420679990cf6a024fad6e704a2992fcda99ef4640665150125a9c8b098a6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__032vnnt._.js.map",
+      "sha256": "e75819c8d2b6d0c28ebbde2a189c6ee1547d78eaa1e65b04ec97040f95e18854"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__05t7e7o._.js",
+      "sha256": "68dc9bbf505ad10db4b9f072c93b6d24548c36784899240a656ba17c51dabfbc"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__05t7e7o._.js.map",
+      "sha256": "02b6bc9412af365f871ff19ea9741c8d603c876fa871a7076c1184559e727199"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__0_0kwgs._.js",
+      "sha256": "9118fc02b1da13256fb5142227df9a4019114475ce7dec89545932d1114e7ba3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__0_0kwgs._.js.map",
+      "sha256": "02b6bc9412af365f871ff19ea9741c8d603c876fa871a7076c1184559e727199"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__0gxncrg._.js",
+      "sha256": "4d16e1e8e5b71f264799bf66e93f74f7ce438b5994131ea48b597545b8b22c66"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__0gxncrg._.js.map",
+      "sha256": "e75819c8d2b6d0c28ebbde2a189c6ee1547d78eaa1e65b04ec97040f95e18854"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__0y7kg67._.js",
+      "sha256": "5d0fc6134a3aaa80d616d838167082f6f5b0a6ab213ea6395010640fc49a1915"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__0y7kg67._.js.map",
+      "sha256": "02b6bc9412af365f871ff19ea9741c8d603c876fa871a7076c1184559e727199"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__1-kd1tt._.js",
+      "sha256": "2d01a3aa5b9fdd57fd506cf849fe1b2236f72b60d28a481dacf75d3087b76c5f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__1-kd1tt._.js.map",
+      "sha256": "2728d2f0331ab137fa2dc4f0586bd82889b23b4c76f29f29b35674f6795e343a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__1m5c6tj._.js",
+      "sha256": "62720d6ca6cfc670ceea9f6a4f62ad1cf588db493d844ad1748018817b25581a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[root-of-the-server]__1m5c6tj._.js.map",
+      "sha256": "02b6bc9412af365f871ff19ea9741c8d603c876fa871a7076c1184559e727199"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[turbopack]_runtime.js",
+      "sha256": "100556d4f2e89d3207ee9f3af0082ce2c8e7c39f00b64103ec196eb92dc62d84"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/[turbopack]_runtime.js.map",
+      "sha256": "c2a20475e7a2e6065de472a0255a5a49d996efa4d11d771de84428b6be80da35"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/_0d0820x._.js",
+      "sha256": "06caa4c8d74c13f9c6c2e8c9fcece87db60a88d23a01f6c440928986515ceb42"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/_0d0820x._.js.map",
+      "sha256": "7c7d4a8e681a0a488e5bfacdd254630b815fd954fff9a0111ff6f9f58a10c8b4"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/_0jhuzti._.js",
+      "sha256": "947c5cabf64d013fe7233938c07ded02f1a7716228fb6868c884910d9578a0a3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/_0jhuzti._.js.map",
+      "sha256": "f4936e1587a6684c44dd282a753dff6be3b35a22e50d6581a94e0b7b0fb4d2db"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/_0vuf86r._.js",
+      "sha256": "fde9b11256179f2da03e5fce1a57fcfa1f5c01ceadfe13c86879904b5e41607c"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/_0vuf86r._.js.map",
+      "sha256": "5ca88f34096f60ec37b29a708ced1ec06188107d0fc0220aacf586b9439e6316"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/artifacts_geoapify-corrected-20261011_app_src_0_8d0zu._.js",
+      "sha256": "99f0231d8447b941e6ce3cabf802a112eaf97b8b4e0254bb5236f6db688a7440"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/artifacts_geoapify-corrected-20261011_app_src_0_8d0zu._.js.map",
+      "sha256": "2cef1190efca59c0d4fb70a8426587f0d6241f117bbc6fb0dd3ebfdafa4d3c7b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/artifacts_geoapify-corrected-20261011_app_src_0ncrc9y._.js",
+      "sha256": "eb410484d303468f271758f32811e4dcd75085ecaf055d6b74851966be3c6f53"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/artifacts_geoapify-corrected-20261011_app_src_0ncrc9y._.js.map",
+      "sha256": "2cef1190efca59c0d4fb70a8426587f0d6241f117bbc6fb0dd3ebfdafa4d3c7b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/0vgv_app__next-internal_server_app__global-error_page_actions_1sdvyby.js",
+      "sha256": "8a06c878cfc7caa3bebe19cc07c7a2aff6da0051291fa3463b6a938262a38544"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/0vgv_app__next-internal_server_app__global-error_page_actions_1sdvyby.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/0vgv_app__next-internal_server_app__not-found_page_actions_1bi4fmy.js",
+      "sha256": "5895f8e6f3d58971742589705a1348664910fc1448a70a5d9c964b9573408392"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/0vgv_app__next-internal_server_app__not-found_page_actions_1bi4fmy.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/1xr3_geoapify-corrected-20261011_app__next-internal_server_app_page_actions_01ih1d6.js",
+      "sha256": "31784d0e4d7b93356dc4128e54464b5b69cdb2f5479ee0b7ca9729d0782aa2f2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/1xr3_geoapify-corrected-20261011_app__next-internal_server_app_page_actions_01ih1d6.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__05brojp._.js",
+      "sha256": "f65963b7c663d773cbcb49f30fb2a8c17bb4792ecb4cb7256d2cf4da97270038"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__05brojp._.js.map",
+      "sha256": "f434e48a2e20601e4f9638dfa4a1994438e67f3ea3f1f814a943efecf4a1f619"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__0ilwc7r._.js",
+      "sha256": "54d9e6fdc91fd7ade5e84fee82d6f8334327984ab7b64f2e63f4c905b48a3ea3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__0ilwc7r._.js.map",
+      "sha256": "9322a7949398365d8f392a6ead44547caecf5f897d38183d35294d6c4ce99fa3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__0j26pto._.js",
+      "sha256": "d65dd18b11c7e7340c0dcf1b98df5de7b9c6a6358f1903a8123ad8c3c0fdeda7"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__0j26pto._.js.map",
+      "sha256": "8d471b529e4bc4a23c78ec43f369e237f6ef6e6dd9c413e2dd5c6867c924383f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__0maea5-._.js",
+      "sha256": "8a6701ccc6065a66fa23d2469e30844489f2e201b60c42144995a0d055811a4a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__0maea5-._.js.map",
+      "sha256": "50f14662378e3119d18f7fd5a5475a5b4e01c0ffd1930fa4fe170908fd70c41c"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__11h2l0a._.js",
+      "sha256": "414e31b1ad8c85a26edd9066ba0d81f25b1ed6c39da1e427373a5c4eee85dea5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__11h2l0a._.js.map",
+      "sha256": "9c61cca36422d4c18f0825cac3735cc4e8e535e1bc8bea658791256fb613fdda"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__1i-gtwu._.js",
+      "sha256": "de172a5432b5eea2ffa016ba9ee5c450074c6f5cba92a4b1d2d18a23595789d1"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__1i-gtwu._.js.map",
+      "sha256": "783adff1d3179bb996a60d2bfb9b11fe463044796641d6df68b35bfef185e3e1"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__1io3bae._.js",
+      "sha256": "fe9f554a9aa6511759b8eb012c826a4fbcd5ea3f215b203d5dfc4d17ab28e397"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[root-of-the-server]__1io3bae._.js.map",
+      "sha256": "ce1bdd2da4ec33bda0f3bbf92f2071117adeeb93bfbfb2d4b65cd81bb9a7471f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[turbopack]_runtime.js",
+      "sha256": "9ecddf2669a725fd2eaef1c3b969dafc1cb8110bad4872a6aff8fec5d5cb52aa"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/[turbopack]_runtime.js.map",
+      "sha256": "c2a20475e7a2e6065de472a0255a5a49d996efa4d11d771de84428b6be80da35"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/_0haet87._.js",
+      "sha256": "dff738e05dd7a645b641268821d90e85364a0e4e299aef03849024ed59b8d275"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/_0haet87._.js.map",
+      "sha256": "1b58f6ed89621e5bc93ce0a697f2aa40110dae4633aa12e3c66363c1b1c83b2c"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/artifacts_geoapify-corrected-20261011_app_src_1pna6dj._.js",
+      "sha256": "9a005ac71ba4613931e7f162876248afe5094623fcb6b749beeb5170c7fd7190"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/artifacts_geoapify-corrected-20261011_app_src_1pna6dj._.js.map",
+      "sha256": "5db7bd9847bc0b36053016ee9e3db0215714c8e5ee200aca8e61561209bb207d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/artifacts_geoapify-corrected-20261011_app_src_app_layout_tsx_1px9s0u._.js",
+      "sha256": "0b6e17fce2a5d75383a979991c0bc4ef5416b88d4f06ca73ef82cc9de6d9e047"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/artifacts_geoapify-corrected-20261011_app_src_app_layout_tsx_1px9s0u._.js.map",
+      "sha256": "4ca4f6c1eda077e0236d2a2caaf697edb82f8ffac89b4e987ae89a7110ddcc74"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/artifacts_geoapify-corrected-20261011_app_src_app_not-found_tsx_0oacg70._.js",
+      "sha256": "9237db05fef4ac43efa561d5b74ffbd61bf201ee56f764f68a2b8faa95ddc242"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/artifacts_geoapify-corrected-20261011_app_src_app_not-found_tsx_0oacg70._.js.map",
+      "sha256": "9732996ed282ba4abe7d9f6894bb6336e17cd644d220e629f47df259088b0d90"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_01xbj_9._.js",
+      "sha256": "38e504b236c8c1cd0f80f1064b850817d62321d9a4c946d68cbd2f94b28fc175"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_01xbj_9._.js.map",
+      "sha256": "6a4633a153408d3772deaae9584d5a211babe7465dc5dbf087d7e9c7db48a47a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_1xjqib-._.js",
+      "sha256": "eb160fce04ff81a1568d0872600e727bc06be3d833862cf5fe9781959c0754a5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_1xjqib-._.js.map",
+      "sha256": "7180ea1e93aaadabe24379ca73915db286b3e2f0e43c03445c95254442713d8e"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_next_dist_10oqhbx._.js",
+      "sha256": "a3abcc7ab34a3e5acb79749a5be5933b3c8de0ccae1192c7e5094146075d18d6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_next_dist_10oqhbx._.js.map",
+      "sha256": "c10da9a14202330cd0f96b753e66282ff6469c2e1572d68e47d9c164df5bfacc"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_next_dist_1n3w9lb._.js",
+      "sha256": "f3ab9d04cebe3b56312e999eb446b3647b9e4a918961e6f6d9cf626bdffe9e3e"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_next_dist_1n3w9lb._.js.map",
+      "sha256": "d6b6ea296e964bbccdd5e0dd92eededd3519d6c3e7f76a48cfa5894ec1b7fd10"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_0p8s4lh._.js",
+      "sha256": "f0f7da6ff7ff11d5b8186d703607612923b70c65535506b8827e681b28e3267a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_0p8s4lh._.js.map",
+      "sha256": "e347942c53742f8e0cbccdddbf42a127223aadbe2762b2d0727fac652f70a6ca"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-error_0q-w892.js",
+      "sha256": "e9ce90963a6e6323cdd2ead93413871384be9114c77b4b753fcc64b2a648fafe"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-error_0q-w892.js.map",
+      "sha256": "b4910144230c8c8fa48650cc3b29208648a7426bb461bc5ce07b01c1fb9d0562"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_builtin_unauthorized_0l_sp0x.js",
+      "sha256": "31c82886e206a4ddfb028d86b19b036491c30eca465089fc6284754717f29f3a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_builtin_unauthorized_0l_sp0x.js.map",
+      "sha256": "f34158bb7e0b7bb60081f93bd24e3129ae6a780bb26280fa4e38fe9ac515a6c6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/functions-config-manifest.json",
+      "sha256": "762ff1f2398965ec0ef7326fca8ddc025d2b78f951dad10693d425630b5f23de"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/interception-route-rewrite-manifest.js",
+      "sha256": "fc5133e40acf09e6517b073ddd7b5c0c218d09938848902210f2cc13f08e1c81"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/middleware-build-manifest.js",
+      "sha256": "cfad2214eff2bf805fbaf64d0ff4ba5bda32d6f4321ccd443a1e1d3f3e2185ef"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/middleware-manifest.json",
+      "sha256": "3e662212864bc4c124cfc53fa5d428813c619852b447c9fd2d9926cd39d7a4a6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/next-font-manifest.js",
+      "sha256": "36feb6ff9eda2c958da55bdf3e7280596902cbaf7050cfaca0d5c68ee25d2be2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/next-font-manifest.json",
+      "sha256": "65f953122fe2fb5910d84495421ee32397b0be6321daa59118bd85d3cbc51d4d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/pages/404.html",
+      "sha256": "943be1654f2239ccd8e1689be4c43f98857441b88ef53ca380946228fa46cc02"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/pages/500.html",
+      "sha256": "e2339bee3098e7132ac578f5550800e69dce7500634221068409c643c5f55694"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/pages-manifest.json",
+      "sha256": "c354059caa217e72bdeb145e351b2038990972872c52df215cb1e4105c35097b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/prefetch-hints.json",
+      "sha256": "bc01cc6d9b026fa2426d22ef586168edad9c9c0a7a481b4cdae1c4097cadecc4"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/server-reference-manifest.js",
+      "sha256": "e274ffffea1ff129b59908ee980647999a95c635fa77e3cbd9178ecfeb91442a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/server/server-reference-manifest.json",
+      "sha256": "8d73a7044eb544415f700a61fe2e0cd6af5dd646b7e9cde4737cd4bda9955eaa"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/01alhmy7bhfq8.css",
+      "sha256": "6f30b61308a83e18ce09bdff39cae932346d26df502e1fb54bbef2041debeac7"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/09lgyggnhjlha.js",
+      "sha256": "b218706af8a3ba93b0ed0e54da588c0357e5e8430d8fa563ec5a1f232ca42f1e"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/0cz1d0mv5g_q7.js",
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/0er7zk919zusg.js",
+      "sha256": "956f4edbe328e390827993c9b36da57a482106d537f7b4e8b9d3790dac01aba7"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/0hmshp0lv835k.js",
+      "sha256": "9fb24252601fcd6f98213d8f92959381c321f4f38c83aea7a2e154d9e63b99d8"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/0o5csjchqwmta.js",
+      "sha256": "02b8d164e6bd457c5f67cc847658e4c4b691f62d5ec8898abc3e4e2d96a32913"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/1-8m44fauj6k8.js",
+      "sha256": "589513b5e6e98ca7742b1b62d3ee216f908cdd383056232b62ee74f7e5969453"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/15ytmf0r207z-.js",
+      "sha256": "fb68d734f86e86a1fa715b220208c100e2b092a21e9e7920c0db92af71ca9208"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/1btu5meg-ueqp.js",
+      "sha256": "2ef7b46b02eee58867a878dcfd13eb35725c349b28158ff52ed1c940924805fb"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/1x7psm479-ylr.css",
+      "sha256": "588185f90149ddc541de1765b1865d0a27ada1e5027cd65fd2c6dfd7818e995a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/26vt7h0uyx3z7.js",
+      "sha256": "48cd7a1a64fe780eecc46db8587ecbbfab7e0e2422a5f3cf9b5c75f4a7f229fb"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/2z3sh82dl8glu.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/32bb216gc5w1z.css",
+      "sha256": "75c0390a7de166d52c0f6685cc39da9b8956f97d00e321318d01d4a7bc53fcd1"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/333a-pxpx3woz.css",
+      "sha256": "f81db6ac155a1da5cebec49d5c8b1f9c0b3c65df0cc0ab638704452f9da34900"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/3_v0pgdcdq71i.css",
+      "sha256": "9f8c9ccf153ec8af9001278ca2982777eb7e6ed7b8fa99028cfa19f0086d67f4"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/3byuobrkyz9bj.js",
+      "sha256": "2998459ef0c506d9417d5337fd7c562b13913d9eb939016648e0352c0b037eb2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/3fntmmi971322.js",
+      "sha256": "34ed6abf4c6d0d1bb3dc56d3f133d2a5dbc3a3c89c791deab314e27143ac14ce"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/4362rrmdo_xf3.js",
+      "sha256": "e4314cada3546fc7c7d5a4d2e2888cf26bde5e382f8ae41c741d641b9cbf8a2a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/turbopack-0vnl_b8bnrdis.js",
+      "sha256": "c1d694c261cadec213a5d86766230a19c8d6f493617983ac43f1eb2e0a1cd225"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/turbopack-2hxi-gn73zqd4.js",
+      "sha256": "2fe3a606d0dc29c4404a35887675c8b195716cd9226dffbd33aa771d9e57104c"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/chunks/turbopack-worker-2ru9m5gbh1na6.js",
+      "sha256": "861da5809b4f43b053fab88fe560f16efe31827655a06502ada9274a742852de"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/eeqzrNGYFlct2mvwLV9no/_buildManifest.js",
+      "sha256": "9476e0afd3f9da68a64e6ec58631191fd3eaca62c9f5a377e7517fe9a89e59ea"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/eeqzrNGYFlct2mvwLV9no/_clientMiddlewareManifest.js",
+      "sha256": "5483e3295dc35dfe29ea932efc85341c916f10ff78ff5b0e965e003710893a4a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/eeqzrNGYFlct2mvwLV9no/_ssgManifest.js",
+      "sha256": "678f6ce2cb80b1fe72fc67e7412be6e2ab6ada083111b64f7c40d35e3cba5e00"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/media/barcode.worker.0u7zb800re1az.ts",
+      "sha256": "ac5dbb59f29f5e3dafa5513f4f9fe3eeaca8dd46a2a5f7a6d5a842f28768d705"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/media/maplibre-gl-dev.20x3-5awu0rtw.mjs",
+      "sha256": "461f88a8ebd4231f53321a9001c40834353d08428e23ad79f331b5945521a699"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/media/maplibre-gl-shared-dev.3cujs3u1p0bt2.mjs",
+      "sha256": "cb3b6804354500df908037d5629b829635ceaea3a0ea315a9026d22d5d23083d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/media/maplibre-gl-shared.3n592vt0na6rz.mjs",
+      "sha256": "34c2cb0330cec92e81c4fa7344e7008451442bbb9cca1da3465db4041a934073"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/media/maplibre-gl-worker-dev.1dyjzeito63ts.mjs",
+      "sha256": "8d69f7cfce2fe10fbd146b9308aa4a0cb1eab4c921475ce6fbd1481f2a9721e9"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/media/maplibre-gl-worker.1hfb6nl_qj5oz.mjs",
+      "sha256": "b081c9b3d0691d9d85552b5624f2601f69f24ed37573959d279d322e98e4ee2f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/media/maplibre-gl.1lgabj6522g9e.css",
+      "sha256": "8e2dbbab312dc57656fbb76e9fa5308c75c9d7c7ba5808a7d55bcdb64cc813fa"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/static/media/maplibre-gl.3vqtpaudl-dky.mjs",
+      "sha256": "d84cb65fa75f07a972616cb4ee1902829ca053beae28f7be9b0889131c497afd"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/turbopack",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/types/cache-life.d.ts",
+      "sha256": "4f984436b10cfb43ccf7fc3114dcb851cbefa4d58b7d8ae741aaae0f6e330129"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/types/root-params.d.ts",
+      "sha256": "f3387dd7800eec3c34273f7a8efad13e864598c7e8f788d321e407390989bb59"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/types/routes.d.ts",
+      "sha256": "5d9e56b8e988f95a9a0c75f35e082034fe3af01ea85d5ed18cf468cd09358dfd"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/.next/types/validator.ts",
+      "sha256": "ae49c3793a87dea784615c06b03bcfce6cf56152b15885cff5b0c3e91a54a903"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/next.config.ts",
+      "sha256": "f72975f55ce88b0584453d5ac87a8434886d83f32c0578ad81696a3eaacee949"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/package-lock.json",
+      "sha256": "a8c87642d01fd03cf4388c2986fd184e8e7d49ca1987eed5b7ba9ff080ead541"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/package.json",
+      "sha256": "732c5c5fccac4767a33af660ede2d5b3ab1e5d278dc09aacf69499849ab9cb53"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/app/api/address-search/route.ts",
+      "sha256": "9821546e41274e92247e2d9a593aeb5f4ca086eb66d64df35427ae8c983cf316"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/app/api/receipt-direct/route.ts",
+      "sha256": "221d33a6c8c323b1a945718f75394fced9b4eaaa93dda9a39d699430853984b4"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/app/api/receipt-ocr/route.ts",
+      "sha256": "5f2393bda11f5a87328b761864528c330429a358e81241859fa020d6b2fabc9f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/app/api/receipt-structured/route.ts",
+      "sha256": "a997632f9860544ad9b110da9052650e89341fb1053426a1453c25e1e3f31414"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/app/globals.css",
+      "sha256": "15d61e58677425d46a6e645b2237c9ae6d0adbbaab8fb89da8907036f2f624b6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/app/layout.tsx",
+      "sha256": "8b4a9d3aba81999fd129b38394468d5d73852ea8c87d942f0cf83ae04e1a11d3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/app/not-found.tsx",
+      "sha256": "8f0ec10a0a257a7401d2d7193786127880d21521bf1ca415b03017f8cf088efc"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/app/page.tsx",
+      "sha256": "96a4b63d5403ed72bc98ed0b17feccc877bc0be5b94123edc2a1349c6ae64ff3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/data/spendscape-analytics.test.ts",
+      "sha256": "1bac88719814d4017029fb1f60241cfc93f9469ef5c0517ae520a53fab4a9969"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/data/spendscape-analytics.ts",
+      "sha256": "4b5dc4c2b641a3e43d3156ecc58387ab22b621433c94adff5632d741fa1b9c8e"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/data/spendscape-boundary.test.ts",
+      "sha256": "d18121478c6529eee612797cfb841a00a4f96c64d0524ddb824d4727e293e833"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/data/spendscape-data.test.ts",
+      "sha256": "96d315a36aa34ff05ac4481aca56aae077cbb33ff78637e8decc58472f8dd669"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/data/spendscape-fixtures.ts",
+      "sha256": "e0157ed1202e0a705f1573e298aeddef1612ecd2f5105fc18bc5dbd2999762e7"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/data/spendscape-globe.test.ts",
+      "sha256": "f2642f084f2cbb9fb7872aed04b74e7f3d65fcac9f9ee283546baab2a9905b1b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/data/spendscape-globe.ts",
+      "sha256": "562530ee59fe34a3c451559967a47428428303949a1a9cef1c2d6237f87d8bef"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/data/spendscape-repository.test.ts",
+      "sha256": "14b4d8005acf95ac01a270709fb62ef679d913a76c3635b8ae2fe12840f4a18a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/data/spendscape-repository.ts",
+      "sha256": "1365df1ec4dabd71129479b8a990bfa99d4040d4a203e0cb13f024e4ae15352f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/ask/AskSpendscapeExperience.module.css",
+      "sha256": "19a58069ad984daf452144c3a921e562e72c816ca417ddc6c57e30537c4220e1"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/ask/AskSpendscapeExperience.tsx",
+      "sha256": "368ecb80ae9802d6ef2c8bffc9c75ffb1a88084e173882f57fd32af32ac48bf6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/ask/ask-spendscape-domain.test.ts",
+      "sha256": "795b1f44f1e7404a8b89647232a1857d533df0221da4744d4f3d21222e76c641"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/ask/ask-spendscape-domain.ts",
+      "sha256": "be16a4c668de307bea1cf2cc9e058f83f8094c059567308754e219f51fbac636"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/CaptureBarcode.tsx",
+      "sha256": "0a647671fff473f80feca6d6bbd5bc2f318a675f0af30ad807ce2d5afc2d6d8b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/CaptureCamera.tsx",
+      "sha256": "f1e504df804411269438630f65232a730043da5e42a1d7f06f8713a9c4a681bb"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/CaptureExperience.module.css",
+      "sha256": "a75195dee4052c6ed8acd12f3df67cfc8125b73be1daaddd09f40bb2c859504b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/CaptureExperience.tsx",
+      "sha256": "c6d891de6513e43f7dbefc182aa183ff108748dbfa55e3057cdc0aae8efae52e"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/MerchantPlaceReview.tsx",
+      "sha256": "4ea832fec436e57fe47fd21f69815f396f95b0942d9604908c2dccade9978845"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/PurchaseReview.tsx",
+      "sha256": "6770de7007a785843539c5a31db3e5e7166ca038235181e2975acc4979862644"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/ReceiptPayableSummary.tsx",
+      "sha256": "839bae530ae2baa99b4e97d5faed6c0ca902d50bba8999a78f9be1057c36dcaa"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/ReceiptReviewDetails.tsx",
+      "sha256": "988c9ffae24e9070072f1bde01e2d7799bd4bd2e3667fec4c78baa5e61c0e3c9"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/barcode-demo-catalog.ts",
+      "sha256": "4ac296582b136e417a29e7c4c04bfea5a59f93b7026d337b583291d64a17d7d9"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/barcode-domain.test.ts",
+      "sha256": "672df543d520257005440228908916505136d8ffb5abaebd875f1ab97a3d91d2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/barcode-domain.ts",
+      "sha256": "c7ebea77983139fa4a41442dbcfd528feacc41bb61ba897f75d1207d57c50fa3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/barcode-reader-result.ts",
+      "sha256": "e7b882fbe37c06a41c09770160a0958823e38e001bed07a8cb597eb24edb3f7a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/barcode-session.test.ts",
+      "sha256": "5bc5cf7ea56b95dbd9a088fd0e93c6a2b9764f43119a62187767c722990fe0aa"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/barcode-session.ts",
+      "sha256": "1798f34694af23831bd45eae4e87db49043792c3dcb9d9206d7c2ba4510d049d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/barcode.worker.ts",
+      "sha256": "ac5dbb59f29f5e3dafa5513f4f9fe3eeaca8dd46a2a5f7a6d5a842f28768d705"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/camera-session.test.ts",
+      "sha256": "a00e0bd271b3ba2ce63cd311c2f50d58ae0317e32a59007c1a43ea4a1257901d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/camera-session.ts",
+      "sha256": "7e3b953bf7c2d7b608dbfd17138aeedfac5208df1011b24aa14eef1937aa86de"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/capture-domain.test.ts",
+      "sha256": "cd8229d2afa98912cb9a15ce2328784aa5c5cdfba63da111cb58ad7e19d7fd66"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/capture-domain.ts",
+      "sha256": "3f1663e424ff3ac0f3f164a913a76cf15798edfafe8475747e5792968bd7f950"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/final-payable.test.ts",
+      "sha256": "e4ac9cf0c501984a7defbca3b79d52405eb32e5bdf9d63986522cffb0e081c81"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/receipt-editor-values.test.ts",
+      "sha256": "ca4adee366c6617bbc3f2de930d74d246e2643157175e9bd25cba956fc393a67"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/receipt-editor-values.ts",
+      "sha256": "bdd909172908f6ab2759515bd4de0db4f1273c95f95428b1fd3a9fe96ed50dbb"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/receipt-review-adapter.test.ts",
+      "sha256": "a3baddad099da4c88e956022ba9fe1faf89612f2684bcf1f7f281af4e79d98b2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/receipt-review-adapter.ts",
+      "sha256": "2697c9a953c4aa63d97462147ab44636264ab3fc089304a06289e6d75a74cfea"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/receipt-review-readiness.test.ts",
+      "sha256": "1d158a16393657709fe0a101c34c010be686e9f5e556b8e2fd5a6a8cc9c3a17c"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/receipt-review-readiness.ts",
+      "sha256": "9236c387c956fe3ac532616bd56880c3641384160ec333f02a8caa66606653b8"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/receipt-review-time.test.ts",
+      "sha256": "3bf9dc4784bbb9bedc99adf79c583ab7338e17cf6c1b88a06ebfe485a68e93e5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/receipt-review-time.ts",
+      "sha256": "4091430152fc581bcbdc815afe68af1d85e67ffc6cb300c14bb88b9a65354e65"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/session-purchase-domain.test.ts",
+      "sha256": "d080d34a4b88bc5417b3549163c384fcb83f147fb3dcc18e927d51bd8f5f4f45"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/session-purchase-domain.ts",
+      "sha256": "63ad1afb49d9d8066e11f54908c8f16686f93266d8203e4e051f0fe2d1d6a6a2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/unknown-context.test.ts",
+      "sha256": "1941b62f07887b87e2af45cf1031745f42d9411528377d97a61d1b817ef5adc3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/useCaptureBarcode.ts",
+      "sha256": "8a21295d9a8ec7ba7ca1099fdfa8fcd12ac1d2b88d201321b047c6d7c6a4521b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/capture/useCaptureCamera.ts",
+      "sha256": "7084dce0024abdeab0658294ca42d694e44b313e93f37f4dea4d94fd42730274"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/globe/SpendscapeAnalytics.module.css",
+      "sha256": "164b72c1e2937006bcd010dcb6272e680520fb3d24b1fb931626cd5144618724"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/globe/SpendscapeAnalytics.tsx",
+      "sha256": "5b9a5f21ef50825d7259ba4e7560020e755d3a440a94dfc288b247c4ce89477f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/globe/SpendscapeGlobe.module.css",
+      "sha256": "7e792aee088d633ab0ef286a1e2cd53db636a2105aa5bd6a64d9526b909a3fe6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/globe/SpendscapeGlobe.tsx",
+      "sha256": "33c3d443ff8310318950589afb8ffd2485adfbda717e51578d2e908e095bbe05"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/globe/globe-map-config.test.ts",
+      "sha256": "9d7904d5cb6353de9e3e3454d81634298455184b1b9fdb9bf9ff6816d6a0f529"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/globe/globe-map-config.ts",
+      "sha256": "ed4cf04376c2f26e6705c6754c98e2bb5f2e910bfb6cf08e20927a7cde1ef5fd"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/inbox/SmartInboxExperience.module.css",
+      "sha256": "531e877dd60f121a46eccc91434aae6a0a05b900609f753d334d12ae5e6c3762"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/inbox/SmartInboxExperience.tsx",
+      "sha256": "1486cf66629d982bbf00ed205dd1c6d0a8de6b9ed2fa034797f85b405c70b191"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/inbox/smart-inbox-domain.test.ts",
+      "sha256": "b16d3ef6da9b310f4becf09917265b43d54277327c73dfc2cc4afd5e7a72a2fc"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/inbox/smart-inbox-domain.ts",
+      "sha256": "89871a71d7a8a22219c80c5c3989c431b5571455e9440c8a3e3dc930b0a34a30"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/AddressSearch.tsx",
+      "sha256": "fca8a12b5690306737a74a2c3b0c4ffde62e333e4344402d04a1282c332ee678"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/LocalDataPanel.module.css",
+      "sha256": "a79b587645437c548fd2348a76f1af2fcacbfd4848128dbe97b32fb33a8f30c8"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/LocalDataPanel.tsx",
+      "sha256": "64f6ae51093300279bb3789296b74d5bb55a19d92849b10d5a034fbe637f3577"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/PurchaseLocationReview.module.css",
+      "sha256": "170884e4c0bde7e0f4886dc3cacb832ecdc64f5a161c9cf398b9db4f101721b3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/PurchaseLocationReview.tsx",
+      "sha256": "050b403957b495fd6cc6c9596f808bce4de2127100b885a442b680db11c5c6d6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/address-search.test.ts",
+      "sha256": "8ac93167a70d0a13e207feb9eeeb76c124071f4e4ac56bfbd651f80b31faf6ed"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/address-search.ts",
+      "sha256": "ab0ab7567515578d7806f2f99e0843758a7270775fb01090bfb740beb09d747e"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/local-directory.test.ts",
+      "sha256": "872cbf644510637975b8dcf8f53d660d873bf3494ddc33524f825a233e33e4b5"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/local-directory.ts",
+      "sha256": "0e951b8c1ccefc3faf8f220fbdb4fd5e7b80751c56a486a25b29bb6f7cd34508"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/local-purchase-store.test.ts",
+      "sha256": "31efd30a86236f04f57be55e20de1d19042ce54d05de4b507c888fbc366ff83d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/local-purchase-store.ts",
+      "sha256": "b2dc17219b7156d2c4d7f2bf5d68ac680ff5c7724865c8baacf41f918dfb8709"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/local-structure.ts",
+      "sha256": "aaf3bd84724c8d1578cabdb8cc6e94aeee683b24f6fbb73dd78012d9289afa8c"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/purchase-location.test.ts",
+      "sha256": "637da8ec78eff1f3f2cecc3de0c70415b49d3622f9af222b067f1e0d6201d527"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/purchase-location.ts",
+      "sha256": "0f335e3dca3bc48581ea357dbcf3193efdb491d4a485f19619af6a2290bdad04"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/local-purchases/useLocalPurchases.ts",
+      "sha256": "8adf555a410776fc6040e74acc52bd4b411f2b8cfc7425e45dee29d7e1ccc4e2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/nearby-demo/NearbyDemoCard.module.css",
+      "sha256": "56b9b265c2db08f14699bd1bb140ace57490985d199478a68401cb4dbe524c1d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/nearby-demo/NearbyDemoCard.tsx",
+      "sha256": "3a2f2ae89d2bafbcf3dd43cf76de4c448525f14ca5fd2dc404e01ed0927a15f2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/nearby-demo/comparison.test.ts",
+      "sha256": "02b22e677ed5c73b0a5482df6d302dc3e1eaceb89b798c39739062c278522867"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/nearby-demo/comparison.ts",
+      "sha256": "3c8b821fce3fb8dbe7929680404cdcff5765fb2b4c2177320d66512426dacca8"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/nearby-demo/demo-prices.ts",
+      "sha256": "8593cd7d11158d82fdec5cabf02032b11831046359f1386339c5ca7235184276"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/ReceiptImageIntake.tsx",
+      "sha256": "3a4a2fe93cc97a02c4ceed90137c3cc5a71471ea172c7c9e7974eb6ba831c322"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/direct-image-boundary.ts",
+      "sha256": "90c7ecbd352b970dc0df87dac9329e8ae93298af74d9b00dab8c0ee764a5c30f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/direct-image-contract.ts",
+      "sha256": "4a2ce842c978ce4ae7c829758002fdbd98659e20264932c464f15ba99456cd0f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/direct-image-transport.ts",
+      "sha256": "da10c73797e6b9d3ff948a8e06a29bc0e496048643d43ac65550c4020e022e46"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/direct-image.test.ts",
+      "sha256": "b1af87e9063ec835c0c2a177fd4fde8de1c1560a2e12487aa3739ac36f5ad9e3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/gemini-error-diagnostic.test.ts",
+      "sha256": "a0f07a99f86bcbf37c29c997f2fbe8836c05874fcaccdfecae0e1b36a26ae7d2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/gemini-error-diagnostic.ts",
+      "sha256": "0d6d87fce37ed3bb54f7f1fc7e59a66248737da8b23b24ff937f5fbb888be900"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/image-input.test.ts",
+      "sha256": "161b294e064c7c9cc907b5f71442500bb00504b14620a32b6bc0087864a5c58d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/image-input.ts",
+      "sha256": "2b425414b3edd4215e471205be69a6dcfee504b65c98f20fb6b71f096bbeb639"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/image-session.test.ts",
+      "sha256": "a6acdd896c330917b0c91d2b6a36431fd87881168c48d7968e3af2268bad1f8a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/image-session.ts",
+      "sha256": "5dcbb3c9f15c656d160d6893a7044d058fcce783bb93c8a797604de7cf717fab"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/layout-reason.ts",
+      "sha256": "291dd829095ec8a382b50f17691c5a0703c7da0e1d6b8e2fd9f64fda7e06828e"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/ocr-boundary.test.ts",
+      "sha256": "19907b0f84e1d3d9ecc23b06c25fb2fea6563c7fdb4b4c42bf07d3e0b1f307a6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/ocr-boundary.ts",
+      "sha256": "4daecb3a13665a7e4954183bcff805b3015524f294e5ca9e2d00e49e8f4d78e1"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/ocr-fixtures.ts",
+      "sha256": "5fbaf8e61d6c47999c9e2b83b9b260cd6fdab5b89cd3982a3b64ec60366844cc"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/ocr-parser.test.ts",
+      "sha256": "8fc959254303e478d1366fb1080a59d4d73df43d4d30869926327e440ee39ef6"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/ocr-parser.ts",
+      "sha256": "e3a5798a2c33b6bf85eb40905be70d41daacf7322888ff063ba7245f508490f9"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/parser-inspection.test.ts",
+      "sha256": "719e5d3f5b6b522655a13bf0665735777c490ae2c9a0df20c7b5acc44b1f948d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/parser-inspection.ts",
+      "sha256": "1096272e15ccea6d71696c003c7a782d2f14ecbe52c7c794bad7d7faaf39770c"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/row-rejection.test.ts",
+      "sha256": "5d8292eb422c02f69d69b6e3ab75eb77eaecf97cf1f20933438476d64490b6bd"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/row-rejection.ts",
+      "sha256": "3d6a8ae0d4f8eda0736afcceac8917f3a5ecb2759a6b9e176fe3139c2284ce3b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/short-receipt-parser.test.ts",
+      "sha256": "1013cefcea954cf3dddda02afeba2ebb32104da2dda4b8cdc83d49935bd5cf37"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/short-receipt-parser.ts",
+      "sha256": "8b99ec639b60db6233a3734c7c13f1292f62d14f20bf3ffe1ab89a4d88152f1d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/structured-image-contract.ts",
+      "sha256": "f6ca143dd73fdbc51f3fb4c6021904080575d6fc990f0af7f84736faced9cd78"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/structured-image-transport.ts",
+      "sha256": "903a73efa4824c6df98046419207705497cb09849e952c580955d99f01426f97"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/structured-image.test.ts",
+      "sha256": "84ef2e848472fdede16fef0a8293af0e3d0194846f71f026b482bd0e5b152106"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/vision-attempt.test.ts",
+      "sha256": "1307df63c1f8ac99ee10d40246f32c0171cb629aa5f514b1bc1174a970903553"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/vision-attempt.ts",
+      "sha256": "4140b2c865e522e59378e768cc03eb0f5519dbbbea4f7f546a96d3e270a17a59"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/vision-fixtures.ts",
+      "sha256": "dcafc944b141fdca14efcecf72904ca03256b5d5524ab4f482e9a9324ec3b5cc"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/vision-local-boundary.ts",
+      "sha256": "b55e8cd9578f125fae37c80ea6ff1c9c8a82a37d34578da9eff1327051a29364"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/vision-local.test.ts",
+      "sha256": "d2f4460cb2e52a100d586bb7f84c0b9697f787db6c360913fe074264f1181848"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/vision-normalize.test.ts",
+      "sha256": "bc3f8c30063bbdf4f34c02d2df42fdc5ff5fe58bcb64546248d1aa37b8bc8240"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/vision-normalize.ts",
+      "sha256": "919da6f00efd1f2bb5909341dd51be6fd820f35e782062a99b94181ab2244869"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/receipt-image/vision-transport.ts",
+      "sha256": "2bf074dd13a385c866966a98312df195b64e981e9b503bcdfc3ea2c2b6f16f60"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/replay/LifeReplayExperience.module.css",
+      "sha256": "125b18f5fcb75eb26b07b2195b89e41cde531663ae199ae417ad8c36365c80ac"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/replay/LifeReplayExperience.tsx",
+      "sha256": "801fcdc3b769e2a1aff1678731aa7cdc803c1f583980bbe1efe39d3a452aa0b1"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/replay/life-replay-domain.test.ts",
+      "sha256": "3a569123c1bbaf82f3188eeed5a553e5b328cd490bf93361ca404fb83b9dc44b"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/features/replay/life-replay-domain.ts",
+      "sha256": "73e6039b2b6cf95785bf37a9250d2bc575647688b2a0c91a7fe54c8fd9826b5a"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/address-search-boundary.test.ts",
+      "sha256": "adbc04d2b726ce5b4984fbf4e03e135b9fdd695cd90233bcabb6873c2728d6f2"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/address-search-boundary.ts",
+      "sha256": "dfbad564d0ac39558727a6871e6763189efae5de81ea2b2100df4b3003c5b4ff"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/address-search-local.ts",
+      "sha256": "c7fa663a9527eaf8b9c5010d90ff7f49abf4e3ca6c760d3a47181067b7ede7cd"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/address-search-native.test.ts",
+      "sha256": "fb8ff29802df102e8b3d90a956e00e57cb6f80afba6e1872b2a241844678d2a0"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/address-search-native.ts",
+      "sha256": "93c3a525c25308fd9243cde74c0bcd3c802140396f9e57d5d3828b788dd83030"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/address-search-runs.ts",
+      "sha256": "799e6ef670db4a0a520819773a5e5057b5b241cb0fc014b28a02bc76d8251984"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/direct-image-diagnostic.ts",
+      "sha256": "a549df4e688db369a7afb8da72b6ccacb24311a50a642a02872b9d63b69fb2e3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/direct-image-pilot.ts",
+      "sha256": "49d04b2c7c60d9b1e472e64934ecd6aa9416ba0483638198fbcc45e098a99d20"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/direct-image-recovery.ts",
+      "sha256": "f496033012bf0dec02b16a6ea92f75d89ac8f03bcf96949b70f756c5be5d76b0"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/receipt-direct.test.ts",
+      "sha256": "7047f3a7bdc970ff3be98a8782dbc2e5aaa7af92dc2251b8f60c5e1816c4e211"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/receipt-direct.ts",
+      "sha256": "a51624ec76ac8ba07ec6ec576a18560cf18cfdfc6153c76c9ed88dfee4728fe3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/receipt-ocr.ts",
+      "sha256": "759343d7fb23e9e481fea89317fd2adc5b80ae06c5237099b7d606810aa37758"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/receipt-structured-native.test.ts",
+      "sha256": "e6c2de2845c0686ddfd6d8a58bead61d782a76e967772ae2e95fdb12b0f02c4f"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/receipt-structured-native.ts",
+      "sha256": "4412f49830f9100d1d39504cf51bc60dd5179864de648601f8f1dd2de5430a4d"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/receipt-structured.test.ts",
+      "sha256": "bb3dc2be86bc917ca026b2b17f0bf566301906ea261906ad96bdbd40f8f09dd3"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/receipt-structured.ts",
+      "sha256": "ad43f960696faf99cb33ea8cedc26e67bb3ccfc178d7f0288f6c7caffa4e7168"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/vision-attempt-record.ts",
+      "sha256": "c6660287180239eb076abf25b10f5be4fc700b5f82b4239cd9054cf11e52a1bb"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/vision-local-reservation.ts",
+      "sha256": "2b1d3f8a1861c9348bca1a4e5f72ae2eba3d9deb934a42fee35eb1f5cda227d0"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/vision-local-run.test.ts",
+      "sha256": "e9efe9899a1c6560dab0c5387222ac621c0159fe6b52276b4fbcd37045dab9ff"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/vision-local-run.ts",
+      "sha256": "5857c0f088486ef5d950dc48ec700d8a4ff8bb5a364189540d1f339244a5cf14"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/src/server/vision-local.ts",
+      "sha256": "cfef4ac4a5ad59a72ca53bc0239fe51b4c464d918ec5f927087c7352eb857bb1"
+    },
+    {
+      "path": "artifacts/geoapify-corrected-20261011/app/tsconfig.json",
+      "sha256": "e7c445f9e30e239b4ac43d2bbf4667b4758dab060b1dbbab5026f5d21316c33b"
+    },
+    {
+      "path": "next.config.ts",
+      "sha256": "f72975f55ce88b0584453d5ac87a8434886d83f32c0578ad81696a3eaacee949"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "a8c87642d01fd03cf4388c2986fd184e8e7d49ca1987eed5b7ba9ff080ead541"
+    },
+    {
+      "path": "package.json",
+      "sha256": "732c5c5fccac4767a33af660ede2d5b3ab1e5d278dc09aacf69499849ab9cb53"
+    },
+    {
+      "path": "qa/address-search-corrected/README.md",
+      "sha256": "d20f9a74566ab28dc82ea2a29f333bbc02b839525caf1b6b887e9a00b3e2ed4a"
+    },
+    {
+      "path": "qa/address-search-corrected/preflight.mjs",
+      "sha256": "673b34bcc1450827dff8fe73ce70ee3e167f92bbba0d2284ea3fd8672922b896"
+    },
+    {
+      "path": "qa/address-search-corrected/preflight.test.mjs",
+      "sha256": "df96af18be56ec324030f50855415d8a80a41e92a1da0e0b70df480efe7e7e6e"
+    },
+    {
+      "path": "qa/address-search-corrected/start.mjs",
+      "sha256": "7930e3a6674ad3baac4bc9a55e0f366195b408d625b44dbc799375cf45f0f5eb"
+    },
+    {
+      "path": "src/.DS_Store",
+      "sha256": "9f0e7cf9e2ca26b2fc8a694a456c39478f21a78e81a55ab267c3d94aadbcfd08"
+    },
+    {
+      "path": "src/app/api/address-search/route.ts",
+      "sha256": "9821546e41274e92247e2d9a593aeb5f4ca086eb66d64df35427ae8c983cf316"
+    },
+    {
+      "path": "src/app/api/receipt-direct/route.ts",
+      "sha256": "221d33a6c8c323b1a945718f75394fced9b4eaaa93dda9a39d699430853984b4"
+    },
+    {
+      "path": "src/app/api/receipt-ocr/route.ts",
+      "sha256": "5f2393bda11f5a87328b761864528c330429a358e81241859fa020d6b2fabc9f"
+    },
+    {
+      "path": "src/app/api/receipt-structured/route.ts",
+      "sha256": "a997632f9860544ad9b110da9052650e89341fb1053426a1453c25e1e3f31414"
+    },
+    {
+      "path": "src/app/globals.css",
+      "sha256": "15d61e58677425d46a6e645b2237c9ae6d0adbbaab8fb89da8907036f2f624b6"
+    },
+    {
+      "path": "src/app/layout.tsx",
+      "sha256": "8b4a9d3aba81999fd129b38394468d5d73852ea8c87d942f0cf83ae04e1a11d3"
+    },
+    {
+      "path": "src/app/not-found.tsx",
+      "sha256": "8f0ec10a0a257a7401d2d7193786127880d21521bf1ca415b03017f8cf088efc"
+    },
+    {
+      "path": "src/app/page.tsx",
+      "sha256": "96a4b63d5403ed72bc98ed0b17feccc877bc0be5b94123edc2a1349c6ae64ff3"
+    },
+    {
+      "path": "src/data/spendscape-analytics.test.ts",
+      "sha256": "1bac88719814d4017029fb1f60241cfc93f9469ef5c0517ae520a53fab4a9969"
+    },
+    {
+      "path": "src/data/spendscape-analytics.ts",
+      "sha256": "4b5dc4c2b641a3e43d3156ecc58387ab22b621433c94adff5632d741fa1b9c8e"
+    },
+    {
+      "path": "src/data/spendscape-boundary.test.ts",
+      "sha256": "d18121478c6529eee612797cfb841a00a4f96c64d0524ddb824d4727e293e833"
+    },
+    {
+      "path": "src/data/spendscape-data.test.ts",
+      "sha256": "96d315a36aa34ff05ac4481aca56aae077cbb33ff78637e8decc58472f8dd669"
+    },
+    {
+      "path": "src/data/spendscape-fixtures.ts",
+      "sha256": "e0157ed1202e0a705f1573e298aeddef1612ecd2f5105fc18bc5dbd2999762e7"
+    },
+    {
+      "path": "src/data/spendscape-globe.test.ts",
+      "sha256": "f2642f084f2cbb9fb7872aed04b74e7f3d65fcac9f9ee283546baab2a9905b1b"
+    },
+    {
+      "path": "src/data/spendscape-globe.ts",
+      "sha256": "562530ee59fe34a3c451559967a47428428303949a1a9cef1c2d6237f87d8bef"
+    },
+    {
+      "path": "src/data/spendscape-repository.test.ts",
+      "sha256": "14b4d8005acf95ac01a270709fb62ef679d913a76c3635b8ae2fe12840f4a18a"
+    },
+    {
+      "path": "src/data/spendscape-repository.ts",
+      "sha256": "1365df1ec4dabd71129479b8a990bfa99d4040d4a203e0cb13f024e4ae15352f"
+    },
+    {
+      "path": "src/features/.DS_Store",
+      "sha256": "5c81d13be05478962df20010b3c225248145838eb7d8c332561264acbc0ce4a2"
+    },
+    {
+      "path": "src/features/ask/AskSpendscapeExperience.module.css",
+      "sha256": "19a58069ad984daf452144c3a921e562e72c816ca417ddc6c57e30537c4220e1"
+    },
+    {
+      "path": "src/features/ask/AskSpendscapeExperience.tsx",
+      "sha256": "368ecb80ae9802d6ef2c8bffc9c75ffb1a88084e173882f57fd32af32ac48bf6"
+    },
+    {
+      "path": "src/features/ask/ask-spendscape-domain.test.ts",
+      "sha256": "795b1f44f1e7404a8b89647232a1857d533df0221da4744d4f3d21222e76c641"
+    },
+    {
+      "path": "src/features/ask/ask-spendscape-domain.ts",
+      "sha256": "be16a4c668de307bea1cf2cc9e058f83f8094c059567308754e219f51fbac636"
+    },
+    {
+      "path": "src/features/capture/CaptureBarcode.tsx",
+      "sha256": "0a647671fff473f80feca6d6bbd5bc2f318a675f0af30ad807ce2d5afc2d6d8b"
+    },
+    {
+      "path": "src/features/capture/CaptureCamera.tsx",
+      "sha256": "f1e504df804411269438630f65232a730043da5e42a1d7f06f8713a9c4a681bb"
+    },
+    {
+      "path": "src/features/capture/CaptureExperience.module.css",
+      "sha256": "a75195dee4052c6ed8acd12f3df67cfc8125b73be1daaddd09f40bb2c859504b"
+    },
+    {
+      "path": "src/features/capture/CaptureExperience.tsx",
+      "sha256": "c6d891de6513e43f7dbefc182aa183ff108748dbfa55e3057cdc0aae8efae52e"
+    },
+    {
+      "path": "src/features/capture/MerchantPlaceReview.tsx",
+      "sha256": "4ea832fec436e57fe47fd21f69815f396f95b0942d9604908c2dccade9978845"
+    },
+    {
+      "path": "src/features/capture/PurchaseReview.tsx",
+      "sha256": "6770de7007a785843539c5a31db3e5e7166ca038235181e2975acc4979862644"
+    },
+    {
+      "path": "src/features/capture/ReceiptPayableSummary.tsx",
+      "sha256": "839bae530ae2baa99b4e97d5faed6c0ca902d50bba8999a78f9be1057c36dcaa"
+    },
+    {
+      "path": "src/features/capture/ReceiptReviewDetails.tsx",
+      "sha256": "988c9ffae24e9070072f1bde01e2d7799bd4bd2e3667fec4c78baa5e61c0e3c9"
+    },
+    {
+      "path": "src/features/capture/barcode-demo-catalog.ts",
+      "sha256": "4ac296582b136e417a29e7c4c04bfea5a59f93b7026d337b583291d64a17d7d9"
+    },
+    {
+      "path": "src/features/capture/barcode-domain.test.ts",
+      "sha256": "672df543d520257005440228908916505136d8ffb5abaebd875f1ab97a3d91d2"
+    },
+    {
+      "path": "src/features/capture/barcode-domain.ts",
+      "sha256": "c7ebea77983139fa4a41442dbcfd528feacc41bb61ba897f75d1207d57c50fa3"
+    },
+    {
+      "path": "src/features/capture/barcode-reader-result.ts",
+      "sha256": "e7b882fbe37c06a41c09770160a0958823e38e001bed07a8cb597eb24edb3f7a"
+    },
+    {
+      "path": "src/features/capture/barcode-session.test.ts",
+      "sha256": "5bc5cf7ea56b95dbd9a088fd0e93c6a2b9764f43119a62187767c722990fe0aa"
+    },
+    {
+      "path": "src/features/capture/barcode-session.ts",
+      "sha256": "1798f34694af23831bd45eae4e87db49043792c3dcb9d9206d7c2ba4510d049d"
+    },
+    {
+      "path": "src/features/capture/barcode.worker.ts",
+      "sha256": "ac5dbb59f29f5e3dafa5513f4f9fe3eeaca8dd46a2a5f7a6d5a842f28768d705"
+    },
+    {
+      "path": "src/features/capture/camera-session.test.ts",
+      "sha256": "a00e0bd271b3ba2ce63cd311c2f50d58ae0317e32a59007c1a43ea4a1257901d"
+    },
+    {
+      "path": "src/features/capture/camera-session.ts",
+      "sha256": "7e3b953bf7c2d7b608dbfd17138aeedfac5208df1011b24aa14eef1937aa86de"
+    },
+    {
+      "path": "src/features/capture/capture-domain.test.ts",
+      "sha256": "cd8229d2afa98912cb9a15ce2328784aa5c5cdfba63da111cb58ad7e19d7fd66"
+    },
+    {
+      "path": "src/features/capture/capture-domain.ts",
+      "sha256": "3f1663e424ff3ac0f3f164a913a76cf15798edfafe8475747e5792968bd7f950"
+    },
+    {
+      "path": "src/features/capture/final-payable.test.ts",
+      "sha256": "e4ac9cf0c501984a7defbca3b79d52405eb32e5bdf9d63986522cffb0e081c81"
+    },
+    {
+      "path": "src/features/capture/receipt-editor-values.test.ts",
+      "sha256": "ca4adee366c6617bbc3f2de930d74d246e2643157175e9bd25cba956fc393a67"
+    },
+    {
+      "path": "src/features/capture/receipt-editor-values.ts",
+      "sha256": "bdd909172908f6ab2759515bd4de0db4f1273c95f95428b1fd3a9fe96ed50dbb"
+    },
+    {
+      "path": "src/features/capture/receipt-review-adapter.test.ts",
+      "sha256": "a3baddad099da4c88e956022ba9fe1faf89612f2684bcf1f7f281af4e79d98b2"
+    },
+    {
+      "path": "src/features/capture/receipt-review-adapter.ts",
+      "sha256": "2697c9a953c4aa63d97462147ab44636264ab3fc089304a06289e6d75a74cfea"
+    },
+    {
+      "path": "src/features/capture/receipt-review-readiness.test.ts",
+      "sha256": "1d158a16393657709fe0a101c34c010be686e9f5e556b8e2fd5a6a8cc9c3a17c"
+    },
+    {
+      "path": "src/features/capture/receipt-review-readiness.ts",
+      "sha256": "9236c387c956fe3ac532616bd56880c3641384160ec333f02a8caa66606653b8"
+    },
+    {
+      "path": "src/features/capture/receipt-review-time.test.ts",
+      "sha256": "3bf9dc4784bbb9bedc99adf79c583ab7338e17cf6c1b88a06ebfe485a68e93e5"
+    },
+    {
+      "path": "src/features/capture/receipt-review-time.ts",
+      "sha256": "4091430152fc581bcbdc815afe68af1d85e67ffc6cb300c14bb88b9a65354e65"
+    },
+    {
+      "path": "src/features/capture/session-purchase-domain.test.ts",
+      "sha256": "d080d34a4b88bc5417b3549163c384fcb83f147fb3dcc18e927d51bd8f5f4f45"
+    },
+    {
+      "path": "src/features/capture/session-purchase-domain.ts",
+      "sha256": "63ad1afb49d9d8066e11f54908c8f16686f93266d8203e4e051f0fe2d1d6a6a2"
+    },
+    {
+      "path": "src/features/capture/unknown-context.test.ts",
+      "sha256": "1941b62f07887b87e2af45cf1031745f42d9411528377d97a61d1b817ef5adc3"
+    },
+    {
+      "path": "src/features/capture/useCaptureBarcode.ts",
+      "sha256": "8a21295d9a8ec7ba7ca1099fdfa8fcd12ac1d2b88d201321b047c6d7c6a4521b"
+    },
+    {
+      "path": "src/features/capture/useCaptureCamera.ts",
+      "sha256": "7084dce0024abdeab0658294ca42d694e44b313e93f37f4dea4d94fd42730274"
+    },
+    {
+      "path": "src/features/globe/SpendscapeAnalytics.module.css",
+      "sha256": "164b72c1e2937006bcd010dcb6272e680520fb3d24b1fb931626cd5144618724"
+    },
+    {
+      "path": "src/features/globe/SpendscapeAnalytics.tsx",
+      "sha256": "5b9a5f21ef50825d7259ba4e7560020e755d3a440a94dfc288b247c4ce89477f"
+    },
+    {
+      "path": "src/features/globe/SpendscapeGlobe.module.css",
+      "sha256": "7e792aee088d633ab0ef286a1e2cd53db636a2105aa5bd6a64d9526b909a3fe6"
+    },
+    {
+      "path": "src/features/globe/SpendscapeGlobe.tsx",
+      "sha256": "33c3d443ff8310318950589afb8ffd2485adfbda717e51578d2e908e095bbe05"
+    },
+    {
+      "path": "src/features/globe/globe-map-config.test.ts",
+      "sha256": "9d7904d5cb6353de9e3e3454d81634298455184b1b9fdb9bf9ff6816d6a0f529"
+    },
+    {
+      "path": "src/features/globe/globe-map-config.ts",
+      "sha256": "ed4cf04376c2f26e6705c6754c98e2bb5f2e910bfb6cf08e20927a7cde1ef5fd"
+    },
+    {
+      "path": "src/features/inbox/SmartInboxExperience.module.css",
+      "sha256": "531e877dd60f121a46eccc91434aae6a0a05b900609f753d334d12ae5e6c3762"
+    },
+    {
+      "path": "src/features/inbox/SmartInboxExperience.tsx",
+      "sha256": "1486cf66629d982bbf00ed205dd1c6d0a8de6b9ed2fa034797f85b405c70b191"
+    },
+    {
+      "path": "src/features/inbox/smart-inbox-domain.test.ts",
+      "sha256": "b16d3ef6da9b310f4becf09917265b43d54277327c73dfc2cc4afd5e7a72a2fc"
+    },
+    {
+      "path": "src/features/inbox/smart-inbox-domain.ts",
+      "sha256": "89871a71d7a8a22219c80c5c3989c431b5571455e9440c8a3e3dc930b0a34a30"
+    },
+    {
+      "path": "src/features/local-purchases/AddressSearch.tsx",
+      "sha256": "fca8a12b5690306737a74a2c3b0c4ffde62e333e4344402d04a1282c332ee678"
+    },
+    {
+      "path": "src/features/local-purchases/LocalDataPanel.module.css",
+      "sha256": "a79b587645437c548fd2348a76f1af2fcacbfd4848128dbe97b32fb33a8f30c8"
+    },
+    {
+      "path": "src/features/local-purchases/LocalDataPanel.tsx",
+      "sha256": "64f6ae51093300279bb3789296b74d5bb55a19d92849b10d5a034fbe637f3577"
+    },
+    {
+      "path": "src/features/local-purchases/PurchaseLocationReview.module.css",
+      "sha256": "170884e4c0bde7e0f4886dc3cacb832ecdc64f5a161c9cf398b9db4f101721b3"
+    },
+    {
+      "path": "src/features/local-purchases/PurchaseLocationReview.tsx",
+      "sha256": "050b403957b495fd6cc6c9596f808bce4de2127100b885a442b680db11c5c6d6"
+    },
+    {
+      "path": "src/features/local-purchases/address-search.test.ts",
+      "sha256": "8ac93167a70d0a13e207feb9eeeb76c124071f4e4ac56bfbd651f80b31faf6ed"
+    },
+    {
+      "path": "src/features/local-purchases/address-search.ts",
+      "sha256": "ab0ab7567515578d7806f2f99e0843758a7270775fb01090bfb740beb09d747e"
+    },
+    {
+      "path": "src/features/local-purchases/local-directory.test.ts",
+      "sha256": "872cbf644510637975b8dcf8f53d660d873bf3494ddc33524f825a233e33e4b5"
+    },
+    {
+      "path": "src/features/local-purchases/local-directory.ts",
+      "sha256": "0e951b8c1ccefc3faf8f220fbdb4fd5e7b80751c56a486a25b29bb6f7cd34508"
+    },
+    {
+      "path": "src/features/local-purchases/local-purchase-store.test.ts",
+      "sha256": "31efd30a86236f04f57be55e20de1d19042ce54d05de4b507c888fbc366ff83d"
+    },
+    {
+      "path": "src/features/local-purchases/local-purchase-store.ts",
+      "sha256": "b2dc17219b7156d2c4d7f2bf5d68ac680ff5c7724865c8baacf41f918dfb8709"
+    },
+    {
+      "path": "src/features/local-purchases/local-structure.ts",
+      "sha256": "aaf3bd84724c8d1578cabdb8cc6e94aeee683b24f6fbb73dd78012d9289afa8c"
+    },
+    {
+      "path": "src/features/local-purchases/purchase-location.test.ts",
+      "sha256": "637da8ec78eff1f3f2cecc3de0c70415b49d3622f9af222b067f1e0d6201d527"
+    },
+    {
+      "path": "src/features/local-purchases/purchase-location.ts",
+      "sha256": "0f335e3dca3bc48581ea357dbcf3193efdb491d4a485f19619af6a2290bdad04"
+    },
+    {
+      "path": "src/features/local-purchases/useLocalPurchases.ts",
+      "sha256": "8adf555a410776fc6040e74acc52bd4b411f2b8cfc7425e45dee29d7e1ccc4e2"
+    },
+    {
+      "path": "src/features/nearby-demo/NearbyDemoCard.module.css",
+      "sha256": "56b9b265c2db08f14699bd1bb140ace57490985d199478a68401cb4dbe524c1d"
+    },
+    {
+      "path": "src/features/nearby-demo/NearbyDemoCard.tsx",
+      "sha256": "3a2f2ae89d2bafbcf3dd43cf76de4c448525f14ca5fd2dc404e01ed0927a15f2"
+    },
+    {
+      "path": "src/features/nearby-demo/comparison.test.ts",
+      "sha256": "02b22e677ed5c73b0a5482df6d302dc3e1eaceb89b798c39739062c278522867"
+    },
+    {
+      "path": "src/features/nearby-demo/comparison.ts",
+      "sha256": "3c8b821fce3fb8dbe7929680404cdcff5765fb2b4c2177320d66512426dacca8"
+    },
+    {
+      "path": "src/features/nearby-demo/demo-prices.ts",
+      "sha256": "8593cd7d11158d82fdec5cabf02032b11831046359f1386339c5ca7235184276"
+    },
+    {
+      "path": "src/features/receipt-image/ReceiptImageIntake.tsx",
+      "sha256": "3a4a2fe93cc97a02c4ceed90137c3cc5a71471ea172c7c9e7974eb6ba831c322"
+    },
+    {
+      "path": "src/features/receipt-image/direct-image-boundary.ts",
+      "sha256": "90c7ecbd352b970dc0df87dac9329e8ae93298af74d9b00dab8c0ee764a5c30f"
+    },
+    {
+      "path": "src/features/receipt-image/direct-image-compatibility.test.ts",
+      "sha256": "b95ee34f885cba58d4c1976f3025dedf00084bbae70f6b5b17537521b2e02699"
+    },
+    {
+      "path": "src/features/receipt-image/direct-image-contract.ts",
+      "sha256": "4a2ce842c978ce4ae7c829758002fdbd98659e20264932c464f15ba99456cd0f"
+    },
+    {
+      "path": "src/features/receipt-image/direct-image-transport.ts",
+      "sha256": "da10c73797e6b9d3ff948a8e06a29bc0e496048643d43ac65550c4020e022e46"
+    },
+    {
+      "path": "src/features/receipt-image/direct-image.test.ts",
+      "sha256": "b1af87e9063ec835c0c2a177fd4fde8de1c1560a2e12487aa3739ac36f5ad9e3"
+    },
+    {
+      "path": "src/features/receipt-image/gemini-error-diagnostic.test.ts",
+      "sha256": "a0f07a99f86bcbf37c29c997f2fbe8836c05874fcaccdfecae0e1b36a26ae7d2"
+    },
+    {
+      "path": "src/features/receipt-image/gemini-error-diagnostic.ts",
+      "sha256": "0d6d87fce37ed3bb54f7f1fc7e59a66248737da8b23b24ff937f5fbb888be900"
+    },
+    {
+      "path": "src/features/receipt-image/image-input.test.ts",
+      "sha256": "161b294e064c7c9cc907b5f71442500bb00504b14620a32b6bc0087864a5c58d"
+    },
+    {
+      "path": "src/features/receipt-image/image-input.ts",
+      "sha256": "2b425414b3edd4215e471205be69a6dcfee504b65c98f20fb6b71f096bbeb639"
+    },
+    {
+      "path": "src/features/receipt-image/image-session.test.ts",
+      "sha256": "a6acdd896c330917b0c91d2b6a36431fd87881168c48d7968e3af2268bad1f8a"
+    },
+    {
+      "path": "src/features/receipt-image/image-session.ts",
+      "sha256": "5dcbb3c9f15c656d160d6893a7044d058fcce783bb93c8a797604de7cf717fab"
+    },
+    {
+      "path": "src/features/receipt-image/layout-reason.ts",
+      "sha256": "291dd829095ec8a382b50f17691c5a0703c7da0e1d6b8e2fd9f64fda7e06828e"
+    },
+    {
+      "path": "src/features/receipt-image/ocr-boundary.test.ts",
+      "sha256": "19907b0f84e1d3d9ecc23b06c25fb2fea6563c7fdb4b4c42bf07d3e0b1f307a6"
+    },
+    {
+      "path": "src/features/receipt-image/ocr-boundary.ts",
+      "sha256": "4daecb3a13665a7e4954183bcff805b3015524f294e5ca9e2d00e49e8f4d78e1"
+    },
+    {
+      "path": "src/features/receipt-image/ocr-fixtures.ts",
+      "sha256": "5fbaf8e61d6c47999c9e2b83b9b260cd6fdab5b89cd3982a3b64ec60366844cc"
+    },
+    {
+      "path": "src/features/receipt-image/ocr-parser.test.ts",
+      "sha256": "8fc959254303e478d1366fb1080a59d4d73df43d4d30869926327e440ee39ef6"
+    },
+    {
+      "path": "src/features/receipt-image/ocr-parser.ts",
+      "sha256": "e3a5798a2c33b6bf85eb40905be70d41daacf7322888ff063ba7245f508490f9"
+    },
+    {
+      "path": "src/features/receipt-image/parser-inspection.test.ts",
+      "sha256": "719e5d3f5b6b522655a13bf0665735777c490ae2c9a0df20c7b5acc44b1f948d"
+    },
+    {
+      "path": "src/features/receipt-image/parser-inspection.ts",
+      "sha256": "1096272e15ccea6d71696c003c7a782d2f14ecbe52c7c794bad7d7faaf39770c"
+    },
+    {
+      "path": "src/features/receipt-image/row-rejection.test.ts",
+      "sha256": "5d8292eb422c02f69d69b6e3ab75eb77eaecf97cf1f20933438476d64490b6bd"
+    },
+    {
+      "path": "src/features/receipt-image/row-rejection.ts",
+      "sha256": "3d6a8ae0d4f8eda0736afcceac8917f3a5ecb2759a6b9e176fe3139c2284ce3b"
+    },
+    {
+      "path": "src/features/receipt-image/short-receipt-parser.test.ts",
+      "sha256": "1013cefcea954cf3dddda02afeba2ebb32104da2dda4b8cdc83d49935bd5cf37"
+    },
+    {
+      "path": "src/features/receipt-image/short-receipt-parser.ts",
+      "sha256": "8b99ec639b60db6233a3734c7c13f1292f62d14f20bf3ffe1ab89a4d88152f1d"
+    },
+    {
+      "path": "src/features/receipt-image/structured-image-contract.ts",
+      "sha256": "f6ca143dd73fdbc51f3fb4c6021904080575d6fc990f0af7f84736faced9cd78"
+    },
+    {
+      "path": "src/features/receipt-image/structured-image-transport.ts",
+      "sha256": "903a73efa4824c6df98046419207705497cb09849e952c580955d99f01426f97"
+    },
+    {
+      "path": "src/features/receipt-image/structured-image.test.ts",
+      "sha256": "84ef2e848472fdede16fef0a8293af0e3d0194846f71f026b482bd0e5b152106"
+    },
+    {
+      "path": "src/features/receipt-image/vision-attempt.test.ts",
+      "sha256": "1307df63c1f8ac99ee10d40246f32c0171cb629aa5f514b1bc1174a970903553"
+    },
+    {
+      "path": "src/features/receipt-image/vision-attempt.ts",
+      "sha256": "4140b2c865e522e59378e768cc03eb0f5519dbbbea4f7f546a96d3e270a17a59"
+    },
+    {
+      "path": "src/features/receipt-image/vision-fixtures.ts",
+      "sha256": "dcafc944b141fdca14efcecf72904ca03256b5d5524ab4f482e9a9324ec3b5cc"
+    },
+    {
+      "path": "src/features/receipt-image/vision-local-boundary.ts",
+      "sha256": "b55e8cd9578f125fae37c80ea6ff1c9c8a82a37d34578da9eff1327051a29364"
+    },
+    {
+      "path": "src/features/receipt-image/vision-local.test.ts",
+      "sha256": "d2f4460cb2e52a100d586bb7f84c0b9697f787db6c360913fe074264f1181848"
+    },
+    {
+      "path": "src/features/receipt-image/vision-normalize.test.ts",
+      "sha256": "bc3f8c30063bbdf4f34c02d2df42fdc5ff5fe58bcb64546248d1aa37b8bc8240"
+    },
+    {
+      "path": "src/features/receipt-image/vision-normalize.ts",
+      "sha256": "919da6f00efd1f2bb5909341dd51be6fd820f35e782062a99b94181ab2244869"
+    },
+    {
+      "path": "src/features/receipt-image/vision-transport.ts",
+      "sha256": "2bf074dd13a385c866966a98312df195b64e981e9b503bcdfc3ea2c2b6f16f60"
+    },
+    {
+      "path": "src/features/replay/LifeReplayExperience.module.css",
+      "sha256": "125b18f5fcb75eb26b07b2195b89e41cde531663ae199ae417ad8c36365c80ac"
+    },
+    {
+      "path": "src/features/replay/LifeReplayExperience.tsx",
+      "sha256": "801fcdc3b769e2a1aff1678731aa7cdc803c1f583980bbe1efe39d3a452aa0b1"
+    },
+    {
+      "path": "src/features/replay/life-replay-domain.test.ts",
+      "sha256": "3a569123c1bbaf82f3188eeed5a553e5b328cd490bf93361ca404fb83b9dc44b"
+    },
+    {
+      "path": "src/features/replay/life-replay-domain.ts",
+      "sha256": "73e6039b2b6cf95785bf37a9250d2bc575647688b2a0c91a7fe54c8fd9826b5a"
+    },
+    {
+      "path": "src/server/address-search-boundary.test.ts",
+      "sha256": "adbc04d2b726ce5b4984fbf4e03e135b9fdd695cd90233bcabb6873c2728d6f2"
+    },
+    {
+      "path": "src/server/address-search-boundary.ts",
+      "sha256": "dfbad564d0ac39558727a6871e6763189efae5de81ea2b2100df4b3003c5b4ff"
+    },
+    {
+      "path": "src/server/address-search-local.ts",
+      "sha256": "c7fa663a9527eaf8b9c5010d90ff7f49abf4e3ca6c760d3a47181067b7ede7cd"
+    },
+    {
+      "path": "src/server/address-search-native.test.ts",
+      "sha256": "fb8ff29802df102e8b3d90a956e00e57cb6f80afba6e1872b2a241844678d2a0"
+    },
+    {
+      "path": "src/server/address-search-native.ts",
+      "sha256": "93c3a525c25308fd9243cde74c0bcd3c802140396f9e57d5d3828b788dd83030"
+    },
+    {
+      "path": "src/server/address-search-runs.ts",
+      "sha256": "799e6ef670db4a0a520819773a5e5057b5b241cb0fc014b28a02bc76d8251984"
+    },
+    {
+      "path": "src/server/direct-image-diagnostic.test.ts",
+      "sha256": "1bf992b9f41f9bf0802bcca45059d1796efac9a3626f19e2439bf2cff5efca05"
+    },
+    {
+      "path": "src/server/direct-image-diagnostic.ts",
+      "sha256": "a549df4e688db369a7afb8da72b6ccacb24311a50a642a02872b9d63b69fb2e3"
+    },
+    {
+      "path": "src/server/direct-image-pilot.ts",
+      "sha256": "49d04b2c7c60d9b1e472e64934ecd6aa9416ba0483638198fbcc45e098a99d20"
+    },
+    {
+      "path": "src/server/direct-image-recovery.test.ts",
+      "sha256": "e6447ea362d967b1edab0fa8095bfe36caa91dcce64b586ee94f6fc35af787f3"
+    },
+    {
+      "path": "src/server/direct-image-recovery.ts",
+      "sha256": "f496033012bf0dec02b16a6ea92f75d89ac8f03bcf96949b70f756c5be5d76b0"
+    },
+    {
+      "path": "src/server/receipt-direct.test.ts",
+      "sha256": "7047f3a7bdc970ff3be98a8782dbc2e5aaa7af92dc2251b8f60c5e1816c4e211"
+    },
+    {
+      "path": "src/server/receipt-direct.ts",
+      "sha256": "a51624ec76ac8ba07ec6ec576a18560cf18cfdfc6153c76c9ed88dfee4728fe3"
+    },
+    {
+      "path": "src/server/receipt-ocr.ts",
+      "sha256": "759343d7fb23e9e481fea89317fd2adc5b80ae06c5237099b7d606810aa37758"
+    },
+    {
+      "path": "src/server/receipt-structured-native.test.ts",
+      "sha256": "44dd9f29cd8a5950e0c7ddb540dd1fc1236769e425026ba55df039810f1af31b"
+    },
+    {
+      "path": "src/server/receipt-structured-native.ts",
+      "sha256": "110a85d0a492a191dcbb17e6e0a179dcf5e0124fe8306f4d48a3b1195013fa39"
+    },
+    {
+      "path": "src/server/receipt-structured.test.ts",
+      "sha256": "bb3dc2be86bc917ca026b2b17f0bf566301906ea261906ad96bdbd40f8f09dd3"
+    },
+    {
+      "path": "src/server/receipt-structured.ts",
+      "sha256": "ad43f960696faf99cb33ea8cedc26e67bb3ccfc178d7f0288f6c7caffa4e7168"
+    },
+    {
+      "path": "src/server/vision-attempt-record.ts",
+      "sha256": "c6660287180239eb076abf25b10f5be4fc700b5f82b4239cd9054cf11e52a1bb"
+    },
+    {
+      "path": "src/server/vision-local-reservation.ts",
+      "sha256": "2b1d3f8a1861c9348bca1a4e5f72ae2eba3d9deb934a42fee35eb1f5cda227d0"
+    },
+    {
+      "path": "src/server/vision-local-run.test.ts",
+      "sha256": "135fefe3d04b2bd0a3177ab508a511713038dc0e849ec9da287e5587dfb1f1bb"
+    },
+    {
+      "path": "src/server/vision-local-run.ts",
+      "sha256": "89febeeb70ec143a314e872043e5c0f7e6dcbc30c79a23b5d20f9b2ece11392a"
+    },
+    {
+      "path": "src/server/vision-local.ts",
+      "sha256": "1499f7fd86e3cccc252a6128c0c0992713113221e3011a070e7b6336ecfedeac"
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "e7c445f9e30e239b4ac43d2bbf4667b4758dab060b1dbbab5026f5d21316c33b"
+    }
+  ]
+}

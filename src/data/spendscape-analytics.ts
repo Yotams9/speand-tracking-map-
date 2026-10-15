@@ -49,7 +49,7 @@ export interface PurchaseAnalytics {
   evidenceSources: Array<AnalyticsSegment<EvidenceKind>>
 }
 
-const categoryOrder: PurchaseCategory[] = ['groceries', 'food', 'retail', 'travel']
+const categoryOrder: PurchaseCategory[] = ['groceries', 'food', 'retail', 'travel', 'unknown']
 const channelOrder = ['physical', 'online', 'unresolved'] as const
 const evidenceOrder: EvidenceKind[] = ['card-record', 'receipt', 'email-receipt', 'manual-entry']
 
@@ -103,7 +103,7 @@ export function derivePurchaseAnalytics(
   )
 
   const categories = summarize(
-    categoryOrder,
+    categoryOrder.filter(key => key !== 'unknown' || purchases.some(p => p.category === 'unknown')),
     purchases,
     (purchase, key) => purchase.category === key,
     totalBaseAmountIls,

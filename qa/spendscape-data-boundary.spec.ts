@@ -185,7 +185,7 @@ test('fixture repository snapshot preserves mobile navigation, RTL, and responsi
   const mobileNav = page.locator('nav[aria-label="Mobile primary"]')
   await expect(mobileNav.locator(':scope > button')).toHaveCount(4)
   await expect(mobileNav.locator(':scope > button > span')).toHaveText([
-    'Globe', 'Capture', 'Purchases', 'Stats',
+    'Globe', 'Add', 'Purchases', 'Stats',
   ])
   await mobileNav.getByRole('button', { name: 'Purchases' }).click()
   await expect(page.getByTestId('derived-summary')).toContainText('42')

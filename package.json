@@ -2,7 +2,7 @@
   "name": "spendscape",
   "private": true,
   "version": "0.2.0",
-  "description": "Spendscape Phase 1 globe checkpoint. Synthetic data only.",
+  "description": "Spendscape on-device purchase review and confirmed-place globe.",
   "packageManager": "npm@10.9.2",
   "engines": {
     "node": ">=22.14.0"

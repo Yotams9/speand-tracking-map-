@@ -1,0 +1,17 @@
+.panel { margin: auto; padding: 24px; inline-size: min(480px, calc(100% - 24px)); max-block-size: calc(100dvh - 32px); overflow: auto; border: 1px solid #58656b; border-radius: 16px; background: #11171c; color: #eef2f5; text-align: start; font-size: .9rem; line-height: 1.6; }
+.panel::backdrop { background: #000b; }
+.panel h2 { font-size: 1.2rem; margin-block: 0 14px; }
+.panel p { margin-block: 12px; }
+.panel button { min-block-size: 44px; margin: 4px; padding: 8px 14px; border: 1px solid #63717a; border-radius: 8px; background: #26353e; color: white; cursor: pointer; }
+.panel :focus-visible { outline: 3px solid #9ee6ff; outline-offset: 2px; }
+.busy { position: fixed; z-index: 9999; inset: 0; display: grid; place-items: center; background: #0008; color: white; pointer-events: all; }
+.backup { border-block: 1px solid #58656b; margin-block: 20px; padding-block: 12px; }
+.backup h3 { font-size: 1.05rem; }
+.backup label { display: block; margin-block: 12px; }
+.backup input[type="file"] { display: block; inline-size: 100%; max-inline-size: 100%; margin-block-start: 8px; padding-block: 8px; }
+.backup input::file-selector-button { min-block-size: 44px; padding: 8px 12px; border: 1px solid #63717a; border-radius: 8px; background: #26353e; color: white; font: inherit; cursor: pointer; }
+.backup dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; }
+.backup dd { margin: 0; font-variant-numeric: tabular-nums; }
+.backupConfirm { display: flex !important; align-items: start; gap: 10px; }
+.backupConfirm input { margin-block-start: 5px; flex: none; }
+.panel button:disabled { opacity: .55; cursor: default; }
