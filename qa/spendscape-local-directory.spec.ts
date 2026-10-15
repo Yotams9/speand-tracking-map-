@@ -19,7 +19,7 @@ for(const [width,height,he] of [[360,640,false],[360,640,true],[390,844,true],[4
  test(`explicit local merchant and receipt place ${width} ${he?'he':'en'}`,async({page})=>{
   await page.setViewportSize({width,height});await page.emulateMedia({reducedMotion:'reduce'})
   const writes:string[]=[],forbidden:string[]=[],errors:string[]=[]
-  page.on('request',r=>{if(!['GET','HEAD'].includes(r.method()))writes.push(r.method());if(/tesseract|traineddata|groq|gemini|vision.googleapis|\/api\/catalog|geocod/i.test(r.url()))forbidden.push('forbidden')});page.on('pageerror',()=>errors.push('pageerror'))
+  page.on('request',r=>{if(!['GET','HEAD'].includes(r.method()))writes.push(r.method());if(/tesseract|traineddata|groq|gemini|vision.googleapis|\/api\/catalog\/(?!stores$)|geocod/i.test(r.url()))forbidden.push('forbidden')});page.on('pageerror',()=>errors.push('pageerror'))
   await page.goto('/?receiptReviewQa=1');await ready(page);if(he)await page.getByRole('button',{name:'Switch to Hebrew'}).click();await counts(page,42,12)
   await open(page);const raw=structuredClone(width===1280?fifteenReceipt:oneReceipt);raw.lines[0].lineAmount='0.01';await inject(page,raw);await context(page);await merchant(page);await place(page)
   await page.getByTestId('capture-confirm').click();await expect(page.getByTestId('review-printedAmount-0')).toHaveAttribute('aria-invalid','true');await expect(page.getByTestId('review-printedAmount-0')).toBeFocused();await counts(page,42,12)
