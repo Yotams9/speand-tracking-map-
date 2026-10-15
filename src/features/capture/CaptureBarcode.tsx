@@ -7,6 +7,8 @@ import { barcodeDemoCatalog, lookupDemoProduct } from './barcode-demo-catalog'
 import type { DecoderState } from './barcode-session'
 import type { CatalogProduct } from '@/data/price-catalog'
 import styles from './CaptureExperience.module.css'
+import { BarcodeBranchCompare } from '@/features/savings/BarcodeBranchCompare'
+import { formatDistance } from '@/features/savings/savings-copy'
 
 const copy = {
   en: {
@@ -79,6 +81,7 @@ export function CaptureBarcode({ locale, syntheticQa = false, state, identity, o
     return () => controller.abort()
   }, [identity, product])
   const real = lookup?.gtin === identity?.gtin14 && lookup?.state === 'found' ? lookup.product : undefined
+  const [distances, setDistances] = useState<Record<string, number> | null>(null)
   const money = (value: number) => new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-GB', { style: 'currency', currency: 'ILS' }).format(value)
   // Locale changes must not overwrite a name the user edited.
   useEffect(() => { setName(product?.name[locale] ?? ''); setDemoLoaded(false) }, [identity, product])
@@ -103,12 +106,13 @@ export function CaptureBarcode({ locale, syntheticQa = false, state, identity, o
           // Same barcode, same unit: the lowest published shelf price is the only one marked.
           const cheapest = entry.price === real.prices[0].price
           return <li key={entry.store.id} data-cheapest={cheapest || undefined} data-testid={cheapest ? 'catalog-price-cheapest' : undefined}>
-            <span className={styles.catalogStore}><bdi>{entry.store.chainName[locale]}</bdi><small><bdi>{entry.store.name}</bdi></small></span>
+            <span className={styles.catalogStore}><bdi>{entry.store.chainName[locale]}</bdi><small><bdi>{entry.store.name}</bdi>{distances?.[entry.store.id] !== undefined && <> · {formatDistance(distances[entry.store.id], locale)}</>}</small></span>
             {cheapest && <em className={styles.cheapestBadge}>{t.cheapest}</em>}
             <strong>{money(entry.price)}{real.weighted ? <small> {t.perKg}</small> : null}</strong>
           </li>
         })}</ul>
         {real.prices.length > 5 && <p>+{real.prices.length - 5} {t.more} · {money(real.prices.at(-1)!.price)}</p>}
+        <BarcodeBranchCompare key={real.gtin14} locale={locale} prices={real.prices} weighted={real.weighted} onDistances={setDistances} />
         <small>{t.priceNote.replace('{date}', real.prices[0].store.publishedLocal.slice(0, 10))}</small>
       </div>}
       <label>{t.name}<input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} data-testid="barcode-product-name" /></label>
