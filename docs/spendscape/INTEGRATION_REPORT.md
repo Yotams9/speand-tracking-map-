@@ -309,3 +309,34 @@ State for the next agent working on `integration/final`:
   form; decide on `college-m1`'s fresh-user expectation; add catalog
   re-verification for chain places; then open a PR from `integration/final`
   for review (not done; it needs the owner's decision).
+
+## 11. Stale receipt/directory specs updated (follow-up)
+
+`qa/spendscape-local-directory.spec.ts` and `qa/spendscape-receipt-review-integration.spec.ts`
+now follow the current receipt review. Specs only; no app change. Run with
+`qa/integration.config.ts` (qa-gate project, own server + proxy on loopback):
+**29/29 pass** (local-directory 12/12, receipt-review-integration 17/17).
+
+- The observed store is pre-filled as a new store. Tests that need a saved store
+  or place (`merchant_unresolved`, `place_shuk_bograshov`, `local_place_*`) first
+  check the pre-fill, then press "Use an existing store and place". Money,
+  validation and storage assertions are unchanged.
+- Receipt review no longer creates a place. Local-directory tests save the receipt
+  with its new store, then add the place through the post-save location form
+  (manual coordinates, explicit confirmation). The out-of-range longitude and
+  unconfirmed-place checks moved there, and both must leave storage unchanged.
+  Pin counts and directory checks follow that order. Undo after a place was added
+  uses the session Undo.
+- The receipt timezone now starts at the visible Israel default. The time-feedback
+  tests clear it to reach the "missing timezone" correction.
+- Place IDs: the test no longer expects `local_place_4`. It checks that a new
+  branch's ID sequence is higher than the deleted branch's (IDs are not reused).
+
+App gaps found (not fixed here):
+
+- At 360×420 the post-save location dialog is taller than the screen: its error
+  and Save button sit below the bottom edge, and the sticky footer covers the
+  confirmation checkbox. The keyboard-height check now targets the receipt form's
+  store-category error.
+- The Ask "Applied locally" status covers the timeline's Life replay button at
+  1280×720. The manual-entry test dismisses the status first.
