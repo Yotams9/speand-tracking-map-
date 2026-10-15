@@ -5,11 +5,14 @@ import type { SessionPurchaseLedger } from '../capture/session-purchase-domain'
 import type { SmartInboxDecision } from '../inbox/smart-inbox-domain'
 import { emptyLocalPurchases, emptyRestoreDestination, LOCAL_CHANNEL, LocalStoreError, readLocalPurchases, restoreLocalPurchases, writeLocalPurchases, type LocalPurchases } from './local-purchase-store'
 import { exportPurchaseBackup, inspectPurchaseBackup, PurchaseBackupError } from './purchase-backup'
+import { migrateLegacyPurchases, type LegacyMigrationOutcome } from './legacy-device-migration'
+import { loadCatalogStores } from '../capture/catalog-stores'
 
 export function useLocalPurchases(context: SpendscapeDataSnapshot, onRestore: (data: LocalPurchases) => void) {
   const [phase, setPhase] = useState<'loading' | 'ready' | 'invalid' | 'unavailable' | 'conflict'>('loading')
   const [busy, setBusy] = useState(false)
   const [writeError, setWriteError] = useState(false)
+  const [migration, setMigration] = useState<LegacyMigrationOutcome | null>(null)
   const lastFailure = useRef<'capacity' | 'storage'>('storage')
   const current = useRef(emptyLocalPurchases()), lock = useRef(false), alive = useRef(false)
   const channel = useRef<BroadcastChannel | null>(null), restore = useRef(onRestore)
@@ -20,9 +23,19 @@ export function useLocalPurchases(context: SpendscapeDataSnapshot, onRestore: (d
     const check = async (initial = false) => {
       const revisionAtStart = current.current.revision
       try {
-        const data = await readLocalPurchases(context)
+        let data = await readLocalPurchases(context)
         if (!active) return
-        if (initial) { current.current = data; restore.current(data); setPhase('ready') }
+        if (initial) {
+          // One-time import of the earlier localStorage ledger, only into an empty store.
+          // The UI stays inert (phase 'loading') until this settles.
+          let storage: Storage | null = null
+          try { storage = window.localStorage } catch { storage = null }
+          const migrated = await migrateLegacyPurchases({ storage, current: data, context, loadStores: loadCatalogStores, restore: next => restoreLocalPurchases(next, context, data.revision) })
+          if (!active) return
+          if (migrated.saved) { data = migrated.saved; try { channel.current?.postMessage({ changed: true }) } catch { /* No purchase data in notifications. */ } }
+          setMigration(migrated.outcome)
+          current.current = data; restore.current(data); setPhase('ready')
+        }
         else if (!lock.current && revisionAtStart === current.current.revision && data.revision !== current.current.revision) setPhase('conflict')
       } catch (e) { if (active && !lock.current) setPhase(e instanceof LocalStoreError && e.code === 'invalid' ? 'invalid' : 'unavailable') }
     }
@@ -76,5 +89,5 @@ export function useLocalPurchases(context: SpendscapeDataSnapshot, onRestore: (d
       throw new PurchaseBackupError(error instanceof LocalStoreError && error.code === 'not-empty' ? 'not-empty' : error instanceof LocalStoreError && error.code === 'conflict' ? 'conflict' : 'storage')
     } finally { lock.current = false; if (alive.current) setBusy(false) }
   }
-  return { phase, busy, writeError, lastFailure, commit, exportBackup, restoreBackup, inspectBackup: (text: string) => inspectPurchaseBackup(text, context), emptyDestination: emptyRestoreDestination(current.current) }
+  return { phase, busy, writeError, lastFailure, migration, commit, exportBackup, restoreBackup, inspectBackup: (text: string) => inspectPurchaseBackup(text, context), emptyDestination: emptyRestoreDestination(current.current) }
 }

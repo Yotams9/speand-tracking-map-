@@ -998,6 +998,13 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
     inboxDecisionsRef.current = [...data.decisions]
     setSmartInboxDecisions([...data.decisions])
   })
+  // One-time report of the earlier on-device ledger import (see legacy-device-migration.ts).
+  const [migrationDismissed, setMigrationDismissed] = useState(false)
+  const migration = localData.migration
+  const migrationNotice = migrationDismissed || !migration ? null
+    : migration.status === 'imported' && migration.purchases > 0 ? (locale === 'he' ? `${migration.purchases} רכישות שנשמרו קודם במכשיר הזה הועברו לאחסון המקומי החדש.${migration.demoSkipped ? ` ${migration.demoSkipped} רכישות דמו לא הועברו.` : ''}` : `${migration.purchases} purchases saved earlier on this device were moved to the new local store.${migration.demoSkipped ? ` ${migration.demoSkipped} demo purchases were not moved.` : ''}`)
+    : migration.status === 'skipped-invalid' ? (locale === 'he' ? 'רכישות שנשמרו קודם במכשיר הזה לא הועברו כי לא עברו בדיקה. הן לא נמחקו ולא שונו.' : 'Purchases saved earlier on this device were not moved because they did not pass validation. They were not deleted or changed.')
+    : null
   const [askOpen, setAskOpen] = useState(false)
   const [replay, setReplay] = useState<ReplaySession | null>(null)
   const [askUndoSnapshot, setAskUndoSnapshot] = useState<AskUndoSnapshot | null>(null)
@@ -3451,6 +3458,7 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
       data-data-version={initialData.source.version}
     >
       {localData.writeError && captureStep !== 'review' && captureStep !== 'manual' && (localData.lastFailure.current !== 'capacity' || !captureStep) && <div role="alert" style={{ position: 'fixed', bottom: 90, left: 12, right: 12, zIndex: 300, background: '#311b1b', color: 'white', padding: 12 }}>{localData.lastFailure.current === 'capacity' ? (locale === 'he' ? 'מגבלת האחסון המקומי הושגה. הרכישות הקיימות לא השתנו.' : 'Local storage limit reached. Existing purchases are unchanged.') : (locale === 'he' ? 'השינוי לא נשמר. בדקו את האחסון ונסו שוב.' : 'Change not saved. Check storage and retry.')}</div>}
+      {migrationNotice && <div role="status" className={styles.migrationNotice} data-testid="legacy-migration-notice" data-migration-status={localData.migration?.status}><p>{migrationNotice}</p><button type="button" onClick={() => setMigrationDismissed(true)}>{locale === 'he' ? 'הבנתי' : 'Got it'}</button></div>}
       <div ref={mapNodeRef} className={styles.map} data-testid="map-canvas" />
       <div className={styles.vignette} aria-hidden="true" />
 
