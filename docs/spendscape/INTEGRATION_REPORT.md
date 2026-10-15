@@ -241,20 +241,57 @@ Only where merged behaviour intentionally changed:
 
 ## 8. Known differences and follow-ups
 
-- Shon's receipt/directory browser tests that pick a store from the old receipt
-  dropdown fail on his own branch too; they need updating to the pre-filled
-  store form (his change). Not touched here.
-- `qa/spendscape-college-m1.spec.ts` (not in the required set) expects Shon's
-  fresh-user map card; fresh users now see Yotam's home card.
-- The 93 Windows-environment unit failures (§5) are pre-existing.
-- Chain-branch choices and their published address are validated for shape, not
-  re-checked against the catalog at save/restore time (the list comes from our
-  own server; a tampered backup could carry a wrong address). Follow-up: verify
-  against `/api/catalog/stores` before saving a new catalog place.
-- After the published price fills quantity 1 and the total, changing the
-  quantity does not recompute the total; validation then asks for a correct
-  total (unchanged from Yotam's branch).
-- `demoStory` in `src/data/demo-visibility.ts` is now only used by its tests.
+### Fixed on `fix/integration-review` (16 October 2026)
+
+An independent review found these; each is fixed with unit tests (one commit
+per fix; details in `OVERNIGHT_REPORT.md` on `integration/candidate`).
+
+1. **Legacy migration, per purchase.** One purchase at a fictional demo store or
+   one invalid record no longer skips the whole import. Each purchase is
+   rebuilt and checked on its own (same exact-facts check and write validator);
+   failures are left out and counted (`fixtureSkipped`, `invalidSkipped`), the
+   rest imported; stores used only by left-out purchases are pruned. Only an
+   unreadable ledger, one over 1,000 records or a failing final envelope still
+   skips everything. The notice reports left-out purchases until dismissed.
+   Weighted (kg) purchases from the old build import unchanged (checked against
+   Shon's 951e75f cases).
+2. **Store list unavailable.** The import no longer becomes a silent deferral
+   that a later save turns into a permanent skip. The store stays empty, saving
+   stays blocked, and the local data panel (modal while loading) offers "Try
+   again" (the same single empty-only import) or "Continue without importing"
+   (`skipped-by-user`, reported until dismissed). The empty-only restore is
+   unchanged; no append path was added.
+3. **Markers.** An `imported` marker is never replaced by a second tab; a
+   decision another tab made while this one waited is kept.
+4. **Suggested branch needs confirmation.** "Find the store I'm in" pre-selects
+   the nearest branch, but Save is blocked until "I confirm this purchase was at
+   this branch" is ticked (also when that branch is already a saved place). A
+   branch picked from the list is the confirmation itself. Late location answers
+   are ignored once the person chose a store, changed channel, typed
+   coordinates or closed the form.
+5. **Wording.** User-facing "merchant"/"בית עסק" → "store"/"חנות".
+6. **Specs.** `college-m1` follows the merged first run (Hebrew start, home card,
+   Stats first-run card), barcode lookup and receipt pre-fill: 13/13.
+7. **Published price follows the store.** Automatic price/total (and an
+   automatically chosen ILS) follow the chosen store; typed values never change;
+   a store without a price clears only automatic values; an automatic total
+   follows item edits (integer agorot).
+8. **Typed store kept.** A half-typed new store replaced by a branch or saved
+   place comes back on "New store"/"Choose…" (place to confirm again).
+9. **Layout.** The post-save location form fits a 360×420 phone screen; modal
+   sheets cover the Ask status (timeline replay button reachable at 1280×720).
+10. **Specs repaired.** receipt-review-integration 17/17 and local-directory
+    12/12 (merged from `qa/receipt-directory-specs`), scanner-e 28/28 (uses the
+    configured server). Full `qa/integration.config.ts`: 0 failures (was 28).
+
+### Still open
+
+- Chain-branch choices and their published address are validated for shape,
+  not re-checked against the catalog at save/restore time (a tampered backup
+  could carry a wrong address).
+- `demoStory` in `src/data/demo-visibility.ts` is only used by its tests.
+- No real-phone camera/GPS check of these flows yet (needs an HTTPS Preview).
+- The 93 Windows-environment unit failures (§5) are unchanged.
 
 ## 9. Receipt R1 (Ofir) — not merged
 
