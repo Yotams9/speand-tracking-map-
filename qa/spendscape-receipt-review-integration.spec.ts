@@ -12,7 +12,16 @@ async function inject(p:Page, observations:unknown) {
   await p.evaluate(raw => (window as any).__SPENDSCAPE_RECEIPT_REVIEW_QA__(raw), observations)
   await expect(p.getByTestId('receipt-observations')).toBeVisible()
 }
+// Receipt review pre-fills the observed store as a new store. These flows explicitly
+// switch to a saved store or place, which stays one step away.
+async function existingStore(p:Page) {
+  await expect(p.getByTestId('review-merchantName')).toHaveValue(oneReceipt.merchantName as string)
+  await expect(p.getByTestId('review-merchantId')).toHaveCount(0); await expect(p.getByTestId('review-placeId')).toHaveCount(0)
+  await p.getByRole('button',{name:/Use an existing store and place|חזרה לבחירת חנות ומקום קיימים/}).click()
+  await expect(p.getByTestId('review-merchantName')).toHaveCount(0)
+}
 async function context(p:Page, physical=false) {
+  await existingStore(p)
   await p.getByTestId('review-channel').selectOption(physical?'physical':'unknown')
   if(physical) await p.getByTestId('review-placeId').selectOption('place_shuk_bograshov')
   else await p.getByTestId('review-merchantId').selectOption('merchant_unresolved')
@@ -191,6 +200,7 @@ for (const he of [false, true]) for (const height of [640, 420]) {
     if (he) await page.getByRole('button', { name: 'Switch to Hebrew' }).click()
     await open(page)
     await inject(page, { ...oneReceipt, date: null, time: null })
+    await existingStore(page)
     await page.getByTestId('review-channel').selectOption('unknown')
     await page.getByTestId('review-merchantId').selectOption('merchant_unresolved')
     await page.getByTestId('review-payment').selectOption('cash')
@@ -210,8 +220,10 @@ for (const he of [false, true]) for (const height of [640, 420]) {
     await page.getByTestId('capture-confirm').click()
     await visibleCorrection('review-date', 'missing')
     await page.getByTestId('review-date').fill('2026-10-03T09:15')
-    // A complete wall time does not silently choose a timezone.
-    await expect(page.getByTestId('receipt-timezone')).toHaveValue('')
+    // Israel is the visible, editable review default (never read from the receipt);
+    // a complete wall time does not change it, and clearing it is a correction target.
+    await expect(page.getByTestId('receipt-timezone')).toHaveValue('Asia/Jerusalem')
+    await page.getByTestId('receipt-timezone').selectOption('')
     await page.getByTestId('capture-confirm').click()
     await visibleCorrection('receipt-timezone', 'zone')
     await page.getByTestId('receipt-timezone').selectOption('UTC')
@@ -249,8 +261,11 @@ for (const he of [false, true]) for (const height of [640, 420]) {
 }
 
 test('receipt directory intent remains transient until explicit save and cannot bypass printed totals',async({page})=>{
-  await page.goto('/?receiptReviewQa=1');await ready(page);await open(page);await inject(page,fifteenReceipt);await context(page)
-  await page.getByTestId('review-new-merchant').click();await page.getByTestId('review-merchantName').fill('Fictional receipt-only merchant');await page.getByTestId('review-merchantCategory').selectOption('groceries')
+  await page.goto('/?receiptReviewQa=1');await ready(page);await open(page);await inject(page,fifteenReceipt)
+  // The observed store is pre-filled as a new store; the person confirms or renames it.
+  await expect(page.getByTestId('review-new-merchant')).toHaveCount(0);await expect(page.getByTestId('review-merchantName')).toHaveValue(fifteenReceipt.merchantName as string)
+  await page.getByTestId('review-channel').selectOption('unknown');await page.getByTestId('review-payment').selectOption('cash');await page.getByTestId('review-category').selectOption('groceries');await page.getByTestId('receipt-timezone').selectOption('Asia/Jerusalem');await page.getByTestId('receipt-confirm-time').click()
+  await page.getByTestId('review-merchantName').fill('Fictional receipt-only merchant');await page.getByTestId('review-merchantCategory').selectOption('groceries')
   await page.getByTestId('review-printedAmount-0').fill('5.99');await page.getByTestId('capture-confirm').click();await expect(page.getByTestId('review-printedAmount-0')).toHaveAttribute('aria-invalid','true')
   expect((await qa(page)).combinedPurchaseCount).toBe(42);expect(await stored(page)).toBeUndefined()
   await page.getByTestId('review-printedAmount-0').fill('6.00');await page.getByTestId('capture-confirm').click();await expect(page.getByTestId('capture-success')).toBeVisible()
