@@ -60,11 +60,11 @@ describe('local purchase boundary', () => {
 describe('P2C envelope compatibility and strict discounts', () => {
   it('migrates v1 in memory with all records, decisions, revisions and identities unchanged', () => {
     const c = data.smartInboxCases.find(c => c.material)!
-    const { directory: _directory, ...legacy } = disk()
+    const { directory: _directory, legacyMain: _archive, ...legacy } = disk()
     const old = { ...legacy, version: 1, revision: 12, decisions: [{ caseId: c.id, status: 'deferred' }] }
     const before = JSON.stringify(old)
     const migrated = validateLocalPurchases(old, data)
-    expect(migrated).toEqual({ ...old, directory: { merchants: [], places: [] }, version: 4 })
+    expect(migrated).toEqual({ ...old, directory: { merchants: [], places: [] }, version: 5, legacyMain: null })
     expect(JSON.stringify(old)).toBe(before)
     expect(validateLocalPurchases(migrated, data)).toEqual(migrated)
     expect(restoredLedger(migrated)).toMatchObject({ undoId: null, consumed: [] })
@@ -79,7 +79,7 @@ describe('P2C envelope compatibility and strict discounts', () => {
   })
   it('rejects discount fields in v1 and unknown future versions without mutating input', () => {
     const old = structuredClone(disk()); old.records[0].purchase.items[0].discountMinor = 0
-    for (const raw of [{ ...old, version: 1 }, { ...disk(), version: 5 }]) {
+    for (const raw of [{ ...old, version: 1 }, { ...disk(), version: 6 }]) {
       const before = JSON.stringify(raw)
       expect(() => validateLocalPurchases(raw, data)).toThrow('invalid')
       expect(JSON.stringify(raw)).toBe(before)
@@ -106,9 +106,9 @@ it('validates v3 against the composed graph and migrates v2 discounts without ch
   expect(validateLocalPurchases(JSON.parse(JSON.stringify(d)),data)).toEqual(d)
   expect(d.records[0].purchase.items[0]).toMatchObject({unitPrice:10,discountMinor:1000,lineTotal:0})
   expect(()=>validateLocalPurchases({...d,directory:{merchants:[],places:[]}},data)).toThrow('invalid')
-  const {directory:_directory,...legacy}=disk(),old={...legacy,version:2,revision:21}
+  const {directory:_directory,legacyMain:_archive,...legacy}=disk(),old={...legacy,version:2,revision:21}
   const before=JSON.stringify(old),migrated=validateLocalPurchases(old,data)
-  expect(migrated).toEqual({...old,version:4,directory:{merchants:[],places:[]}});expect(JSON.stringify(old)).toBe(before)
+  expect(migrated).toEqual({...old,version:5,legacyMain:null,directory:{merchants:[],places:[]}});expect(JSON.stringify(old)).toBe(before)
 })
 it('rejects orphan directories and malformed versioned arrays without salvaging', async () => {
   const { proposeDirectory } = await import('./local-directory')
@@ -125,5 +125,5 @@ it('migrates actual v2 full/partial discounts without rewriting financial facts'
  const old={version:2,revision:17,records:ledger.records,nextSequence:ledger.nextSequence,decisions:[]},before=JSON.stringify(old)
  const migrated=validateLocalPurchases(old,data)
  expect(migrated.records).toEqual(old.records);expect(migrated.records[0].purchase.items[0]).toMatchObject({unitPrice:10,discountMinor:1000,lineTotal:0});expect(JSON.stringify(old)).toBe(before)
- expect(migrated).toEqual({...old,version:4,directory:{merchants:[],places:[]}})
+ expect(migrated).toEqual({...old,version:5,legacyMain:null,directory:{merchants:[],places:[]}})
 })

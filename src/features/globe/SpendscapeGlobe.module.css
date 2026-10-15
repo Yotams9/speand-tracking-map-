@@ -1539,6 +1539,20 @@
 }
 .reviewMatchButton span { inline-size: 20px; block-size: 20px; display: grid; place-items: center; border: 1px solid rgba(168, 233, 255, 0.45); border-radius: 50%; font-size: 0.65rem; }
 .reviewMatchButton:hover { border-color: rgba(117, 218, 255, 0.56); background: rgba(68, 164, 220, 0.17); }
+.removePurchaseButton {
+  inline-size: 100%;
+  min-block-size: 44px;
+  margin-block-start: 8px;
+  border: 1px solid rgba(255, 123, 137, 0.34);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 680;
+}
+.removePurchaseButton:hover { background: rgba(255, 123, 137, 0.1); }
+.removePurchaseButton[data-armed='true'] { border-color: var(--danger); background: rgba(255, 123, 137, 0.18); color: var(--cloud); }
 
 .experienceScrim {
   position: absolute;

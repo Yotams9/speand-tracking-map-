@@ -16,6 +16,11 @@ const nextConfig: NextConfig = {
     '192.168.*.*',
     ...private172DevOrigins,
   ],
+  // The barcode catalog route reads its published-price snapshot from disk.
+  outputFileTracingIncludes: {
+    '/api/catalog/[gtin]': ['./data/catalog/*.json'],
+    '/api/catalog/stores': ['./data/catalog/*.json'],
+  },
 }
 
 export default nextConfig

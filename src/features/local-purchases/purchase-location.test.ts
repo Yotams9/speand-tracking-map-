@@ -67,8 +67,8 @@ describe('confirmed local purchase place update', () => {
     const mapped=apply().ledger;expect(()=>validateLocalPurchases({...disk(mapped),version:3},data)).toThrow('invalid')
     const old=saved();const input:any=branch();input.method='manual-coordinates';const l=apply(old,input).ledger
     // Known context is necessary for a legacy v3 envelope.
-    const d:any=disk(l);d.directory.merchants[0].category='groceries';d.directory.places[0].category='groceries';d.records[0].purchase.category='groceries';d.records[0].purchase.paymentMode='cash';d.version=3
-    const before=JSON.stringify(d);expect(validateLocalPurchases(d,data).version).toBe(4);expect(JSON.stringify(d)).toBe(before)
+    const d:any=disk(l);d.directory.merchants[0].category='groceries';d.directory.places[0].category='groceries';d.records[0].purchase.category='groceries';d.records[0].purchase.paymentMode='cash';d.version=3;delete d.legacyMain
+    const before=JSON.stringify(d);expect(validateLocalPurchases(d,data).version).toBe(5);expect(JSON.stringify(d)).toBe(before)
   })
 })
 

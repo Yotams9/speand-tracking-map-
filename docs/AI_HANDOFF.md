@@ -2448,3 +2448,39 @@ not claimed. Proposed separate approval:2 explicit forward searches/2credits,
 30minutes, current exact-project/Free/allowance/no-concurrent/no-paid-overage
 confirmation, private key, no retry/fallback/user-only location Save. Fresh prices
 need separate bounded collection approval. Vercel paused; no push/deployment.
+
+## Isolated main integration candidate — 2026-10-15
+
+User authorized an isolated integration checkout/branch and local integration
+commit only. Inputs: feature c481edb0b8da36c76d375dda00d0d71318b0fc13 and current
+GitHub main 69506d22b6497dec0ecb4abd5979c98260ba4b25 (rechecked unchanged).
+Branch codex/spendscape-main-integration-20261015; recovery refs recorded in
+MAIN_INTEGRATION_REVIEW.md. Original feature/main checkouts and port3172 intact;
+125 dirty/untracked feature files,239 historical files,54 lock/metadata files
+hash-preserved. No provider calls, benchmark rerun, dependency, push or deployment.
+
+Eight textual conflicts resolved, keeping feature financial/review/IndexedDB
+contracts and porting main catalog/barcode/store/map behavior. New v5 validates
+v1–v4 before read-only migration and archives strict whole main localStorage
+records. Original source/IDs/facts/provenance retained; deterministic display
+namespace prevents ID overwrite. Known shared directory references use one pin.
+No partial salvage, hydration write or repeated-load append. Explicit native
+transactions/empty-only backup restore remain atomic. Legacy records read-only;
+backup includes both ledgers; erase-all disabled with an archive. Divergent old
+main writes block rather than silently reconcile. Each ledger keeps its size bound.
+
+Tel Aviv catalog remains server-local and distinct from purchase graph/totals.
+Store choice requires confirmation; shelf prices never prefill paid amounts.
+Retained publication times/attribution preserved; old/unzoned prices unavailable
+as current quotes. City comparison and expiry preserved; radius still deferred.
+Gemini request path, historical launchers/reservations, date/financial validators
+and existing native editing/Undo remain intact.
+
+QA: serial1120/1120; app/new-QA TS and production webpack build pass. Reviewed
+production-browser 30/30, synthetic profiles/mock providers only.
+Earlier1118/1119 timing failure and intermediate harness failures retained;
+unchanged timeout tests pass serially. EN/HE mobile rendered inspection passed.
+Exact file/hunk/hash manifest and preservation evidence:
+artifacts/integration-20261015/. Full conflict/storage/limits report:
+docs/spendscape/MAIN_INTEGRATION_REVIEW.md. Review candidate before any main update.
+Real repeated-capture/phone/provider accuracy gates remain closed/unverified.

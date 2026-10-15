@@ -27,9 +27,9 @@ describe('explicit unknown context',()=>{
   it('still blocks unresolved units, invalid dates, arithmetic and excessive discounts',()=>{for(const mutate of [(d:ReturnType<typeof draft>)=>{d.review.lines[0].unit='' as never},(d:ReturnType<typeof draft>)=>{d.review.date='2024-02-30T09:07'},(d:ReturnType<typeof draft>)=>{d.review.lines[0].printedAmount='9.99'},(d:ReturnType<typeof draft>)=>{d.review.lines[0].discount='11'}]){const d=draft();mutate(d);expect(prepareReceiptReview(d,data).ready).toBe(false)}})
   it('preserves duplicate and Undo semantics',()=>{const {ledger,disk}=saved();const p=prepareReceiptReview(draft(),data);if(!p.ready)throw 0;const input={...p.input,directoryIntent:undefined,merchantId:disk.records[0].purchase.merchantId};const context={...data,merchants:[...data.merchants,...disk.directory.merchants]};expect(saveReviewedPurchase(ledger,'another',input,context,data.purchases).result.code).toBe('duplicate');expect(undoSessionPurchase(ledger)).toMatchObject({records:[],directory:{merchants:[],places:[]}});expect(restoredLedger(disk).undoId).toBeNull()})
   it('includes unknown category in analytics without treating unknown payment as cash',()=>{const {disk}=saved();const p=disk.records[0].purchase;expect(derivePurchaseAnalytics([p],[]).categories.find(c=>c.key==='unknown')).toMatchObject({purchaseCount:1,totalBaseAmountIls:10.05});expect(p.paymentMode).not.toBe('manual')})
-  it.each([1,2,3])('migrates validated v%s known records in memory only',version=>{const l=saveReviewedPurchase(emptySessionLedger(),'legacy',reviewFromDemo(demoDraftForSource('receipt')!,'he'),data,data.purchases).ledger;const old={...emptyLocalPurchases(),records:l.records,nextSequence:l.nextSequence};let legacy:any={...old,version};if(version<3)delete legacy.directory;const before=JSON.stringify(legacy);const next=validateLocalPurchases(legacy,data);expect(next.version).toBe(4);expect(next.records).toEqual(legacy.records);expect(JSON.stringify(legacy)).toBe(before)})
+  it.each([1,2,3])('migrates validated v%s known records in memory only',version=>{const l=saveReviewedPurchase(emptySessionLedger(),'legacy',reviewFromDemo(demoDraftForSource('receipt')!,'he'),data,data.purchases).ledger;const old={...emptyLocalPurchases(),records:l.records,nextSequence:l.nextSequence};let legacy:any={...old,version};delete legacy.legacyMain;if(version<3)delete legacy.directory;const before=JSON.stringify(legacy);const next=validateLocalPurchases(legacy,data);expect(next.version).toBe(5);expect(next.records).toEqual(legacy.records);expect(JSON.stringify(legacy)).toBe(before)})
   it.each([1,2,3])('does not reinterpret unknown context in old v%s envelopes',version=>{const {disk}=saved();expect(()=>validateLocalPurchases({...disk,version},data)).toThrow('invalid')})
-  it('fails closed on future versions and extra data',()=>{const {disk}=saved();expect(()=>validateLocalPurchases({...disk,version:5},data)).toThrow('invalid');expect(()=>validateLocalPurchases({...disk,photo:'forbidden'},data)).toThrow('invalid')})
+  it('fails closed on future versions and extra data',()=>{const {disk}=saved();expect(()=>validateLocalPurchases({...disk,version:6},data)).toThrow('invalid');expect(()=>validateLocalPurchases({...disk,photo:'forbidden'},data)).toThrow('invalid')})
 })
 
 // Independent migration controls: start with known context and real domain
@@ -64,7 +64,7 @@ describe('independent legacy envelope preservation', () => {
   it.each([1,2,3] as const)('v%s preserves exact records, decisions and revision before any write', version => {
     const legacy = legacyEnvelope(version), before = JSON.stringify(legacy)
     const migrated = validateLocalPurchases(legacy, data)
-    expect(migrated).toEqual({...legacy,version:4,directory:legacy.directory ?? {merchants:[],places:[]}})
+    expect(migrated).toEqual({...legacy,version:5,legacyMain:null,directory:legacy.directory ?? {merchants:[],places:[]}})
     expect(JSON.stringify(legacy)).toBe(before)
     expect(migrated.records[0].purchase.originalAmount).toBe(version === 1 ? 10.05 : 8.05)
     expect(migrated.records[0].purchase.items.reduce((n,i)=>n+i.lineTotal,0)).toBe(version === 1 ? 10 : 8)

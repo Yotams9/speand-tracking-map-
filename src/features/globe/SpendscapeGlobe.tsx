@@ -1,4 +1,6 @@
 'use client'
+import { loadCatalogStores, isLocated } from '../capture/catalog-stores'
+import { legacyMainGraph, type LegacyMainLedger } from '../capture/session-purchase-storage'
 
 import {
   useCallback,
@@ -17,7 +19,7 @@ import type {
   MapMouseEvent,
   StyleSpecification,
 } from 'maplibre-gl'
-import type { Point } from 'geojson'
+import type { FeatureCollection, Point } from 'geojson'
 import { derivePurchaseAnalytics } from '@/data/spendscape-analytics'
 import { composeUserGraph } from '@/data/spendscape-user'
 import type { SpendscapeDataSnapshot } from '@/data/spendscape-repository'
@@ -145,6 +147,10 @@ const AskSpendscapeExperience = dynamic(
   },
 )
 
+const CATALOG_SOURCE_ID = 'spendscape-catalog-stores'
+const CATALOG_STORE_LAYER = 'spendscape-catalog-stores'
+const CATALOG_LABEL_LAYER = 'spendscape-catalog-store-labels'
+const catalogLabelExpression = (locale: LocaleCode) => ['concat', ['get', locale === 'he' ? 'chainHe' : 'chainEn'], ' · ', ['get', 'name']] as maplibregl.ExpressionSpecification
 const SOURCE_ID = 'spendscape-places'
 const HEAT_LAYER = 'spendscape-heat'
 const CLUSTER_GLOW_LAYER = 'spendscape-cluster-glow'
@@ -394,6 +400,7 @@ interface QaEvidence {
 }
 
 interface QaActions {
+  catalogContext: () => { sourcePresent: boolean; layerSource: string | null; featureCount: number }
   firstRenderedPoint: (layerId: 'cluster' | 'pin') => [number, number] | null
   jumpTo: (center: [number, number], zoom: number, pitch?: number) => void
   unproject: (point: [number, number]) => [number, number]
@@ -921,9 +928,12 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const [captureDepth, setCaptureDepth] = useState(0)
   const [sessionLedger, setSessionLedger] = useState(emptySessionLedger)
   const sessionLedgerRef = useRef(sessionLedger)
+  const [legacyMain, setLegacyMain] = useState<LegacyMainLedger | null>(null)
+  const legacyGraph = useMemo(() => legacyMainGraph(initialData, legacyMain), [initialData, legacyMain])
+  const userContext = useMemo(() => ({ ...initialData, merchants: [...initialData.merchants,...legacyGraph.merchants.filter(m => !initialData.merchants.some(existing => existing.id === m.id))], places: [...initialData.places,...legacyGraph.places.filter(p => !initialData.places.some(existing => existing.id === p.id))] }), [initialData, legacyGraph])
   const directoryGraph = useMemo(() => syntheticQa
     ? composeDirectory({ merchants: baselineMerchants, places: baselinePlaces }, sessionLedger.directory)
-    : composeUserGraph(initialData, sessionLedger.directory, sessionLedger.records), [syntheticQa, initialData, baselineMerchants, baselinePlaces, sessionLedger.directory, sessionLedger.records])
+    : composeUserGraph(userContext, sessionLedger.directory, [...sessionLedger.records,...legacyGraph.records]), [syntheticQa, userContext, legacyGraph.records, baselineMerchants, baselinePlaces, sessionLedger.directory, sessionLedger.records])
   const { merchants: globeMerchants, places: globePlaces } = directoryGraph
   const globePlacesRef = useRef(globePlaces)
   globePlacesRef.current = globePlaces
@@ -940,7 +950,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const locationViewRef = useRef(locationPurchaseId)
   locationViewRef.current = locationPurchaseId
   const [deletePurchaseId, setDeletePurchaseId] = useState<string | null>(null)
-  const sessionCaptureRecords = useMemo(() => syntheticQa ? sessionLedger.records : sessionLedger.records.filter(record => !record.synthetic), [syntheticQa, sessionLedger.records])
+  const sessionCaptureRecords = useMemo(() => syntheticQa ? sessionLedger.records : [...sessionLedger.records,...legacyGraph.records].filter(record => !record.synthetic), [syntheticQa, sessionLedger.records, legacyGraph.records])
   const [comparisonReadyId, setComparisonReadyId] = useState<string | null>(null)
   const nearbyComparison = useMemo(() => syntheticQa ? demoComparison(sessionCaptureRecords, comparisonReadyId, sessionLedger.undoId, globePlaces) : null, [syntheticQa, sessionCaptureRecords, comparisonReadyId, sessionLedger.undoId, globePlaces])
   const [inboxCaseId, setInboxCaseId] = useState<string | null>(null)
@@ -948,6 +958,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const inboxDecisionsRef = useRef(smartInboxDecisions)
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const localData = useLocalPurchases(initialData, data => {
+    setLegacyMain(data.legacyMain ?? null)
     const restored = restoredLedger(data)
     sessionLedgerRef.current = restored
     setSessionLedger(restored)
@@ -1692,6 +1703,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     const map = mapRef.current
     if (map?.getLayer(LABEL_LAYER)) {
       map.setLayoutProperty(LABEL_LAYER, 'text-field', placeLabelExpression(locale))
+      if (map.getLayer(CATALOG_LABEL_LAYER)) map.setLayoutProperty(CATALOG_LABEL_LAYER, 'text-field', catalogLabelExpression(locale))
     }
   }, [locale])
 
@@ -2268,6 +2280,66 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           })
 
           const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 16 })
+          void loadCatalogStores().then((stores) => {
+            if (disposed || map.getSource(CATALOG_SOURCE_ID)) return
+            const below = map.getLayer(HEAT_LAYER) ? HEAT_LAYER : undefined
+            map.addSource(CATALOG_SOURCE_ID, {
+              type: 'geojson',
+              data: {
+                type: 'FeatureCollection',
+                features: stores.filter(isLocated).map((store) => ({
+                  type: 'Feature' as const,
+                  geometry: { type: 'Point' as const, coordinates: [store.location.lon, store.location.lat] },
+                  properties: { id: store.id, chainEn: store.chainName.en, chainHe: store.chainName.he, name: store.name, address: store.address },
+                })),
+              },
+            })
+            map.addLayer({
+              id: CATALOG_STORE_LAYER,
+              type: 'circle',
+              source: CATALOG_SOURCE_ID,
+              minzoom: 10,
+              paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 13, 4.5, 16, 7],
+                'circle-color': '#0c2b25',
+                'circle-stroke-color': '#3bd0a5',
+                'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 2],
+                'circle-opacity': 0.92,
+                'circle-pitch-alignment': 'viewport',
+              },
+            }, below)
+            map.addLayer({
+              id: CATALOG_LABEL_LAYER,
+              type: 'symbol',
+              source: CATALOG_SOURCE_ID,
+              minzoom: 14,
+              layout: {
+                'text-field': catalogLabelExpression(localeRef.current),
+                'text-font': ['Noto Sans Regular'],
+                'text-size': 11,
+                'text-offset': [0, 1.1],
+                'text-anchor': 'top',
+                'text-optional': true,
+              },
+              paint: { 'text-color': '#17614f', 'text-halo-color': 'rgba(252,253,255,0.95)', 'text-halo-width': 1.6 },
+            }, below)
+            map.on('mouseenter', CATALOG_STORE_LAYER, (event) => {
+              if (replaySessionRef.current) return
+              const feature = event.features?.[0]
+              if (!feature) return
+              const properties = feature.properties as { chainEn: string; chainHe: string; name: string; address: string }
+              const activeLocale = localeRef.current
+              const tooltip = document.createElement('div')
+              tooltip.className = styles.mapTooltip
+              const title = document.createElement('strong')
+              title.textContent = `${activeLocale === 'he' ? properties.chainHe : properties.chainEn} · ${properties.name}`
+              const meta = document.createElement('span')
+              meta.textContent = activeLocale === 'he' ? `${properties.address} · חנות קטלוג · לא רכישה · OpenStreetMap contributors` : `${properties.address} · catalog store · not a purchase · OpenStreetMap contributors`
+              tooltip.append(title, meta)
+              popup.setLngLat((feature.geometry as Point).coordinates as [number, number]).setDOMContent(tooltip).addTo(map)
+            })
+            map.on('mouseleave', CATALOG_STORE_LAYER, () => popup.remove())
+          }).catch(() => {})
           let hoveredFeatureId: string | number | null = null
           map.on('mouseenter', PIN_LAYER, (event) => {
             if (replaySessionRef.current || locationPickingRef.current) return
@@ -2403,6 +2475,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           canvas.setAttribute('tabindex', '0')
 
           window.__SPENDSCAPE_QA_ACTIONS__ = {
+            catalogContext: () => {
+              const source = map.getStyle().sources[CATALOG_SOURCE_ID] as maplibregl.GeoJSONSourceSpecification | undefined
+              const data = source?.data
+              return { sourcePresent: !!source, layerSource: (map.getLayer(CATALOG_STORE_LAYER) as { source?: string } | undefined)?.source ?? null, featureCount: data && typeof data !== 'string' && data.type === 'FeatureCollection' ? (data as FeatureCollection).features.length : 0 }
+            },
             firstRenderedPoint: (layerId) => {
               const rendererLayer = layerId === 'cluster' ? CLUSTER_LAYER : PIN_LAYER
               const feature = map.queryRenderedFeatures({ layers: [rendererLayer] })[0]
@@ -3811,6 +3888,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
           </button>
           <p className={styles.eyebrow}>{t.purchaseDetail} · {selectedPurchase.provenance === 'user-reviewed-session' ? (locale === 'he' ? 'דיווח שלך · במכשיר הזה' : 'Reported by you · on this device') : t.synthetic}</p>
+          {selectedPurchase.id.startsWith('legacy_main:') && <p data-testid="legacy-readonly">{locale === 'he' ? 'רשומה קודמת שמורה ללא שינוי · קריאה בלבד. המזהים המקוריים כלולים בגיבוי.' : 'Preserved legacy record · read-only. Original IDs are included in backup.'}</p>}
           <h2 id="purchase-title">{localized(selectedMerchant.name, locale)}</h2>
           <p className={styles.panelLocation}>
             {selectedPurchase.placeId
@@ -3824,7 +3902,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             <span>{selectedPurchase.resolution === 'confirmed' ? t.confirmedStatus : t.unresolvedStatus}</span>
           </div>
 
-          {sessionCaptureRecords.some(r => r.purchase.id === selectedPurchase.id && r.source === 'receipt' && !r.synthetic) && <PurchaseTimeCorrection key={selectedPurchase.id} purchase={selectedPurchase} locale={locale} onConfirm={intent => confirmPurchaseTime(selectedPurchase.id, intent)} />}
+          {sessionLedger.records.some(r => r.purchase.id === selectedPurchase.id && r.source === 'receipt' && !r.synthetic) && <PurchaseTimeCorrection key={selectedPurchase.id} purchase={selectedPurchase} locale={locale} onConfirm={intent => confirmPurchaseTime(selectedPurchase.id, intent)} />}
 
           <div className={styles.amountLedger}>
             <span><small>{t.originalAmount}</small><strong>{formatMoney(selectedPurchase.originalAmount, locale, selectedPurchase.originalCurrency)}</strong></span>
@@ -3863,11 +3941,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             </button>
           )}
 
-          {sessionCaptureRecords.some(r => r.purchase.id === selectedPurchase.id) && <div className={styles.localDelete}>
+          {sessionLedger.records.some(r => r.purchase.id === selectedPurchase.id) && <div className={styles.localDelete}>
             {deletePurchaseId === selectedPurchase.id ? <><p role="status">{locale === 'he' ? 'למחוק רכישה זו מהמכשיר? אי אפשר לבטל. מקומות שעדיין בשימוש יישארו.' : 'Delete this purchase from this device? This cannot be undone. Places still in use will remain.'}</p><button type="button" data-testid="local-purchase-delete-confirm" onClick={() => removeLocalPurchase(selectedPurchase.id)}>{locale === 'he' ? 'כן, למחוק רכישה' : 'Yes, delete purchase'}</button><button type="button" onClick={() => setDeletePurchaseId(null)}>{locale === 'he' ? 'ביטול' : 'Cancel'}</button></> : <button type="button" data-testid="local-purchase-delete" onClick={() => setDeletePurchaseId(selectedPurchase.id)}>{locale === 'he' ? 'מחיקת רכישה מהמכשיר' : 'Delete purchase from device'}</button>}
           </div>}
-          {sessionCaptureRecords.some(r => r.purchase.id === selectedPurchase.id) && selectedPurchase.channel !== 'online' && !selectedMerchant.onlineOnly && <button type="button" className={styles.viewPlaceButton} data-testid="purchase-resolve-location" onClick={() => { stopSpin(false); setDeletePurchaseId(null); setLocationPurchaseId(selectedPurchase.id) }}>{locale === 'he' ? 'אישור או שינוי מקום הרכישה' : 'Confirm or change purchase place'}</button>}
-          {sessionCaptureRecords.some(r => r.purchase.id === selectedPurchase.id && r.source === 'receipt') && <button type="button" className={styles.viewPlaceButton} data-testid="purchase-nearby-prices" onClick={() => { stopSpin(false); setDeletePurchaseId(null); setNearbyPurchaseId(selectedPurchase.id) }}>{locale === 'he' ? 'השוואת מחירים בעיר' : 'City price comparison'}</button>}
+          {sessionLedger.records.some(r => r.purchase.id === selectedPurchase.id) && selectedPurchase.channel !== 'online' && !selectedMerchant.onlineOnly && <button type="button" className={styles.viewPlaceButton} data-testid="purchase-resolve-location" onClick={() => { stopSpin(false); setDeletePurchaseId(null); setLocationPurchaseId(selectedPurchase.id) }}>{locale === 'he' ? 'אישור או שינוי מקום הרכישה' : 'Confirm or change purchase place'}</button>}
+          {sessionLedger.records.some(r => r.purchase.id === selectedPurchase.id && r.source === 'receipt') && <button type="button" className={styles.viewPlaceButton} data-testid="purchase-nearby-prices" onClick={() => { stopSpin(false); setDeletePurchaseId(null); setNearbyPurchaseId(selectedPurchase.id) }}>{locale === 'he' ? 'השוואת מחירים בעיר' : 'City price comparison'}</button>}
           {selectedPurchase.placeId && (
             <button type="button" className={styles.viewPlaceButton} data-testid="purchase-show-place" onClick={() => selectPlace(selectedPurchase.placeId!)}>{t.viewPlace}</button>
           )}
@@ -4052,7 +4130,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         </button>
       </nav>
     </main>
-    <LocalDataPanel locale={locale} open={privacyOpen} phase={localData.phase} busy={localData.busy} writeError={localData.writeError} onClose={() => setPrivacyOpen(false)} onErase={() => localData.commit(emptySessionLedger(), [], true)} emptyDestination={localData.emptyDestination} onExport={localData.exportBackup} onInspect={localData.inspectBackup} onRestore={localData.restoreBackup} />
+    <LocalDataPanel legacyPresent={localData.legacyPresent} locale={locale} open={privacyOpen} phase={localData.phase} busy={localData.busy} writeError={localData.writeError} onClose={() => setPrivacyOpen(false)} onErase={() => localData.commit(emptySessionLedger(), [], true)} emptyDestination={localData.emptyDestination} onExport={localData.exportBackup} onInspect={localData.inspectBackup} onRestore={localData.restoreBackup} />
     </>
   )
 }

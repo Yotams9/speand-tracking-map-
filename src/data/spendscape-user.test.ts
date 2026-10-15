@@ -38,12 +38,13 @@ describe('ordinary local-user graph and historical storage compatibility', () =>
   for (const version of [1, 2, 3, 4]) it(`strict v${version} read-only migration preserves referenced legacy entities`, () => {
     const legacyRecord = reviewedRecord({ ...input, source: 'manual', amount: '12.00', payment: 'cash', category: 'groceries' }, 1, history)
     const raw: any = { ...current, version, records: [legacyRecord], decisions: [{ caseId: history.smartInboxCases[0].id, status: 'deferred' }] }
+    delete raw.legacyMain
     if (version < 3) delete raw.directory
     const before = structuredClone(raw)
     const hydrated = validateLocalPurchases(raw, context)
     expect(raw).toEqual(before); expect(hydrated.records).toEqual(before.records)
     expect(hydrated.revision).toBe(7); expect(hydrated.nextSequence).toBe(2)
-    expect(hydrated.decisions).toEqual(before.decisions); expect(hydrated.version).toBe(4)
+    expect(hydrated.decisions).toEqual(before.decisions); expect(hydrated.version).toBe(5)
     expect(validateLocalPurchaseWrite(hydrated, context)).toEqual(hydrated)
   })
   it('keeps discounts and fully discounted lines unchanged', () => {
@@ -76,7 +77,7 @@ describe('ordinary local-user graph and historical storage compatibility', () =>
     expect(undoSessionPurchase(saved.ledger).records).toEqual([]); expect(saved.ledger.records).toHaveLength(1)
     expect(saveReviewedPurchase(saved.ledger, 'other', input, history, [record.purchase]).result.code).toBe('duplicate')
   })
-  for (const alter of [(r: any) => { r.version = 5 }, (r: any) => { r.records[0].purchase.merchantId = 'missing' }, (r: any) => { r.records[0].purchase.items[0].lineTotal = 11 }, (r: any) => { r.directory.merchants = [{}] }]) it('rejects corrupt/future graphs instead of partial salvage', () => {
+  for (const alter of [(r: any) => { r.version = 6 }, (r: any) => { r.records[0].purchase.merchantId = 'missing' }, (r: any) => { r.records[0].purchase.items[0].lineTotal = 11 }, (r: any) => { r.directory.merchants = [{}] }]) it('rejects corrupt/future graphs instead of partial salvage', () => {
     const raw = structuredClone(current); alter(raw)
     expect(() => validateLocalPurchases(raw, context)).toThrow('invalid')
   })

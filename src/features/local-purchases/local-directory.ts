@@ -4,11 +4,11 @@ import { needsPointAdjustment, validSearchProvenance, type AddressSearchProvenan
 import type { Merchant, Place, PurchaseCategory } from '../../data/spendscape-globe'
 
 export interface LocalMerchant extends Merchant { source: 'user-confirmed' }
-export interface LocalPlace extends Place { source: 'user-confirmed'; locationMethod: 'manual-coordinates' | 'map-selection' | 'address-search'; address: string; addressSearch?: AddressSearchProvenance }
+export interface LocalPlace extends Place { source: 'user-confirmed'; locationMethod: 'manual-coordinates' | 'map-selection' | 'address-search' | 'catalog-selection'; catalogStoreId?: string; address: string; addressSearch?: AddressSearchProvenance }
 export interface LocalDirectory { merchants: readonly LocalMerchant[]; places: readonly LocalPlace[] }
 export interface DirectoryIntent {
   merchant?: { name: string; category: PurchaseCategory | ''; separate: boolean }
-  place?: { branch: string; city: string; country: string; address: string; longitude: string; latitude: string; confirmed: boolean; separate: boolean }
+  place?: { branch: string; city: string; country: string; address: string; longitude: string; latitude: string; confirmed: boolean; separate: boolean; catalogStoreId?: string }
 }
 type Context = { merchants: readonly Merchant[]; places: readonly Place[] }
 const categories = ['groceries', 'food', 'retail', 'travel', 'unknown']
@@ -27,7 +27,7 @@ export function validDirectoryIntent(raw: unknown): raw is DirectoryIntent {
   if (!keys.length || !exactObject(raw, keys) || keys.some(k => !['merchant', 'place'].includes(k))) return false
   const d = raw as DirectoryIntent
   if (Object.hasOwn(d, 'merchant') && (!exactObject(d.merchant, ['name', 'category', 'separate']) || typeof d.merchant.name !== 'string' || typeof d.merchant.category !== 'string' || typeof d.merchant.separate !== 'boolean')) return false
-  if (Object.hasOwn(d, 'place') && (!exactObject(d.place, ['branch', 'city', 'country', 'address', 'longitude', 'latitude', 'confirmed', 'separate']) || ['branch', 'city', 'country', 'address', 'longitude', 'latitude'].some(k => typeof d.place![k as keyof NonNullable<DirectoryIntent['place']>] !== 'string') || typeof d.place.confirmed !== 'boolean' || typeof d.place.separate !== 'boolean')) return false
+  if (Object.hasOwn(d, 'place') && (!exactObject(d.place, ['branch', 'city', 'country', 'address', 'longitude', 'latitude', 'confirmed', 'separate', ...(d.place?.catalogStoreId !== undefined ? ['catalogStoreId'] : [])]) || ['branch', 'city', 'country', 'address', 'longitude', 'latitude'].some(k => typeof d.place![k as keyof NonNullable<DirectoryIntent['place']>] !== 'string') || typeof d.place.confirmed !== 'boolean' || typeof d.place.separate !== 'boolean' || (d.place.catalogStoreId !== undefined && !/^(shufersal|ramilevi|osherad)-\d{1,5}$/.test(d.place.catalogStoreId)))) return false
   return true
 }
 export function proposeDirectory(intent: unknown, merchantId: string, channel: string, sequence: number, context: Context): { errors: Record<string, string>; directory: LocalDirectory; merchantId: string; placeId: string } {
@@ -58,7 +58,7 @@ export function proposeDirectory(intent: unknown, merchantId: string, channel: s
     if (!p.separate && context.places.some(existing => existing.merchantId === merchantId && (normalized(existing.branch.en) === normalized(p.branch) || normalized(existing.branch.he) === normalized(p.branch) || (longitude !== null && latitude !== null && existing.coordinates[0] === longitude && existing.coordinates[1] === latitude) || (p.address && normalized((existing as Place & { address?: string }).address ?? '') === normalized(p.address) && normalized(existing.city.en) === normalized(p.city) && normalized(existing.country.en) === normalized(p.country))))) errors['place-separate'] = 'duplicate'
     placeId = `local_place_${sequence}`
     if (context.places.some(p => p.id === placeId)) errors.directory = 'required'
-    if (merchant) directory.places = [{ id: placeId, merchantId, name: { ...merchant.name }, branch: literal(p.branch), city: literal(p.city), country: literal(p.country), coordinates: [longitude ?? NaN, latitude ?? NaN], category: merchant.category, address: p.address, source: 'user-confirmed', locationMethod: 'manual-coordinates' }]
+    if (merchant) directory.places = [{ id: placeId, merchantId, name: { ...merchant.name }, branch: literal(p.branch), city: literal(p.city), country: literal(p.country), coordinates: [longitude ?? NaN, latitude ?? NaN], category: merchant.category, address: p.address, source: 'user-confirmed', locationMethod: p.catalogStoreId ? 'catalog-selection' : 'manual-coordinates', ...(p.catalogStoreId ? { catalogStoreId: p.catalogStoreId } : {}) }]
   } else if (channel === 'physical') errors.placeId = 'place'
   return { errors, directory, merchantId, placeId }
 }
@@ -83,9 +83,9 @@ export function validateDirectory(raw: unknown, context: Context, nextSequence: 
   }
   const merchants = [...context.merchants, ...raw.merchants as unknown as LocalMerchant[]]
   for (const rawPlace of raw.places) {
-    if (!exactObject(rawPlace, ['id', 'merchantId', 'name', 'branch', 'city', 'country', 'coordinates', 'category', 'address', 'source', 'locationMethod', ...(rawPlace && typeof rawPlace === 'object' && Object.hasOwn(rawPlace,'addressSearch') ? ['addressSearch'] : [])])) throw new Error('directory-invalid')
+    if (!exactObject(rawPlace, ['id', 'merchantId', 'name', 'branch', 'city', 'country', 'coordinates', 'category', 'address', 'source', 'locationMethod', ...(rawPlace && typeof rawPlace === 'object' && Object.hasOwn(rawPlace,'addressSearch') ? ['addressSearch'] : []), ...(rawPlace && typeof rawPlace === 'object' && Object.hasOwn(rawPlace,'catalogStoreId') ? ['catalogStoreId'] : [])])) throw new Error('directory-invalid')
     const p = rawPlace as unknown as LocalPlace, n = suffix(p.id, 'place'), m = merchants.find(m => m.id === p.merchantId)
-    if (!Number.isSafeInteger(n) || n >= nextSequence || placeIds.has(p.id) || !m || m.onlineOnly || !localized(p.branch) || !localized(p.city) || !localized(p.country) || !exactObject(p.name, ['en', 'he']) || p.name.en !== m.name.en || p.name.he !== m.name.he || p.category !== m.category || !text(p.address, true) || p.source !== 'user-confirmed' || !['manual-coordinates', 'map-selection', 'address-search'].includes(p.locationMethod) || (p.addressSearch !== undefined && (!validSearchProvenance(p.addressSearch) || needsPointAdjustment(p.addressSearch))) || (p.locationMethod === 'address-search' && !p.addressSearch) || !denseArray(p.coordinates, 2) || p.coordinates.length !== 2 || p.coordinates.some((c,i) => typeof c !== 'number' || !Number.isFinite(c) || Math.abs(c) > (i ? 90 : 180))) throw new Error('directory-invalid')
+    if (!Number.isSafeInteger(n) || n >= nextSequence || placeIds.has(p.id) || !m || m.onlineOnly || !localized(p.branch) || !localized(p.city) || !localized(p.country) || !exactObject(p.name, ['en', 'he']) || p.name.en !== m.name.en || p.name.he !== m.name.he || p.category !== m.category || !text(p.address, true) || p.source !== 'user-confirmed' || !['manual-coordinates', 'map-selection', 'address-search','catalog-selection'].includes(p.locationMethod) || (p.locationMethod === 'catalog-selection' ? !p.catalogStoreId || !/^(shufersal|ramilevi|osherad)-\d{1,5}$/.test(p.catalogStoreId) : p.catalogStoreId !== undefined) || (p.addressSearch !== undefined && (!validSearchProvenance(p.addressSearch) || needsPointAdjustment(p.addressSearch))) || (p.locationMethod === 'address-search' && !p.addressSearch) || !denseArray(p.coordinates, 2) || p.coordinates.length !== 2 || p.coordinates.some((c,i) => typeof c !== 'number' || !Number.isFinite(c) || Math.abs(c) > (i ? 90 : 180))) throw new Error('directory-invalid')
     placeIds.add(p.id)
   }
   return structuredClone(raw) as unknown as LocalDirectory

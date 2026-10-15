@@ -78,7 +78,7 @@ describe('strict local purchase backup', () => {
     await expect(inspectPurchaseBackup(seal(corrupted), context)).rejects.toMatchObject({ code: 'invalid' })
   })
   it('rejects future envelope versions and excessive nesting', async () => {
-    const raw = JSON.parse(await exportPurchaseBackup(fictionalBackupLedger(), context)); raw.data.version = 5
+    const raw = JSON.parse(await exportPurchaseBackup(fictionalBackupLedger(), context)); raw.data.version = 6
     await expect(inspectPurchaseBackup(seal(raw), context)).rejects.toMatchObject({ code: 'unsupported' })
     let deep: any = {}; for (let i = 0; i < 40; i++) deep = { nested: deep }
     raw.data = deep

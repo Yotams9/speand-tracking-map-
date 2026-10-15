@@ -5,6 +5,7 @@ import type { LocaleCode } from '@/data/spendscape-globe'
 import { barcodeFormats, type BarcodeFormat, type BarcodeIdentity } from './barcode-domain'
 import { barcodeDemoCatalog, lookupDemoProduct } from './barcode-demo-catalog'
 import type { DecoderState } from './barcode-session'
+import type { CatalogProduct } from '@/data/price-catalog'
 import styles from './CaptureExperience.module.css'
 
 const copy = {
@@ -13,13 +14,15 @@ const copy = {
     loading: 'Loading the local barcode reader…', ready: 'Reader ready. Hold one barcode inside the guide.',
     found: 'Barcode found. Review the identification below.', invalid: 'Invalid barcode. Check the format, digits and checksum, then correct or retry.',
     empty: 'No barcode found. Adjust the light and position, then retry, or enter the code.',
-    'load-error': 'The barcode reader could not load. Retry, enter the code or explore a demo.',
-    'decode-error': 'The barcode could not be read. Retry, enter the code or explore a demo.',
+    'load-error': 'The barcode reader could not load. Retry or enter the code.',
+    'decode-error': 'The barcode could not be read. Retry or enter the code.',
     cancelled: 'Barcode scanning cancelled. You can enter a code or start the camera again.',
     manual: 'Enter barcode', format: 'Barcode format', code: 'Barcode digits', identify: 'Check barcode',
     demo: 'Load demo product for review', loaded: 'Demo product loaded — review only', continue: 'Continue to purchase details', provenance: 'Synthetic demo catalog · fictional product',
-    unknown: 'Unknown barcode', unknownBody: 'The code is valid, but is not in this small demo catalog. No real product lookup was made.',
-    name: 'Product name for review', note: 'Identification only. Nothing is added to your purchases. Price, merchant, date and place are unknown.',
+    unknown: 'Unknown barcode', unknownBody: 'The code is valid, but is not identified in this retained catalog. No purchase facts are inferred.',
+    real: 'Found in Tel Aviv published prices', checking: 'Checking the Tel Aviv price files…', missing: 'Not in the Tel Aviv price files of Shufersal, Rami Levy and Osher Ad. Type the product name below.', lookupError: 'The price files could not be checked right now. Type the product name below.',
+    prices: 'Published shelf prices in Tel Aviv', stores: 'stores', perKg: 'per kg', more: 'more stores · up to', priceNote: 'From the chains’ official price files ({date}). Promotions and club prices are not applied; the price you pay may differ.',
+    name: 'Product name for review', note: 'Identification only. Nothing is added to your purchases. The price you paid, merchant, date and place are unknown.',
     retry: 'Retry barcode scan', reset: 'Clear result', original: 'Scanned code', normalized: 'Equivalent GTIN',
   },
   he: {
@@ -27,27 +30,25 @@ const copy = {
     loading: 'טוענים את קורא הברקודים המקומי…', ready: 'הקורא מוכן. מקמו ברקוד אחד בתוך המסגרת.',
     found: 'נמצא ברקוד. בדקו את הזיהוי למטה.', invalid: 'ברקוד לא תקין. בדקו את הסוג, הספרות וספרת הביקורת, ותקנו או נסו שוב.',
     empty: 'לא נמצא ברקוד. שפרו תאורה ומיקום ונסו שוב, או הזינו את הקוד.',
-    'load-error': 'לא ניתן לטעון את קורא הברקודים. נסו שוב, הזינו קוד או פתחו הדגמה.',
-    'decode-error': 'לא ניתן לקרוא את הברקוד. נסו שוב, הזינו קוד או פתחו הדגמה.',
+    'load-error': 'לא ניתן לטעון את קורא הברקודים. נסו שוב או הזינו קוד.',
+    'decode-error': 'לא ניתן לקרוא את הברקוד. נסו שוב או הזינו קוד.',
     cancelled: 'סריקת הברקוד בוטלה. אפשר להזין קוד או להפעיל שוב את המצלמה.',
     manual: 'הזנת ברקוד', format: 'סוג ברקוד', code: 'ספרות הברקוד', identify: 'בדיקת ברקוד',
     demo: 'טעינת מוצר הדגמה לבדיקה', loaded: 'מוצר ההדגמה נטען — לבדיקה בלבד', continue: 'המשך לפרטי רכישה', provenance: 'קטלוג הדגמה סינתטי · מוצר בדיוני',
-    unknown: 'ברקוד לא מוכר', unknownBody: 'הקוד תקין, אך אינו בקטלוג ההדגמה הקטן. לא בוצע חיפוש מוצר אמיתי.',
-    name: 'שם מוצר לבדיקה', note: 'זיהוי בלבד. דבר לא נוסף לרכישות. המחיר, בית העסק, התאריך והמקום אינם ידועים.',
+    unknown: 'ברקוד לא מוכר', unknownBody: 'הקוד תקין, אך לא זוהה בקטלוג השמור. אין הסקת פרטי רכישה.',
+    real: 'נמצא במחירוני תל אביב', checking: 'בודקים במחירוני תל אביב…', missing: 'המוצר לא נמצא במחירונים של שופרסל, רמי לוי ואושר עד בתל אביב. הקלידו את שם המוצר למטה.', lookupError: 'לא ניתן לבדוק במחירונים כרגע. הקלידו את שם המוצר למטה.',
+    prices: 'מחירי מדף מפורסמים בתל אביב', stores: 'סניפים', perKg: 'לק״ג', more: 'סניפים נוספים · עד', priceNote: 'מתוך קובצי המחירים הרשמיים של הרשתות ({date}). מבצעים ומחירי מועדון אינם כלולים; המחיר בקופה עשוי להיות שונה.',
+    name: 'שם מוצר לבדיקה', note: 'זיהוי בלבד. דבר לא נוסף לרכישות. המחיר ששילמתם, בית העסק, התאריך והמקום אינם ידועים.',
     retry: 'ניסיון סריקה נוסף', reset: 'ניקוי תוצאה', original: 'הקוד שנסרק', normalized: 'GTIN מקביל',
   },
 } as const
 
-export function CaptureBarcode({ locale, syntheticQa = false, state, identity, onManual, onDemo, onCandidate, onCancel, onRetry, onReset }: {
+export function CaptureBarcode({ locale, state, identity, onManual, onDemo, onCandidate, onCancel, onRetry, onReset, syntheticQa = false }: {
   syntheticQa?: boolean; locale: LocaleCode; state: DecoderState; identity: BarcodeIdentity | null
   onDemo: (code: string, format: string) => void; onCandidate: (name: string, syntheticCatalog: boolean) => void
   onManual: (code: string, format: string) => void; onCancel: () => void; onRetry: () => void; onReset: () => void
 }) {
-  const t = syntheticQa ? copy[locale] : { ...copy[locale],
-    unknownBody: locale === 'he' ? 'הקוד תקין. חיפוש פרטי מוצר אינו מחובר; הזינו שם מוצר שבדקתם.' : 'The code is valid. Product lookup is not connected; enter a product name you have checked.',
-    'load-error': locale === 'he' ? 'לא ניתן לטעון את הקורא. נסו שוב או הזינו קוד.' : 'The reader could not load. Retry or enter the code.',
-    'decode-error': locale === 'he' ? 'לא ניתן לקרוא את הקוד. נסו שוב או הזינו קוד.' : 'The code could not be read. Retry or enter the code.',
-  }
+  const t = copy[locale]
   const [editing, setEditing] = useState(false)
   const [code, setCode] = useState('')
   const [format, setFormat] = useState<BarcodeFormat>('EAN13')
@@ -55,7 +56,29 @@ export function CaptureBarcode({ locale, syntheticQa = false, state, identity, o
   const [demoLoaded, setDemoLoaded] = useState(false)
   const input = useRef<HTMLInputElement>(null)
   const result = useRef<HTMLDivElement>(null)
-  const product = syntheticQa && identity ? lookupDemoProduct(identity) : undefined
+  const product = identity && syntheticQa ? lookupDemoProduct(identity) : undefined
+  // Barcodes outside the demo catalog are looked up in the Tel Aviv price files on our own server.
+  const [lookup, setLookup] = useState<{ gtin: string; state: 'checking' | 'found' | 'missing' | 'error'; product?: CatalogProduct } | null>(null)
+  useEffect(() => {
+    if (!identity || product) { setLookup(null); return }
+    const gtin = identity.gtin14, controller = new AbortController()
+    setLookup({ gtin, state: 'checking' })
+    fetch(`/api/catalog/${gtin}`, { signal: controller.signal })
+      .then(async response => {
+        if (controller.signal.aborted) return
+        if (response.status === 404) { setLookup({ gtin, state: 'missing' }); return }
+        if (!response.ok) throw new Error('lookup')
+        const found = await response.json() as CatalogProduct
+        if (controller.signal.aborted) return
+        if (found.gtin14 !== gtin || typeof found.name !== 'string' || found.name.length > 1000 || !Array.isArray(found.prices) || !['expired','publication-time-unqualified'].includes(found.priceStatus)) throw new Error('lookup')
+        setLookup({ gtin, state: 'found', product: found })
+        setName(current => current || found.name)
+      })
+      .catch(() => { if (!controller.signal.aborted) setLookup({ gtin, state: 'error' }) })
+    return () => controller.abort()
+  }, [identity, product])
+  const real = lookup?.gtin === identity?.gtin14 && lookup?.state === 'found' ? lookup.product : undefined
+  const money = (value: number) => new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-GB', { style: 'currency', currency: 'ILS' }).format(value)
   // Locale changes must not overwrite a name the user edited.
   useEffect(() => { setName(product?.name[locale] ?? ''); setDemoLoaded(false) }, [identity, product])
   useEffect(() => {
@@ -69,10 +92,17 @@ export function CaptureBarcode({ locale, syntheticQa = false, state, identity, o
   useEffect(() => { if (state === 'invalid' && editing) input.current?.focus() }, [state, editing])
 
   return <section className={styles.barcodePanel} data-testid="capture-barcode" data-decoder-state={state}>
-    <p role="status" aria-live="polite" aria-atomic="true" id="barcode-status" data-testid="barcode-status">{identity && !product ? t.unknown : t[state]}</p>
-    {identity && <div ref={result} tabIndex={-1} className={styles.barcodeResult} data-testid="barcode-result" aria-label={product ? product.name[locale] : t.unknown}>
-      <strong>{product ? t.provenance : t.unknown}</strong>
-      <p>{product ? `${product.category[locale]} · ${product.size[locale]}` : t.unknownBody}</p>
+    <p role="status" aria-live="polite" aria-atomic="true" id="barcode-status" data-testid="barcode-status">{identity && !product ? (real ? t.real : t.unknown) : t[state]}</p>
+    {identity && <div ref={result} tabIndex={-1} className={styles.barcodeResult} data-testid="barcode-result" aria-label={product ? product.name[locale] : real ? real.name : t.unknown}>
+      <strong>{product ? t.provenance : real ? t.real : t.unknown}</strong>
+      <p>{product ? `${product.category[locale]} · ${product.size[locale]}` : real ? [real.manufacturer, real.quantity].filter(Boolean).join(' · ') || real.name : lookup?.state === 'missing' ? t.missing : lookup?.state === 'error' ? t.lookupError : lookup ? t.checking : t.unknownBody}</p>
+      {real && <div className={styles.catalogPrices} data-testid="catalog-prices">
+        <p role="status">{locale === 'he' ? 'מחירים נוכחיים אינם זמינים — פרסום ישן או זמן לא מאומת. המחירים להלן היסטוריים בלבד, לא סכום ששולם.' : 'Current prices unavailable — expired or unqualified publication time. Prices below are historical reference only, never paid amounts.'}</p>
+        <p>{t.prices} · {real.prices.length}/{real.storesInArea} {t.stores}</p>
+        <ul>{real.prices.slice(0, 5).map(entry => <li key={entry.store.id}><span><bdi>{entry.store.chainName[locale]}</bdi> · <bdi>{entry.store.name}</bdi></span><small><bdi dir="ltr">{entry.store.publishedLocal}</bdi> · {locale === 'he' ? 'זמן מקומי ללא אזור זמן' : 'local time; timezone unqualified'}</small><strong>{money(entry.price)}{real.weighted ? ` ${t.perKg}` : ''}</strong></li>)}</ul>
+        {real.prices.length > 5 && <p>+{real.prices.length - 5} {t.more} · {money(real.prices.at(-1)!.price)}</p>}
+        <small>{real.generatedAt} · {real.source} · {t.priceNote.replace('{date}', real.prices[0].store.publishedLocal.slice(0, 10))}</small>
+      </div>}
       <label>{t.name}<input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} data-testid="barcode-product-name" /></label>
       <p>{t.original}: <bdi dir="ltr" data-testid="barcode-original">{identity.original}</bdi> · {identity.format}</p>
       <p>{t.normalized}: <bdi dir="ltr" data-testid="barcode-normalized">{identity.gtin14}</bdi></p>

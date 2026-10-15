@@ -1,3 +1,4 @@
+import { legacyMainGraph, validateLegacyMain, type LegacyMainLedger } from '../capture/session-purchase-storage'
 import { composeDirectory, denseArray, emptyDirectory, exactObject, pruneDirectory, validateDirectory, type LocalDirectory } from './local-directory'
 import type { SpendscapeDataSnapshot } from '../../data/spendscape-repository'
 import { emptySessionLedger, reviewedRecord, type PurchaseReviewInput, type SessionPurchaseLedger } from '../capture/session-purchase-domain'
@@ -6,8 +7,8 @@ import type { SmartInboxDecision } from '../inbox/smart-inbox-domain'
 
 export const LOCAL_DB = 'spendscape-local-purchases'
 export const LOCAL_CHANNEL = 'spendscape-local-purchases-changed'
-export interface LocalPurchases { version: 4; directory: LocalDirectory; revision: number; records: readonly SessionCaptureRecord[]; nextSequence: number; decisions: readonly SmartInboxDecision[] }
-export const emptyLocalPurchases = (): LocalPurchases => ({ version: 4, directory: emptyDirectory(), revision: 0, records: [], nextSequence: 1, decisions: [] })
+export interface LocalPurchases { version: 4 | 5; legacyMain?: LegacyMainLedger | null; directory: LocalDirectory; revision: number; records: readonly SessionCaptureRecord[]; nextSequence: number; decisions: readonly SmartInboxDecision[] }
+export const emptyLocalPurchases = (): LocalPurchases => ({ version: 5, legacyMain: null, directory: emptyDirectory(), revision: 0, records: [], nextSequence: 1, decisions: [] })
 export class LocalStoreError extends Error {
   constructor(public readonly code: 'invalid' | 'unavailable' | 'conflict' | 'capacity' | 'rejected' | 'not-empty') { super(code) }
 }
@@ -22,13 +23,17 @@ function same(a: unknown, b: unknown): boolean {
 // arbitrary evidence fields can survive hydration or enter the write payload.
 export function validateLocalPurchases(raw: unknown, context: SpendscapeDataSnapshot): LocalPurchases {
   try {
-    if (!raw || typeof raw !== 'object' || !exactObject(raw, Object.keys(raw)) || JSON.stringify(raw).length > 2_000_000) throw 0
+    if (!raw || typeof raw !== 'object' || !exactObject(raw, Object.keys(raw)) || JSON.stringify(raw).length > 4_000_000) throw 0
     const data = raw as Omit<LocalPurchases, 'version'> & { version: number }
-    if ((data.version !== 1 && data.version !== 2 && data.version !== 3 && data.version !== 4) || !Number.isSafeInteger(data.revision) || data.revision < 0 || !Number.isSafeInteger(data.nextSequence) || data.nextSequence < 1 || !denseArray(data.records, 1000) || !denseArray(data.decisions, context.smartInboxCases.length)) throw 0
-    const directory = data.version >= 3 ? validateDirectory(data.directory, context, data.nextSequence) : emptyDirectory()
+    if ((data.version !== 1 && data.version !== 2 && data.version !== 3 && data.version !== 4 && data.version !== 5) || !Number.isSafeInteger(data.revision) || data.revision < 0 || !Number.isSafeInteger(data.nextSequence) || data.nextSequence < 1 || !denseArray(data.records, 1000) || !denseArray(data.decisions, context.smartInboxCases.length)) throw 0
+    if (JSON.stringify(data.version === 5 ? { ...data, legacyMain: null } : data).length > 2_000_000) throw 0
+    const legacyMain = data.version === 5 ? (data.legacyMain === null ? null : validateLegacyMain(data.legacyMain, context)) : null
+    const legacyGraph = legacyMainGraph(context, legacyMain)
+    const validationContext = { merchants: [...context.merchants,...legacyGraph.merchants.filter(m => !context.merchants.some(existing => existing.id === m.id))], places: [...context.places,...legacyGraph.places.filter(p => !context.places.some(existing => existing.id === p.id))] }
+    const directory = data.version >= 3 ? validateDirectory(data.directory, validationContext, data.nextSequence) : emptyDirectory()
     // Legacy envelopes did not support unknown context; never reinterpret them.
     if (data.version < 4 && (directory.places.some(p => p.locationMethod !== 'manual-coordinates' || p.addressSearch !== undefined) || directory.merchants.some(m => m.category === 'unknown') || data.records.some(r => r.purchase.paymentMode === 'unknown' || r.purchase.category === 'unknown'))) throw 0
-    const graph = composeDirectory(context, directory)
+    const graph = composeDirectory(validationContext, directory)
     const sequences = new Set<number>()
     const records = data.records.map((r: SessionCaptureRecord) => {
       const p = r.purchase
@@ -64,10 +69,11 @@ export function validateLocalPurchases(raw: unknown, context: SpendscapeDataSnap
       if (!same(d, clean)) throw 0
       return clean
     })
-    const clean: LocalPurchases = { version: 4, directory, revision: data.revision, records, nextSequence: data.nextSequence, decisions }
+    const clean: LocalPurchases = { version: 5, legacyMain, directory, revision: data.revision, records, nextSequence: data.nextSequence, decisions }
     // Historical envelopes are validated before an in-memory-only migration.
-    const { directory: _directory, ...legacy } = clean
-    if (!same(data, data.version >= 3 ? { ...clean, version: data.version } : { ...legacy, version: data.version })) throw 0
+    const { legacyMain: _archive, ...v4 } = clean
+    const { directory: _directory, ...legacy } = v4
+    if (!same(data, data.version === 5 ? clean : data.version >= 3 ? { ...v4, version: data.version } : { ...legacy, version: data.version })) throw 0
     if (!same(directory, pruneDirectory(directory, records.map(r => r.purchase)))) throw 0
     return clean
   } catch { throw new LocalStoreError('invalid') }
@@ -109,7 +115,7 @@ export async function readLocalPurchases(context: SpendscapeDataSnapshot): Promi
 }
 // Prospective write rejection must not mark the previously persisted data invalid.
 export function validateLocalPurchaseWrite(next: LocalPurchases, context: SpendscapeDataSnapshot): LocalPurchases {
-  if (next.records.length > 1000 || JSON.stringify(next).length > 2_000_000) throw new LocalStoreError('capacity')
+  if (next.records.length > 1000 || JSON.stringify(next.version === 5 ? { ...next, legacyMain: null } : next).length > 2_000_000 || JSON.stringify(next.legacyMain ?? null).length > 2_000_000) throw new LocalStoreError('capacity')
   try { return validateLocalPurchases(next, context) }
   catch { throw new LocalStoreError('rejected') }
 }
@@ -117,7 +123,7 @@ export async function writeLocalPurchases(next: LocalPurchases, context: Spendsc
   return persistLocalPurchases(next, context, erase ? 'erase' : 'write')
 }
 export function emptyRestoreDestination(data: LocalPurchases): boolean {
-  return data.records.length === 0 && data.directory.merchants.length === 0 && data.directory.places.length === 0 && data.decisions.length === 0
+  return (data.legacyMain?.records.length ?? 0) === 0 && (data.legacyMain?.merchants?.length ?? 0) === 0 && (data.legacyMain?.places?.length ?? 0) === 0 && data.records.length === 0 && data.directory.merchants.length === 0 && data.directory.places.length === 0 && data.decisions.length === 0
 }
 export async function restoreLocalPurchases(data: LocalPurchases, context: SpendscapeDataSnapshot, expectedRevision: number): Promise<LocalPurchases> {
   // Validate all imported facts before opening a write transaction. Only the

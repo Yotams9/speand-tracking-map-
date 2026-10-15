@@ -15,8 +15,9 @@ Activation requires separate approval, and consumed historical launchers cannot 
 Ordinary city comparison uses a qualified, limited Shufersal snapshot while its
 publications are within 24 hours; expired or unmatched prices are unavailable.
 Product/package matching is explicit and temporary. Distances and radius-based
-comparison remain deferred. External product lookup, AI Ask and automatic
-insights are unavailable. Historical receipt prices are never current-price or
+comparison remain deferred. Barcode lookup uses main’s retained Tel Aviv catalog on this server; its old
+prices are historical references, never paid amounts or verified current prices.
+AI Ask and automatic insights are unavailable. Historical receipt prices are never current-price or
 savings evidence. Vercel remains paused; this checkpoint does not publish or deploy.
 
 For the current local submission workflow, pin reconciliation, acceptance gaps and
@@ -36,6 +37,13 @@ available to strict storage validation so existing records are not discarded.
 See [the college milestone checkpoint](docs/spendscape/COLLEGE_FINAL_MILESTONES.md)
 and [current technical handoff](docs/AI_HANDOFF.md) for acceptance evidence and
 remaining gates. Earlier concept-demo checkpoints below are historical.
+
+## Isolated main integration candidate
+
+See [integration inputs, storage compatibility and verification](docs/spendscape/MAIN_INTEGRATION_REVIEW.md).
+The legacy main localStorage ledger is preserved read-only and included in backups.
+It is never silently overwritten, partially salvaged or merged into colliding IDs.
+New writes use the existing atomic IndexedDB boundary.
 
 ## Local requirements
 
@@ -205,9 +213,22 @@ merge, deployment, dependency, or provider change was made.
   CSV preview, Gmail future explanation, manual/cash, and failure/retry states
 - confirm-first receipt review with nested arithmetic, place-suggestion truth
   language, fixed synthetic FX provenance, and no retained photo value
-- separate in-memory session additions that update Purchases, Analytics, and
-  canonical place aggregates without mutating the checked-in fixture graph;
-  reload resets them and online/unresolved additions remain unpinned
+- separate added purchases that update Purchases, Analytics, and canonical
+  place aggregates without mutating the checked-in fixture graph; since
+  2026-10-02 they are kept in this browser's `localStorage` on the device and
+  survive reload until removed; online/unresolved additions remain unpinned
+- real barcodes outside the demo catalog show the published shelf prices of
+  every Tel Aviv Shufersal, Rami Levy and Osher Ad store that sells them,
+  served by `/api/catalog/[gtin]` from `data/catalog/tel-aviv.json`; rebuild the
+  snapshot with `python tools/nearby-prices/build_catalog.py` (source: the
+  chains' price transparency files; promotions and club prices not applied)
+- `Find the store I'm in` suggests the closest of the 34 located Tel Aviv
+  supermarkets (store addresses geocoded once with OpenStreetMap Nominatim,
+  © OpenStreetMap contributors, ODbL) and fills that store's published price
+  for a scanned item; the location is read only on press and never stored
+- stores the user adds in the review form, pinned only from a location the
+  user explicitly reads on the device, and a two-press removal of an added
+  purchase from its detail panel
 - one typed material-uncertainty Smart Inbox case linked to the existing
   unresolved purchase and two existing canonical place candidates, with no
   score, GPS claim, provider fact, or second fixture source
@@ -245,8 +266,8 @@ map interaction/backgrounding pauses playback. Close/Escape/Back restore entry
 camera/query/selection/mode; Forward opens a fresh paused player at the first
 event (Replay-only dates, speed and progress are intentionally ephemeral).
 Temporary camera positions
-do not overwrite normal persistence. Reload exits Replay; the existing in-memory
-Capture/Inbox reset policy remains unchanged. Ask and Replay cannot execute
+do not overwrite normal persistence. Reload exits Replay and resets Inbox
+decisions; added purchases are restored from the device. Ask and Replay cannot execute
 concurrently, and Ask Undo is preserved through Replay open/close.
 
 Production QA: build, then `npm run start -- --hostname 127.0.0.1` and

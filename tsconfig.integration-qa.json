@@ -1,0 +1,6 @@
+{
+  "extends":"./tsconfig.json",
+  "compilerOptions":{"incremental":false},
+  "include":["next-env.d.ts","qa/main-integration-fixtures.ts","qa/spendscape-main-integration.spec.ts","src/features/local-purchases/main-integration.test.ts","src/features/capture/catalog-stores.test.ts","src/features/capture/device-store.test.ts","src/features/capture/session-purchase-storage.test.ts"],
+  "exclude":["node_modules","artifacts"]
+}

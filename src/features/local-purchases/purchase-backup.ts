@@ -3,7 +3,7 @@ import { exactObject } from './local-structure'
 import { validateLocalPurchases, type LocalPurchases } from './local-purchase-store'
 
 // UTF-8 bytes, including the wrapper and referenced historical directory facts.
-// The existing ledger's stricter 2,000,000-character limit remains unchanged.
+// Each ledger keeps its 2,000,000-character bound; v5 can carry both archives.
 export const BACKUP_MAX_BYTES = 8 * 1024 * 1024
 export type BackupErrorCode = 'unsupported' | 'invalid' | 'corrupted' | 'size' | 'not-empty' | 'conflict' | 'storage' | 'unavailable'
 export class PurchaseBackupError extends Error {
@@ -24,9 +24,10 @@ export interface BackupPreview {
 }
 
 function references(data: LocalPurchases, context: SpendscapeDataSnapshot): References {
-  const places = new Set(data.records.map(r => r.purchase.placeId).filter(id => id !== null))
+  const allRecords = [...data.records, ...(data.legacyMain?.records ?? [])]
+  const places = new Set(allRecords.map(r => r.purchase.placeId).filter(id => id !== null))
   for (const decision of data.decisions) if (decision.status === 'resolved') places.add(decision.placeId)
-  const merchants = new Set(data.records.map(r => r.purchase.merchantId))
+  const merchants = new Set(allRecords.map(r => r.purchase.merchantId))
   const legacyPlaces = context.places.filter(p => places.has(p.id) && !data.directory.places.some(local => local.id === p.id))
   for (const place of legacyPlaces) merchants.add(place.merchantId)
   // Carry referenced historical facts verbatim, without inventing confirmation
@@ -107,17 +108,17 @@ export async function inspectPurchaseBackup(text: string, context: SpendscapeDat
   const content = { data: raw.data, references: raw.references }
   if (await checksum(content) !== raw.checksum) throw new PurchaseBackupError('corrupted')
   const version = (raw.data as { version?: unknown } | null)?.version
-  if (typeof version === 'number' && ![1, 2, 3, 4].includes(version)) throw new PurchaseBackupError('unsupported')
+  if (typeof version === 'number' && ![1, 2, 3, 4, 5].includes(version)) throw new PurchaseBackupError('unsupported')
   let data: LocalPurchases
   try { data = validateLocalPurchases(raw.data, context) } catch { throw new PurchaseBackupError('invalid') }
   const expected = references(data, context)
   if (canonical(raw.references) !== canonical(expected)) throw new PurchaseBackupError('invalid')
   return {
     data,
-    purchases: data.records.length,
-    merchants: data.directory.merchants.length + expected.merchants.length,
-    places: data.directory.places.length + expected.places.length,
-    unresolved: data.records.filter(r => r.purchase.channel !== 'online' && r.purchase.placeId === null).length,
-    historicalSynthetic: data.records.filter(r => r.synthetic).length,
+    purchases: data.records.length + (data.legacyMain?.records.length ?? 0),
+    merchants: data.directory.merchants.length + expected.merchants.length + (data.legacyMain?.merchants?.length ?? 0),
+    places: data.directory.places.length + expected.places.length + (data.legacyMain?.places?.length ?? 0),
+    unresolved: [...data.records, ...(data.legacyMain?.records ?? [])].filter(r => r.purchase.channel !== 'online' && r.purchase.placeId === null).length,
+    historicalSynthetic: [...data.records, ...(data.legacyMain?.records ?? [])].filter(r => r.synthetic).length,
   }
 }
