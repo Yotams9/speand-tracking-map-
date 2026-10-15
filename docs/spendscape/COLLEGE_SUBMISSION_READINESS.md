@@ -246,3 +246,29 @@ request/credit allowance and current key-project/Free/remaining/no-concurrent/
 no-paid-overage confirmation. Scanner stays closed; real repeat duplicate test
 unverified. M4 city completed/radius deferred. FullM5 still open; Vercel paused.
 Main refs,next-env,historical evidence/locks and unrelated work preserved.
+
+
+## Final local submission checks — passed, provider-disabled (2026-10-15)
+
+Running prepared app matches203 committed source/public/launcher/config files and
+its source/build freeze. Separate same-origin tab verifies3 saved purchases,
+3 distinct place associations/pins, one map; Purchases/Globe/Stats/search/View place
+work. All displayed cards/details/place associations unchanged after reload.
+No real IndexedDB export/byte comparison, purchase edit or restore; user reports
+first backup done, controls inspected and occupied restore protected.
+Both retained city publications now expired: previously user-confirmed temporary
+Mango match produces0/1 priced rows per branch and no subtotal; no refresh/source
+fetch. No coordinate/geographic-accuracy upgrade or historical savings claim.
+
+Matching evidence reused: backup10browser; address122units/4launcher/18browser,
+typechecks/build; city5browser. Hashes verified, no scanner retesting. Current
+5 provider endpoints503; zero inference/geocode/feed calls. User server unchanged.
+No functional defect observed; scoped4doc checkpoint/checklist only. Evidence:
+artifacts/college-final-local-iy8907ia/, COLLEGE_FINAL_LOCAL_CHECKS.md.
+Physical phone remains unverified; safe phone-accessible URL/setup still needed.
+Scanner stays closed with real repeat duplicate prevention unverified; M4 city
+completed/radius deferred. Provider-disabled local use ready; live address session
+not claimed. Proposed separate approval:2 explicit forward searches/2credits,
+30minutes, current exact-project/Free/allowance/no-concurrent/no-paid-overage
+confirmation, private key, no retry/fallback/user-only location Save. Fresh prices
+need separate bounded collection approval. Vercel paused; no push/deployment.
