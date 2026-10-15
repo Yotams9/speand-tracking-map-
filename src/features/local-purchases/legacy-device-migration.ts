@@ -218,7 +218,11 @@ const writeMarker = (storage: Preferences | null, outcome: RecordedOutcome, now:
 
 export async function migrateLegacyPurchases(deps: LegacyMigrationDeps): Promise<{ outcome: LegacyMigrationOutcome; saved?: LocalPurchases }> {
   const read = (key: string) => { try { return deps.storage?.getItem(key) ?? null } catch { return null } }
-  const mark = (outcome: RecordedOutcome) => {
+  const mark = (outcome: RecordedOutcome): { outcome: LegacyMigrationOutcome } => {
+    // Another tab may have finished the import while this one waited: re-read
+    // the marker and never replace an import with a later "skipped" result.
+    const latest = alreadyDone(read(LEGACY_MIGRATION_KEY))
+    if (latest?.previous?.status === 'imported') return { outcome: latest }
     writeMarker(deps.storage, outcome, deps.now?.() ?? new Date())
     return { outcome }
   }

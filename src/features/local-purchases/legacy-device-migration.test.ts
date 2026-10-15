@@ -224,6 +224,23 @@ describe('migration run', () => {
     expect(other.writes).toEqual([])
   })
   const unavailable = () => vi.fn(async (): Promise<readonly CatalogStoreSummary[]> => { throw new Error('503') })
+  it('a second tab never replaces an imported marker with skipped-not-empty', async () => {
+    const raw = JSON.stringify(legacyLedger()), store = storage({ [LEGACY_DEVICE_KEY]: raw })
+    // Both tabs saw an empty store and no marker. Tab A's import lands first, so
+    // tab B's empty-only restore is refused.
+    const tabB = vi.fn(async (): Promise<LocalPurchases> => {
+      const tabA = await run(store)
+      expect(tabA.outcome).toMatchObject({ status: 'imported', purchases: 3 })
+      throw new LocalStoreError('not-empty')
+    })
+    const second = await run(store, emptyLocalPurchases(), tabB)
+    expect(tabB).toHaveBeenCalledTimes(1)
+    expect(second.outcome).toMatchObject({ status: 'already-done', previous: { status: 'imported', purchases: 3 } })
+    expect(JSON.parse(store.map.get(LEGACY_MIGRATION_KEY)!)).toMatchObject({ status: 'imported', purchases: 3 })
+    expect(store.writes.filter(([key]) => key === LEGACY_MIGRATION_KEY)).toHaveLength(1)
+    expect(legacyNotice(second.outcome)).toBeNull()
+    expect(store.map.get(LEGACY_DEVICE_KEY)).toBe(raw)
+  })
   it('store list unavailable: writes nothing and keeps the store empty; a retry then imports', async () => {
     const raw = JSON.stringify(legacyLedger()), store = storage({ [LEGACY_DEVICE_KEY]: raw })
     const waiting = await run(store, emptyLocalPurchases(), undefined, unavailable())
