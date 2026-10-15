@@ -41,7 +41,7 @@ for (const [width, he] of [[360, false], [390, true], [430, true], [1280, false]
   await page.screenshot({ path: `${out}/empty-globe-${width}-${he ? 'he' : 'en'}.png` })
   await nav(page).getByRole('button', { name: he ? 'רכישות' : 'Purchases', exact: true }).click(); await expect(page.getByTestId('purchases-empty')).toBeVisible()
   await page.screenshot({ path: `${out}/empty-purchases-${width}-${he ? 'he' : 'en'}.png` })
-  await nav(page).getByRole('button', { name: he ? (width < 761 ? 'נתונים' : 'ניתוחים') : (width < 761 ? 'Stats' : 'Analytics'), exact: true }).click(); await expect(page.getByTestId('analytics-count')).toHaveText('0'); await expect(page.getByTestId('analytics-empty')).toBeVisible()
+  await nav(page).getByRole('button', { name: he ? (width < 761 ? 'נתונים' : 'ניתוחים') : (width < 761 ? 'Stats' : 'Analytics'), exact: true }).click(); await expect(page.getByTestId('analytics-first-run')).toBeVisible(); await expect(page.getByTestId('analytics-count')).toHaveCount(0)
   await page.screenshot({ path: `${out}/empty-stats-${width}-${he ? 'he' : 'en'}.png` })
   await capture(page); await expect(page.getByTestId('barcode-demo')).toHaveCount(0)
   await page.getByTestId('barcode-manual-open').click(); await page.getByTestId('barcode-input').fill('2000000000015'); await page.getByTestId('barcode-submit').click()
