@@ -45,3 +45,5 @@ Current completion build passed application/focused admin typecheck and optimize
 New private configuration helpers:5/5 offline policy tests; admin module gated out of ordinary tests. Current focused unit count is recorded in artifacts/hosted-completion-20261015/final-focused-tests.log. There have been zero Gemini/Geoapify requests in this task. Real Preview access, live extraction/address confirmation and real Save/reload remain pending.
 
 Release tooling and scope: .vercelignore; receipt intake privacy wording; hosted QA destination override/config/spec; new protected completion QA; one-time administrative quota config/test; private release configuration/verification helpers. No request builder, model, decoder, financial rule, purchase migration or historical launcher was changed.
+
+Focused current units253/253 passed. QA output configuration now resolves fresh result destinations from the workspace root, preventing generated files under qa/. Existing results were relocated without regeneration.
