@@ -1,6 +1,6 @@
 import type { CatalogStoreSummary } from '@/data/price-catalog'
 import { catalogStoreIdOf, catalogText, type CatalogStoreChoice } from '../local-purchases/place-provenance'
-import type { PurchaseReviewInput } from './session-purchase-domain'
+import { lineMinorTotal, type PurchaseReviewInput } from './session-purchase-domain'
 
 export type LocatedCatalogStore = CatalogStoreSummary & { location: NonNullable<CatalogStoreSummary['location']> }
 export const NEAREST_STORE_METERS = 200
@@ -47,14 +47,47 @@ export function catalogIdForPlace(place: unknown): string | null {
   return catalogStoreIdOf(place)
 }
 
-// One identified item at a store with a published price: fill the unit price
-// (and an empty quantity and total), never overwrite what the user typed.
-export function withPublishedPrice<T extends PurchaseReviewInput>(input: T, storeId: string | null): T {
-  const price = storeId ? input.catalogPrices?.[storeId] : undefined
+// What the form last filled in from a store's published price. Form state only:
+// never saved and never part of the reviewed record. An empty value means that
+// field was not filled in automatically.
+export interface PublishedFill { storeId: string; price: string; amount: string }
+const agorot = (minor: number) => `${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, '0')}`
+// The published fill only ever applies to one item priced in ILS.
+const fillable = (input: PurchaseReviewInput) => input.lines.length === 1 && (!input.currency || input.currency === 'ILS')
+const isAuto = (value: string, filled: string | undefined) => value === '' || (Boolean(filled) && value === filled)
+
+// One identified item at the chosen store: its published price follows the store.
+// A price or total is replaced only while it is empty or still exactly what was
+// filled in automatically; what the person typed is never overwritten. A store
+// without a published price clears only the automatic values.
+export function followPublishedPrice<T extends PurchaseReviewInput>(input: T, storeId: string | null, last: PublishedFill | null): { input: T; fill: PublishedFill | null } {
+  if (!fillable(input)) return { input, fill: last }
   const [line] = input.lines
-  if (price === undefined || input.lines.length !== 1 || line.price || (input.currency && input.currency !== 'ILS')) return input
-  const quantity = line.quantity || '1'
-  return { ...input, currency: 'ILS', lines: [{ ...line, price: price.toFixed(2), quantity }], amount: input.amount || (Math.round(price * 100 * Number(quantity)) / 100).toFixed(2) }
+  // A typed price stays, and so does everything derived from it.
+  if (!isAuto(line.price, last?.price)) return { input, fill: last && { ...last, price: '' } }
+  const published = storeId ? input.catalogPrices?.[storeId] : undefined
+  const autoAmount = last?.amount ? input.amount === last.amount : false
+  if (published === undefined || !storeId) {
+    if (!line.price && !autoAmount) return { input, fill: null }
+    return { input: { ...input, lines: [{ ...line, price: '' }], amount: autoAmount ? '' : input.amount }, fill: null }
+  }
+  const filled = { ...line, price: agorot(Math.round(published * 100)), quantity: line.quantity || '1' }
+  const total = isAuto(input.amount, last?.amount) ? lineMinorTotal(filled, 'ILS') : null
+  const amount = total === null ? (autoAmount ? '' : input.amount) : agorot(total)
+  return { input: { ...input, currency: 'ILS', lines: [filled], amount }, fill: { storeId, price: filled.price, amount: total === null ? '' : amount } }
+}
+// The person edited the item: a total that is still the automatic one follows the
+// line (integer agorot); a typed total is never changed.
+export function followLineEdit<T extends PurchaseReviewInput>(input: T, last: PublishedFill | null): { input: T; fill: PublishedFill | null } {
+  if (!last?.amount || input.amount !== last.amount || !fillable(input)) return { input, fill: last }
+  const total = lineMinorTotal(input.lines[0], 'ILS')
+  if (total === null) return { input, fill: last }
+  const amount = agorot(total)
+  return { input: { ...input, amount }, fill: { ...last, amount } }
+}
+// One store choice without earlier automatic values.
+export function withPublishedPrice<T extends PurchaseReviewInput>(input: T, storeId: string | null): T {
+  return followPublishedPrice(input, storeId, null).input
 }
 
 // The form keeps dates as UTC minutes ('YYYY-MM-DDTHH:mm'); people read and type

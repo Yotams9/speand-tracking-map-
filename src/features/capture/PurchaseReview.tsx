@@ -12,7 +12,7 @@ import { receiptEditorWall } from './receipt-editor-values'
 import { receiptReviewPrefill, receiptReviewZone } from './receipt-review-prefill'
 import { receiptPlaceSeed, type ReceiptPlaceSeed } from './receipt-place-seed'
 import { receiptBlockerFields, receiptBlockerLabel } from './receipt-review-readiness'
-import { catalogChoice, catalogIdForPlace, isLocated, loadCatalogStores, localInputToUtc, nearestCatalogStore, NEAREST_STORE_METERS, utcToLocalInput, withNowIfEmpty, withPublishedPrice, type LocatedCatalogStore } from './catalog-stores'
+import { catalogChoice, catalogIdForPlace, isLocated, loadCatalogStores, localInputToUtc, nearestCatalogStore, NEAREST_STORE_METERS, utcToLocalInput, withNowIfEmpty, followLineEdit, followPublishedPrice, type LocatedCatalogStore, type PublishedFill } from './catalog-stores'
 import { catalogChainNames } from '../local-purchases/place-provenance'
 import type { CatalogStoreSummary } from '@/data/price-catalog'
 import styles from './CaptureExperience.module.css'
@@ -20,7 +20,13 @@ import styles from './CaptureExperience.module.css'
 const NEW_STORE = '__new_store__'
 const CATALOG = 'catalog:'
 
-type EditableReview = Omit<PurchaseReviewInput, 'lines'> & { lines: (PurchaseReviewInput['lines'][number] | ReceiptReviewDraft['review']['lines'][number])[] }
+// publishedFill is form state only: what was last filled in from a store's
+// published price, so a later store change can tell it from typed values.
+type EditableReview = Omit<PurchaseReviewInput, 'lines'> & { lines: (PurchaseReviewInput['lines'][number] | ReceiptReviewDraft['review']['lines'][number])[]; publishedFill?: PublishedFill }
+const reviewInput = ({ publishedFill: _fill, ...form }: EditableReview) => form as PurchaseReviewInput
+const withFill = (input: PurchaseReviewInput, fill: PublishedFill | null): EditableReview => ({ ...(input as EditableReview), ...(fill ? { publishedFill: fill } : {}) })
+const followStore = (current: EditableReview, storeId: string | null): EditableReview => { const next = followPublishedPrice(reviewInput(current), storeId, current.publishedFill ?? null); return withFill(next.input, next.fill) }
+const followEdit = (current: EditableReview): EditableReview => { const next = followLineEdit(reviewInput(current), current.publishedFill ?? null); return withFill(next.input, next.fill) }
 const calculatedLine = (line: EditableReview['lines'][number], currency: string) => line.unit ? lineMinorTotal(line as PurchaseReviewInput['lines'][number], currency) : null
 const receiptFeedbackTarget = (control: HTMLElement) => control.closest<HTMLElement>('[data-review-feedback]') ?? control.closest('label') ?? control
 
@@ -39,7 +45,7 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
   const observedMerchant = typeof receiptDraft?.observations.merchantName === 'string' ? receiptDraft.observations.merchantName : ''
   const [receiptAddress, setReceiptAddress] = useState(() => typeof receiptDraft?.observations.address === 'string' ? receiptDraft.observations.address : '')
   const [receiptWall, setReceiptWall] = useState(() => receiptEditorWall(receiptDraft?.observations.date, receiptDraft?.observations.time))
-  const preparation = receiptDraft ? prepareReceiptReview({ ...receiptDraft, review: input as ReceiptReviewDraft['review'] }, context) : null
+  const preparation = receiptDraft ? prepareReceiptReview({ ...receiptDraft, review: reviewInput(input) as ReceiptReviewDraft['review'] }, context) : null
   const blockers = preparation && !preparation.ready ? receiptBlockerFields(preparation.errors) : []
   const form = useRef<HTMLFormElement>(null), heading = useRef<HTMLHeadingElement>(null), saving = useRef(false)
   const directoryActive = useRef(Boolean(input.directoryIntent))
@@ -92,7 +98,7 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
   const withCatalogStore = (current: EditableReview, store: LocatedCatalogStore, suggested = false): EditableReview => {
     const existing = context.places.find(p => catalogIdForPlace(p) === store.id)
     const chosen: EditableReview = existing && !suggested ? { ...current, directoryIntent: undefined, placeId: existing.id, merchantId: existing.merchantId } : { ...current, placeId: '', merchantId: '', directoryIntent: { catalogStore: catalogChoice(store), ...(suggested ? { locationSuggested: { confirmed: false } } : {}) } }
-    return withPublishedPrice(chosen as PurchaseReviewInput, store.id) as EditableReview
+    return followStore(chosen, store.id)
   }
   // The device location is read only on this press, to suggest the closest known store.
   const findNearest = () => {
@@ -109,14 +115,14 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
   }
   const choosePlace = (value: string) => {
     setNearby({ state: 'idle' })
-    if (value === NEW_STORE) { patch({ placeId: '', merchantId: '', directoryIntent: { merchant: { name: '', category: '', separate: false }, place: { branch: '', city: '', country: '', address: '', longitude: '', latitude: '', confirmed: false, separate: false } } }); return }
+    if (value === NEW_STORE) { setErrors({}); setMessage(null); setInput(current => followStore({ ...current, placeId: '', merchantId: '', directoryIntent: { merchant: { name: '', category: '', separate: false }, place: { branch: '', city: '', country: '', address: '', longitude: '', latitude: '', confirmed: false, separate: false } } }, null)); return }
     const store = value.startsWith(CATALOG) ? shownCatalogStores.find(s => s.id === value.slice(CATALOG.length)) : undefined
     setErrors({}); setMessage(null)
     // Picking a chain branch means shopping there: an empty date becomes now (still editable).
     if (store) { setInput(current => withCatalogStore(withNowIfEmpty({ ...current, category: current.category || 'groceries' }), store)); return }
     const p = context.places.find(p => p.id === value)
     const chainStoreId = p ? catalogIdForPlace(p) : null
-    setInput(current => { const chosen = { ...current, placeId: p?.id ?? '', merchantId: p?.merchantId ?? '', directoryIntent: undefined }; return withPublishedPrice((chainStoreId ? withNowIfEmpty(chosen) : chosen) as PurchaseReviewInput, chainStoreId) as EditableReview })
+    setInput(current => { const chosen = { ...current, placeId: p?.id ?? '', merchantId: p?.merchantId ?? '', directoryIntent: undefined }; return followStore(chainStoreId ? withNowIfEmpty(chosen) : chosen, chainStoreId) })
   }
   const catalogIntent = input.directoryIntent?.catalogStore
   const suggestion = input.directoryIntent?.locationSuggested
@@ -125,13 +131,14 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
   const shownErrors =receiptDraft ? Object.fromEntries(Object.entries(errors).filter(([field]) => receiptBlockerFields(errors).includes(field))) : errors
   useEffect(() => { heading.current?.focus({ preventScroll: true }) }, [manualStep])
   const patch = (value: Partial<EditableReview>) => { setInput(current => ({ ...current, ...value })); setErrors({}); setMessage(null) }
+  const patchLine = (index: number, value: Partial<PurchaseReviewInput['lines'][number]>) => { setInput(current => followEdit({ ...current, lines: current.lines.map((l, j) => j === index ? { ...l, ...value } : l) })); setErrors({}); setMessage(null) }
   const errorText = (field: string) => receiptDraft && field.startsWith('printedAmount-') && shownErrors[field] === 'arithmetic' ? receiptCopy[locale].mismatch : shownErrors[field] ? t.error[shownErrors[field] as keyof typeof t.error] ?? t.error.required : null
   const attrs = (field: string) => ({ id: `review-${field}`, 'data-testid': `review-${field}`, 'aria-invalid': Boolean(shownErrors[field]), 'aria-required': true, 'aria-describedby': shownErrors[field] ? `review-error-${field}` : undefined })
   const error = (field: string) => errorText(field) && <small className={styles.fieldError} id={`review-error-${field}`}>{errorText(field)}</small>
   const submit = async (allowDuplicate = false) => {
     if (saving.current) return
     const prepared = preparation
-    const projected = prepared?.ready ? prepared.input : input as PurchaseReviewInput
+    const projected = prepared?.ready ? prepared.input : reviewInput(input)
     const nextErrors = prepared && !prepared.ready ? prepared.errors : validateReview(projected, context)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) {
@@ -204,16 +211,16 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
       {input.provenance === 'user-reviewed' && input.currency && input.currency !== 'ILS' && <label>{t.baseAmount}<input {...attrs('baseAmount')} dir="ltr" inputMode="decimal" value={input.baseAmount} onChange={e => patch({ baseAmount: e.target.value })} />{error('baseAmount')}<small>{t.conversion}</small></label>}
       <div className={styles.fullField}><p>{input.lines.length ? t.total : t.noItems}</p>{input.lines.map((line, i) => <fieldset key={i} className={styles.reviewLine}><legend>{i + 1}. {line.name || t.name}</legend>
         <label>{t.name}<input {...attrs(`name-${i}`)} dir="auto" maxLength={100} value={line.name} onChange={e => patch({ lines: input.lines.map((l, j) => j === i ? { ...l, name: e.target.value } : l) })} />{error(`name-${i}`)}</label>
-        <label>{t.quantity}<input {...attrs(`quantity-${i}`)} dir="ltr" inputMode="decimal" value={line.quantity} onChange={e => patch({ lines: input.lines.map((l, j) => j === i ? { ...l, quantity: e.target.value } : l) })} />{error(`quantity-${i}`)}</label>
-        <label>{t.price}<input {...attrs(`price-${i}`)} dir="ltr" inputMode="decimal" value={line.price} onChange={e => patch({ lines: input.lines.map((l, j) => j === i ? { ...l, price: e.target.value } : l) })} />{error(`price-${i}`)}</label>
-        <label>{t.unit}<select {...attrs(`unit-${i}`)} value={line.unit} onChange={e => patch({ lines: input.lines.map((l, j) => j === i ? { ...l, unit: e.target.value as 'item' | 'kg' } : l) })}>{receiptDraft && <option value="">{t.required}</option>}<option value="item">{t.item}</option><option value="kg">{t.kg}</option></select>{error(`unit-${i}`)}</label>
+        <label>{t.quantity}<input {...attrs(`quantity-${i}`)} dir="ltr" inputMode="decimal" value={line.quantity} onChange={e => patchLine(i, { quantity: e.target.value })} />{error(`quantity-${i}`)}</label>
+        <label>{t.price}<input {...attrs(`price-${i}`)} dir="ltr" inputMode="decimal" value={line.price} onChange={e => patchLine(i, { price: e.target.value })} />{error(`price-${i}`)}</label>
+        <label>{t.unit}<select {...attrs(`unit-${i}`)} value={line.unit} onChange={e => patchLine(i, { unit: e.target.value as 'item' | 'kg' })}>{receiptDraft && <option value="">{t.required}</option>}<option value="item">{t.item}</option><option value="kg">{t.kg}</option></select>{error(`unit-${i}`)}</label>
         {receiptDraft && <label>{receiptCopy[locale].amount}<input {...attrs(`printedAmount-${i}`)} dir="ltr" inputMode="decimal" value={'printedAmount' in line ? line.printedAmount : ''} onChange={e => patch({ lines: input.lines.map((l, j) => j === i ? { ...l, printedAmount: e.target.value } : l) })} />{error(`printedAmount-${i}`)}</label>}
-        <label className={styles.lineDiscount}>{t.discount}<input {...attrs(`discount-${i}`)} aria-required={false} aria-describedby={shownErrors[`discount-${i}`] ? `review-error-discount-${i}` : `review-discount-hint-${i}`} dir="ltr" inputMode="decimal" value={line.discount ?? '0'} onChange={e => patch({ lines: input.lines.map((l, j) => j === i ? { ...l, discount: e.target.value } : l) })} /><small id={`review-discount-hint-${i}`}>{t.discountHint}</small>{error(`discount-${i}`)}</label>
+        <label className={styles.lineDiscount}>{t.discount}<input {...attrs(`discount-${i}`)} aria-required={false} aria-describedby={shownErrors[`discount-${i}`] ? `review-error-discount-${i}` : `review-discount-hint-${i}`} dir="ltr" inputMode="decimal" value={line.discount ?? '0'} onChange={e => patchLine(i, { discount: e.target.value })} /><small id={`review-discount-hint-${i}`}>{t.discountHint}</small>{error(`discount-${i}`)}</label>
         <output className={styles.lineNet} data-testid={`review-net-${i}`}>{t.net}: <bdi>{calculatedLine(line, input.currency) === null ? '—' : money(calculatedLine(line, input.currency)! / factor)}</bdi></output><button type="button" className={styles.secondary} onClick={() => patch({ lines: input.lines.filter((_, j) => j !== i) })}>{t.remove} {i + 1}</button>
       </fieldset>)}{error('lines')}{(() => {
-        const storeId = catalogIntent?.id ?? catalogIdForPlace(place)
-        const price = storeId ? input.catalogPrices?.[storeId] : undefined
-        return price !== undefined && input.lines.length === 1 && input.lines[0].price === price.toFixed(2) && <small data-testid="review-price-filled">{t.priceFilled.replace('{price}', new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-GB', { style: 'currency', currency: 'ILS' }).format(price))}</small>
+        // The note follows the current store and only while the price is still the filled-in one.
+        const storeId = catalogIntent?.id ?? catalogIdForPlace(place), fill = input.publishedFill
+        return Boolean(fill?.price) && fill!.storeId === storeId && input.lines.length === 1 && input.lines[0].price === fill!.price && <small data-testid="review-price-filled">{t.priceFilled.replace('{price}', new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-GB', { style: 'currency', currency: 'ILS' }).format(Number(fill!.price)))}</small>
       })()}<button type="button" className={styles.secondary} disabled={input.lines.length >= 50} onClick={() => patch({ lines: [...input.lines, receiptDraft ? { name: '', quantity: '', price: '', unit: '', printedAmount: '' } : { name: '', quantity: '', price: '', unit: 'item' }] })}>{t.addLine}</button></div>
     </div><aside className={styles.reviewSummary} aria-label={t.summary}><strong>{t.summary}</strong>{receiptDraft ? <div data-testid="receipt-context-summary">
       <p>{locale === 'he' ? 'חנות: ' : 'Store: '}<bdi dir="auto">{input.directoryIntent?.merchant ? input.directoryIntent.merchant.name || (locale === 'he' ? 'שם חסר' : 'Name missing') : merchant ? localized(merchant.name, locale) : observedMerchant || (locale === 'he' ? 'שם לא פתור' : 'Name unresolved')}</bdi>{!merchant && !input.directoryIntent && <small> · {locale === 'he' ? 'נצפה · נדרש אישור' : 'observed · confirmation required'}</small>}</p>

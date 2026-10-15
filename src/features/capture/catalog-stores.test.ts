@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { canonicalSpendscapeData } from '../../data/spendscape-fixtures'
 import { buildPlaceFeatureCollection } from '../../data/spendscape-globe'
 import type { CatalogStoreSummary } from '../../data/price-catalog'
-import { catalogChoice, catalogIdForPlace, distanceMeters, isLocated, localInputToUtc, nearestCatalogStore, utcToLocalInput, withNowIfEmpty, withPublishedPrice } from './catalog-stores'
+import { catalogChoice, catalogIdForPlace, distanceMeters, followLineEdit, followPublishedPrice, isLocated, localInputToUtc, nearestCatalogStore, utcToLocalInput, withNowIfEmpty, withPublishedPrice } from './catalog-stores'
 import { blankReview, deleteLocalPurchase, emptySessionLedger, saveReviewedPurchase, validateReview, type PurchaseReviewInput, type ReviewContext } from './session-purchase-domain'
 import { composeDirectory } from '../local-purchases/local-directory'
 
@@ -42,6 +42,75 @@ describe('published price fill', () => {
     expect(withPublishedPrice({ ...base(), currency: 'USD' }, 'shufersal-1').lines[0].price).toBe('')
     expect(withPublishedPrice({ ...base(), lines: [...base().lines, ...base().lines] }, 'shufersal-1').lines[0].price).toBe('')
     expect(withPublishedPrice({ ...base(), amount: '20.00' }, 'shufersal-1').amount).toBe('20.00')
+  })
+})
+
+describe('published price follows the chosen store', () => {
+  const line = (input: PurchaseReviewInput, patch: Partial<PurchaseReviewInput['lines'][number]>) => ({ ...input, lines: [{ ...input.lines[0], ...patch }] })
+  const atA = (quantity = '') => followPublishedPrice(line(base(), { quantity }), 'shufersal-1', null)
+  it('switching from branch A to branch B updates the automatic price and total', () => {
+    const a = atA()
+    expect(a.input.lines[0]).toMatchObject({ price: '8.50', quantity: '1' }); expect(a.input.amount).toBe('8.50')
+    expect(a.fill).toEqual({ storeId: 'shufersal-1', price: '8.50', amount: '8.50' })
+    const b = followPublishedPrice(a.input, 'ramilevi-733', a.fill)
+    expect(b.input.lines[0].price).toBe('8.20'); expect(b.input.amount).toBe('8.20')
+    expect(b.fill).toEqual({ storeId: 'ramilevi-733', price: '8.20', amount: '8.20' })
+    const three = followPublishedPrice(atA('3').input, 'ramilevi-733', atA('3').fill)
+    expect(three.input.amount).toBe('24.60')
+  })
+  it('a price typed after the fill is kept on a store change', () => {
+    const a = atA()
+    const typed = followLineEdit(line(a.input, { price: '7.00' }), a.fill)
+    const b = followPublishedPrice(typed.input, 'ramilevi-733', typed.fill)
+    expect(b.input.lines[0].price).toBe('7.00')
+    // The total was still automatic, so it already follows the typed price.
+    expect(b.input.amount).toBe('7.00')
+    expect(b.fill?.price).toBe('')
+  })
+  it('a total typed after the fill is kept while the automatic price follows the store', () => {
+    const a = atA()
+    const b = followPublishedPrice({ ...a.input, amount: '9.00' }, 'ramilevi-733', a.fill)
+    expect(b.input.lines[0].price).toBe('8.20'); expect(b.input.amount).toBe('9.00')
+    expect(b.fill).toEqual({ storeId: 'ramilevi-733', price: '8.20', amount: '' })
+    // and a later quantity change leaves the typed total alone.
+    expect(followLineEdit(line(b.input, { quantity: '2' }), b.fill).input.amount).toBe('9.00')
+  })
+  it('a quantity change recomputes only an automatic total', () => {
+    const a = atA()
+    const more = followLineEdit(line(a.input, { quantity: '3' }), a.fill)
+    expect(more.input.amount).toBe('25.50'); expect(more.fill?.amount).toBe('25.50')
+    expect(followLineEdit({ ...line(a.input, { quantity: '3' }), amount: '30.00' }, a.fill).input.amount).toBe('30.00')
+    // Text that is not yet a quantity changes nothing until it is one.
+    expect(followLineEdit(line(a.input, { quantity: '3.' }), a.fill).input.amount).toBe('8.50')
+    expect(followLineEdit(line(a.input, { quantity: '3' }), null).input.amount).toBe('8.50')
+  })
+  it('a store without a published price clears only the automatic values', () => {
+    const a = atA()
+    for (const storeId of ['osherad-24', null]) {
+      const cleared = followPublishedPrice(a.input, storeId, a.fill)
+      expect(cleared.input.lines[0]).toMatchObject({ price: '', quantity: '1' }); expect(cleared.input.amount).toBe('')
+      expect(cleared.fill).toBeNull()
+    }
+    expect(followPublishedPrice({ ...a.input, amount: '9.00' }, 'osherad-24', a.fill).input).toMatchObject({ amount: '9.00', lines: [{ price: '' }] })
+    const typed = line(a.input, { price: '7.00' })
+    expect(followPublishedPrice(typed, 'osherad-24', a.fill).input).toBe(typed)
+  })
+  it('works in exact agorot: 3 × 7.90 = 23.70', () => {
+    const priced = { ...base(), catalogPrices: { 'shufersal-2': 7.9 } }
+    expect(followPublishedPrice(line(priced, { quantity: '3' }), 'shufersal-2', null).input.amount).toBe('23.70')
+    const one = followPublishedPrice(priced, 'shufersal-2', null)
+    expect(followLineEdit(line(one.input, { quantity: '3' }), one.fill).input.amount).toBe('23.70')
+    expect(followLineEdit(line(one.input, { quantity: '0.333', unit: 'kg' }), one.fill).input.amount).toBe('2.63')
+  })
+  it('leaves other currencies and multi-item forms as they are, and adds nothing to the purchase', () => {
+    const a = atA()
+    const usd = { ...a.input, currency: 'USD' as const }
+    expect(followPublishedPrice(usd, 'ramilevi-733', a.fill)).toEqual({ input: usd, fill: a.fill })
+    const two = { ...a.input, lines: [...a.input.lines, ...a.input.lines] }
+    expect(followPublishedPrice(two, 'ramilevi-733', a.fill)).toEqual({ input: two, fill: a.fill })
+    expect(followLineEdit(two, a.fill).input).toBe(two)
+    // The fill record is returned beside the form values, never inside them.
+    expect(Object.keys(followPublishedPrice(a.input, 'ramilevi-733', a.fill).input)).toEqual(Object.keys(a.input))
   })
 })
 
