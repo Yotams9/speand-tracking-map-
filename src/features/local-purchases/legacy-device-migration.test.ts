@@ -81,31 +81,65 @@ describe('one-time import of the earlier localStorage ledger', () => {
     const plan = planLegacyImport(JSON.stringify({ version: 1, nextSequence: 2, records: [online] }), ctx, null)
     expect(plan).toMatchObject({ kind: 'ready', purchases: 1 })
   })
-  it('skips invalid data as a whole and never imports part of it', async () => {
+  it('rejects a ledger only when the ledger itself is unreadable or over capacity', async () => {
     const ctx = await context()
-    const broken = (patch: (ledger: any) => void) => { const ledger: any = legacyLedger(); patch(ledger); return planLegacyImport(JSON.stringify(ledger), ctx, stores) }
+    const ledger: any = legacyLedger(); ledger.records = ledger.records.concat(Array.from({ length: 1000 }, () => ledger.records[0]))
     for (const plan of [
       planLegacyImport('{', ctx, stores),
       planLegacyImport(JSON.stringify({ version: 2, records: [] }), ctx, stores),
-      broken(l => { l.records[0].purchase.originalAmount = -1 }),
-      broken(l => { l.records[0].purchase.originalAmount = 42.505 }),
-      broken(l => { l.records[1].purchase.items[0].lineTotal = 99 }),
-      broken(l => { l.records[0].purchase.merchantId = 'missing' }),
-      broken(l => { l.records[0].purchase.placeId = 'place_shuk_bograshov' }),
-      broken(l => { l.records[1].purchase.id = l.records[0].purchase.id }),
-      broken(l => { l.records[0].purchase.timestamp = 'yesterday' }),
-      broken(l => { l.records[1].identification.identity.gtin14 = '07290110115211' }),
-      broken(l => { l.places[0].coordinates = [34.78, 132] }),
-      broken(l => { l.places[1].merchantId = 'device_merchant_01' }),
-      broken(l => { l.merchants[1].name = { en: 'Rami', he: 'רמי' } }),
-      broken(l => { l.merchants[0].id = canonicalSpendscapeData.merchants[0].id }),
-      broken(l => { l.records = l.records.concat(Array.from({ length: 1000 }, () => l.records[0])) }),
-      // Fictional demo stores never become the person's own places.
-      planLegacyImport(JSON.stringify({ version: 1, nextSequence: 2, records: [legacyRecord({ ...base(), channel: 'online', merchantId: 'merchant_serein', amount: '12.00', category: 'retail' }, 1)] }), ctx, stores),
-      planLegacyImport(JSON.stringify({ version: 1, nextSequence: 2, records: [legacyRecord({ ...base(), channel: 'physical', merchantId: 'merchant_shuk', placeId: 'place_shuk_bograshov', amount: '12.00' }, 1)] }), ctx, stores),
-      // A chain branch no longer in the published catalog gets no invented address.
-      planLegacyImport(JSON.stringify(legacyLedger()), ctx, []),
+      planLegacyImport(JSON.stringify({ ...legacyLedger(), merchants: {} }), ctx, stores),
+      planLegacyImport(JSON.stringify(ledger), ctx, stores),
     ]) expect(plan.kind).toBe('invalid')
+  })
+  it('leaves out each purchase that cannot be imported exactly and imports the rest unchanged', async () => {
+    const ctx = await context()
+    const broken = (patch: (ledger: any) => void, catalog: CatalogStoreSummary[] = stores) => { const ledger: any = legacyLedger(); patch(ledger); return planLegacyImport(JSON.stringify(ledger), ctx, catalog) }
+    const cases: [string, ReturnType<typeof planLegacyImport>, string][] = [
+      ['negative amount', broken(l => { l.records[0].purchase.originalAmount = -1 }), 'session_purchase_manual_01'],
+      ['sub-agora amount', broken(l => { l.records[0].purchase.originalAmount = 42.505 }), 'session_purchase_manual_01'],
+      ['line total', broken(l => { l.records[1].purchase.items[0].lineTotal = 99 }), 'session_purchase_barcode_02'],
+      ['missing store', broken(l => { l.records[0].purchase.merchantId = 'missing' }), 'session_purchase_manual_01'],
+      ['timestamp', broken(l => { l.records[0].purchase.timestamp = 'yesterday' }), 'session_purchase_manual_01'],
+      ['barcode identity', broken(l => { l.records[1].identification.identity.gtin14 = '07290110115211' }), 'session_purchase_barcode_02'],
+      ['currency', broken(l => { l.records[2].purchase.originalCurrency = 'QQQ' }), 'session_purchase_manual_03'],
+      ['pin coordinates', broken(l => { l.places[0].coordinates = [34.78, 132] }), 'session_purchase_manual_01'],
+      ['place of another store', broken(l => { l.places[1].merchantId = 'device_merchant_01' }), 'session_purchase_barcode_02'],
+      ['chain name', broken(l => { l.merchants[1].name = { en: 'Rami', he: 'רמי' } }), 'session_purchase_barcode_02'],
+      ['store colliding with a built-in ID', broken(l => { l.merchants[0].id = canonicalSpendscapeData.merchants[0].id }), 'session_purchase_manual_01'],
+      // A later copy of a sequence number is left out; the first one stays.
+      ['duplicate sequence', broken(l => { l.records[1].purchase.id = l.records[0].purchase.id }), 'session_purchase_barcode_02'],
+      // A chain branch no longer in the published catalog gets no invented address.
+      ['branch not in the catalog', broken(() => {}, []), 'session_purchase_barcode_02'],
+    ]
+    for (const [name, plan, left] of cases) {
+      if (plan.kind !== 'ready') throw new Error(`${name}: ${JSON.stringify(plan)}`)
+      expect([name, plan.purchases, plan.invalidSkipped, plan.fixtureSkipped, plan.demoSkipped]).toEqual([name, 2, 1, 0, 1])
+      expect(plan.data.records.map(r => r.purchase.id)).not.toContain(left)
+      // Stores used only by the left-out purchase are not imported; the rest is exactly what the store accepts.
+      expect(plan.data.directory.places.every(p => plan.data.records.some(r => r.purchase.placeId === p.id))).toBe(true)
+      expect(validateLocalPurchases(plan.data, ctx)).toEqual(plan.data)
+    }
+  })
+  it('imports three real purchases and counts the one at a fictional demo store', async () => {
+    const ctx = await context()
+    const ledger = legacyLedger()
+    ledger.records.splice(1, 0, legacyRecord({ ...base(), channel: 'physical', merchantId: 'merchant_shuk', placeId: 'place_shuk_bograshov', amount: '12.00' }, 5))
+    const plan = planLegacyImport(JSON.stringify(ledger), ctx, stores)
+    if (plan.kind !== 'ready') throw new Error(JSON.stringify(plan))
+    expect(plan).toMatchObject({ purchases: 3, fixtureSkipped: 1, invalidSkipped: 0, demoSkipped: 1 })
+    expect(plan.data.records.map(r => r.purchase.id)).toEqual(['session_purchase_manual_01', 'session_purchase_barcode_02', 'session_purchase_manual_03'])
+    // Fictional demo stores never become the person's own places.
+    expect(plan.data.directory.places.map(p => p.catalogStore?.storeId ?? p.locationMethod)).toEqual(['device-location', 'ramilevi-733'])
+    expect(plan.data.records.every(r => !r.purchase.merchantId.startsWith('merchant_') && !String(r.purchase.placeId).startsWith('place_'))).toBe(true)
+    // An online purchase at a demo store is counted the same way.
+    const online = planLegacyImport(JSON.stringify({ version: 1, nextSequence: 2, records: [legacyRecord({ ...base(), channel: 'online', merchantId: 'merchant_serein', amount: '12.00', category: 'retail' }, 1)] }), ctx, stores)
+    expect(online).toMatchObject({ kind: 'ready', purchases: 0, fixtureSkipped: 1 })
+  })
+  it('imports the rest when one record is not even a purchase', async () => {
+    const ctx = await context()
+    const ledger: any = legacyLedger(); ledger.records.splice(2, 0, { purchase: null, synthetic: false }, 'text')
+    const plan = planLegacyImport(JSON.stringify(ledger), ctx, stores)
+    expect(plan).toMatchObject({ kind: 'ready', purchases: 3, invalidSkipped: 2, fixtureSkipped: 0, demoSkipped: 1 })
   })
   it('asks for the published store list before importing a chain branch', async () => {
     expect(planLegacyImport(JSON.stringify(legacyLedger()), await context(), null)).toEqual({ kind: 'needs-catalog' })
@@ -121,8 +155,8 @@ describe('migration run', () => {
   it('imports into an empty store once, marks it done and never touches the old key', async () => {
     const raw = JSON.stringify(legacyLedger()), store = storage({ [LEGACY_DEVICE_KEY]: raw })
     const first = await run(store)
-    expect(first.outcome).toEqual({ status: 'imported', purchases: 3, demoSkipped: 1 })
-    expect(legacyNotice(first.outcome)).toEqual({ kind: 'imported', purchases: 3, demoSkipped: 1 })
+    expect(first.outcome).toEqual({ status: 'imported', purchases: 3, demoSkipped: 1, fixtureSkipped: 0, invalidSkipped: 0 })
+    expect(legacyNotice(first.outcome)).toEqual({ kind: 'imported', purchases: 3, demoSkipped: 1, skipped: 0 })
     expect(first.restore).toHaveBeenCalledTimes(1)
     expect(first.saved?.records).toHaveLength(3)
     expect(store.writes.map(([key]) => key)).toEqual([LEGACY_MIGRATION_KEY])
@@ -157,13 +191,28 @@ describe('migration run', () => {
     expect(legacyNotice((await run(store)).outcome)).toBeNull()
     expect(store.map.get(LEGACY_DEVICE_KEY)).toBe(raw)
   })
-  it('reports invalid legacy data, imports nothing and keeps the old key', async () => {
-    const ledger: any = legacyLedger(); ledger.records[2].purchase.originalCurrency = 'QQQ'
+  it('reports an unreadable ledger, imports nothing and keeps the old key', async () => {
+    const ledger: any = legacyLedger(); ledger.merchants = 'broken'
     const raw = JSON.stringify(ledger), store = storage({ [LEGACY_DEVICE_KEY]: raw })
     const result = await run(store)
     expect(result.outcome).toMatchObject({ status: 'skipped-invalid', legacyPurchases: 3 })
     expect(legacyNotice(result.outcome)).toEqual({ kind: 'invalid', purchases: 3, capacity: false })
     expect(result.restore).not.toHaveBeenCalled()
+    expect(store.map.get(LEGACY_DEVICE_KEY)).toBe(raw)
+  })
+  it('imports the rest when some purchases are left out, and reports those until dismissed', async () => {
+    const ledger: any = legacyLedger(); ledger.records[2].purchase.originalCurrency = 'QQQ'
+    ledger.records.push(legacyRecord({ ...base(), channel: 'physical', merchantId: 'merchant_nomi', placeId: 'place_nomi_dizengoff', amount: '30.00', category: 'food' }, 5))
+    const raw = JSON.stringify(ledger), store = storage({ [LEGACY_DEVICE_KEY]: raw })
+    const result = await run(store)
+    expect(result.outcome).toEqual({ status: 'imported', purchases: 2, demoSkipped: 1, fixtureSkipped: 1, invalidSkipped: 1 })
+    expect(result.restore).toHaveBeenCalledTimes(1)
+    expect(result.saved?.records.map(r => r.purchase.id)).toEqual(['session_purchase_manual_01', 'session_purchase_barcode_02'])
+    expect(legacyNotice(result.outcome)).toEqual({ kind: 'imported', purchases: 2, demoSkipped: 1, skipped: 2 })
+    // The left-out purchases stay reported on later loads until dismissed; the old key is untouched.
+    expect(legacyNotice((await run(store)).outcome)).toEqual({ kind: 'imported', purchases: 2, demoSkipped: 1, skipped: 2 })
+    dismissLegacyNotice(store)
+    expect(legacyNotice((await run(store)).outcome)).toBeNull()
     expect(store.map.get(LEGACY_DEVICE_KEY)).toBe(raw)
   })
   it('a concurrent write or storage failure is retried on a later load', async () => {
