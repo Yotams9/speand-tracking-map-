@@ -49,3 +49,13 @@ describe('actual receipt save blockers, not a parallel validator', () => {
     expect(receiptEditorTime('24:00')).toBe(''); expect(receiptEditorTime({ candidates: ['09:07', '10:07'] })).toBe('')
   })
 })
+describe('store wording', () => {
+  it('calls a store a store in every blocker label, in Hebrew and English', () => {
+    for (const field of ['merchantId', 'merchantName', 'merchantCategory', 'merchantSeparate', 'directory', 'placeId', 'other']) {
+      expect(receiptBlockerLabel(field, true)).not.toMatch(/עסק/)
+      expect(receiptBlockerLabel(field, false)).not.toMatch(/merchant/i)
+    }
+    expect(receiptBlockerLabel('merchantName', true)).toBe('יש לבדוק את שם החנות')
+    expect(receiptBlockerLabel('merchantId', false)).toBe('Choose an existing store or review and create the observed store')
+  })
+})
