@@ -1,6 +1,7 @@
 // Fixed hosted release preparation. Imports perform no network or credentials I/O.
 import { createHash, randomBytes } from 'node:crypto'
-export const PROJECT = 'prj_PNiKcOoBrfiJQGOTXYhzApxitZp3'
+export const ORIGINAL_PROJECT = 'prj_PNiKcOoBrfiJQGOTXYhzApxitZp3'
+export const PROJECT = 'prj_28lNdvbpPK3zNOrAq8C9hnuhupJS'
 export const TEAM = 'team_yx1kmFpHwN320ijT9Z2Bv2mL'
 export const BRANCH = 'codex/hosted-college-release-20261015'
 export const PREFIX = `artifacts/hosted-completion-20261015`
@@ -14,7 +15,7 @@ export function accessMaterial() {
 }
 export function windowConfig(prepared, origin, now = Date.now()) {
   const url = new URL(origin)
-  if (url.origin !== origin || !/^https:\/\/spendscape-college-demo-[a-z0-9-]+\.vercel\.app$/.test(origin) || !/^[a-f0-9]{32}$/.test(prepared.release) || !['ownerHash','lecturerHash','digestSalt'].every(k => /^[a-f0-9]{64}$/.test(prepared[k])) || prepared.ownerHash === prepared.lecturerHash) throw Error('release-policy-invalid')
+  if (url.origin !== origin || !/^https:\/\/spendscape-college-preview-[a-z0-9-]+\.vercel\.app$/.test(origin) || !/^[a-f0-9]{32}$/.test(prepared.release) || !['ownerHash','lecturerHash','digestSalt'].every(k => /^[a-f0-9]{64}$/.test(prepared[k])) || prepared.ownerHash === prepared.lecturerHash) throw Error('release-policy-invalid')
   // A future boundary allows the deployed Preview to be checked while inactive.
   // Never extend this boundary after writing it or initialize a replacement.
   const start = now + 10 * 60_000

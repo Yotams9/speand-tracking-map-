@@ -47,3 +47,11 @@ New private configuration helpers:5/5 offline policy tests; admin module gated o
 Release tooling and scope: .vercelignore; receipt intake privacy wording; hosted QA destination override/config/spec; new protected completion QA; one-time administrative quota config/test; private release configuration/verification helpers. No request builder, model, decoder, financial rule, purchase migration or historical launcher was changed.
 
 Focused current units253/253 passed. QA output configuration now resolves fresh result destinations from the workspace root, preventing generated files under qa/. Existing results were relocated without regeneration.
+
+## Hosting correction — separately authorized Preview-only project
+
+Vercel blocked both the source deployment and locally successful prebuilt upload on the old project: “This deployment couldn’t be built because the project was paused.” Both immutable blocked records are retained; no unpause or provider request occurred. Metadata-only local linkage/build was used; rejected `vercel pull` was not run and no environment secrets were downloaded.
+
+User separately approved a new Preview-only project on the existing Hobby team. Created `spendscape-college-preview`, ID `prj_28lNdvbpPK3zNOrAq8C9hnuhupJS`, with Vercel Authentication, no Git connection, no Production deployment, and automatic domain promotion disabled. Original project `prj_PNiKcOoBrfiJQGOTXYhzApxitZp3` remains paused. Existing Redis store `store_3sGUulxEtWPKQw78` is reused; no new database or account. Private tools now pin both IDs and verify original Production remains paused before setup. Existing Redis values are privately read from the original integration and supplied server-side to Preview only. No purchases are moved.
+
+Expiry applies to protected server access and provider requests. Already loaded pages and browser-local records are not remotely erased. Export a backup before closing the presentation; device data has no cloud synchronization. Legacy archived purchases remain read-only: visible in history, details, Stats/search and backups, with editing/date/place/delete/Undo controls unavailable. Native reviewed purchases retain their normal controls.

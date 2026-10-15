@@ -5,7 +5,7 @@ import { existsSync } from 'node:fs'
 import { mkdtemp, writeFile, rm, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { PROJECT, TEAM, BRANCH, previewVariable, redisPair, sha } from './release-config.mjs'
+import { PROJECT, ORIGINAL_PROJECT, TEAM, BRANCH, previewVariable, redisPair, sha } from './release-config.mjs'
 const exec = promisify(execFile)
 export const CLI = existsSync('/Users/testing.user/.npm/_npx/59776437f344dde1/node_modules/.bin/vercel') ? '/Users/testing.user/.npm/_npx/59776437f344dde1/node_modules/.bin/vercel' : 'vercel'
 export const cleanEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !/API_KEY|REST_TOKEN|NODE_DEBUG|NODE_OPTIONS|DEBUG/.test(k)))
@@ -21,15 +21,16 @@ export async function api(path, method = 'GET', body) {
 }
 export async function verifyProject() {
   const p = await api('/v9/projects/' + PROJECT)
-  if (p.id !== PROJECT || p.accountId !== TEAM || p.paused !== true || !p.ssoProtection || p.autoAssignCustomDomains !== false) throw Error('protected-project-unverified')
+  const original = await api('/v9/projects/' + ORIGINAL_PROJECT)
+  if (p.id !== PROJECT || p.accountId !== TEAM || p.paused === true || !p.ssoProtection || p.autoAssignCustomDomains !== false || p.targets?.production || original.paused !== true) throw Error('protected-project-unverified')
 }
 export async function existingRedis() {
-  const list = await api('/v10/projects/' + PROJECT + '/env?decrypt=false')
+  const list = await api('/v10/projects/' + ORIGINAL_PROJECT + '/env?decrypt=false')
   const pair = {}
   for (const key of ['KV_REST_API_URL', 'KV_REST_API_TOKEN']) {
     const rows = list.envs.filter(e => e.key === key && e.target.includes('production'))
     if (rows.length !== 1) throw Error('existing-redis-unverified')
-    const entry = await api('/v1/projects/' + PROJECT + '/env/' + rows[0].id)
+    const entry = await api('/v1/projects/' + ORIGINAL_PROJECT + '/env/' + rows[0].id)
     pair[key] = entry.value
     entry.value = ''
   }

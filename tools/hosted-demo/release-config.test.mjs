@@ -11,7 +11,7 @@ test('explicit existing-plan readiness and both private inputs required', () => 
 test('separate 256-bit role capabilities with hashes only in server policy', () => {
   const a = accessMaterial(), b = accessMaterial()
   assert.match(a.owner, /^[a-f0-9]{64}$/); assert.notEqual(a.owner, a.lecturer); assert.notEqual(a.release, b.release)
-  const p = windowConfig(a, 'https://spendscape-college-demo-git-release-sk-dev3.vercel.app', 1000000)
+  const p = windowConfig(a, 'https://spendscape-college-preview-git-release-sk-dev3.vercel.app', 1000000)
   assert.equal(Date.parse(p.SPENDSCAPE_DEMO_EXPIRES_AT)-Date.parse(p.SPENDSCAPE_DEMO_START_AT), 7200000)
   assert.equal(Date.parse(p.SPENDSCAPE_DEMO_START_AT), 1600000)
   assert.equal(p.SPENDSCAPE_DEMO_RECEIPT_LIMIT, '2'); assert.equal(p.SPENDSCAPE_DEMO_ADDRESS_LIMIT, '2'); assert.equal(p.SPENDSCAPE_DEMO_CEILING_MICRO_USD, '100000')
@@ -19,8 +19,8 @@ test('separate 256-bit role capabilities with hashes only in server policy', () 
 })
 test('reject unrelated or unsafe origins and malformed policy', () => {
   const a = accessMaterial()
-  for (const u of ['http://spendscape-college-demo-qa.vercel.app', 'https://evil.test', 'https://spendscape-college-demo-qa.vercel.app/?code=x']) assert.throws(() => windowConfig(a, u))
-  assert.throws(() => windowConfig({ ...a, ownerHash: a.lecturerHash }, 'https://spendscape-college-demo-qa.vercel.app'))
+  for (const u of ['http://spendscape-college-preview-qa.vercel.app', 'https://evil.test', 'https://spendscape-college-preview-qa.vercel.app/?code=x']) assert.throws(() => windowConfig(a, u))
+  assert.throws(() => windowConfig({ ...a, ownerHash: a.lecturerHash }, 'https://spendscape-college-preview-qa.vercel.app'))
 })
 test('all configuration is sensitive and scoped to Preview only; source freeze separately requires the release branch', () => {
   const v = previewVariable('GEMINI_API_KEY', 'synthetic-key')
