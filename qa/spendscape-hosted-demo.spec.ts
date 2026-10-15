@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import { fictionalStructured, structuredEnvelope } from '../src/features/receipt-image/structured-image-contract'
 import { captureResponse } from '../src/features/receipt-image/structured-capture-response'
+const out = process.env.SPENDSCAPE_HOSTED_QA_OUT ?? 'artifacts/hosted-demo-qa'
 const code = '1'.repeat(64) // Public synthetic local QA capability only.
 async function login(page: import('@playwright/test').Page) {
   await page.goto('/'); await expect(page).toHaveURL(/\/demo-access$/)
@@ -23,8 +24,8 @@ for (const width of [360, 390, 430, 1280]) test(`private entry and logout at ${w
   await page.getByLabel('Access code / קוד גישה').fill(code); await page.getByRole('button', { name: 'Open Spendscape / כניסה' }).click()
   await expect(page.locator('html')).toHaveAttribute('data-spendscape-private-demo', 'true')
   const cookies = await context.cookies(); expect(cookies.find(c => c.name === 'spendscape-demo-test')?.httpOnly).toBe(true)
-  await page.goto('/demo-access'); await mkdir('artifacts/hosted-demo-qa', { recursive: true })
-  await page.screenshot({ path: `artifacts/hosted-demo-qa/entry-${width}.png` })
+  await page.goto('/demo-access'); await mkdir(out, { recursive: true })
+  await page.screenshot({ path: `${out}/entry-${width}.png` })
   await page.getByRole('button', { name: 'Close private session / סיום ההפעלה הפרטית' }).click()
   expect((await context.cookies()).some(c => c.name === 'spendscape-demo-test')).toBe(false)
   await page.goto('/'); await expect(page).toHaveURL(/\/demo-access$/)
@@ -48,6 +49,7 @@ test('authenticated receipt flow accepts a mocked hosted capability without quer
   })
   await login(page); await page.getByRole('button', { name: /Add purchase/ }).click(); await page.getByRole('button', { name: /Receipt photo/ }).click()
   await expect(page.getByTestId('receipt-image-read')).toBeVisible()
+  await expect(page.locator('#capture-description')).toContainText('through this protected demonstration')
   expect(posted).toBe(0)
   const image = await page.evaluate(() => { const c = document.createElement('canvas'); c.width = c.height = 64; c.getContext('2d')!.fillText('FICTIONAL QA', 1, 20); return c.toDataURL('image/png').split(',')[1] })
   await page.getByTestId('receipt-upload-input').setInputFiles({ name: 'fictional-qa.png', mimeType: 'image/png', buffer: Buffer.from(image, 'base64') })
@@ -64,5 +66,5 @@ test('Hebrew mobile privacy exposes sign-out without changing saved data', async
   const dialog = page.getByRole('dialog'); await expect(dialog).toHaveAttribute('dir', 'rtl')
   await expect(dialog.getByRole('link', { name: 'ניהול הגישה הפרטית וסיום ההפעלה' })).toBeVisible()
   await expect(page.getByTestId('purchase-backup')).toBeVisible()
-  await page.screenshot({ path: 'artifacts/hosted-demo-qa/privacy-he-390.png' })
+  await page.screenshot({ path: `${out}/privacy-he-390.png` })
 })

@@ -15,3 +15,6 @@ Thumbs.db
 # No credentials belong in this repository. Phase 1 needs none at all.
 .env
 .env.*
+
+# Private deployment linkage and CLI metadata.
+/.vercel/

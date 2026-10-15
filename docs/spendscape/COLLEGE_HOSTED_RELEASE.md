@@ -29,3 +29,19 @@ Official directory reconfirmed physical branch 104/subchain1, Rothschild180, and
 Publisher HTTP Last-Modified UTC: branch104 `2026-10-15T10:16:28.000Z`, branch285 `2026-10-15T10:17:39.000Z`. Fetch UTC: `20:02:21.498Z` / `20:02:46.934Z`. Filename and item-update times remain separate raw local observations. The 24-hour expiry remains enforced without hidden refresh. Tel Aviv catalog is unchanged and separately labeled; this city slice does not qualify its older prices as current.
 
 Collector tests8/8, existing qualifier4/4 and focused hosted/comparison43/43 passed. The initial unsigned-link rejection remains recorded; cached reprocessing required no HTTP retry. Published read-only signatures are accepted only from the existing exact Azure feed host and expected paths; no private credentials are used.
+
+## Private Preview preparation
+
+Project `prj_PNiKcOoBrfiJQGOTXYhzApxitZp3`, team `team_yx1kmFpHwN320ijT9Z2Bv2mL`: Production remains paused, auto-domain assignment off, Vercel Authentication enabled. The existing project has no Git connection; branch-specific environment creation returned HTTP400. Corrected configuration therefore targets Preview only, with release branch/HEAD/file hashes checked independently before private setup. Existing deployments have immutable environment snapshots. No Git connection/account created.
+
+The new private launcher verifies the privately entered Gemini key against the existing named key in project376401338717, reuses only the existing Production-managed Redis pair, and writes sensitive server-only Preview variables. It never initializes quota or calls Gemini/Geoapify. Access codes are separately generated256-bit capabilities, retained in a mode0600 ignored local file for private sharing; only hashes reach server configuration. Provider keys are not written to local files. Temporary Vercel API input files are mode0600 and removed.
+
+Activation is a separate exclusive record: fixed2/2 requests, US$0.10, exactlytwo hours, future start allowing the ready Preview to be checked before the window opens. Quota initialization is administrative SET NX only after ready-Preview verification; existing or partially failed records are never reset. If deployment is not ready before the planned start, stop rather than silently extend. No public initialization endpoint exists.
+
+## Completed offline acceptance
+
+Current completion build passed application/focused admin typecheck and optimized production build. Protected production-browser12/12: owner access/logout/API denial, automatic protected capability, editable mocked extraction, explicit synthetic Save/reload, independent printed/final totals, unknown context/unresolved no-pin saving, isolated confirmed backup restore/reload, fresh city matching/expiry, unchanged seeded purchase/pin, EN/HE mobile. Screenshots of synthetic entry/privacy states inspected at360/390px; no overflow. No real ledger is seeded or copied. Existing matching1167-unit/40-integration-browser evidence remains valid for unchanged modules; this new12-test run does not replace or relabel historical evidence.
+
+New private configuration helpers:5/5 offline policy tests; admin module gated out of ordinary tests. Current focused unit count is recorded in artifacts/hosted-completion-20261015/final-focused-tests.log. There have been zero Gemini/Geoapify requests in this task. Real Preview access, live extraction/address confirmation and real Save/reload remain pending.
+
+Release tooling and scope: .vercelignore; receipt intake privacy wording; hosted QA destination override/config/spec; new protected completion QA; one-time administrative quota config/test; private release configuration/verification helpers. No request builder, model, decoder, financial rule, purchase migration or historical launcher was changed.
