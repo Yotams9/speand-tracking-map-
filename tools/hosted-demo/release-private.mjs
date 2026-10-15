@@ -2,22 +2,23 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { existsSync } from 'node:fs'
-import { mkdtemp, writeFile, rm, readFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { PROJECT, ORIGINAL_PROJECT, TEAM, BRANCH, previewVariable, redisPair, sha } from './release-config.mjs'
 const exec = promisify(execFile)
 export const CLI = existsSync('/Users/testing.user/.npm/_npx/59776437f344dde1/node_modules/.bin/vercel') ? '/Users/testing.user/.npm/_npx/59776437f344dde1/node_modules/.bin/vercel' : 'vercel'
 export const cleanEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !/API_KEY|REST_TOKEN|NODE_DEBUG|NODE_OPTIONS|DEBUG/.test(k)))
 export async function api(path, method = 'GET', body) {
-  let folder
   try {
     const args = ['api', path + (path.includes('?') ? '&' : '?') + 'teamId=' + TEAM, '--method', method]
-    if (body) { folder = await mkdtemp(join(tmpdir(), 'spendscape-private-')); const file = join(folder, 'body.json'); await writeFile(file, JSON.stringify(body), { mode: 0o600 }); args.push('--input', file) }
-    const r = await exec(CLI, args, { env: cleanEnv(), timeout: 30000, maxBuffer: 2_000_000 })
+    // CLI 59 supports --input -: credentials stay in a private stdin pipe,
+    // never a process argument, local request file or printed command result.
+    if (body) args.push('--input', '-')
+    const pending = exec(CLI, args, { env: cleanEnv(), timeout: 30000, maxBuffer: 2_000_000 })
+    if (body) pending.child.stdin.end(JSON.stringify(body))
+    const r = await pending
     try { return JSON.parse(r.stdout) } finally { r.stdout = ''; r.stderr = '' }
   } catch { throw Error('vercel-configuration-failed') }
-  finally { if (folder) await rm(folder, { recursive: true, force: true }) }
 }
 export async function verifyProject() {
   const p = await api('/v9/projects/' + PROJECT)

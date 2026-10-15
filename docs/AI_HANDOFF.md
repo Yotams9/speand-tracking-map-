@@ -2519,3 +2519,8 @@ Public-price slice53b9574 is committed. Protected completion production-browser1
 ### Preview-only hosting exception — authorized (2026-10-15)
 
 Old-project source/prebuilt Preview attempts blocked because the project is paused; no Production unpause. User explicitly authorized a separate Preview-only project on current Hobby. Created spendscape-college-preview/prj_28lNdvbpPK3zNOrAq8C9hnuhupJS, Vercel Authentication/no Production target/no automatic domain promotion. Reuse existing Upstash only; originalproject stayspaused. Private helpers pin both IDs and verify this separation. No keys configured yet, no quota initialized, no provider calls/window start. Focused units253/253, protected synthetic browsers12/12, helper5/5, collector8/8, qualifier4/4; local app and Vercel prebuilt builds pass. Next deploy new protected Preview, then private user key setup and bounded manual acceptance.
+
+
+### Hosting target and package correction — live acceptance still pending
+
+Newproject firstCLI uploadauto-classifiedProduction despitePreviewflag, thenfailedENOENT(localQAlogdependency). Removed only that new error deployment/alias, preserved diagnostics; originalProductionpaused. No keys/providercalls/userdata/operationalwindow. Automaticapprovalreviewblocked another identicalCLI attempt; notrun. Nexttracing exclusion fix preservesdata/catalog but excludesalllocalartifacts/secrets/QA: rebuiltpackage14traces/1544dependencies/0forbidden;8helper/privacychecks. FutureCLIsecretconfigusestdin, no requestfiles. Inertstaticbootstrapproposalawaitsspecificapproval; noPreview/live readiness claim. Continue from artifacts/hosted-completion-20261015/bootstrap-proposal.json and COLLEGE_HOSTED_RELEASE.md.

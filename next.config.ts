@@ -8,6 +8,14 @@ const private172DevOrigins = Array.from(
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Local diagnostics/reservations are never hosted function dependencies.
+  // Hosted quotas use Redis; ordinary provider paths never read these files.
+  outputFileTracingRoot: process.cwd(),
+  outputFileTracingExcludes: {
+    '/*': ['./artifacts/**/*', './qa/**/*', './tools/**/*', './docs/**/*',
+      './.vercel/**/*', './.git/**/*', './.agents/**/*', './.claude/**/*',
+      './.cache/**/*', './.env*'],
+  },
   // Next 16 blocks dev assets requested through a hostname other than the
   // server's bind host. Keep phone testing limited to loopback and RFC 1918.
   allowedDevOrigins: [
