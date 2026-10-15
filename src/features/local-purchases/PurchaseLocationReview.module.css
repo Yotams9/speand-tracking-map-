@@ -2,6 +2,10 @@
 .panel, .picker { pointer-events: auto; position: absolute; background: #141b26; border: 1px solid #637a94; border-radius: 22px; box-shadow: 0 20px 70px #0009; padding: 20px; }
 .panel { inset-block: max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-bottom)); inset-inline-end: 16px; inline-size: min(460px,calc(100% - 32px)); overflow-y: auto; overscroll-behavior: contain; }
 .panel[hidden] { display: none; }
+/* The app keeps a minimum height and scrolls on short screens; the form follows the
+   visible viewport instead, so its top, fields, error and Save all stay reachable. The
+   bottom scroll padding keeps a focused field or checkbox clear of the sticky footer. */
+.panel { position: fixed; scroll-padding-block: 12px 112px; }
 .panel header { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
 .panel h2 { font-size: 1.35rem; margin: 0; }
 .panel p, .picker p { line-height: 1.5; font-size: .9rem; }
@@ -15,6 +19,7 @@
 .panel .confirm { display: grid; grid-template-columns: 24px 1fr; align-items: start; line-height: 1.5; }
 .confirm input { inline-size: 22px; block-size: 22px; }
 .panel footer { position: sticky; bottom: -20px; background: #141b26; display: flex; flex-wrap: wrap; gap: 10px; padding-block: 14px; }
+.panel footer button { flex: 1 1 0; min-inline-size: 0; }
 .panel [role=alert] { color: #ffd0c7; }
 .crosshair { position: absolute; inset-inline-start: 50%; inset-block-start: 50%; transform: translate(-50%,-50%); color: white; text-shadow: 0 0 3px #000,0 0 3px #000; font-size: 40px; }
 .picker { inset-inline: 12px; inset-block-end: max(12px,env(safe-area-inset-bottom)); max-inline-size: 520px; margin-inline: auto; }

@@ -21,7 +21,7 @@ export default defineConfig({
   projects: [
     {
       name: 'qa-gate',
-      testMatch: ['spendscape-receipt-review-integration.spec.ts', 'spendscape-address-search.spec.ts', 'spendscape-local-directory.spec.ts', 'spendscape-nearby-demo.spec.ts', 'spendscape-scanner-e.spec.ts'],
+      testMatch: ['spendscape-receipt-review-integration.spec.ts', 'spendscape-address-search.spec.ts', 'spendscape-local-directory.spec.ts', 'spendscape-nearby-demo.spec.ts', 'spendscape-scanner-e.spec.ts', 'spendscape-review-fixes.spec.ts'],
       use: { ...common, baseURL: qaBase, locale: 'en-GB' },
     },
     { name: 'ordinary', testMatch: ['spendscape-first-run.spec.ts', 'spendscape-night-shots.spec.ts', 'spendscape-contrast.spec.ts', 'spendscape-legacy-migration.spec.ts'], use: { ...common, locale: 'en-GB' } },

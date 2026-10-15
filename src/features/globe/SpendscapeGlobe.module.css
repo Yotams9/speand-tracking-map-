@@ -1334,6 +1334,8 @@
   backdrop-filter: blur(20px);
 }
 [dir='rtl'] .askFeedback { transform: translateX(50%); }
+/* A modal sheet (timeline, replay entry) stays on top of the Ask status. */
+.app:has(.experienceScrim) .askFeedback { z-index: 59; }
 .askFeedback > span { inline-size: 28px; block-size: 28px; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 50%; color: #e4e8ee; }
 .askFeedback p { min-inline-size: 0; display: flex; flex-direction: column; gap: 3px; margin: 0; }
 .askFeedback strong { font-size: 0.72rem; }
