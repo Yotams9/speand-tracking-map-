@@ -12,7 +12,9 @@ import { receiptEditorWall } from './receipt-editor-values'
 import { receiptReviewPrefill, receiptReviewZone } from './receipt-review-prefill'
 import { receiptPlaceSeed, type ReceiptPlaceSeed } from './receipt-place-seed'
 import { receiptBlockerFields, receiptBlockerLabel } from './receipt-review-readiness'
-import { catalogChoice, catalogIdForPlace, isLocated, loadCatalogStores, localInputToUtc, nearestCatalogStore, NEAREST_STORE_METERS, utcToLocalInput, withNowIfEmpty, followLineEdit, followPublishedPrice, type LocatedCatalogStore, type PublishedFill } from './catalog-stores'
+import { catalogChoice, catalogIdForPlace, isLocated, loadCatalogStores, localInputToUtc, nearestCatalogStore, NEAREST_STORE_METERS, utcToLocalInput, withNowIfEmpty, followLineEdit, followPublishedPrice, restoredStore, setAsideStore, type LocatedCatalogStore, type PublishedFill } from './catalog-stores'
+import { locationRequests } from './location-request'
+import type { DirectoryIntent } from '../local-purchases/local-directory'
 import { catalogChainNames } from '../local-purchases/place-provenance'
 import type { CatalogStoreSummary } from '@/data/price-catalog'
 import styles from './CaptureExperience.module.css'
@@ -22,8 +24,8 @@ const CATALOG = 'catalog:'
 
 // publishedFill is form state only: what was last filled in from a store's
 // published price, so a later store change can tell it from typed values.
-type EditableReview = Omit<PurchaseReviewInput, 'lines'> & { lines: (PurchaseReviewInput['lines'][number] | ReceiptReviewDraft['review']['lines'][number])[]; publishedFill?: PublishedFill }
-const reviewInput = ({ publishedFill: _fill, ...form }: EditableReview) => form as PurchaseReviewInput
+type EditableReview = Omit<PurchaseReviewInput, 'lines'> & { lines: (PurchaseReviewInput['lines'][number] | ReceiptReviewDraft['review']['lines'][number])[]; publishedFill?: PublishedFill; setAside?: DirectoryIntent }
+const reviewInput = ({ publishedFill: _fill, setAside: _aside, ...form }: EditableReview) => form as PurchaseReviewInput
 const withFill = (input: PurchaseReviewInput, fill: PublishedFill | null): EditableReview => ({ ...(input as EditableReview), ...(fill ? { publishedFill: fill } : {}) })
 const followStore = (current: EditableReview, storeId: string | null): EditableReview => { const next = followPublishedPrice(reviewInput(current), storeId, current.publishedFill ?? null); return withFill(next.input, next.fill) }
 const followEdit = (current: EditableReview): EditableReview => { const next = followLineEdit(reviewInput(current), current.publishedFill ?? null); return withFill(next.input, next.fill) }
@@ -97,32 +99,40 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
   // A branch suggested by the device location, saved place or not, stays a suggestion until confirmed.
   const withCatalogStore = (current: EditableReview, store: LocatedCatalogStore, suggested = false): EditableReview => {
     const existing = context.places.find(p => catalogIdForPlace(p) === store.id)
-    const chosen: EditableReview = existing && !suggested ? { ...current, directoryIntent: undefined, placeId: existing.id, merchantId: existing.merchantId } : { ...current, placeId: '', merchantId: '', directoryIntent: { catalogStore: catalogChoice(store), ...(suggested ? { locationSuggested: { confirmed: false } } : {}) } }
+    const setAside = setAsideStore(current)
+    const chosen: EditableReview = existing && !suggested ? { ...current, setAside, directoryIntent: undefined, placeId: existing.id, merchantId: existing.merchantId } : { ...current, setAside, placeId: '', merchantId: '', directoryIntent: { catalogStore: catalogChoice(store), ...(suggested ? { locationSuggested: { confirmed: false } } : {}) } }
     return followStore(chosen, store.id)
   }
   // The device location is read only on this press, to suggest the closest known store.
+  // Choosing a store, changing the channel or closing the form makes a pending read stale.
+  const nearestRead = useRef(locationRequests())
+  useEffect(() => () => nearestRead.current.cancel(), [])
   const findNearest = () => {
     if (!('geolocation' in navigator)) { setNearby({ state: 'failed' }); return }
     setNearby({ state: 'pending' })
+    const request = nearestRead.current.start()
     navigator.geolocation.getCurrentPosition(position => {
+      if (!nearestRead.current.isCurrent(request)) return
       const found = nearestCatalogStore(catalogStores, [position.coords.longitude, position.coords.latitude])
       if (!found) { setNearby({ state: 'none' }); return }
       setNearby({ state: 'found', label: `${catalogChainNames[found.store.chain][locale]} · ${found.store.name}`, meters: Math.round(found.meters) })
       setErrors({}); setMessage(null)
       // Being in the store now makes "now" and groceries the sensible defaults; both stay editable.
       setInput(current => withCatalogStore(withNowIfEmpty({ ...current, channel: 'physical', category: current.category || 'groceries' }), found.store, true))
-    }, () => setNearby({ state: 'failed' }), { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 })
+    }, () => { if (nearestRead.current.isCurrent(request)) setNearby({ state: 'failed' }) }, { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 })
   }
   const choosePlace = (value: string) => {
-    setNearby({ state: 'idle' })
-    if (value === NEW_STORE) { setErrors({}); setMessage(null); setInput(current => followStore({ ...current, placeId: '', merchantId: '', directoryIntent: { merchant: { name: '', category: '', separate: false }, place: { branch: '', city: '', country: '', address: '', longitude: '', latitude: '', confirmed: false, separate: false } } }, null)); return }
+    nearestRead.current.cancel(); setNearby({ state: 'idle' })
+    // "New store" or no store brings back a new store the person was typing before a store replaced it.
+    if (value === NEW_STORE) { setErrors({}); setMessage(null); setInput(current => followStore({ ...current, setAside: undefined, placeId: '', merchantId: '', directoryIntent: restoredStore(setAsideStore(current)) ?? { merchant: { name: '', category: '', separate: false }, place: { branch: '', city: '', country: '', address: '', longitude: '', latitude: '', confirmed: false, separate: false } } }, null)); return }
+    if (!value) { setErrors({}); setMessage(null); setInput(current => followStore({ ...current, setAside: undefined, placeId: '', merchantId: '', directoryIntent: restoredStore(setAsideStore(current)) }, null)); return }
     const store = value.startsWith(CATALOG) ? shownCatalogStores.find(s => s.id === value.slice(CATALOG.length)) : undefined
     setErrors({}); setMessage(null)
     // Picking a chain branch means shopping there: an empty date becomes now (still editable).
     if (store) { setInput(current => withCatalogStore(withNowIfEmpty({ ...current, category: current.category || 'groceries' }), store)); return }
     const p = context.places.find(p => p.id === value)
     const chainStoreId = p ? catalogIdForPlace(p) : null
-    setInput(current => { const chosen = { ...current, placeId: p?.id ?? '', merchantId: p?.merchantId ?? '', directoryIntent: undefined }; return followStore(chainStoreId ? withNowIfEmpty(chosen) : chosen, chainStoreId) })
+    setInput(current => { const chosen = { ...current, setAside: setAsideStore(current), placeId: p?.id ?? '', merchantId: p?.merchantId ?? '', directoryIntent: undefined }; return followStore(chainStoreId ? withNowIfEmpty(chosen) : chosen, chainStoreId) })
   }
   const catalogIntent = input.directoryIntent?.catalogStore
   const suggestion = input.directoryIntent?.locationSuggested
@@ -132,7 +142,7 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
   useEffect(() => { heading.current?.focus({ preventScroll: true }) }, [manualStep])
   const patch = (value: Partial<EditableReview>) => { setInput(current => ({ ...current, ...value })); setErrors({}); setMessage(null) }
   // Leaving a store (channel, another store or a new one) clears only automatic published values.
-  const patchStore = (change: (current: EditableReview) => EditableReview) => { setInput(current => followStore(change(current), null)); setErrors({}); setMessage(null) }
+  const patchStore = (change: (current: EditableReview) => EditableReview) => { nearestRead.current.cancel(); setNearby(n => n.state === 'pending' ? { state: 'idle' } : n); setInput(current => followStore(change(current), null)); setErrors({}); setMessage(null) }
   const patchLine = (index: number, value: Partial<PurchaseReviewInput['lines'][number]>) => { setInput(current => followEdit({ ...current, lines: current.lines.map((l, j) => j === index ? { ...l, ...value } : l) })); setErrors({}); setMessage(null) }
   const errorText = (field: string) => receiptDraft && field.startsWith('printedAmount-') && shownErrors[field] === 'arithmetic' ? receiptCopy[locale].mismatch : shownErrors[field] ? t.error[shownErrors[field] as keyof typeof t.error] ?? t.error.required : null
   const attrs = (field: string) => ({ id: `review-${field}`, 'data-testid': `review-${field}`, 'aria-invalid': Boolean(shownErrors[field]), 'aria-required': true, 'aria-describedby': shownErrors[field] ? `review-error-${field}` : undefined })
@@ -204,7 +214,7 @@ export function PurchaseReview({ initial, receiptDraft, locale, context, manualS
       </div>}
       <label>{t.channel}<select {...attrs('channel')} value={input.channel} onChange={e => { const channel = e.target.value as PurchaseReviewInput['channel']; patchStore(current => ({ ...current, channel, placeId: '', ...(receiptDraft ? { directoryIntent: current.directoryIntent?.merchant ? { merchant: current.directoryIntent.merchant } : undefined } : { merchantId: '', directoryIntent: undefined }) })) }}><option value="">{t.required}</option>{(['physical', 'online', 'unknown'] as const).map(key => <option key={key} value={key}>{t[key]}</option>)}</select>{error('channel')}</label>
       {(!input.directoryIntent || catalogIntent) && (input.channel === 'physical' ? <label>{t.placeId}<select {...attrs('placeId')} value={catalogPlace ? catalogPlace.id : catalogIntent ? CATALOG + catalogIntent.id : input.placeId} onChange={e => choosePlace(e.target.value)}><option value="">{t.required}</option>{!receiptDraft && <option value={NEW_STORE}>{t.newStore}</option>}{context.places.map(p => <option key={p.id} value={p.id}>{localized(p.name, locale)} · {localized(p.branch, locale)}</option>)}{!receiptDraft && shownCatalogStores.length > 0 && <optgroup label={t.catalogGroup}>{shownCatalogStores.map(s => <option key={s.id} value={CATALOG + s.id}>{catalogChainNames[s.chain][locale]} · {s.name}</option>)}</optgroup>}</select>{error('placeId')}<small>{t.places}</small></label> : <label>{t.merchantId}<select {...attrs('merchantId')} value={input.merchantId} onChange={e => patch(e.target.value === NEW_STORE ? { merchantId: '', placeId: '', directoryIntent: { merchant: { name: '', category: '', separate: false } } } : { merchantId: e.target.value, directoryIntent: undefined })}><option value="">{t.required}</option>{!receiptDraft && <option value={NEW_STORE}>{t.newStore}</option>}{context.merchants.map(m => <option key={m.id} value={m.id}>{localized(m.name, locale)}</option>)}</select>{error('merchantId')}</label>)}
-      <div className={styles.fullField}><MerchantPlaceReview intent={catalogIntent ? undefined : input.directoryIntent} merchantId={input.merchantId} channel={input.channel} context={context} locale={locale} errors={shownErrors} observedName={observedMerchant} reviewedAddress={receiptAddress} receiptMode={Boolean(receiptDraft)} onChooseMerchant={merchantId => patchStore(current => ({ ...current, merchantId, placeId: '', directoryIntent: undefined }))} onChange={directoryIntent => patchStore(current => ({ ...current, directoryIntent, ...(directoryIntent ? { placeId: '', ...(directoryIntent.merchant ? { merchantId: '' } : {}) } : {}) }))} /></div>
+      <div className={styles.fullField}><MerchantPlaceReview intent={catalogIntent ? undefined : input.directoryIntent} merchantId={input.merchantId} channel={input.channel} context={context} locale={locale} errors={shownErrors} observedName={observedMerchant} reviewedAddress={receiptAddress} receiptMode={Boolean(receiptDraft)} onChooseMerchant={merchantId => patchStore(current => ({ ...current, merchantId, placeId: '', directoryIntent: undefined }))} onChange={directoryIntent => patchStore(current => ({ ...current, directoryIntent, ...(directoryIntent ? { placeId: '', ...(directoryIntent.merchant ? { merchantId: '' } : {}) } : { setAside: setAsideStore(current) }) }))} /></div>
       {!receiptDraft && <label>{t.date}<input {...attrs('date')} type="datetime-local" step="60" dir="ltr" value={utcToLocalInput(input.date)} onChange={e => patch({ date: localInputToUtc(e.target.value) })} />{error('date')}</label>}
       <label>{t.currency}<select {...attrs('currency')} value={input.currency} onChange={e => patch({ currency: e.target.value as PurchaseReviewInput['currency'], baseAmount: '' })}><option value="">{t.required}</option>{reviewCurrencies.map(c => <option key={c}>{c}</option>)}</select>{error('currency')}</label>
       <label>{t.payment}<select {...attrs('payment')} value={input.payment} onChange={e => patch({ payment: e.target.value as PurchaseReviewInput['payment'] })}><option value="">{t.required}</option>{(['card', 'cash', 'manual', 'unknown'] as const).map(p => <option key={p} value={p}>{p === 'unknown' ? t.unknownContext : t[p]}</option>)}</select>{error('payment')}</label>

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { canonicalSpendscapeData } from '../../data/spendscape-fixtures'
 import { buildPlaceFeatureCollection } from '../../data/spendscape-globe'
 import type { CatalogStoreSummary } from '../../data/price-catalog'
-import { catalogChoice, catalogIdForPlace, distanceMeters, followLineEdit, followPublishedPrice, isLocated, localInputToUtc, nearestCatalogStore, utcToLocalInput, withNowIfEmpty, withPublishedPrice } from './catalog-stores'
+import { catalogChoice, catalogIdForPlace, distanceMeters, followLineEdit, followPublishedPrice, isLocated, restoredStore, setAsideStore, localInputToUtc, nearestCatalogStore, utcToLocalInput, withNowIfEmpty, withPublishedPrice } from './catalog-stores'
 import { blankReview, deleteLocalPurchase, emptySessionLedger, saveReviewedPurchase, validateReview, type PurchaseReviewInput, type ReviewContext } from './session-purchase-domain'
 import { composeDirectory } from '../local-purchases/local-directory'
 
@@ -111,6 +111,27 @@ describe('published price follows the chosen store', () => {
     expect(followLineEdit(two, a.fill).input).toBe(two)
     // The fill record is returned beside the form values, never inside them.
     expect(Object.keys(followPublishedPrice(a.input, 'ramilevi-733', a.fill).input)).toEqual(Object.keys(a.input))
+  })
+})
+
+describe('a new store the person was typing survives a store choice', () => {
+  const typed = { merchant: { name: 'Fictional corner', category: 'groceries' as const, separate: false }, place: { branch: 'Fictional branch', city: 'Fictional city', country: 'Fictional country', address: 'Fictional street 1', longitude: '34.75', latitude: '32.10', confirmed: true, separate: false } }
+  const catalogIntent = { catalogStore: catalogChoice(located(1)) }
+  it('is set aside when a catalog branch or saved place replaces it, and kept across further choices', () => {
+    expect(setAsideStore({ directoryIntent: typed })).toEqual(typed)
+    // A later catalog choice keeps what was set aside first.
+    expect(setAsideStore({ directoryIntent: catalogIntent, setAside: typed })).toEqual(typed)
+    expect(setAsideStore({ directoryIntent: undefined, setAside: typed })).toEqual(typed)
+    // A catalog choice itself is never set aside.
+    expect(setAsideStore({ directoryIntent: catalogIntent })).toBeUndefined()
+  })
+  it('comes back with every typed detail, but the place must be confirmed again', () => {
+    const back = restoredStore(setAsideStore({ directoryIntent: catalogIntent, setAside: typed }))
+    expect(back).toEqual({ ...typed, place: { ...typed.place, confirmed: false } })
+    expect(restoredStore({ merchant: typed.merchant })).toEqual({ merchant: typed.merchant })
+    expect(restoredStore(undefined)).toBeUndefined()
+    // Nothing is changed in place.
+    expect(typed.place.confirmed).toBe(true)
   })
 })
 

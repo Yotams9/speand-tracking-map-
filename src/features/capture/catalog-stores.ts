@@ -1,4 +1,5 @@
 import type { CatalogStoreSummary } from '@/data/price-catalog'
+import type { DirectoryIntent } from '../local-purchases/local-directory'
 import { catalogStoreIdOf, catalogText, type CatalogStoreChoice } from '../local-purchases/place-provenance'
 import { lineMinorTotal, type PurchaseReviewInput } from './session-purchase-domain'
 
@@ -84,6 +85,18 @@ export function followLineEdit<T extends PurchaseReviewInput>(input: T, last: Pu
   if (total === null) return { input, fill: last }
   const amount = agorot(total)
   return { input: { ...input, amount }, fill: { ...last, amount } }
+}
+// A new store the person was typing is set aside (form state only) when a catalog
+// branch or saved place replaces it, so going back to "no store" or "New store"
+// brings their details back instead of an empty form (cf. Shon's 4d5e09a).
+export function setAsideStore(current: { directoryIntent?: DirectoryIntent; setAside?: DirectoryIntent }): DirectoryIntent | undefined {
+  const d = current.directoryIntent
+  return d && !d.catalogStore && (d.merchant || d.place) ? d : current.setAside
+}
+// Brought back details are the person's own, but a place needs confirming again.
+export function restoredStore(aside: DirectoryIntent | undefined): DirectoryIntent | undefined {
+  if (!aside) return undefined
+  return { ...aside, ...(aside.place ? { place: { ...aside.place, confirmed: false } } : {}) }
 }
 // One store choice without earlier automatic values.
 export function withPublishedPrice<T extends PurchaseReviewInput>(input: T, storeId: string | null): T {

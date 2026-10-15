@@ -1,5 +1,6 @@
 'use client'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { locationRequests } from './location-request'
 import type { DirectoryIntent } from '../local-purchases/local-directory'
 import type { ReviewContext, ReviewErrors } from './session-purchase-domain'
 import type { LocaleCode } from '../../data/spendscape-globe'
@@ -21,14 +22,20 @@ export function MerchantPlaceReview({ intent, merchantId, channel, context, loca
   const proposedPlace = () => ({ ...blankPlace(), branch: intent?.merchant?.name || (merchant ? merchant.name[locale] : observedName), address: reviewedAddress })
   // The device location is read once, only on this press. It fills editable
   // coordinates; the place is still saved only after the explicit confirmation.
+  // A fix that arrives after the person typed coordinates, or after the form
+  // closed, is stale and ignored (cf. Shon's 31f271d).
+  const reads = useRef(locationRequests())
+  useEffect(() => () => reads.current.cancel(), [])
   const locate = () => {
     if (!intent?.place || !('geolocation' in navigator)) { setLocating('failed'); return }
     setLocating('pending')
+    const request = reads.current.start(), pressed = { longitude: intent.place.longitude, latitude: intent.place.latitude }
     navigator.geolocation.getCurrentPosition(position => {
+      if (!reads.current.isCurrent(request)) return
       setLocating('idle')
       const current = latest.current
-      if (current?.place) latestChange.current({ ...current, place: { ...current.place, longitude: position.coords.longitude.toFixed(6), latitude: position.coords.latitude.toFixed(6), confirmed: false, separate: false } })
-    }, () => setLocating('failed'), { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 })
+      if (current?.place && current.place.longitude === pressed.longitude && current.place.latitude === pressed.latitude) latestChange.current({ ...current, place: { ...current.place, longitude: position.coords.longitude.toFixed(6), latitude: position.coords.latitude.toFixed(6), confirmed: false, separate: false } })
+    }, () => { if (reads.current.isCurrent(request)) setLocating('failed') }, { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 })
   }
   return <fieldset className={styles.directoryReview} data-testid="merchant-place-review"><legend>{he ? 'חנות ומיקום במכשיר הזה' : 'Store and place on this device'}</legend>
     <p>{receiptMode ? (he ? 'אין צורך במיקום כדי לשמור. שם החנות והכתובת מולאו לבדיקה; סיכה דורשת אישור מיקום נפרד לאחר שמירה.' : 'Location is not needed to save. Store name and address are filled for review; a pin requires separate location confirmation after saving.') : he ? 'אין הסקת מיקום. מקום חדש דורש פרטים וקואורדינטות שתאשרו. אם אינם ידועים, בחרו מקום לא פתור ללא סיכה.' : 'No location is inferred. A new place needs details and coordinates you confirm. If unknown, choose unresolved with no pin.'}</p>
