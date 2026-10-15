@@ -51,7 +51,7 @@ export function catalogIdForPlace(place: unknown): string | null {
 // What the form last filled in from a store's published price. Form state only:
 // never saved and never part of the reviewed record. An empty value means that
 // field was not filled in automatically.
-export interface PublishedFill { storeId: string; price: string; amount: string }
+export interface PublishedFill { storeId: string; price: string; amount: string; currencySet?: boolean }
 const agorot = (minor: number) => `${Math.floor(minor / 100)}.${String(minor % 100).padStart(2, '0')}`
 // The published fill only ever applies to one item priced in ILS.
 const fillable = (input: PurchaseReviewInput) => input.lines.length === 1 && (!input.currency || input.currency === 'ILS')
@@ -69,13 +69,16 @@ export function followPublishedPrice<T extends PurchaseReviewInput>(input: T, st
   const published = storeId ? input.catalogPrices?.[storeId] : undefined
   const autoAmount = last?.amount ? input.amount === last.amount : false
   if (published === undefined || !storeId) {
-    if (!line.price && !autoAmount) return { input, fill: null }
-    return { input: { ...input, lines: [{ ...line, price: '' }], amount: autoAmount ? '' : input.amount }, fill: null }
+    // ILS chosen by the fill (not by the person) goes back to unchosen as well.
+    const currency = last?.currencySet && input.currency === 'ILS' && (line.price === last.price || autoAmount) ? '' : input.currency
+    if (!line.price && !autoAmount && currency === input.currency) return { input, fill: null }
+    return { input: { ...input, currency: currency as T['currency'], lines: [{ ...line, price: '' }], amount: autoAmount ? '' : input.amount }, fill: null }
   }
   const filled = { ...line, price: agorot(Math.round(published * 100)), quantity: line.quantity || '1' }
   const total = isAuto(input.amount, last?.amount) ? lineMinorTotal(filled, 'ILS') : null
   const amount = total === null ? (autoAmount ? '' : input.amount) : agorot(total)
-  return { input: { ...input, currency: 'ILS', lines: [filled], amount }, fill: { storeId, price: filled.price, amount: total === null ? '' : amount } }
+  const currencySet = !input.currency || Boolean(last?.currencySet)
+  return { input: { ...input, currency: 'ILS', lines: [filled], amount }, fill: { storeId, price: filled.price, amount: total === null ? '' : amount, ...(currencySet ? { currencySet } : {}) } }
 }
 // The person edited the item: a total that is still the automatic one follows the
 // line (integer agorot); a typed total is never changed.
@@ -89,14 +92,20 @@ export function followLineEdit<T extends PurchaseReviewInput>(input: T, last: Pu
 // A new store the person was typing is set aside (form state only) when a catalog
 // branch or saved place replaces it, so going back to "no store" or "New store"
 // brings their details back instead of an empty form (cf. Shon's 4d5e09a).
-export function setAsideStore(current: { directoryIntent?: DirectoryIntent; setAside?: DirectoryIntent }): DirectoryIntent | undefined {
+// A new branch of an existing store keeps that store's ID with it.
+export interface SetAsideStore { directoryIntent: DirectoryIntent; merchantId: string }
+export function setAsideStore(current: { directoryIntent?: DirectoryIntent; merchantId: string; setAside?: SetAsideStore }): SetAsideStore | undefined {
   const d = current.directoryIntent
-  return d && !d.catalogStore && (d.merchant || d.place) ? d : current.setAside
+  return d && !d.catalogStore && (d.merchant || d.place) ? { directoryIntent: d, merchantId: d.merchant ? '' : current.merchantId } : current.setAside
 }
 // Brought back details are the person's own, but a place needs confirming again.
-export function restoredStore(aside: DirectoryIntent | undefined): DirectoryIntent | undefined {
+// Without a physical channel only a typed new store (not a place) can come back.
+export function restoredStore(aside: SetAsideStore | undefined, physical = true): SetAsideStore | undefined {
   if (!aside) return undefined
-  return { ...aside, ...(aside.place ? { place: { ...aside.place, confirmed: false } } : {}) }
+  const { merchant, place } = aside.directoryIntent
+  if (!physical) return merchant ? { directoryIntent: { merchant }, merchantId: '' } : undefined
+  if (place && !merchant && !aside.merchantId) return undefined
+  return { merchantId: aside.merchantId, directoryIntent: { ...aside.directoryIntent, ...(place ? { place: { ...place, confirmed: false } } : {}) } }
 }
 // One store choice without earlier automatic values.
 export function withPublishedPrice<T extends PurchaseReviewInput>(input: T, storeId: string | null): T {

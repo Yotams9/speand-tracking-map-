@@ -118,20 +118,51 @@ describe('a new store the person was typing survives a store choice', () => {
   const typed = { merchant: { name: 'Fictional corner', category: 'groceries' as const, separate: false }, place: { branch: 'Fictional branch', city: 'Fictional city', country: 'Fictional country', address: 'Fictional street 1', longitude: '34.75', latitude: '32.10', confirmed: true, separate: false } }
   const catalogIntent = { catalogStore: catalogChoice(located(1)) }
   it('is set aside when a catalog branch or saved place replaces it, and kept across further choices', () => {
-    expect(setAsideStore({ directoryIntent: typed })).toEqual(typed)
+    const aside = { directoryIntent: typed, merchantId: '' }
+    expect(setAsideStore({ directoryIntent: typed, merchantId: '' })).toEqual(aside)
     // A later catalog choice keeps what was set aside first.
-    expect(setAsideStore({ directoryIntent: catalogIntent, setAside: typed })).toEqual(typed)
-    expect(setAsideStore({ directoryIntent: undefined, setAside: typed })).toEqual(typed)
+    expect(setAsideStore({ directoryIntent: catalogIntent, merchantId: '', setAside: aside })).toEqual(aside)
+    expect(setAsideStore({ directoryIntent: undefined, merchantId: 'merchant_x', setAside: aside })).toEqual(aside)
     // A catalog choice itself is never set aside.
-    expect(setAsideStore({ directoryIntent: catalogIntent })).toBeUndefined()
+    expect(setAsideStore({ directoryIntent: catalogIntent, merchantId: '' })).toBeUndefined()
   })
   it('comes back with every typed detail, but the place must be confirmed again', () => {
-    const back = restoredStore(setAsideStore({ directoryIntent: catalogIntent, setAside: typed }))
-    expect(back).toEqual({ ...typed, place: { ...typed.place, confirmed: false } })
-    expect(restoredStore({ merchant: typed.merchant })).toEqual({ merchant: typed.merchant })
+    const back = restoredStore(setAsideStore({ directoryIntent: typed, merchantId: '' }))
+    expect(back).toEqual({ merchantId: '', directoryIntent: { ...typed, place: { ...typed.place, confirmed: false } } })
     expect(restoredStore(undefined)).toBeUndefined()
     // Nothing is changed in place.
     expect(typed.place.confirmed).toBe(true)
+  })
+  it('a new branch of an existing store comes back with that store', () => {
+    const branch = { place: typed.place }
+    const aside = setAsideStore({ directoryIntent: branch, merchantId: 'merchant_nomi' })
+    expect(aside).toEqual({ directoryIntent: branch, merchantId: 'merchant_nomi' })
+    expect(restoredStore(aside)).toEqual({ merchantId: 'merchant_nomi', directoryIntent: { place: { ...typed.place, confirmed: false } } })
+    // A place without any store is never brought back half-made.
+    expect(restoredStore({ directoryIntent: branch, merchantId: '' })).toBeUndefined()
+  })
+  it('without a physical channel only the typed store comes back, never a place', () => {
+    const aside = setAsideStore({ directoryIntent: typed, merchantId: '' })
+    expect(restoredStore(aside, false)).toEqual({ merchantId: '', directoryIntent: { merchant: typed.merchant } })
+    expect(restoredStore({ directoryIntent: { place: typed.place }, merchantId: 'merchant_nomi' }, false)).toBeUndefined()
+  })
+})
+
+describe('the currency set by a published price', () => {
+  it('goes back to unchosen with the automatic values; one the person chose stays', () => {
+    const unset = { ...base(), currency: '' as const }
+    const a = followPublishedPrice(unset, 'shufersal-1', null)
+    expect(a.input.currency).toBe('ILS'); expect(a.fill).toMatchObject({ currencySet: true })
+    const b = followPublishedPrice(a.input, 'ramilevi-733', a.fill)
+    expect(b.fill).toMatchObject({ currencySet: true })
+    const cleared = followPublishedPrice(b.input, null, b.fill)
+    expect(cleared.input).toMatchObject({ currency: '', amount: '', lines: [{ price: '' }] })
+    // Chosen by the person before the fill: kept.
+    const chosen = followPublishedPrice(base(), 'shufersal-1', null)
+    expect(chosen.fill).not.toHaveProperty('currencySet')
+    expect(followPublishedPrice(chosen.input, null, chosen.fill).input.currency).toBe('ILS')
+    // A typed price and total keep the currency too.
+    expect(followPublishedPrice({ ...a.input, amount: '9.00', lines: [{ ...a.input.lines[0], price: '9.00' }] }, null, a.fill).input.currency).toBe('ILS')
   })
 })
 

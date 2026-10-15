@@ -81,6 +81,19 @@ test('a late device location never replaces a store chosen meanwhile', async ({ 
   await expect(page.getByTestId('review-nearest-status')).toHaveText('')
 })
 
+test('a late device location never replaces a store chosen in the online/unresolved store list', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 844 })
+  await slowLocation(page, 32.0764, 34.76795, 2500)
+  await page.goto('/'); await ready(page); await capture(page); await page.getByTestId('capture-camera-manual').click()
+  await page.getByTestId('review-nearest').click()
+  await page.getByTestId('review-merchantId').selectOption('merchant_unresolved')
+  await expect(page.getByTestId('review-nearest')).toBeEnabled()
+  await page.waitForTimeout(3500)
+  await expect(page.getByTestId('review-channel')).toHaveValue('')
+  await expect(page.getByTestId('review-merchantId')).toHaveValue('merchant_unresolved')
+  await expect(page.getByTestId('review-catalog-confirmed')).toHaveCount(0)
+})
+
 test('a new store typed before a store choice comes back on "New store", to be confirmed again', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 844 })
   await slowLocation(page, 32.0764, 34.76795, 0)
