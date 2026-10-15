@@ -5,7 +5,7 @@ import { writeFile, stat } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { resolve, join } from 'node:path'
 import { verifyProjectKey } from '../receipt-capture/key-project.mjs'
-import { readiness, accessMaterial, PREFIX } from './release-config.mjs'
+import { readiness, accessMaterial, PREFIX, PRIVATE_READINESS_CODES } from './release-config.mjs'
 import { cleanEnv, verifyProject, existingRedis, configure, verifyFreeze } from './release-private.mjs'
 const exec = promisify(execFile), root = resolve(fileURLToPath(new URL('../..', import.meta.url)))
 let token = '', gemini = process.env.GEMINI_API_KEY ?? '', geo = process.env.GEOAPIFY_API_KEY ?? ''
@@ -30,6 +30,6 @@ try {
   material.owner='';material.lecturer=''
   console.log(JSON.stringify({status:'private-preview-prepared',keyMatch:true,projectNumber:'376401338717',receiptRequests:0,addressRequests:0,sessionStarted:false}))
 } catch(e) {
-  const codes=['private-readiness-required','preparation-already-exists','source-freeze-mismatch','protected-project-unverified','existing-redis-unverified','key-project-unverified','vercel-configuration-failed']
+  const codes=[...PRIVATE_READINESS_CODES,'private-readiness-required','preparation-already-exists','source-freeze-mismatch','protected-project-unverified','existing-redis-unverified','key-project-unverified','vercel-configuration-failed']
   console.error(JSON.stringify({status:'stopped',code:codes.includes(e?.message)?e.message:'private-preparation-failed',receiptRequests:0,addressRequests:0,sessionStarted:false}));process.exitCode=1
 } finally { token='';gemini='';geo='';delete process.env.GEMINI_API_KEY;delete process.env.GEOAPIFY_API_KEY }

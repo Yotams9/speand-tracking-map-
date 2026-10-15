@@ -6,8 +6,16 @@ export const TEAM = 'team_yx1kmFpHwN320ijT9Z2Bv2mL'
 export const BRANCH = 'codex/hosted-college-release-20261015'
 export const PREFIX = `artifacts/hosted-completion-20261015`
 export const sha = value => createHash('sha256').update(value).digest('hex')
+// Fixed local preflight reasons only. Never include input values or lengths.
+export const PRIVATE_READINESS_CODES = Object.freeze([
+  'readiness-flags-required', 'local-environment-required',
+  'gemini-key-input-invalid', 'geoapify-key-input-invalid',
+])
 export function readiness(args, env) {
-  if (args.join(' ') !== '--prepare-private-preview --prepay-ready-confirmed --geoapify-free-two-confirmed --no-concurrent-use --auto-reload-off' || env.VERCEL || env.CI || !/^[A-Za-z0-9_.-]{20,200}$/.test(env.GEMINI_API_KEY ?? '') || !/^[A-Za-z0-9_-]{16,128}$/.test(env.GEOAPIFY_API_KEY ?? '')) throw Error('private-readiness-required')
+  if (args.join(' ') !== '--prepare-private-preview --prepay-ready-confirmed --geoapify-free-two-confirmed --no-concurrent-use --auto-reload-off') throw Error('readiness-flags-required')
+  if (env.VERCEL || env.CI) throw Error('local-environment-required')
+  if (!/^[A-Za-z0-9_.-]{20,200}$/.test(env.GEMINI_API_KEY ?? '')) throw Error('gemini-key-input-invalid')
+  if (!/^[A-Za-z0-9_-]{16,128}$/.test(env.GEOAPIFY_API_KEY ?? '')) throw Error('geoapify-key-input-invalid')
 }
 export function accessMaterial() {
   const owner = randomBytes(32).toString('hex'), lecturer = randomBytes(32).toString('hex')
