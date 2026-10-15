@@ -4,7 +4,9 @@ import type { PurchaseAnalytics } from '@/data/spendscape-analytics'
 import type { AnalyticsView } from '@/features/ask/ask-spendscape-domain'
 import {
   localized,
+  merchantForId,
   placeForId,
+  type Merchant,
   type CategoryFilter,
   type ChannelFilter,
   type CurrencyFilter,
@@ -13,12 +15,16 @@ import {
   type PurchaseCategory,
   type PurchaseQuery,
 } from '@/data/spendscape-globe'
+import { amountIn, fromMinor, type MonthSummary } from '@/features/insights/insights-domain'
 import styles from './SpendscapeAnalytics.module.css'
 
 interface SpendscapeAnalyticsProps {
   syntheticQa?: boolean
   analytics: PurchaseAnalytics
   places: readonly Place[]
+  merchants: readonly Merchant[]
+  /** Deterministic "this month" figures from the insights engine: your own purchases only, unfiltered. */
+  monthSummary: MonthSummary
   locale: LocaleCode
   query: PurchaseQuery
   activeFilterCount: number
@@ -34,6 +40,12 @@ interface SpendscapeAnalyticsProps {
   onSelectMonth: (month: string | null) => void
   onSelectPlace: (placeId: string) => void
   initialView: AnalyticsView | null
+  /** Demo purchases are shown in the figures below (labelled); never in the month card. */
+  demoData: boolean
+  /** False when nothing has been saved yet (and demo data is off). */
+  hasAnyPurchases: boolean
+  onAddPurchase: () => void
+  onLoadDemo: () => void
 }
 
 const copy = {
@@ -60,6 +72,12 @@ const copy = {
     cardRecord: 'Card record', receipt: 'Receipt', emailReceipt: 'Email receipt', manualEntry: 'Manual entry',
     emptyTitle: 'No analytics for this shared view',
     emptyBody: 'Adjust the search, filters, or selected month. The canonical fixtures remain unchanged.',
+    firstTitle: 'Your spending will show up here', firstBody: 'Add a purchase and see totals, top stores and months, calculated on this device.',
+    firstAdd: 'Add your first purchase', firstDemo: 'Load demo data',
+    demoEyebrow: 'Demo + your purchases', demoNote: 'The figures below include fictional demo purchases while demo data is on. The month card counts only your own purchases.',
+    monthTitle: 'This month', monthNone: 'Nothing saved this month yet.', monthOwn: 'Your purchases only; demo purchases are not counted.', topStore: 'Top store', topCategory: 'Top category',
+    vsLast: 'vs {month}', less: 'less', more: 'more', same: 'Same as {month}', noCompare: 'No {month} purchases to compare',
+    monthPurchases: 'Purchases this month',
   },
   he: {
     eyebrow: 'ניתוחים דטרמיניסטיים · נתונים סינתטיים',
@@ -84,6 +102,12 @@ const copy = {
     cardRecord: 'רשומת כרטיס', receipt: 'קבלה', emailReceipt: 'קבלה בדוא״ל', manualEntry: 'הזנה ידנית',
     emptyTitle: 'אין נתונים לניתוח בתצוגה המשותפת',
     emptyBody: 'אפשר לשנות חיפוש, מסננים או חודש נבחר. ה־fixtures הקנוניים נשארים ללא שינוי.',
+    firstTitle: 'כאן יופיעו ההוצאות שלך', firstBody: 'הוסיפו רכישה ותראו סכומים, חנויות מובילות וחודשים — מחושבים במכשיר הזה.',
+    firstAdd: 'הוספת רכישה ראשונה', firstDemo: 'טען נתוני דמו',
+    demoEyebrow: 'דמו + הרכישות שלך', demoNote: 'הנתונים למטה כוללים רכישות דמו בדיוניות כל עוד נתוני הדמו פעילים. כרטיס החודש סופר רק את הרכישות שלך.',
+    monthTitle: 'החודש', monthNone: 'עוד לא נשמרו רכישות החודש.', monthOwn: 'הרכישות שלך בלבד; רכישות דמו אינן נספרות.', topStore: 'החנות המובילה', topCategory: 'הקטגוריה המובילה',
+    vsLast: 'לעומת {month}', less: 'פחות', more: 'יותר', same: 'כמו ב{month}', noCompare: 'אין רכישות ב{month} להשוואה',
+    monthPurchases: 'רכישות החודש',
   },
 } as const
 
@@ -139,9 +163,10 @@ function chartGeometry(months: PurchaseAnalytics['months']) {
 }
 
 export function SpendscapeAnalytics({
-  syntheticQa = false, analytics, places, locale, query, activeFilterCount, onClose, onSearch, onOpenFilters,
+  syntheticQa = false, analytics, places, merchants, monthSummary, locale, query, activeFilterCount, onClose, onSearch, onOpenFilters,
   onOpenTimeline, onReset, onOpenPurchases, onSelectCategory, onSelectChannel,
-  onSelectCurrency, onSelectMonth, onSelectPlace, initialView,
+  onSelectCurrency, onSelectMonth, onSelectPlace, initialView, demoData, hasAnyPurchases,
+  onAddPurchase, onLoadDemo,
 }: SpendscapeAnalyticsProps) {
   const t = syntheticQa ? copy[locale] : { ...copy[locale],
     total: locale === 'he' ? 'סכום בש״ח · המרות בדיווח שלכם' : 'ILS total · reported conversions',
@@ -172,7 +197,7 @@ export function SpendscapeAnalytics({
     <section className={styles.panel} aria-labelledby="analytics-title" data-testid="analytics-panel">
       <header className={styles.header}>
         <div>
-          <p>{syntheticQa && analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'דוגמה + רכישות מקומיות' : 'Sample + local purchases') : t.eyebrow}</p>
+          <p>{syntheticQa && analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'דוגמה + רכישות מקומיות' : 'Sample + local purchases') : !syntheticQa && demoData ? t.demoEyebrow : t.eyebrow}</p>
           <h2 id="analytics-title">{t.title}</h2>
           <span>{t.intro}</span>
         </div>
@@ -209,11 +234,20 @@ export function SpendscapeAnalytics({
       </div>
 
       <div className={styles.scrollArea}>
+        {!hasAnyPurchases ? (
+          <section className={styles.empty} role="status" data-testid="analytics-first-run">
+            <h3>{t.firstTitle}</h3>
+            <p>{t.firstBody}</p>
+            <button type="button" onClick={onAddPurchase} data-testid="analytics-add">{t.firstAdd}</button>
+            {!syntheticQa && <button type="button" className={styles.emptySecondary} onClick={onLoadDemo} data-testid="analytics-demo-load">{t.firstDemo}</button>}
+          </section>
+        ) : <>
+        <MonthSummaryCard summary={monthSummary} merchants={merchants} locale={locale} demoShown={!syntheticQa && demoData} />
         <section className={styles.heroMetrics} aria-label={t.title} data-testid="analytics-summary" data-analytics-view="overview" tabIndex={-1}>
           <article className={styles.totalMetric}>
             <span>{t.total}</span>
             <strong data-testid="analytics-total">{formatMoney(analytics.totalBaseAmountIls, locale)}</strong>
-            <small>{syntheticQa && analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הסיכום משלב נתוני הדגמה ותוספות שלך. המרות לתוספות דווחו על ידך ולא אומתו.' : 'Totals combine demo data and your local purchases. Conversions for your additions are user-reported, not verified.') : t.normalizedNote}</small>
+            <small>{syntheticQa && analytics.currencies.some(c => c.reportedPurchaseCount > 0) ? (locale === 'he' ? 'הסיכום משלב נתוני הדגמה ותוספות שלך. המרות לתוספות דווחו על ידך ולא אומתו.' : 'Totals combine demo data and your local purchases. Conversions for your additions are user-reported, not verified.') : !syntheticQa && demoData ? t.demoNote : t.normalizedNote}</small>
           </article>
           <article>
             <span>{t.purchases}</span>
@@ -394,12 +428,41 @@ export function SpendscapeAnalytics({
             </section>
           </>
         )}
+        </>}
       </div>
 
       <footer className={styles.footer}>
         <span><strong>{analytics.purchaseCount}</strong> {t.results}</span>
         <button type="button" onClick={onOpenPurchases} data-testid="analytics-view-purchases">{t.viewPurchases}<i aria-hidden="true">→</i></button>
       </footer>
+    </section>
+  )
+}
+
+function MonthSummaryCard({ summary, merchants, locale, demoShown }: { summary: MonthSummary; merchants: readonly Merchant[]; locale: LocaleCode; demoShown: boolean }) {
+  const t = copy[locale]
+  const ils = amountIn(summary.total, 'ILS')
+  const others = summary.total.totals.filter((entry) => entry.currency !== 'ILS')
+  const lastMonth = formatMonth(summary.previousMonth, locale).split(' ')[0]
+  const store = summary.topStore ? merchantForId(summary.topStore.storeId, merchants) : undefined
+  const change = summary.vsPrevious
+  return (
+    <section className={styles.monthCard} aria-labelledby="analytics-month-title" data-testid="analytics-month-summary" data-source-purchases={summary.total.purchaseIds.length}>
+      <p id="analytics-month-title">{t.monthTitle} · {formatMonth(summary.month, locale)}</p>
+      <strong className={styles.monthAmount} data-testid="analytics-month-total">{formatMoney(fromMinor(ils, 'ILS'), locale)}</strong>
+      {others.length > 0 && <p className={styles.monthOthers}>{others.map((entry) => formatMoney(fromMinor(entry.minor, entry.currency), locale, entry.currency)).join(' · ')}</p>}
+      {demoShown && <p className={styles.monthMuted} data-testid="analytics-month-own">{t.monthOwn}</p>}
+      {summary.total.purchaseCount === 0 ? <p className={styles.monthMuted}>{t.monthNone}</p> : (
+        <dl className={styles.monthFacts}>
+          <div><dt>{t.topStore}</dt><dd data-testid="analytics-month-store">{store ? localized(store.name, locale) : '—'}{summary.topStore && <small>{formatMoney(fromMinor(amountIn(summary.topStore), 'ILS'), locale)}</small>}</dd></div>
+          <div><dt>{t.topCategory}</dt><dd data-testid="analytics-month-category">{summary.topCategory ? t[categoryLabels[summary.topCategory.category]] : '—'}{summary.topCategory && <small>{formatMoney(fromMinor(amountIn(summary.topCategory), 'ILS'), locale)}</small>}</dd></div>
+          <div><dt>{t.monthPurchases}: {summary.total.purchaseCount}</dt><dd data-testid="analytics-month-change" data-direction={!change ? 'none' : change.deltaMinor < 0 ? 'down' : change.deltaMinor > 0 ? 'up' : 'same'}>
+            {!change ? <span className={styles.monthMuted}>{t.noCompare.replace('{month}', lastMonth)}</span>
+              : change.deltaMinor === 0 ? t.same.replace('{month}', lastMonth)
+              : <>{formatMoney(fromMinor(Math.abs(change.deltaMinor), 'ILS'), locale)} {change.deltaMinor < 0 ? t.less : t.more}{change.percent !== null && <> ({Math.abs(change.percent)}%)</>}<small>{t.vsLast.replace('{month}', lastMonth)}</small></>}
+          </dd></div>
+        </dl>
+      )}
     </section>
   )
 }

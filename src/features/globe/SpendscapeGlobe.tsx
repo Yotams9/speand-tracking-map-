@@ -66,6 +66,10 @@ import { LocalDataPanel } from '@/features/local-purchases/LocalDataPanel'
 import { restoredLedger } from '@/features/local-purchases/local-purchase-store'
 import { composeDirectory } from '@/features/local-purchases/local-directory'
 import { deleteLocalPurchase, emptySessionLedger, expireSessionPurchaseUndo, saveReviewedPurchase, undoSessionPurchase } from '@/features/capture/session-purchase-domain'
+import { isLocated, loadCatalogStores } from '@/features/capture/catalog-stores'
+import { catalogChainNames } from '@/features/local-purchases/place-provenance'
+import { thisMonthSummary } from '@/features/insights/insights-domain'
+import { DEFAULT_LOCALE, offeredDirectory, readDemoPreference, readLocalePreference, writeDemoPreference, writeLocalePreference } from '@/data/demo-visibility'
 import {
   applySmartInboxDecisions,
   caseForPurchase,
@@ -146,6 +150,11 @@ const AskSpendscapeExperience = dynamic(
 )
 
 const SOURCE_ID = 'spendscape-places'
+// Supermarkets with published prices: context markers, never purchase places or pins.
+const CATALOG_SOURCE_ID = 'spendscape-catalog-stores'
+const CATALOG_STORE_LAYER = 'spendscape-catalog-stores'
+const CATALOG_LABEL_LAYER = 'spendscape-catalog-store-labels'
+const catalogLabelExpression = (locale: LocaleCode) => ['concat', ['get', locale === 'he' ? 'chainHe' : 'chainEn'], ' · ', ['get', 'name']] as maplibregl.ExpressionSpecification
 const HEAT_LAYER = 'spendscape-heat'
 const CLUSTER_GLOW_LAYER = 'spendscape-cluster-glow'
 const CLUSTER_LAYER = 'spendscape-clusters'
@@ -520,9 +529,9 @@ const userCopy = {
 
 const copy = {
   en: {
-    product: 'Spendscape', checkpoint: 'Globe checkpoint', navGlobe: 'Globe',
+    product: 'Spendscape', checkpoint: 'Your purchases on a globe', navGlobe: 'Globe',
     navAnalytics: 'Analytics', navPurchases: 'Purchases',
-    addPurchase: 'Add purchase', capture: 'Capture',
+    addPurchase: 'Add purchase', capture: 'Add',
     inbox: 'Inbox', openInbox: 'Open Smart Inbox', reviewMatch: 'Review match',
     headline: 'Your world, in purchases.',
     intro: 'Every confirmed place becomes one point in a living history.',
@@ -563,11 +572,16 @@ const copy = {
     noPurchases: 'No purchases match this view', noPurchasesBody: 'Adjust the shared search, filters, or timeline.',
     reloadNote: 'Shared view saved for this session', onlineNoPin: 'Online · no map pin',
     unresolvedNoPin: 'Unresolved · no map pin', manualEntry: 'Manual cash record',
+    demoLoad: 'Load demo data', demoHide: 'Hide demo data', demoOn: 'Demo data on', demoLabel: 'Demo · fictional purchase',
+    demoLoadedStatus: 'Demo purchases loaded. They are fictional and never saved.', demoHiddenStatus: 'Demo purchases hidden',
+    emptyTitle: 'No purchases yet', emptyBody: 'Scan a barcode or type a purchase in. It stays on this device.',
+    emptyAdd: 'Add your first purchase', emptyDemoHint: 'Just looking around? Load fictional demo purchases.',
+    demoHistoryIntro: 'Fictional demo history next to the purchases you saved on this device. Demo purchases are never saved or backed up.',
   },
   he: {
-    product: 'Spendscape', checkpoint: 'נקודת ביקורת גלובוס', navGlobe: 'גלובוס',
+    product: 'Spendscape', checkpoint: 'הרכישות שלך על הגלובוס', navGlobe: 'גלובוס',
     navAnalytics: 'ניתוחים', navPurchases: 'רכישות',
-    addPurchase: 'הוספת רכישה', capture: 'קליטה',
+    addPurchase: 'הוספת רכישה', capture: 'הוספה',
     inbox: 'תיבת עזרה', openInbox: 'פתיחת תיבת העזרה', reviewMatch: 'בדיקת התאמה',
     headline: 'עולם הרכישות שלך.',
     intro: 'כל מקום מאומת הופך לנקודה אחת בהיסטוריה חיה.',
@@ -608,6 +622,11 @@ const copy = {
     noPurchases: 'אין רכישות התואמות לתצוגה', noPurchasesBody: 'אפשר לשנות חיפוש, מסננים או ציר זמן משותפים.',
     reloadNote: 'התצוגה המשותפת נשמרה להפעלה זו', onlineNoPin: 'אונליין · ללא סיכה',
     unresolvedNoPin: 'לא פתור · ללא סיכה', manualEntry: 'רשומת מזומן ידנית',
+    demoLoad: 'טען נתוני דמו', demoHide: 'הסתר נתוני דמו', demoOn: 'נתוני דמו פעילים', demoLabel: 'דמו · רכישה בדיונית',
+    demoLoadedStatus: 'רכישות הדמו נטענו. הן בדיוניות ולעולם אינן נשמרות.', demoHiddenStatus: 'רכישות הדמו הוסתרו',
+    emptyTitle: 'עוד אין רכישות', emptyBody: 'סרקו ברקוד או הקלידו רכישה. היא נשמרת במכשיר הזה.',
+    emptyAdd: 'הוספת רכישה ראשונה', emptyDemoHint: 'רק מסתכלים? טענו רכישות דמו בדיוניות.',
+    demoHistoryIntro: 'היסטוריית דמו בדיונית לצד הרכישות ששמרת במכשיר הזה. רכישות דמו לעולם אינן נשמרות או מגובות.',
   },
 } as const
 
@@ -837,17 +856,25 @@ function isAvailableFocusTarget(target: HTMLElement | null): target is HTMLEleme
 
 interface SpendscapeGlobeProps {
   initialData: SpendscapeDataSnapshot
+  /** Fictional history behind the visible demo toggle. View-only: never saved, backed up or counted as yours. */
+  demoHistory?: Pick<SpendscapeDataSnapshot, 'purchases' | 'evidence'>
 }
 
-export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
+const noDemo = Object.freeze({ purchases: Object.freeze([]), evidence: Object.freeze([]) }) as Pick<SpendscapeDataSnapshot, 'purchases' | 'evidence'>
+
+export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: SpendscapeGlobeProps) {
   const syntheticQa = initialData.source.classification === 'synthetic'
+  // Demo purchases stay hidden until the person loads them (remembered on this device).
+  // The server QA gate keeps its own synthetic snapshot and ignores the toggle.
+  const [demoData, setDemoData] = useState(false)
+  const demoShown = !syntheticQa && demoData
   const {
     merchants: baselineMerchants,
     places: baselinePlaces,
-    purchases: globePurchases,
-    evidence: globeEvidenceRecords,
     smartInboxCases,
   } = initialData
+  const globePurchases = demoShown ? demoHistory.purchases : initialData.purchases
+  const globeEvidenceRecords = demoShown ? demoHistory.evidence : initialData.evidence
   const placeFeatureCollection = useMemo(
     () => buildPlaceFeatureCollection(baselinePlaces, globePurchases),
     [baselinePlaces, globePurchases],
@@ -901,7 +928,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const sessionUndoDeadlineRef = useRef(0)
   const [undoSeconds, setUndoSeconds] = useState(0)
   const loadStartRef = useRef(0)
-  const localeRef = useRef<LocaleCode>('en')
+  const localeRef = useRef<LocaleCode>(DEFAULT_LOCALE)
   const modeRef = useRef<MapMode>('pins')
   const mapInstanceCountRef = useRef(0)
   const mapConstructionCountRef = useRef(0)
@@ -909,7 +936,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const captureDismissedRef = useRef(false)
   const captureResumeSpinRef = useRef(false)
 
-  const [locale, setLocale] = useState<LocaleCode>('en')
+  const [locale, setLocale] = useState<LocaleCode>(DEFAULT_LOCALE)
   const [query, setQuery] = useState<PurchaseQuery>(defaultPurchaseQuery)
   const [mode, setMode] = useState<MapMode>('pins')
   const [surface, setSurface] = useState<ProductSurface>('globe')
@@ -921,10 +948,27 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   const [captureDepth, setCaptureDepth] = useState(0)
   const [sessionLedger, setSessionLedger] = useState(emptySessionLedger)
   const sessionLedgerRef = useRef(sessionLedger)
-  const directoryGraph = useMemo(() => syntheticQa
+  const userGraph = useMemo(() => syntheticQa
     ? composeDirectory({ merchants: baselineMerchants, places: baselinePlaces }, sessionLedger.directory)
     : composeUserGraph(initialData, sessionLedger.directory, sessionLedger.records), [syntheticQa, initialData, baselineMerchants, baselinePlaces, sessionLedger.directory, sessionLedger.records])
+  // The view adds only the fictional places the demo history uses; the purchase
+  // form, validation and storage keep working from the person's own graph.
+  const directoryGraph = useMemo(() => {
+    if (!demoShown || demoHistory.purchases.length === 0) return userGraph
+    const placeIds = new Set(demoHistory.purchases.flatMap(p => p.placeId ? [p.placeId] : [])), merchantIds = new Set(demoHistory.purchases.map(p => p.merchantId))
+    const places = [...userGraph.places, ...baselinePlaces.filter(p => placeIds.has(p.id) && !userGraph.places.some(u => u.id === p.id))]
+    const merchants = [...userGraph.merchants, ...baselineMerchants.filter(m => (merchantIds.has(m.id) || places.some(p => p.merchantId === m.id)) && !userGraph.merchants.some(u => u.id === m.id))]
+    return { merchants, places }
+  }, [demoShown, demoHistory.purchases, userGraph, baselineMerchants, baselinePlaces])
   const { merchants: globeMerchants, places: globePlaces } = directoryGraph
+  // Stores the purchase form offers: your own, plus the "store not identified" choice.
+  // Fictional demo stores are never offered, so demo data cannot enter your purchases.
+  const captureContext = useMemo(() => syntheticQa ? userGraph : offeredDirectory(
+    { merchants: [...userGraph.merchants, ...baselineMerchants.filter(m => !userGraph.merchants.some(u => u.id === m.id))], places: userGraph.places },
+    new Set(baselineMerchants.map(m => m.id)), new Set(baselinePlaces.map(p => p.id)),
+    { merchantIds: new Set(userGraph.merchants.map(m => m.id)), placeIds: new Set(userGraph.places.map(p => p.id)) },
+    false,
+  ), [syntheticQa, userGraph, baselineMerchants, baselinePlaces])
   const globePlacesRef = useRef(globePlaces)
   globePlacesRef.current = globePlaces
   const receiptLocationSeedRef = useRef<ReceiptPlaceSeed | undefined>(undefined)
@@ -970,7 +1014,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   replayMapAvailableRef.current = mapAvailable
   const [autoSpin, setAutoSpin] = useState(true)
   const [reducedMotion, setReducedMotion] = useState(false)
-  const [status, setStatus] = useState<string>(copy.en.loading)
+  const [status, setStatus] = useState<string>(copy[DEFAULT_LOCALE].loading)
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false)
   const [compactViewport, setCompactViewport] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -1086,6 +1130,12 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     }
   }, [globePlaces, allPurchases])
   const timelineMonths = useMemo(() => availableTimelineMonths(allPurchases), [allPurchases])
+  // "This month" is always the whole month of your own purchases, independent of filters.
+  // Demo purchases never count towards it; the QA sample keeps its synthetic history.
+  const monthSummary = useMemo(
+    () => thisMonthSummary(syntheticQa ? allPurchases : sessionCaptureRecords.map((record) => record.purchase), { now: new Date() }),
+    [syntheticQa, allPurchases, sessionCaptureRecords],
+  )
   const askContext = useMemo<AskContext>(() => ({
     merchants: globeMerchants,
     places: globePlaces,
@@ -1153,6 +1203,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
   }, [])
 
   useEffect(() => {
+    let preferences: Storage | null = null
+    try { preferences = window.localStorage } catch { preferences = null }
+    setDemoData(readDemoPreference(preferences))
+    const preferredLocale = readLocalePreference(preferences)
+    if (preferredLocale) setLocale(preferredLocale)
     let restored: Partial<StoredExperienceState> = {}
     try {
       const raw = window.sessionStorage.getItem(EXPERIENCE_STORAGE_KEY)
@@ -1262,6 +1317,11 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     stored.query = { ...stored.query, search: '' }
     window.sessionStorage.setItem(EXPERIENCE_STORAGE_KEY, JSON.stringify(stored))
   }, [locale, mode, query, selectedPlaceId, selectedPurchaseId, stateRestored, surface])
+
+  useEffect(() => {
+    if (!stateRestored) return
+    try { writeLocalePreference(window.localStorage, locale) } catch { /* storage blocked */ }
+  }, [locale, stateRestored])
 
   useEffect(() => {
     const dismissed = askWasOpenRef.current && !askOpen
@@ -1693,6 +1753,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     if (map?.getLayer(LABEL_LAYER)) {
       map.setLayoutProperty(LABEL_LAYER, 'text-field', placeLabelExpression(locale))
     }
+    if (map?.getLayer(CATALOG_LABEL_LAYER)) map.setLayoutProperty(CATALOG_LABEL_LAYER, 'text-field', catalogLabelExpression(locale))
   }, [locale])
 
   useEffect(() => {
@@ -2268,6 +2329,67 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           })
 
           const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 16 })
+          void loadCatalogStores().then((stores) => {
+            if (disposed || map.getSource(CATALOG_SOURCE_ID)) return
+            const below = map.getLayer(HEAT_LAYER) ? HEAT_LAYER : undefined
+            map.addSource(CATALOG_SOURCE_ID, {
+              type: 'geojson',
+              data: {
+                type: 'FeatureCollection',
+                features: stores.filter(isLocated).map((store) => ({
+                  type: 'Feature' as const,
+                  geometry: { type: 'Point' as const, coordinates: [store.location.lon, store.location.lat] },
+                  properties: { id: store.id, chain: store.chain, chainEn: catalogChainNames[store.chain].en, chainHe: catalogChainNames[store.chain].he, name: store.name, address: store.address },
+                })),
+              },
+            })
+            map.addLayer({
+              id: CATALOG_STORE_LAYER,
+              type: 'circle',
+              source: CATALOG_SOURCE_ID,
+              minzoom: 10,
+              paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 13, 4.5, 16, 7],
+                'circle-color': '#1a1e26',
+                // A quiet per-chain tint so neighbouring chains are told apart; no logos.
+                'circle-stroke-color': ['match', ['get', 'chain'], 'shufersal', '#e0707f', 'ramilevi', '#e3a95c', 'osherad', '#7f9fe0', '#aab1bd'],
+                'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 2],
+                'circle-opacity': 0.92,
+                'circle-pitch-alignment': 'viewport',
+              },
+            }, below)
+            map.addLayer({
+              id: CATALOG_LABEL_LAYER,
+              type: 'symbol',
+              source: CATALOG_SOURCE_ID,
+              minzoom: 14,
+              layout: {
+                'text-field': catalogLabelExpression(localeRef.current),
+                'text-font': ['Noto Sans Regular'],
+                'text-size': 11,
+                'text-offset': [0, 1.1],
+                'text-anchor': 'top',
+                'text-optional': true,
+              },
+              paint: { 'text-color': '#2b313b', 'text-halo-color': 'rgba(252,253,255,0.95)', 'text-halo-width': 1.6 },
+            }, below)
+            map.on('mouseenter', CATALOG_STORE_LAYER, (event) => {
+              if (replaySessionRef.current || locationPickingRef.current) return
+              const feature = event.features?.[0]
+              if (!feature) return
+              const properties = feature.properties as { chainEn: string; chainHe: string; name: string; address: string }
+              const activeLocale = localeRef.current
+              const tooltip = document.createElement('div')
+              tooltip.className = styles.mapTooltip
+              const title = document.createElement('strong')
+              title.textContent = `${activeLocale === 'he' ? properties.chainHe : properties.chainEn} · ${properties.name}`
+              const meta = document.createElement('span')
+              meta.textContent = activeLocale === 'he' ? `${properties.address} · מחירים מפורסמים בסורק` : `${properties.address} · published prices in the scanner`
+              tooltip.append(title, meta)
+              popup.setLngLat((feature.geometry as Point).coordinates as [number, number]).setDOMContent(tooltip).addTo(map)
+            })
+            map.on('mouseleave', CATALOG_STORE_LAYER, () => popup.remove())
+          }).catch(() => {})
           let hoveredFeatureId: string | number | null = null
           map.on('mouseenter', PIN_LAYER, (event) => {
             if (replaySessionRef.current || locationPickingRef.current) return
@@ -2980,6 +3102,19 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
     return false
   }
 
+  // Loading or hiding the demo story returns to a clean view. It changes only what
+  // is shown: nothing is written to the purchase store and your purchases stay.
+  const toggleDemoData = () => exitReplayForNavigation(() => {
+    const next = !demoData
+    writeDemoPreference((() => { try { return window.localStorage } catch { return null } })(), next)
+    stopSpin(false)
+    const snapshot: NavigationSnapshot = { marker: 'spendscape-1d1', surface, selectedPlaceId: null, selectedPurchaseId: null }
+    window.history.replaceState({ ...window.history.state, ...snapshot }, '', navigationHash(snapshot))
+    applyNavigation(snapshot)
+    setDemoData(next)
+    setStatus(next ? t.demoLoadedStatus : t.demoHiddenStatus)
+  })
+
   const setTimelineMonth = (month: string | null) => {
     stopSpin(false)
     updateQuery({ timelineMonth: month, dateRange: 'all' })
@@ -3359,6 +3494,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             <span aria-hidden="true">＋</span>{t.addPurchase}
           </button>
           {syntheticQa && <span className={styles.syntheticBadge}>{sessionCaptureRecords.some(r => !r.synthetic) ? (locale === 'he' ? 'דוגמה + רכישות מקומיות' : 'Sample + local purchases') : t.synthetic}</span>}
+          {!syntheticQa && <button type="button" className={styles.demoToggle} aria-pressed={demoData} data-testid="demo-toggle" onClick={toggleDemoData}>{demoData ? t.demoHide : t.demoLoad}</button>}
           <button
             type="button"
           className={styles.languageButton}
@@ -3371,7 +3507,6 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       </header>
 
       <section className={styles.hero} aria-labelledby="globe-title">
-        <p className={styles.eyebrow}>{t.checkpoint}</p>
         <h1 id="globe-title">{t.headline}</h1>
         <p className={styles.heroCopy}>{t.intro}</p>
         <p className={styles.heroMeta}>
@@ -3380,6 +3515,17 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           <span><strong>{currentGlobeCounts.physicalConfirmedCount}</strong> {t.purchasesSummary}</span>
         </p>
       </section>
+
+      {!syntheticQa && surface === 'globe' && allPurchases.length === 0 && !captureStep && !replay && (
+        <section className={styles.homeEmpty} aria-labelledby="home-empty-title" data-testid="home-empty">
+          <h2 id="home-empty-title">{t.emptyTitle}</h2>
+          <p>{t.emptyBody}</p>
+          <button type="button" className={styles.emptyPrimary} onClick={openCapture} data-testid="home-empty-add">
+            <span aria-hidden="true">＋</span>{t.emptyAdd}
+          </button>
+          <button type="button" className={styles.emptyLink} onClick={toggleDemoData} data-testid="home-demo-load">{t.emptyDemoHint}</button>
+        </section>
+      )}
 
       <section ref={queryDockRef} className={styles.queryDock} aria-label="Globe query controls" data-testid="query-dock">
         <div ref={searchRootRef} className={styles.searchShell}>
@@ -3652,7 +3798,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         </div>
       )}
 
-      {mapAvailable && surface === 'globe' && !captureStep && !replay && !askOpen && !selectedPurchase && visibleData.features.length === 0 && (
+      {mapAvailable && surface === 'globe' && !captureStep && !replay && !askOpen && !selectedPurchase && visibleData.features.length === 0 && (syntheticQa || allPurchases.length > 0) && (
         <div className={styles.emptyState} role="status" data-testid="map-empty">
           <p className={styles.eyebrow}>{t.synthetic}</p>
           <h2>{allPurchases.length ? t.noPlaces : (locale === 'he' ? 'הגלובוס שלכם מחכה לרכישה הראשונה' : 'Your globe is ready for your first purchase')}</h2>
@@ -3699,6 +3845,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
                 </button>
               ))}
             </div>
+            {(selectedPlace as LocalPlace).catalogStore && <p data-testid="place-catalog-provenance">{locale === 'he' ? `סניף מקטלוג המחירים של תל אביב · כתובת מפורסמת: ${(selectedPlace as LocalPlace).catalogStore!.publishedAddress || '—'}` : `Branch from the Tel Aviv price catalog · published address: ${(selectedPlace as LocalPlace).catalogStore!.publishedAddress || '—'}`}</p>}
             <p className={styles.panelTruth}>{syntheticQa ? t.synthetic : (locale === 'he' ? 'סיכה אחת לכל מקום רכישה מאומת.' : 'One pin per confirmed purchase place.')}</p>
           </div>
         </aside>
@@ -3708,9 +3855,9 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         <section className={styles.purchasesPanel} aria-labelledby="purchases-title" data-testid="purchases-panel">
           <header className={styles.panelHeader}>
             <div>
-              <p className={styles.eyebrow}>{t.synthetic}</p>
+              <p className={styles.eyebrow}>{demoShown ? t.demoOn : t.synthetic}</p>
               <h2 id="purchases-title">{t.history}</h2>
-              <p>{syntheticQa ? (locale === 'he' ? 'היסטוריית בדיקה סינתטית.' : 'Synthetic QA history.') : t.historyIntro}</p>
+              <p>{syntheticQa ? (locale === 'he' ? 'היסטוריית בדיקה סינתטית.' : 'Synthetic QA history.') : demoShown ? t.demoHistoryIntro : t.historyIntro}</p>
             </div>
             <button ref={purchasesCloseRef} type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.closeHistory}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
@@ -3735,9 +3882,18 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
             {(query.search || query.category !== 'all' || activeFilterCount > 0) && (
               <button type="button" data-testid="history-reset" onClick={clearFilters}>{t.resetQuery}</button>
             )}
+            {demoShown && <button type="button" data-testid="purchases-demo-hide" onClick={toggleDemoData}>{t.demoHide}</button>}
           </div>
 
-          {visiblePurchases.length === 0 ? (
+          {!syntheticQa && allPurchases.length === 0 ? (
+            <div className={styles.historyEmpty} role="status" data-testid="purchases-empty" data-empty-kind="no-purchases">
+              <h3>{t.emptyTitle}</h3>
+              <p>{t.emptyBody}</p>
+              <button type="button" className={styles.emptyPrimary} onClick={openCapture}>{t.emptyAdd}</button>
+              <p className={styles.emptyHint}>{t.emptyDemoHint}</p>
+              <button type="button" onClick={toggleDemoData} data-testid="purchases-demo-load">{t.demoLoad}</button>
+            </div>
+          ) : visiblePurchases.length === 0 ? (
             <div className={styles.historyEmpty} role="status" data-testid="purchases-empty">
               <h3>{allPurchases.length ? t.noPurchases : (locale === 'he' ? 'הרכישה הראשונה שלכם מתחילה כאן' : 'Your first purchase starts here')}</h3>
               <p>{allPurchases.length ? t.noPurchasesBody : (locale === 'he' ? 'הוסיפו רכישה ידנית או קבלה ובדקו את הפרטים לפני השמירה.' : 'Add a manual purchase or receipt and review its details before saving.')}</p>
@@ -3787,6 +3943,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           syntheticQa={syntheticQa}
           analytics={visibleAnalytics}
           places={globePlaces}
+          merchants={globeMerchants}
+          monthSummary={monthSummary}
           locale={locale}
           query={query}
           activeFilterCount={activeFilterCount}
@@ -3802,6 +3960,10 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           onSelectMonth={setTimelineMonth}
           onSelectPlace={selectPlace}
           initialView={analyticsView}
+          demoData={demoShown}
+          hasAnyPurchases={allPurchases.length > 0}
+          onAddPurchase={openCapture}
+          onLoadDemo={toggleDemoData}
         />
       )}
 
@@ -3810,12 +3972,17 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           <button ref={purchaseDetailBackRef} type="button" className={styles.closePanel} onClick={closeTopLayer} aria-label={t.backToHistory}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
           </button>
-          <p className={styles.eyebrow}>{t.purchaseDetail} · {selectedPurchase.provenance === 'user-reviewed-session' ? (locale === 'he' ? 'דיווח שלך · במכשיר הזה' : 'Reported by you · on this device') : t.synthetic}</p>
+          <p className={styles.eyebrow}>{t.purchaseDetail} · {selectedPurchase.provenance === 'user-reviewed-session' ? (locale === 'he' ? 'דיווח שלך · במכשיר הזה' : 'Reported by you · on this device') : syntheticQa ? t.synthetic : t.demoLabel}</p>
           <h2 id="purchase-title">{localized(selectedMerchant.name, locale)}</h2>
           <p className={styles.panelLocation}>
             {selectedPurchase.placeId
               ? `${localized(placeForId(selectedPurchase.placeId, globePlaces)!.branch, locale)} · ${localized(placeForId(selectedPurchase.placeId, globePlaces)!.city, locale)}`
               : selectedPurchase.resolution === 'unresolved' ? t.unresolvedNoPin : t.onlineNoPin}
+          </p>
+
+          <p className={styles.detailHeroAmount} data-testid="purchase-detail-amount">
+            <strong>{formatMoney(selectedPurchase.originalAmount, locale, selectedPurchase.originalCurrency)}</strong>
+            <small>{formatDate(selectedPurchase.timestamp, locale)}</small>
           </p>
 
           <div className={styles.detailBadges}>
@@ -3877,7 +4044,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
       {!replay && !captureStep && nearbyPurchaseId && selectedPurchase?.id === nearbyPurchaseId && <NearbyPricesReview key={nearbyPurchaseId} purchase={selectedPurchase} places={globePlaces} locale={locale} onClose={closeTopLayer} />}
 
       {locationPurchaseId && selectedPurchase?.id === locationPurchaseId && selectedMerchant && <div className={styles.locationHost}>
-        <PurchaseLocationReview key={locationPurchaseId} locale={locale} merchant={selectedMerchant} places={globePlaces} currentPlaceId={selectedPurchase.placeId} initialDetails={receiptLocationSeedRef.current} mapAvailable={mapAvailable}
+        <PurchaseLocationReview key={locationPurchaseId} locale={locale} merchant={selectedMerchant} places={userGraph.places} currentPlaceId={selectedPurchase.placeId} initialDetails={receiptLocationSeedRef.current} mapAvailable={mapAvailable}
           onPicking={value => { locationPickingRef.current = value; setLocationPicking(value); stopSpin(false) }}
           previewPoint={point => { const map = mapRef.current; if (!map || !mapAvailable) return; stopSpin(false); map.jumpTo({center:point,zoom:15}) }}
           getMapPoint={() => { if (!mapAvailable || !mapRef.current) return null; const center = mapRef.current.getCenter(); const longitude = ((center.lng + 180) % 360 + 360) % 360 - 180; return [Number(longitude.toFixed(6)), Number(center.lat.toFixed(6))] }}
@@ -3941,8 +4108,8 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
         <CaptureExperience
           syntheticQa={syntheticQa}
           locale={locale}
-          places={globePlaces}
-          merchants={globeMerchants}
+          places={captureContext.places}
+          merchants={captureContext.merchants}
           step={captureStep}
           reducedMotion={reducedMotion}
           sessionRecords={sessionCaptureRecords}
@@ -3953,7 +4120,7 @@ export function SpendscapeGlobe({ initialData }: SpendscapeGlobeProps) {
           onClose={closeCapture}
           onConfirm={async (operationId, input, allowDuplicate) => {
             if (!syntheticQa && input.provenance !== 'user-reviewed') return { code: 'invalid', errors: { provenance: 'required' } }
-            const saved = saveReviewedPurchase(sessionLedgerRef.current, operationId, input, { merchants: globeMerchants, places: globePlaces }, globePurchases, allowDuplicate)
+            const saved = saveReviewedPurchase(sessionLedgerRef.current, operationId, input, captureContext, initialData.purchases, allowDuplicate)
             if (saved.result.code === 'saved') {
               if (!await localData.commit(saved.ledger, inboxDecisionsRef.current)) return { code: localData.lastFailure.current }
               setComparisonReadyId(null)

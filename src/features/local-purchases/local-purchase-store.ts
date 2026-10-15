@@ -27,7 +27,7 @@ export function validateLocalPurchases(raw: unknown, context: SpendscapeDataSnap
     if ((data.version !== 1 && data.version !== 2 && data.version !== 3 && data.version !== 4) || !Number.isSafeInteger(data.revision) || data.revision < 0 || !Number.isSafeInteger(data.nextSequence) || data.nextSequence < 1 || !denseArray(data.records, 1000) || !denseArray(data.decisions, context.smartInboxCases.length)) throw 0
     const directory = data.version >= 3 ? validateDirectory(data.directory, context, data.nextSequence) : emptyDirectory()
     // Legacy envelopes did not support unknown context; never reinterpret them.
-    if (data.version < 4 && (directory.places.some(p => p.locationMethod !== 'manual-coordinates' || p.addressSearch !== undefined) || directory.merchants.some(m => m.category === 'unknown') || data.records.some(r => r.purchase.paymentMode === 'unknown' || r.purchase.category === 'unknown'))) throw 0
+    if (data.version < 4 && (directory.places.some(p => p.locationMethod !== 'manual-coordinates' || p.addressSearch !== undefined) || directory.merchants.some(m => m.category === 'unknown' || m.catalogChain !== undefined) || data.records.some(r => r.purchase.paymentMode === 'unknown' || r.purchase.category === 'unknown'))) throw 0
     const graph = composeDirectory(context, directory)
     const sequences = new Set<number>()
     const records = data.records.map((r: SessionCaptureRecord) => {

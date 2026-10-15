@@ -15,6 +15,8 @@ export interface PurchaseReviewInput {
   merchantId: string; placeId: string; channel: '' | 'physical' | 'online' | 'unknown'
   date: string; currency: '' | CurrencyCode; payment: '' | PaymentMode; category: '' | PurchaseCategory
   amount: string; baseAmount: string; lines: ReviewLine[]
+  /** Published shelf price per catalog store ID for an identified barcode; a form hint only, never saved. */
+  catalogPrices?: Record<string, number>
 }
 export type ReviewErrors = Record<string, string>
 export type ReviewContext = { merchants: readonly Merchant[]; places: readonly Place[] }

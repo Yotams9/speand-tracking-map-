@@ -55,7 +55,7 @@ export function CaptureCamera({ locale, syntheticQa = false, onDemo, onSources, 
   onDemo: () => void
   onSources: () => void
   onManual: () => void
-  onCandidate: (candidate: { name: string; identification: NonNullable<PurchaseReviewInput['identification']> }) => void
+  onCandidate: (candidate: { name: string; identification: NonNullable<PurchaseReviewInput['identification']>; catalogPrices?: Record<string, number> }) => void
 }) {
   const { videoRef, state, start, stop } = useCaptureCamera()
   const targetRef = useRef<HTMLDivElement>(null)
@@ -105,7 +105,7 @@ export function CaptureCamera({ locale, syntheticQa = false, onDemo, onSources, 
       <CaptureBarcode syntheticQa={syntheticQa} locale={locale} state={barcode.state} identity={barcode.identity}
         onManual={(code, format) => { method.current = 'manual'; barcode.manual(code, format) }}
         onDemo={(code, format) => { method.current = 'demo'; barcode.manual(code, format) }}
-        onCandidate={(name, syntheticCatalog) => { if (barcode.identity) { const identity = { ...barcode.identity }; leave(() => onCandidate({ name, identification: { identity, method: method.current, syntheticCatalog } })) } }} onCancel={barcode.cancel}
+        onCandidate={(name, syntheticCatalog, catalogPrices) => { if (barcode.identity) { const identity = { ...barcode.identity }; leave(() => onCandidate({ name, identification: { identity, method: method.current, syntheticCatalog }, catalogPrices })) } }} onCancel={barcode.cancel}
         onRetry={() => { method.current = 'camera'; barcode.retry(); if (state !== 'live') startCamera() }}
         onReset={() => { method.current = 'camera'; barcode.cancel(); barcode.retry() }} />
     </div>

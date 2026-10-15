@@ -3,7 +3,67 @@
 This file transfers the relevant decisions and workspace history into a durable
 form. It is a summary of user intent, not a verbatim transcript.
 
-## Latest gate — Scanner E Replay history correction, 2026-09-15
+## Latest — device purchase storage, 2026-10-02
+
+The user restated the product goal as easy entry of purchases made anywhere,
+an app that remembers them, and suggestions that save money, and approved an
+on-device "remember" step first. Added purchases (the Scanner E ledger) are now
+written to `localStorage` under `spendscape.device-purchases.v1` and restored on
+load after strict validation against the current merchants and places
+(`src/features/capture/session-purchase-storage.ts`). Undo and operation
+idempotency stay page-lifetime. No account, backend or provider is involved;
+data lives only in that browser profile. Search text, Replay and Inbox
+decisions keep their earlier non-persistent behaviour. The earlier statements
+below that additions are session-only describe the state before this change.
+
+Agreed order after this step: real product/price catalog for the barcode
+scanner (Tel Aviv pilot; Shufersal, Rami Levy and Osher Ad were confirmed
+reachable on 2026-10-02, the latter two through their published guest user
+names, which the user approved), then receipt capture, then basket savings
+suggestions.
+
+Follow-up on the same day, approved by the user ("go with your
+recommendation"): the review form offers `＋ New store…`. A new store needs a
+unique name; a pinned physical store also needs the device location, read once
+through the browser Geolocation API only when the user presses the button.
+That location marks where the user says the store is and is never treated as
+proof of a purchase. Online and unpinned stores take no location. Stores live
+in the same device ledger (`device_merchant_NN`, `device_place_NN`), join the
+snapshot merchant/place lists at runtime, and are dropped when their last
+purchase is undone or removed. Purchase detail has a two-press
+`Remove purchase` for added purchases. Storage is written only after a ledger
+change, never on load.
+
+Stage 2a, 2026-10-04 ("continue"): `tools/nearby-prices/build_catalog.py`
+(standard library only) downloads the store list and latest PriceFull file of
+every physical Tel Aviv store (city code 5000) for Shufersal, Rami Levy and
+Osher Ad, and writes `data/catalog/tel-aviv.json` (40 stores, 30,603 GTINs,
+about 5 MB; 6,835 GTINs appear in two or three chains). Only valid external
+GTINs and ordinary shelf prices are kept; promotions and club prices are not
+applied, and publication times stay in Israel local time as named in the file.
+`GET /api/catalog/[gtin14]` serves one product with every store price,
+cheapest first. Scanner B now shows that list and prefills the product name
+for barcodes outside the demo catalog; the request goes only to the app's own
+server, and identification still adds no purchase.
+
+Stage 2b, same day ("let's do the next"): `tools/nearby-prices/store_locations.py`
+geocodes the catalog store addresses once through OpenStreetMap Nominatim
+(one request per second, cached under `artifacts/`, house-number match inside
+Tel Aviv required; a few source misspellings are mapped explicitly). 34 of 40
+stores are located; the other six have no house-level match and stay
+unlocated. `GET /api/catalog/stores` serves them. The review form offers
+`Find the store I'm in`: one location read on press, never stored, suggests
+the closest located store within 200 m (a suggestion, not proof). Choosing a
+chain store creates merchant `chain_<chain>` and place `store_<chain>_<id>` in
+the device ledger, so it gets a pin, and fills the published shelf price of an
+identified barcode item, a quantity of 1, the total, ILS, "now" and groceries
+when those are empty. The user can change all of them.
+
+Known gaps: a store saved without a location cannot be pinned later, added
+places show placeholder city text because nothing is reverse-geocoded, added
+purchases cannot be edited, and tabs do not sync.
+
+## Earlier gate — Scanner E Replay history correction, 2026-09-15
 
 The user authorized `APPROVE SPENDSCAPE SCANNER E — SESSION-ONLY REVIEWED PURCHASE INTEGRATION + LOCAL QA`.
 The completed working-tree slice connects Scanner B identification, demo candidates,

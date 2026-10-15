@@ -37,7 +37,7 @@ export const globeMerchants: Merchant[] = [
   { id: 'merchant_orbit', name: text('Orbit Travel', 'אורביט טרוול'), category: 'travel' },
   { id: 'merchant_serein', name: text('Serein Online', 'סריין אונליין'), category: 'retail', onlineOnly: true },
   { id: 'merchant_cloudfare', name: text('Cloudfare Travel', 'קלאודפר נסיעות'), category: 'travel', onlineOnly: true },
-  { id: 'merchant_unresolved', name: text('Unresolved merchant', 'בית עסק לא פתור'), category: 'retail' },
+  { id: 'merchant_unresolved', name: text('Unidentified store', 'חנות לא מזוהה'), category: 'retail' },
 ]
 
 export const globePlaces: Place[] = [
@@ -264,8 +264,8 @@ export const smartInboxCases: SmartInboxCase[] = [
     material: true,
     question: text('Which place should own this purchase?', 'לאיזה מקום שייכת הרכישה הזו?'),
     rationale: text(
-      'The manual record has an amount and date, but no confirmed merchant or place. Your choice changes place history and its single canonical pin.',
-      'ברשומה הידנית יש סכום ותאריך, אך אין בית עסק או מקום מאומת. הבחירה תשנה את היסטוריית המקום ואת הסיכה הקנונית היחידה שלו.',
+      'The manual record has an amount and date, but no confirmed store or place. Your choice changes place history and its single canonical pin.',
+      'ברשומה הידנית יש סכום ותאריך, אך אין חנות או מקום מאומתים. הבחירה תשנה את היסטוריית המקום ואת הסיכה הקנונית היחידה שלו.',
     ),
     candidates: [
       {
