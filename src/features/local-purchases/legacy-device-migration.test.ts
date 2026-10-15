@@ -135,6 +135,24 @@ describe('one-time import of the earlier localStorage ledger', () => {
     const online = planLegacyImport(JSON.stringify({ version: 1, nextSequence: 2, records: [legacyRecord({ ...base(), channel: 'online', merchantId: 'merchant_serein', amount: '12.00', category: 'retail' }, 1)] }), ctx, stores)
     expect(online).toMatchObject({ kind: 'ready', purchases: 0, fixtureSkipped: 1 })
   })
+  // Shon's 951e75f: the old build rounded weighted lines as Math.round(price × quantity),
+  // half-up on half agorot; such purchases must still import unchanged.
+  it.each([['0.25', '0.58', 0.15], ['0.29', '0.5', 0.15], ['0.45', '0.7', 0.32], ['0.50', '0.29', 0.15], ['1.00', '0.5', 0.5]] as const)('imports a weighted purchase %s × %s kg = %s unchanged', async (price, quantity, total) => {
+    const ctx = await context()
+    // The old build's own arithmetic, written out independently of the current helpers.
+    const oldTotal = Math.round(Math.round(Number(price) * 100) * Math.round(Number(quantity) * 1000) / 1000) / 100
+    expect(oldTotal).toBe(total)
+    const record = legacyRecord({ ...base(), channel: 'online', merchantId: 'device_merchant_03', category: 'retail', amount: total.toFixed(2), lines: [{ name: 'Fictional loose produce', quantity, unit: 'kg', price }] }, 1)
+    expect(record.purchase.items[0]).toMatchObject({ quantity: Number(quantity), unitPrice: Number(price), lineTotal: total })
+    const plan = planLegacyImport(JSON.stringify({ version: 1, nextSequence: 2, merchants: [legacyMerchants[2]], records: [record] }), ctx, stores)
+    if (plan.kind !== 'ready') throw new Error(JSON.stringify(plan))
+    expect(plan).toMatchObject({ purchases: 1, invalidSkipped: 0 })
+    expect(plan.data.records[0].purchase.items[0]).toMatchObject({ quantity: Number(quantity), unitPrice: Number(price), lineTotal: total })
+    expect(plan.data.records[0].purchase.originalAmount).toBe(total)
+    // One agora off is still left out, never repaired.
+    const off = structuredClone(record); off.purchase.items[0].lineTotal = Number((total + 0.01).toFixed(2)); off.purchase.originalAmount = off.purchase.items[0].lineTotal
+    expect(planLegacyImport(JSON.stringify({ version: 1, nextSequence: 2, merchants: [legacyMerchants[2]], records: [off] }), ctx, stores)).toMatchObject({ kind: 'ready', purchases: 0, invalidSkipped: 1 })
+  })
   it('imports the rest when one record is not even a purchase', async () => {
     const ctx = await context()
     const ledger: any = legacyLedger(); ledger.records.splice(2, 0, { purchase: null, synthetic: false }, 'text')
