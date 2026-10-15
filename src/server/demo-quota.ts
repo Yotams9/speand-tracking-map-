@@ -62,9 +62,14 @@ return cjson.encode({status=state,used=used,maxRequests=limit,remaining=limit-us
 `
 export function redisConfiguration(env: NodeJS.ProcessEnv) {
   try {
-    const url = new URL(env.UPSTASH_REDIS_REST_URL ?? '')
-    if (url.protocol !== 'https:' || !url.hostname.endsWith('.upstash.io') || url.username || url.password || url.pathname !== '/' || url.search || url.hash || !/^[A-Za-z0-9_./+=-]{20,1000}$/.test(env.UPSTASH_REDIS_REST_TOKEN ?? '')) return null
-    return { url: url.origin, token: env.UPSTASH_REDIS_REST_TOKEN! }
+    // Vercel Marketplace supplies KV_REST_API_* for Upstash Redis. Choose one
+    // complete pair; never combine credentials from different configurations.
+    const explicit = env.UPSTASH_REDIS_REST_URL !== undefined || env.UPSTASH_REDIS_REST_TOKEN !== undefined
+    const endpoint = explicit ? env.UPSTASH_REDIS_REST_URL : env.KV_REST_API_URL
+    const token = explicit ? env.UPSTASH_REDIS_REST_TOKEN : env.KV_REST_API_TOKEN
+    const url = new URL(endpoint ?? '')
+    if (url.protocol !== 'https:' || !url.hostname.endsWith('.upstash.io') || url.username || url.password || url.pathname !== '/' || url.search || url.hash || !/^[A-Za-z0-9_./+=-]{20,1000}$/.test(token ?? '')) return null
+    return { url: url.origin, token: token! }
   } catch { return null }
 }
 // Administrative preparation only. No route calls this function. Existing

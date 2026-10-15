@@ -76,3 +76,7 @@ Moving from localhost to a hosted origin does not transfer browser purchases. Us
 - [Vercel Deployment Protection](https://vercel.com/docs/deployment-protection): Hobby Standard Protection does not protect the production domain. The application access gate must not be replaced by that assumption.
 
 No new runtime dependency, provider call, account, resource, credential connection, price download, push, PR, main update or deployment is part of this checkpoint.
+
+## Subsequent separately approved Redis connection
+
+The initial offline-only boundary above records commit `12f8196`. The user subsequently approved one Free usage-counter resource and personally accepted its Marketplace terms. That connection is complete, with automatic upgrades disabled and the project still paused. The adapter additionally accepts Vercel Marketplace's complete server-only `KV_REST_API_URL` / `KV_REST_API_TOKEN` pair without mixing it with explicit Upstash configuration. See [the resource checkpoint](COLLEGE_HOSTED_REDIS.md) for the actual script verification, initial test failure, exact settings, preservation evidence and remaining activation/deployment gates. No production quota policy or receipt/address provider was activated.

@@ -2,6 +2,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { createRedisQuota, DEMO_QUOTA_LUA, initialQuotaState, initializeRedisQuota, quotaPolicyHash, redisConfiguration } from './demo-quota'
 import { demoTestEnv, testPolicy } from '../../qa/fixtures/hosted-demo'
 describe('hosted shared quota transport', () => {
+  it('accepts the Marketplace credential pair without mixing it with explicit configuration', () => {
+    const marketplace = { KV_REST_API_URL: 'https://fictional-test.upstash.io', KV_REST_API_TOKEN: 'test-only-token-not-a-secret' }
+    expect(redisConfiguration(marketplace)).toEqual({ url: marketplace.KV_REST_API_URL, token: marketplace.KV_REST_API_TOKEN })
+    expect(redisConfiguration({ ...marketplace, UPSTASH_REDIS_REST_URL: marketplace.KV_REST_API_URL })).toBeNull()
+    expect(redisConfiguration({ ...marketplace, UPSTASH_REDIS_REST_TOKEN: marketplace.KV_REST_API_TOKEN })).toBeNull()
+    expect(redisConfiguration({ ...marketplace, UPSTASH_REDIS_REST_URL: 'https://untrusted.example', UPSTASH_REDIS_REST_TOKEN: marketplace.KV_REST_API_TOKEN })).toBeNull()
+  })
   it('uses a single atomic EVAL with a fixed key, server time and no fallback initialization', async () => {
     const p = testPolicy(), send = vi.fn<typeof fetch>(async () => Response.json({ result: JSON.stringify({ status: 'available', used: 0, maxRequests: 2, remaining: 2, reservedMicroUsd: 0, expiresAt: p.expiresAt }) }))
     await createRedisQuota(demoTestEnv(), p, send).reserve('receipt', 'c'.repeat(64))
