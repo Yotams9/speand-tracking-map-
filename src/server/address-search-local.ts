@@ -3,11 +3,13 @@ import { createAddressSearchHandler } from './address-search-boundary'
 import {join} from 'node:path'
 import {ADDRESS_ROOT,createNativeAddressHandler,verifyAddressFreeze} from './address-search-native'
 
+import {createOperationalAddressHandler} from './address-search-session'
 import {addressRun,addressRuns} from './address-search-runs'
 
-// Default/hosted/unknown runs remain disabled. Only the fixed frozen user-run
-// build can attach native transport; a key by itself never activates it.
+// Default/hosted/unknown modes remain disabled. Operational sessions are separate
+// from historical frozen runs; a key by itself never activates either path.
 export function createLocalAddressHandler(env: NodeJS.ProcessEnv) {
+  if(env.SPENDSCAPE_ADDRESS_SESSION_MODE)return createOperationalAddressHandler(env,(url,options)=>fetch(url,options))
   const root=env.SPENDSCAPE_GEOAPIFY_WORKSPACE??'' // must equal the sole literal worktree below
   const run=addressRun(env.SPENDSCAPE_GEOAPIFY_RUN)
   const config=run?addressRuns[run]:null

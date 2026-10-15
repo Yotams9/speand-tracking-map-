@@ -2392,3 +2392,33 @@ separately approved fresh prices if needed, physical-mobile and submission check
 remain. Scanner's real same-session duplicate check remains unverified and closed;
 city comparison's radius requirement remains deferred. Vercel paused; no push or
 deployment. Unrelated work, main refs, next-env.d.ts and historical locks preserved.
+
+
+## Milestone 5 slice 2 — operational address session, offline verified (2026-10-15)
+
+Separate tools/address-search startup freezes current source/build and supports
+provider-disabled --offline or an explicitly authorized Free-plan session:
+1–10 searches, chosen 5–120 minute expiry. Server-only private key; minimal child
+environment, no .env/debug/proxy/other provider inheritance. Historical fixed
+runs, consumed records and successful receipt request remain unchanged.
+Only reviewed-address submission dispatches, with exclusive durable consumption,
+random submission-id replay protection, concurrency/restart/expiry guards,
+stop-on-error and no automatic retry/fallback. Content-free timing/status journals;
+no address/results/coordinates/key there. UI remaining/expiry/limit/stopped messages
+retain candidate preview, explicit point/save, unresolved path and one-map authority.
+
+Isolated HEAD-only candidate: 122/122 focused tests,4 launcher tests, app/QA
+TypeScript and production build;18/18 browser scenarios EN/HE mobile/desktop,
+repeated mocked searches, confirmation/save/reload/Undo and legacy protections.
+Earlier timing/literal-type/sandbox failures retained and corrected. Actual freeze
+preparation is offline; no live provider request, credentials access or real-ledger
+write/export. No application tab available to inspect; user must check unsaved
+forms before replacing a server. Same-origin provider-disabled startup and first
+backup instructions are in COLLEGE_ADDRESS_SEARCH_OPERATION.md. Actual --offline startup verified on unused3172 and stopped: root200/all
+provider endpoints503; no browser/ledger access. No user server replaced. Exact16file scope/artifacts in college-address-session-nv_xmrd_.
+
+Slice ready for the authorized scoped local commit; live activation needs separate
+request/credit allowance and current key-project/Free/remaining/no-concurrent/
+no-paid-overage confirmation. Scanner stays closed; real repeat duplicate test
+unverified. M4 city completed/radius deferred. FullM5 still open; Vercel paused.
+Main refs,next-env,historical evidence/locks and unrelated work preserved.

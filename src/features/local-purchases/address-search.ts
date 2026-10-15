@@ -4,7 +4,7 @@ export const resultPrecisions = ['unknown','amenity','building','street','suburb
 export type ResultPrecision = typeof resultPrecisions[number]
 export type AddressSearchProvenance = { provider: 'geoapify'; precision: ResultPrecision; match: 'full' | 'partial' | 'unknown'; pointAdjusted: boolean }
 export type AddressCandidate = { address: string; city: string; country: string; longitude: number; latitude: number; provenance: AddressSearchProvenance }
-export const searchErrors = ['disabled','invalid','no-results','timeout','cancelled','quota','http-error','malformed','unavailable','consumed'] as const
+export const searchErrors = ['disabled','invalid','no-results','timeout','cancelled','quota','http-error','malformed','unavailable','consumed','expired','limit-reached','session-stopped','busy','duplicate'] as const
 export type SearchError = typeof searchErrors[number]
 export type SearchResult = { status: 'results'; candidates: AddressCandidate[] } | { status: SearchError }
 const boundedText = (v: unknown, optional = false): v is string => typeof v === 'string' && v === v.trim() && v.length <= 100 && (optional || v.length > 1) && !/[\u0000-\u001f\u007f-\u009f<>]|https?:\/\//i.test(v)

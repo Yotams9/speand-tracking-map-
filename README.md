@@ -10,8 +10,8 @@ is no cloud synchronization or cloud backup.
 
 Receipt extraction and address search remain default-off, local-only provider
 boundaries. Receipt capture has a privately configured, bounded operational
-session; address search still uses fixed one-request validation runs. Activation
-requires separate approval, and consumed historical launchers cannot be reused.
+session; address search now supports a separate bounded operational session.
+Activation requires separate approval, and consumed historical launchers cannot be reused.
 Ordinary city comparison uses a qualified, limited Shufersal snapshot while its
 publications are within 24 hours; expired or unmatched prices are unavailable.
 Product/package matching is explicit and temporary. Distances and radius-based
@@ -23,8 +23,10 @@ For the current local submission workflow, pin reconciliation, acceptance gaps a
 completion plan, see [College submission readiness](docs/spendscape/COLLEGE_SUBMISSION_READINESS.md).
 Local JSON backup and empty-only restore are available from **On-device data &
 privacy** after loading this build. See [backup instructions and limits](docs/spendscape/COLLEGE_PURCHASE_BACKUP.md).
-Records do not transfer automatically between browsers or origins. The closed scanner checkpoint does not establish
-real same-session repeated-capture duplicate prevention.
+Records do not transfer automatically between browsers or origins. See
+[normal local startup and safe backup instructions](docs/spendscape/COLLEGE_ADDRESS_SEARCH_OPERATION.md).
+The closed scanner checkpoint does not establish real same-session
+repeated-capture duplicate prevention.
 
 Synthetic purchases, catalogs and simulations are isolated QA fixtures only.
 They require `SPENDSCAPE_SYNTHETIC_QA=1`, an exact loopback host and explicit
