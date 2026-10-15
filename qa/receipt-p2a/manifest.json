@@ -1,0 +1,646 @@
+{
+  "version": 1,
+  "synthetic": true,
+  "renderer": "offline Chrome canvas / Arial; generated from fixtures.mjs",
+  "fixtures": [
+    {
+      "id": "english-6",
+      "path": "qa/receipt-p2a/images/english-6.png",
+      "width": 1200,
+      "height": 692,
+      "bytes": 94305,
+      "sha256": "07e1f7be259be042c71d0c344a823a879d6dd6da86a029a6bc7306616408a355",
+      "groundTruth": {
+        "version": 1,
+        "id": "english-6",
+        "synthetic": true,
+        "language": "en",
+        "merchant": "DEMO ORCHARD / מטע דמו",
+        "date": "2026-09-20",
+        "currency": "ILS",
+        "lines": [
+          {
+            "row": 1,
+            "label": "Milk 1L",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 720,
+            "discountMinor": 0,
+            "lineMinor": 1440
+          },
+          {
+            "row": 2,
+            "label": "Bread",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1450,
+            "discountMinor": 0,
+            "lineMinor": 1450
+          },
+          {
+            "row": 3,
+            "label": "Coffee",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 2990,
+            "discountMinor": 500,
+            "lineMinor": 2490
+          },
+          {
+            "row": 4,
+            "label": "Apples",
+            "quantityMilli": 1250,
+            "unit": "kg",
+            "unitMinor": 1200,
+            "discountMinor": 0,
+            "lineMinor": 1500
+          },
+          {
+            "row": 5,
+            "label": "Milk 1L",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 720,
+            "discountMinor": 0,
+            "lineMinor": 720
+          },
+          {
+            "row": 6,
+            "label": "Tea",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1690,
+            "discountMinor": 0,
+            "lineMinor": 1690
+          }
+        ],
+        "totalMinor": 9290
+      }
+    },
+    {
+      "id": "hebrew-6",
+      "path": "qa/receipt-p2a/images/hebrew-6.png",
+      "width": 1200,
+      "height": 692,
+      "bytes": 91038,
+      "sha256": "bda4933f36167cf9181ee12820eb9d682affb7a9e13af78ba643ee9982906c49",
+      "groundTruth": {
+        "version": 1,
+        "id": "hebrew-6",
+        "synthetic": true,
+        "language": "he",
+        "merchant": "DEMO ORCHARD / מטע דמו",
+        "date": "2026-09-20",
+        "currency": "ILS",
+        "lines": [
+          {
+            "row": 1,
+            "label": "חלב",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 720,
+            "discountMinor": 0,
+            "lineMinor": 1440
+          },
+          {
+            "row": 2,
+            "label": "לחם",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1450,
+            "discountMinor": 0,
+            "lineMinor": 1450
+          },
+          {
+            "row": 3,
+            "label": "קפה",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 2990,
+            "discountMinor": 500,
+            "lineMinor": 2490
+          },
+          {
+            "row": 4,
+            "label": "תפוחים",
+            "quantityMilli": 1250,
+            "unit": "kg",
+            "unitMinor": 1200,
+            "discountMinor": 0,
+            "lineMinor": 1500
+          },
+          {
+            "row": 5,
+            "label": "חלב",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 720,
+            "discountMinor": 0,
+            "lineMinor": 720
+          },
+          {
+            "row": 6,
+            "label": "תה",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1690,
+            "discountMinor": 0,
+            "lineMinor": 1690
+          }
+        ],
+        "totalMinor": 9290
+      }
+    },
+    {
+      "id": "mixed-25",
+      "path": "qa/receipt-p2a/images/mixed-25.png",
+      "width": 1200,
+      "height": 1870,
+      "bytes": 259316,
+      "sha256": "3eb89525679a8432e19fe4ea5cc811f671eff60cd0fe52cff66e5fe618b04447",
+      "groundTruth": {
+        "version": 1,
+        "id": "mixed-25",
+        "synthetic": true,
+        "language": "he-en",
+        "merchant": "DEMO ORCHARD / מטע דמו",
+        "date": "2026-09-20",
+        "currency": "ILS",
+        "lines": [
+          {
+            "row": 1,
+            "label": "חלב Milk 1L",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 720,
+            "discountMinor": 0,
+            "lineMinor": 1440
+          },
+          {
+            "row": 2,
+            "label": "לחם Bread",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1450,
+            "discountMinor": 0,
+            "lineMinor": 1450
+          },
+          {
+            "row": 3,
+            "label": "אורז Rice 1kg",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1290,
+            "discountMinor": 200,
+            "lineMinor": 1090
+          },
+          {
+            "row": 4,
+            "label": "ביצים Eggs",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 2490,
+            "discountMinor": 0,
+            "lineMinor": 2490
+          },
+          {
+            "row": 5,
+            "label": "עגבניות Tomatoes",
+            "quantityMilli": 1250,
+            "unit": "kg",
+            "unitMinor": 1200,
+            "discountMinor": 0,
+            "lineMinor": 1500
+          },
+          {
+            "row": 6,
+            "label": "מלפפון Cucumber",
+            "quantityMilli": 750,
+            "unit": "kg",
+            "unitMinor": 800,
+            "discountMinor": 0,
+            "lineMinor": 600
+          },
+          {
+            "row": 7,
+            "label": "יוגורט Yogurt",
+            "quantityMilli": 3000,
+            "unit": "item",
+            "unitMinor": 450,
+            "discountMinor": 0,
+            "lineMinor": 1350
+          },
+          {
+            "row": 8,
+            "label": "קפה Coffee",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 2990,
+            "discountMinor": 500,
+            "lineMinor": 2490
+          },
+          {
+            "row": 9,
+            "label": "תה Tea",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1690,
+            "discountMinor": 0,
+            "lineMinor": 1690
+          },
+          {
+            "row": 10,
+            "label": "פסטה Pasta",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 690,
+            "discountMinor": 0,
+            "lineMinor": 1380
+          },
+          {
+            "row": 11,
+            "label": "עדשים Lentils",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1190,
+            "discountMinor": 0,
+            "lineMinor": 1190
+          },
+          {
+            "row": 12,
+            "label": "שיבולת שועל Oats",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1390,
+            "discountMinor": 0,
+            "lineMinor": 1390
+          },
+          {
+            "row": 13,
+            "label": "טחינה Tahini",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 2290,
+            "discountMinor": 0,
+            "lineMinor": 2290
+          },
+          {
+            "row": 14,
+            "label": "שמן Olive oil",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 3490,
+            "discountMinor": 0,
+            "lineMinor": 3490
+          },
+          {
+            "row": 15,
+            "label": "סבון Soap",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 890,
+            "discountMinor": 180,
+            "lineMinor": 1600
+          },
+          {
+            "row": 16,
+            "label": "נייר Paper",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1990,
+            "discountMinor": 0,
+            "lineMinor": 1990
+          },
+          {
+            "row": 17,
+            "label": "מלח Salt",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 390,
+            "discountMinor": 0,
+            "lineMinor": 390
+          },
+          {
+            "row": 18,
+            "label": "פלפל Pepper",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 990,
+            "discountMinor": 0,
+            "lineMinor": 990
+          },
+          {
+            "row": 19,
+            "label": "גבינה Cheese",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1790,
+            "discountMinor": 0,
+            "lineMinor": 1790
+          },
+          {
+            "row": 20,
+            "label": "מים Water",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 590,
+            "discountMinor": 0,
+            "lineMinor": 1180
+          },
+          {
+            "row": 21,
+            "label": "חלב Milk 1L",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 720,
+            "discountMinor": 0,
+            "lineMinor": 720
+          },
+          {
+            "row": 22,
+            "label": "תפוחים Apples",
+            "quantityMilli": 1500,
+            "unit": "kg",
+            "unitMinor": 1400,
+            "discountMinor": 0,
+            "lineMinor": 2100
+          },
+          {
+            "row": 23,
+            "label": "בננות Bananas",
+            "quantityMilli": 1000,
+            "unit": "kg",
+            "unitMinor": 1100,
+            "discountMinor": 0,
+            "lineMinor": 1100
+          },
+          {
+            "row": 24,
+            "label": "שוקולד Chocolate",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 790,
+            "discountMinor": 100,
+            "lineMinor": 1480
+          },
+          {
+            "row": 25,
+            "label": null,
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 650,
+            "discountMinor": 0,
+            "lineMinor": 650
+          }
+        ],
+        "totalMinor": 37830
+      }
+    },
+    {
+      "id": "mixed-25-degraded",
+      "path": "qa/receipt-p2a/images/mixed-25-degraded.png",
+      "width": 1200,
+      "height": 1870,
+      "bytes": 400004,
+      "sha256": "4b78a596995d8ab579eacf55b7a39d7cff11c6cdffc1b72b0ae3a4105222ff5e",
+      "groundTruth": {
+        "version": 1,
+        "id": "mixed-25-degraded",
+        "synthetic": true,
+        "language": "he-en",
+        "merchant": "DEMO ORCHARD / מטע דמו",
+        "date": "2026-09-20",
+        "currency": "ILS",
+        "lines": [
+          {
+            "row": 1,
+            "label": "חלב Milk 1L",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 720,
+            "discountMinor": 0,
+            "lineMinor": 1440
+          },
+          {
+            "row": 2,
+            "label": "לחם Bread",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1450,
+            "discountMinor": 0,
+            "lineMinor": 1450
+          },
+          {
+            "row": 3,
+            "label": "אורז Rice 1kg",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1290,
+            "discountMinor": 200,
+            "lineMinor": 1090
+          },
+          {
+            "row": 4,
+            "label": "ביצים Eggs",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 2490,
+            "discountMinor": 0,
+            "lineMinor": 2490
+          },
+          {
+            "row": 5,
+            "label": "עגבניות Tomatoes",
+            "quantityMilli": 1250,
+            "unit": "kg",
+            "unitMinor": 1200,
+            "discountMinor": 0,
+            "lineMinor": 1500
+          },
+          {
+            "row": 6,
+            "label": "מלפפון Cucumber",
+            "quantityMilli": 750,
+            "unit": "kg",
+            "unitMinor": 800,
+            "discountMinor": 0,
+            "lineMinor": 600
+          },
+          {
+            "row": 7,
+            "label": "יוגורט Yogurt",
+            "quantityMilli": 3000,
+            "unit": "item",
+            "unitMinor": 450,
+            "discountMinor": 0,
+            "lineMinor": 1350
+          },
+          {
+            "row": 8,
+            "label": "קפה Coffee",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 2990,
+            "discountMinor": 500,
+            "lineMinor": 2490
+          },
+          {
+            "row": 9,
+            "label": "תה Tea",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1690,
+            "discountMinor": 0,
+            "lineMinor": 1690
+          },
+          {
+            "row": 10,
+            "label": "פסטה Pasta",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 690,
+            "discountMinor": 0,
+            "lineMinor": 1380
+          },
+          {
+            "row": 11,
+            "label": "עדשים Lentils",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1190,
+            "discountMinor": 0,
+            "lineMinor": 1190
+          },
+          {
+            "row": 12,
+            "label": "שיבולת שועל Oats",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1390,
+            "discountMinor": 0,
+            "lineMinor": 1390
+          },
+          {
+            "row": 13,
+            "label": "טחינה Tahini",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 2290,
+            "discountMinor": 0,
+            "lineMinor": 2290
+          },
+          {
+            "row": 14,
+            "label": "שמן Olive oil",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 3490,
+            "discountMinor": 0,
+            "lineMinor": 3490
+          },
+          {
+            "row": 15,
+            "label": "סבון Soap",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 890,
+            "discountMinor": 180,
+            "lineMinor": 1600
+          },
+          {
+            "row": 16,
+            "label": "נייר Paper",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1990,
+            "discountMinor": 0,
+            "lineMinor": 1990
+          },
+          {
+            "row": 17,
+            "label": "מלח Salt",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 390,
+            "discountMinor": 0,
+            "lineMinor": 390
+          },
+          {
+            "row": 18,
+            "label": "פלפל Pepper",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 990,
+            "discountMinor": 0,
+            "lineMinor": 990
+          },
+          {
+            "row": 19,
+            "label": "גבינה Cheese",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 1790,
+            "discountMinor": 0,
+            "lineMinor": 1790
+          },
+          {
+            "row": 20,
+            "label": "מים Water",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 590,
+            "discountMinor": 0,
+            "lineMinor": 1180
+          },
+          {
+            "row": 21,
+            "label": "חלב Milk 1L",
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 720,
+            "discountMinor": 0,
+            "lineMinor": 720
+          },
+          {
+            "row": 22,
+            "label": "תפוחים Apples",
+            "quantityMilli": 1500,
+            "unit": "kg",
+            "unitMinor": 1400,
+            "discountMinor": 0,
+            "lineMinor": 2100
+          },
+          {
+            "row": 23,
+            "label": "בננות Bananas",
+            "quantityMilli": 1000,
+            "unit": "kg",
+            "unitMinor": 1100,
+            "discountMinor": 0,
+            "lineMinor": 1100
+          },
+          {
+            "row": 24,
+            "label": "שוקולד Chocolate",
+            "quantityMilli": 2000,
+            "unit": "item",
+            "unitMinor": 790,
+            "discountMinor": 100,
+            "lineMinor": 1480
+          },
+          {
+            "row": 25,
+            "label": null,
+            "quantityMilli": 1000,
+            "unit": "item",
+            "unitMinor": 650,
+            "discountMinor": 0,
+            "lineMinor": 650
+          }
+        ],
+        "totalMinor": 37830,
+        "transform": "skew-low-contrast"
+      }
+    }
+  ]
+}

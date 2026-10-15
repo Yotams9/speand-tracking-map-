@@ -1,0 +1,17 @@
+.panel { position: absolute; z-index: 12; inset-block: 100px 96px; inset-inline-end: 24px; inline-size: min(420px, calc(100% - 48px)); overflow-y: auto; overscroll-behavior: contain; padding: 22px; border: 1px solid #414854; border-radius: 22px; background: #131921; color: #f1f4fa; box-shadow: 0 12px 48px #0008; }
+.panel h2 { font-size: 1.6rem; margin-block: 16px; }
+.panel h3 { font-size: 1rem; margin-block: 10px; overflow-wrap: anywhere; }
+.panel p, .panel li { font-size: .85rem; line-height: 1.6; overflow-wrap: anywhere; }
+.panel p { color: #bfc7d5; }
+.close { min-block-size: 44px; padding: 10px 15px; border-radius: 8px; background: #f1f4fa; color: #10141b; cursor: pointer; }
+.notice { padding: 12px; border-radius: 12px; border: 1px solid #616b7e; background: #242d3b; }
+.items { padding-inline-start: 24px; }
+.items > li { padding-block: 12px; border-block-end: 1px solid #444c5b; }
+.panel label { display: grid; gap: 8px; font-size: .85rem; }
+.panel select { inline-size: 100%; min-inline-size: 0; min-block-size: 44px; padding: 8px; border-radius: 8px; border: 1px solid #697488; background: #222a37; color: #f1f4fa; }
+.confirm { grid-template-columns: 24px 1fr; align-items: start; margin-block-start: 12px; }
+.confirm input { inline-size: 22px; block-size: 22px; accent-color: #b6eaff; }
+.store { padding: 14px; margin-block-start: 18px; border: 1px solid #596375; border-radius: 14px; }
+.store ul { padding-inline-start: 20px; }
+.panel :focus-visible { outline: 3px solid #9cecff; outline-offset: 3px; }
+@media (max-width: 760px) { .panel { inset-block: 72px 88px; inset-inline: 10px; inline-size: auto; padding: 18px; } }

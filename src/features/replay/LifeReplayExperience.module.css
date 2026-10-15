@@ -7,7 +7,7 @@
 .header button { flex: 0 0 44px; font-size: 24px; padding: 2px; }
 .player button:disabled, .player input:disabled { opacity: .42; cursor: default; }
 .player :is(button, input, select, summary):focus-visible { outline: 3px solid #d6edff; outline-offset: 3px; box-shadow: 0 0 0 5px #07111b; }
-.event { display: flex; justify-content: space-between; gap: 16px; min-height: 138px; padding-block: 17px 12px; animation: eventReveal 210ms cubic-bezier(.2,.75,.25,1) both; }
+.event { display: flex; justify-content: space-between; gap: 16px; min-height: 138px; padding-block: 17px 12px; animation: eventReveal 180ms cubic-bezier(.2,.75,.25,1) both; }
 .eventCopy { min-width: 0; }
 .event time { color: #b3c6d4; font-size: 12px; }
 .event h3, .empty h3 { margin: 5px 0; font-size: 19px; overflow-wrap: anywhere; }
@@ -19,7 +19,7 @@
 .amount small { display: block; margin-top: 6px; font-size: 11px; font-weight: 400; color: #b3c6d4; }
 .progress { display: flex; justify-content: space-between; color: #b3c6d4; font-size: 12px; }
 .progress output { font-variant-numeric: tabular-nums; color: #eaf4ff; }
-.scrubber { width: 100%; margin: 4px 0 6px; min-height: 24px; accent-color: #87c4ef; }
+.scrubber { width: 100%; margin: 4px 0 6px; min-height: 24px; accent-color: #e4e8ee; }
 .transport { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .transport .play { color: #0d1d2a; background: #d8ecfa; border-color: #d8ecfa; font-weight: 700; min-width: 110px; display: flex; gap: 8px; align-items: center; justify-content: center; }
 .transport .showPlace { font-size: 12px; }

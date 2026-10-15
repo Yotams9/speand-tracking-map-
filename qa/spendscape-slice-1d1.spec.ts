@@ -152,7 +152,8 @@ test('desktop history, search, filters, timeline, selection, back, escape, and r
   await expect.poll(async () => (await evidence(page)).surface).toBe('globe')
   await page.reload()
   await waitForExperience(page)
-  expect((await evidence(page)).query.search).toBe('Tokyo')
+  // Purchase-derived search is intentionally ephemeral across reloads.
+  expect((await evidence(page)).query.search).toBe('')
   expect((await evidence(page)).selectedPlaceId).toBe('place_kumo_shibuya')
   await page.screenshot({ path: path.join(artifactDir, 'desktop-reload-restored.png'), fullPage: true })
 

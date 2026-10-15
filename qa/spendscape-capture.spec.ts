@@ -225,6 +225,7 @@ test('desktop Capture preserves the globe, confirms physical and online demos, a
 
   await page.reload()
   await waitForExperience(page)
+  await expect(page.locator('main')).toHaveAttribute('data-local-state', 'ready')
   const reloaded = await evidence(page)
   expect(reloaded.sessionPurchaseCount).toBe(2)
   expect(reloaded.combinedPurchaseCount).toBe(44)

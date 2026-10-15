@@ -1,0 +1,11 @@
+.section { margin-block: 20px; padding-block: 16px; border-block: 1px solid #53667d; min-inline-size: 0; }
+.section p, .section small { line-height: 1.5; overflow-wrap: anywhere; }
+.section small { display: block; color: #b9c7d9; }
+.section label { display: flex; flex-direction: column; gap: 7px; margin-block: 14px; }
+.section input:not([type=checkbox]), .section select { inline-size: 100%; min-inline-size: 0; min-block-size: 44px; border: 1px solid #6b8095; border-radius: 10px; padding: 10px; background: #131c29; color: #eff5ff; font: inherit; }
+.section label:has(input[type=checkbox]) { display: grid; grid-template-columns: 24px 1fr; align-items: start; }
+.section input[type=checkbox] { inline-size: 22px; block-size: 22px; }
+.section button { min-block-size: 44px; max-inline-size: 100%; margin-block: 5px; margin-inline-end: 8px; padding: 10px 14px; border: 1px solid #6b8095; border-radius: 10px; color: #eff5ff; background: #22334b; font: inherit; cursor: pointer; }
+.section button:disabled { opacity: .6; cursor: default; }
+.section :focus-visible { outline: 3px solid #8eccff; outline-offset: 3px; }
+.section [role=alert] { color: #ffd0c7; }

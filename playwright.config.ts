@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test'
+import { demoEnglishStorage } from './qa/demo-storage'
 
 export default defineConfig({
   testDir: './qa',
@@ -15,7 +16,7 @@ export default defineConfig({
     timeout: 30_000,
   },
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL: 'http://127.0.0.1:3000', storageState: demoEnglishStorage,
     browserName: 'chromium',
     channel: 'chrome',
     headless: true,

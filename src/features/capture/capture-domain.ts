@@ -24,6 +24,7 @@ export type CaptureSource =
 export type CaptureStep =
   | 'scanner'
   | 'sources'
+  | 'receipt-image'
   | 'processing'
   | 'review'
   | 'manual'
@@ -54,6 +55,7 @@ export interface SessionCaptureRecord {
   evidence: PurchaseEvidence
   source: CaptureDraft['source']
   synthetic: boolean
+  demoProductIds?: readonly (string | null)[]
   identification?: { identity: import('./barcode-domain').BarcodeIdentity; method: 'camera' | 'manual' | 'demo'; syntheticCatalog: boolean }
 }
 
@@ -254,7 +256,7 @@ export type ManualCaptureErrors = Partial<Record<keyof ManualCaptureInput, strin
 export function validateManualCapture(input: ManualCaptureInput, locale: LocaleCode): ManualCaptureErrors {
   const errors: ManualCaptureErrors = {}
   const amount = Number(input.amount)
-  if (!input.merchantId) errors.merchantId = locale === 'he' ? 'יש לבחור בית עסק.' : 'Choose a merchant.'
+  if (!input.merchantId) errors.merchantId = locale === 'he' ? 'יש לבחור חנות.' : 'Choose a store.'
   if (!Number.isFinite(amount) || amount <= 0) {
     errors.amount = locale === 'he' ? 'יש להזין סכום חיובי.' : 'Enter a positive amount.'
   }

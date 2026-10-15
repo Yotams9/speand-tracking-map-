@@ -1,0 +1,1650 @@
+{
+  "version": 1,
+  "run": "geoapify-college-m3-validation-20261013-one",
+  "head": "7c4ec31c74d236297791d9edbf8322cda901de0b",
+  "build": "artifacts/college-m3-address-pin-_pl2vht4/app",
+  "maximumRequests": 1,
+  "maximumCredits": 1,
+  "files": [
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/BUILD_ID",
+      "sha256": "39d71a590d1a493b8c179940f186047d43b46440d3b60ee144dcf6b20b266f37"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/app-path-routes-manifest.json",
+      "sha256": "3a4e7103539bb21340ebb90c287db491897e6df3cea378603c4fa63ff485345e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/build-manifest.json",
+      "sha256": "43b9bfa5458c9bfdbd8210688c954bacab554c7a47bb068b9353fe80cb82ea25"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/export-marker.json",
+      "sha256": "82356527db218adb95bd1eca0ede6f3391165b38b22d667d064e62e6b539d974"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/fallback-build-manifest.json",
+      "sha256": "381c8ec0c089e05514cff5be833f55c6dfa1193f0b3567d36f060ca2953064f7"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/images-manifest.json",
+      "sha256": "89153990319006e8e53593d4cee9a741db8a01b9dd8897513bd4e0a4685d2f42"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/next-minimal-server.js.nft.json",
+      "sha256": "01b0f04a9d733e019f94bee01e55d49bf4347f2016fa446c0a5fe3c3c4d10828"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/next-server.js.nft.json",
+      "sha256": "8353a9087adbd41ed1ce6fdb858e53300eb7fe29c1a9fede2fdf23abded63ae4"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/package.json",
+      "sha256": "091a04fa67c7907b98e106fcff8b964e13129754fce72d24f3025b97c4887fa3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/prerender-manifest.json",
+      "sha256": "2ae8d3bd5ac578bfc02ab599cd5bfd8e7a046b5c0ebc85cdc8630740c51e3573"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/required-server-files.js",
+      "sha256": "261e6cd610e63cbbac3d7a8126055fc88a731e3c6a98f1bc86870f42a023ac25"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/required-server-files.json",
+      "sha256": "b5fb459b4bf86e5f1a1a2f73a8ed2638e1b4d50ab7796c66ad266fc826e6ef55"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/routes-manifest.json",
+      "sha256": "ce68d888b44cb64955a65c347d6ac36018d88307c843420037a0ddcbbc11888f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error/page/app-paths-manifest.json",
+      "sha256": "67d788223a06e3479a7e8372879e18c1595dae22d20db1434676dfa06f2b154c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error/page/build-manifest.json",
+      "sha256": "8735ad5771e3597c4b0b4ce7879d2e8881192605671a2e21f3e7f7d76f3d15c5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error/page/next-font-manifest.json",
+      "sha256": "dc1719fb3b97327924884a5839c5cfa68896e28803f0cd5e969b7c20f519d1e5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error/page/react-loadable-manifest.json",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error/page/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error/page.js",
+      "sha256": "71643b1a1c74d39786d12fd355c8aacbcfa3dfe56c068ea8a70b3166ecb1792e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error/page.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error/page.js.nft.json",
+      "sha256": "ab8250167d085de78148c290cef5d8a1833bdc92b4a742eca361e6fe9bfd385c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error/page_client-reference-manifest.js",
+      "sha256": "39f393522415adc7fc8b4a62107e9ce3af4eb9820c2998b13e36f17032c5d441"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error.html",
+      "sha256": "cc7c576e6d08dc98cf1dd34fb683e1c5bca9be0d1b2d9ac48bac024119570d5f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error.meta",
+      "sha256": "1b79091aa6e8d24c81528b77545f91fadaa80b601741ce2646f776bc89327c76"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error.rsc",
+      "sha256": "dfc9a0227834a3dba507a30961e316ed6c3f52ac8a3ac209d14206e124dd57c9"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error.segments/__PAGE__.segment.rsc",
+      "sha256": "5201c886741d7f5a1968b2bf77d20f6f7b82cdc7b4542fe964e4c8ef196feba6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error.segments/_full.segment.rsc",
+      "sha256": "dfc9a0227834a3dba507a30961e316ed6c3f52ac8a3ac209d14206e124dd57c9"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_global-error.segments/_tree.segment.rsc",
+      "sha256": "b461aeeb333104427b38dd19d8bfb416b39df5f6b152a0d5e0821a36b749255c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found/page/app-paths-manifest.json",
+      "sha256": "e96e120dd8e4ae7f5c12a0e9695e528fd90b9b885af3e592cd2695ba972bebe1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found/page/build-manifest.json",
+      "sha256": "8735ad5771e3597c4b0b4ce7879d2e8881192605671a2e21f3e7f7d76f3d15c5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found/page/next-font-manifest.json",
+      "sha256": "dc1719fb3b97327924884a5839c5cfa68896e28803f0cd5e969b7c20f519d1e5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found/page/react-loadable-manifest.json",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found/page/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found/page.js",
+      "sha256": "dab6b44e25b373f018f16af106eb44ad6f1a672c32fc8b87a0f5413bc99cdaf2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found/page.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found/page.js.nft.json",
+      "sha256": "a47b5f61350dbce3320880a6ca5bc1cf41bb1b2a55b6cc30f542f7f456433f4d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found/page_client-reference-manifest.js",
+      "sha256": "604a05b1de606736efedb250df2f85ff7e1ad5c1af5cbfcb44bc18d717fe0731"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found.html",
+      "sha256": "98cd23d0dda6b103efb7ffce2c317cc29119f3b2885c891c127cc21ee76636ac"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found.meta",
+      "sha256": "946026aa7bf14dbf3fe552a4e8ac164cec004f4fa9bebabd2551bbe35290ec60"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found.rsc",
+      "sha256": "54a692835f172525d8140184c2b6de36b9f373f6197ba02dc750aab6fe68bc1d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found.segments/_full.segment.rsc",
+      "sha256": "54a692835f172525d8140184c2b6de36b9f373f6197ba02dc750aab6fe68bc1d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found.segments/_not-found/__PAGE__.segment.rsc",
+      "sha256": "b5adf42f0c0be1696c43aa2cf0a5c74eadad0079413d1106ffa0a95afc487b2d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/_not-found.segments/_tree.segment.rsc",
+      "sha256": "f8966b35f59b7f8bb65d3c650d6986fce4eaf11765bc6cd29c90413e2a2b21d5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/address-search/route/app-paths-manifest.json",
+      "sha256": "491a2b92e3d00749b3955323e7e538027f2705e17b5b5d3aa24505c340b978d2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/address-search/route/build-manifest.json",
+      "sha256": "e4bd095c1cd1f90f87a2e8a0687076d901758d47de688103471925b023ce71f7"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/address-search/route/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/address-search/route.js",
+      "sha256": "7dea5fb48f1d9f779844c4e65ebafffe20ae50c49957f39a3a69566d50a1c43c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/address-search/route.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/address-search/route.js.nft.json",
+      "sha256": "820986d35d9b10bb67383865beff8f826aa3a82ef3a5bf1090fd869bba967c71"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/address-search/route_client-reference-manifest.js",
+      "sha256": "61f0a43b3a0e62391188c157f7822e81351e7791e28329a62c596004a9c44695"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-capture-session/route/app-paths-manifest.json",
+      "sha256": "d9410833e530d195b2e3b32f81f4313b54977512ccb941cc7c0ada3297477469"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-capture-session/route/build-manifest.json",
+      "sha256": "e4bd095c1cd1f90f87a2e8a0687076d901758d47de688103471925b023ce71f7"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-capture-session/route/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-capture-session/route.js",
+      "sha256": "93a966fc0aac006d1550021419ae9bee871e96e9c0b75e19c1c65e1d2e152396"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-capture-session/route.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-capture-session/route.js.nft.json",
+      "sha256": "8a8dfdbdb2a18ae4e92cdbbfd89ab7945ba264174694cbc021c91991eb4280ca"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-capture-session/route_client-reference-manifest.js",
+      "sha256": "97be40e8f75ed1c9e7bdd898e067dd84c57df89a16ebd1b1cf24b3ad2180729d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-direct/route/app-paths-manifest.json",
+      "sha256": "da0792fd2b5da993fcc64d4873754141259573f009fe56b319a092061bc8ac28"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-direct/route/build-manifest.json",
+      "sha256": "e4bd095c1cd1f90f87a2e8a0687076d901758d47de688103471925b023ce71f7"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-direct/route/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-direct/route.js",
+      "sha256": "7001267d2666ae5fc711dd4bdc701909cf3bfd2ef906bab539bb596bb71ab804"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-direct/route.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-direct/route.js.nft.json",
+      "sha256": "3992d1b2538c7dd49fe0c0571b12361f13d621509c4a47120fc045a33d37efe3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-direct/route_client-reference-manifest.js",
+      "sha256": "51daece5bb5393006b4be255aa5f8b354460dcae8f60e43fcfa960ad70004a38"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-ocr/route/app-paths-manifest.json",
+      "sha256": "52cfdd4f11a15f6326e2b24670f353c62cee958eaf55f0d26f80b0c13d827beb"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-ocr/route/build-manifest.json",
+      "sha256": "e4bd095c1cd1f90f87a2e8a0687076d901758d47de688103471925b023ce71f7"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-ocr/route/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-ocr/route.js",
+      "sha256": "25912713ddec1daeac4ec3b820fd458abd41bb10ad351e2080f41a1bf6070290"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-ocr/route.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-ocr/route.js.nft.json",
+      "sha256": "fbf8a5ea1edab4ff3f950578d6f181ea69108f29057f391a57d1b28cb0a8f584"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-ocr/route_client-reference-manifest.js",
+      "sha256": "fe5a6a48ede0a15c6677e7a852b18fe521f99419fe23535f5b01448c38b9d3d9"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-structured/route/app-paths-manifest.json",
+      "sha256": "02d236ee2613b2a3ab619f809280bea5c60a7611d7da6e142533cf224c7ea8d3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-structured/route/build-manifest.json",
+      "sha256": "e4bd095c1cd1f90f87a2e8a0687076d901758d47de688103471925b023ce71f7"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-structured/route/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-structured/route.js",
+      "sha256": "93bfc90b3f914aa15825267a1d3e5e823718b4c7117578af43172adb7a67417c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-structured/route.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-structured/route.js.nft.json",
+      "sha256": "0cc31c9c5bbcac48263b84f584809c03b19c5b9bb2aa240b83101ef70cea9a86"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/api/receipt-structured/route_client-reference-manifest.js",
+      "sha256": "4b8cc4378254181db47d15d9a90198aed32b0e880db774e6f4ef0733fd72a140"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/page/app-paths-manifest.json",
+      "sha256": "e0be75c853555b01e1a9823abf81903c8d8934e5c7ca49e887afd6d00905d77a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/page/build-manifest.json",
+      "sha256": "8735ad5771e3597c4b0b4ce7879d2e8881192605671a2e21f3e7f7d76f3d15c5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/page/next-font-manifest.json",
+      "sha256": "dc1719fb3b97327924884a5839c5cfa68896e28803f0cd5e969b7c20f519d1e5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/page/react-loadable-manifest.json",
+      "sha256": "f5074d887b37255a225007585e850a09ab3e8d4ae6a1ddb884fefe395b13cfae"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/page/server-reference-manifest.json",
+      "sha256": "d0c7f70e7b24a0f6f6b52e64bddbd51705dad21e63403dddeb723b03e70be9a5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/page.js",
+      "sha256": "808757f5c74ea7236ad6f282e5987ae10fe39cf08a17e8f42a6a4f138382b7a1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/page.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/page.js.nft.json",
+      "sha256": "10236914131317169c753d2c8e98c25c7bda8535ecd5139bd4ca11f7cf01d01c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app/page_client-reference-manifest.js",
+      "sha256": "c7169467721148073c9480db2a289a61ad0afa0b9871007ce41bef477229f45c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/app-paths-manifest.json",
+      "sha256": "3bfeecf495d6a70f10e854b7a98511efb503d65251fb6f3a619bf5731d66c74c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/0grl_app__next-internal_server_app_api_receipt-capture-session_route_actions_0f4so--.js",
+      "sha256": "56550155bde85fe34e53593f75f5b72fed6fe210207959641335ea688e125d9a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/0grl_app__next-internal_server_app_api_receipt-capture-session_route_actions_0f4so--.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/0grl_app__next-internal_server_app_api_receipt-structured_route_actions_0vn6pl3.js",
+      "sha256": "9f90d215af2a62b7f7634cabaa46a2b14f4130cabcab834180f491c4b2b189f3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/0grl_app__next-internal_server_app_api_receipt-structured_route_actions_0vn6pl3.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/190m_pl2vht4_app__next-internal_server_app_api_address-search_route_actions_1dlpjkn.js",
+      "sha256": "deae95091b3aed73a82d058c2f3d215fe7b5a767167bb41a1bf62a0fbf716088"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/190m_pl2vht4_app__next-internal_server_app_api_address-search_route_actions_1dlpjkn.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/190m_pl2vht4_app__next-internal_server_app_api_receipt-direct_route_actions_0pjzwst.js",
+      "sha256": "dbb4067b9f811f5b2dbd0ad525996de47015315df5b8035be40e994f337c6508"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/190m_pl2vht4_app__next-internal_server_app_api_receipt-direct_route_actions_0pjzwst.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/190m_pl2vht4_app__next-internal_server_app_api_receipt-ocr_route_actions_01s6kqy.js",
+      "sha256": "59d82c720d2cd3bf242e8cb8f8b05171776cd342fe587db240cde5c14c29f7be"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/190m_pl2vht4_app__next-internal_server_app_api_receipt-ocr_route_actions_01s6kqy.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[externals]__20ducz2._.js",
+      "sha256": "05a10c034c3adcd3341d6e8077d2f520f8db3b8b4d666a2237c0d6d5e6ce9137"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[externals]__20ducz2._.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__08xx-0j._.js",
+      "sha256": "6979f05cd4d62637bd7be3dd3ea808910c7f61be4824f1a1c670781d93bc8eb5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__08xx-0j._.js.map",
+      "sha256": "2a30c5772202228c5558aa46766dd89c38fd3d86fff961bb5e6fd412248872ec"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__09ihfx5._.js",
+      "sha256": "48fee678d62e107d08b728d2c05a2a7c9ef375c6b645b44cbe982bd4f1b26384"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__09ihfx5._.js.map",
+      "sha256": "102b241df8e2cb4b13ceb3c4cfe97bb34d89802acc7a16eec0af51794145ed40"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__0gfv-c2._.js",
+      "sha256": "3acccdc8ffbffb066fd644f74b369e5ec5ffbfae63509111b82dcbbce3392573"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__0gfv-c2._.js.map",
+      "sha256": "2a30c5772202228c5558aa46766dd89c38fd3d86fff961bb5e6fd412248872ec"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__0gggt63._.js",
+      "sha256": "6ed95ee1fc53af9dbb55203fd1ffabe61d0ca6b51da55862e27a20c4d88c0ec7"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__0gggt63._.js.map",
+      "sha256": "2a30c5772202228c5558aa46766dd89c38fd3d86fff961bb5e6fd412248872ec"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__1-zx1ut._.js",
+      "sha256": "5a294284e99cd955a3ae6ebc0c1d01ea65416de08e29f439b6fc696de94f359a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__1-zx1ut._.js.map",
+      "sha256": "fd8695ae5adc1b60b3dc7d0e65fd5a88d4bcf1c5fb708a33b72baad7a7d79a8f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__1ckon78._.js",
+      "sha256": "9e5a92bec136263306a155fc2ca9b088086caab20414a03fffcaae4524444399"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__1ckon78._.js.map",
+      "sha256": "2a30c5772202228c5558aa46766dd89c38fd3d86fff961bb5e6fd412248872ec"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__1h_69bh._.js",
+      "sha256": "b65570dd04f6b6b130eecc35ae9a17de433ae40497b5e24b78828bae4835c647"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__1h_69bh._.js.map",
+      "sha256": "2a30c5772202228c5558aa46766dd89c38fd3d86fff961bb5e6fd412248872ec"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__1uwew89._.js",
+      "sha256": "696a24d944949665979fcf0bc80f2e518b493fdacfe6df95c18c150f6d82bd03"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__1uwew89._.js.map",
+      "sha256": "6fe9a4ec73815ed287764237d3191a9ca7c7a6be7f59b798b2aa1bc38e90f3a6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__1voydnl._.js",
+      "sha256": "7ba8f2f38619a12a6437c1d44588ee793a06ec817efee50e056b423e7d6a9c48"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[root-of-the-server]__1voydnl._.js.map",
+      "sha256": "cee3741517a5123e7b75f67a51c7f63b369c728de641bb1be4dc89724682f27d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[turbopack]_runtime.js",
+      "sha256": "100556d4f2e89d3207ee9f3af0082ce2c8e7c39f00b64103ec196eb92dc62d84"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/[turbopack]_runtime.js.map",
+      "sha256": "c2a20475e7a2e6065de472a0255a5a49d996efa4d11d771de84428b6be80da35"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/_0nsqxee._.js",
+      "sha256": "94c2f2c53d51e321284d133c9d01a132a21410b8e3072110294925a676e5e0c6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/_0nsqxee._.js.map",
+      "sha256": "c4d38b9953fa7bb5c5328dae8bc3f391086c3ea2f904b7bbede1c8fa0caddebf"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/_1-j49hp._.js",
+      "sha256": "9d69c37af5ab740f564999e578a94a14c3ef2e30f8887673c4416867fc550180"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/_1-j49hp._.js.map",
+      "sha256": "a009d22526b5eb4f43c1cdc8c10217f89dca3ac9fd8a342794adb708d297eb95"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/_13d6wx4._.js",
+      "sha256": "41cc2360ec3bc41735936a14a38434444bf34d452fde0646d02a0f1611b96268"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/_13d6wx4._.js.map",
+      "sha256": "eb5557d213c35b583e716ba00e2f914e162a1fc660623e48c1ba493b31e1aa4e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/_182a3-u._.js",
+      "sha256": "275e0a3345f6fb20a94a2833b8bbf609f71d2ea1f71bbb3e6231a04bfe8b35a9"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/_182a3-u._.js.map",
+      "sha256": "41e26f5ac3280da695c256170c35d2c83cf5c8a2bb489835a2e2e9192897c35d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/artifacts_college-m3-address-pin-_pl2vht4_app_src_19w93id._.js",
+      "sha256": "b4f2fd0a068c689fef81a7af604d8a422af5ea0817a281e784e07b8692ef1871"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/artifacts_college-m3-address-pin-_pl2vht4_app_src_19w93id._.js.map",
+      "sha256": "426808720e0d05393f96a3c8d81d23cd9f9483d8e4f24629aebc372c88eff66e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/artifacts_college-m3-address-pin-_pl2vht4_app_src_1nfm17i._.js",
+      "sha256": "84ee55f3e7c0c178031a0f05a678989eb67245a219f34eaf75843b694d1fac89"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/artifacts_college-m3-address-pin-_pl2vht4_app_src_1nfm17i._.js.map",
+      "sha256": "426808720e0d05393f96a3c8d81d23cd9f9483d8e4f24629aebc372c88eff66e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/190m_pl2vht4_app__next-internal_server_app__global-error_page_actions_1qqw20p.js",
+      "sha256": "a222b1b470add051d5beb9ee356be0d30ea1685704e2118d94442367a3d3ac28"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/190m_pl2vht4_app__next-internal_server_app__global-error_page_actions_1qqw20p.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/190m_pl2vht4_app__next-internal_server_app__not-found_page_actions_20bmr0v.js",
+      "sha256": "baf8d2edf153f09ea9f7b28e20539191177b762d82a4a2b0fb9e5c36ad8378a8"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/190m_pl2vht4_app__next-internal_server_app__not-found_page_actions_20bmr0v.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/1owk_llege-m3-address-pin-_pl2vht4_app__next-internal_server_app_page_actions_03u24br.js",
+      "sha256": "a63178e2a4b01f92c5ecae35f1ff8b9d589a1924df6e3660b9573f8bac1575c4"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/1owk_llege-m3-address-pin-_pl2vht4_app__next-internal_server_app_page_actions_03u24br.js.map",
+      "sha256": "bba91168b8031003cc96ad9268cf613f0df3f39694a6b6dfa788d47ed5b30c18"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__0kwj_pq._.js",
+      "sha256": "8e9584e4710c73ff4c680286e7562957284aba3aae847f61287acacdf34e12a2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__0kwj_pq._.js.map",
+      "sha256": "522558815420bb82b29ca93d826e0a89eb5c828bf7e7bb40f7781fa40cd25185"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__0v3_dwr._.js",
+      "sha256": "d33b4fc43c25393c45d600248b089087f5bb482b9bd5df2fd85762da0faf6579"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__0v3_dwr._.js.map",
+      "sha256": "9c61cca36422d4c18f0825cac3735cc4e8e535e1bc8bea658791256fb613fdda"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__112mz-6._.js",
+      "sha256": "01008e40968a03fd3ad27ec90897c590e9ab2d6a51ba4ce81c96aec809050b35"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__112mz-6._.js.map",
+      "sha256": "5fec9082268a31f8c62959017d90acad0a2946be0377732e03ca45b4c219aa02"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__17_rqmx._.js",
+      "sha256": "4ae78c68f410b8561c60d4a5db9f5845e6beee3adf8ebff570111f169e392074"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__17_rqmx._.js.map",
+      "sha256": "9322a7949398365d8f392a6ead44547caecf5f897d38183d35294d6c4ce99fa3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__1io3bae._.js",
+      "sha256": "fe9f554a9aa6511759b8eb012c826a4fbcd5ea3f215b203d5dfc4d17ab28e397"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__1io3bae._.js.map",
+      "sha256": "ce1bdd2da4ec33bda0f3bbf92f2071117adeeb93bfbfb2d4b65cd81bb9a7471f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__1rr2hrt._.js",
+      "sha256": "635180c9d62da102bc2d460eb247f0c323c3ae838f44c4fb920bfd9586c3c3dd"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__1rr2hrt._.js.map",
+      "sha256": "439d1fc5dfaa958a52dd688d4f676f13795ecb76379a2f301603d29b0c5ff244"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__1u9f8n0._.js",
+      "sha256": "dcc3544cb11dea29167164186ff4782d63512618434972c633d8ef4741ebf4a4"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[root-of-the-server]__1u9f8n0._.js.map",
+      "sha256": "125c769dca8d0b5c4f327e4c0a5372df44426eab3da1d6cd16bcb0d6d62df05d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[turbopack]_runtime.js",
+      "sha256": "9ecddf2669a725fd2eaef1c3b969dafc1cb8110bad4872a6aff8fec5d5cb52aa"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/[turbopack]_runtime.js.map",
+      "sha256": "c2a20475e7a2e6065de472a0255a5a49d996efa4d11d771de84428b6be80da35"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/_1c0f8h_._.js",
+      "sha256": "bf6794c2baec5a86ec273afff353274a40104806bb1793d42c8cb2bd4b397787"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/_1c0f8h_._.js.map",
+      "sha256": "123a9b62908bc1e84c4867d1cc09b5012db2deaa6c0f90b8ac782966e9cbea2b"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/_1sotbz3._.js",
+      "sha256": "3f7c882511f63b02afda0ca42660fa03bf253b2d1bd1877f2d09694129565987"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/_1sotbz3._.js.map",
+      "sha256": "78f21de50e641a184240e4da276892fc7077f9cbc38dd0339ab11aef34b1f434"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/artifacts_college-m3-address-pin-_pl2vht4_app_src_app_layout_tsx_08o6_bv._.js",
+      "sha256": "afc5926b8e62a802952d706f83a1272e07bcdb05c0fa577695f7717fcf18b5d1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/artifacts_college-m3-address-pin-_pl2vht4_app_src_app_layout_tsx_08o6_bv._.js.map",
+      "sha256": "c6fc60d4d3c5c35d4f970b22525ee3952d40f12d7f13bfbb8e9d2bef14840851"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/artifacts_college-m3-address-pin-_pl2vht4_app_src_app_not-found_tsx_12kd2cs._.js",
+      "sha256": "395d3b5ce32888c85b98d65d219a6794ff5ffd60c32900f1ce327ad15fa393fe"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/artifacts_college-m3-address-pin-_pl2vht4_app_src_app_not-found_tsx_12kd2cs._.js.map",
+      "sha256": "0546bc4e949a4bd77d1d182b0ccfe3a40a3c7b265471b31e5173aade4fa2f364"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_01xbj_9._.js",
+      "sha256": "38e504b236c8c1cd0f80f1064b850817d62321d9a4c946d68cbd2f94b28fc175"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_01xbj_9._.js.map",
+      "sha256": "6a4633a153408d3772deaae9584d5a211babe7465dc5dbf087d7e9c7db48a47a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_1xjqib-._.js",
+      "sha256": "eb160fce04ff81a1568d0872600e727bc06be3d833862cf5fe9781959c0754a5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_1xjqib-._.js.map",
+      "sha256": "7180ea1e93aaadabe24379ca73915db286b3e2f0e43c03445c95254442713d8e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_next_dist_10oqhbx._.js",
+      "sha256": "a3abcc7ab34a3e5acb79749a5be5933b3c8de0ccae1192c7e5094146075d18d6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_next_dist_10oqhbx._.js.map",
+      "sha256": "c10da9a14202330cd0f96b753e66282ff6469c2e1572d68e47d9c164df5bfacc"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_next_dist_1n3w9lb._.js",
+      "sha256": "f3ab9d04cebe3b56312e999eb446b3647b9e4a918961e6f6d9cf626bdffe9e3e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_next_dist_1n3w9lb._.js.map",
+      "sha256": "d6b6ea296e964bbccdd5e0dd92eededd3519d6c3e7f76a48cfa5894ec1b7fd10"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_0p8s4lh._.js",
+      "sha256": "f0f7da6ff7ff11d5b8186d703607612923b70c65535506b8827e681b28e3267a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_0p8s4lh._.js.map",
+      "sha256": "e347942c53742f8e0cbccdddbf42a127223aadbe2762b2d0727fac652f70a6ca"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-error_0q-w892.js",
+      "sha256": "1511d90136b9b0f3a51642aa06f86d39dde4e0843ffde454674acadfa396b942"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-error_0q-w892.js.map",
+      "sha256": "b4910144230c8c8fa48650cc3b29208648a7426bb461bc5ce07b01c1fb9d0562"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_builtin_unauthorized_0l_sp0x.js",
+      "sha256": "31c82886e206a4ddfb028d86b19b036491c30eca465089fc6284754717f29f3a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/chunks/ssr/node_modules_next_dist_client_components_builtin_unauthorized_0l_sp0x.js.map",
+      "sha256": "f34158bb7e0b7bb60081f93bd24e3129ae6a780bb26280fa4e38fe9ac515a6c6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/functions-config-manifest.json",
+      "sha256": "66d46215670cdb58a1f87029af23959813c27efc45af061b5fa4d32b4d033e8d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/interception-route-rewrite-manifest.js",
+      "sha256": "fc5133e40acf09e6517b073ddd7b5c0c218d09938848902210f2cc13f08e1c81"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/middleware-build-manifest.js",
+      "sha256": "62587b37d980ab64b8e8804ffd386cfa36077438744f8969b2eafc02f959b5be"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/middleware-manifest.json",
+      "sha256": "3e662212864bc4c124cfc53fa5d428813c619852b447c9fd2d9926cd39d7a4a6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/next-font-manifest.js",
+      "sha256": "36feb6ff9eda2c958da55bdf3e7280596902cbaf7050cfaca0d5c68ee25d2be2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/next-font-manifest.json",
+      "sha256": "65f953122fe2fb5910d84495421ee32397b0be6321daa59118bd85d3cbc51d4d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/pages/404.html",
+      "sha256": "98cd23d0dda6b103efb7ffce2c317cc29119f3b2885c891c127cc21ee76636ac"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/pages/500.html",
+      "sha256": "cc7c576e6d08dc98cf1dd34fb683e1c5bca9be0d1b2d9ac48bac024119570d5f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/pages-manifest.json",
+      "sha256": "c354059caa217e72bdeb145e351b2038990972872c52df215cb1e4105c35097b"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/prefetch-hints.json",
+      "sha256": "4844873b8976f454c2c0e7bee3ed6a74e08b85ba958b89332f8a1d152e01e8a2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/server-reference-manifest.js",
+      "sha256": "f31b138cd9e51019775f5e4a396f5d2a9a903a7a5504d228e26742220635f9e3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/server/server-reference-manifest.json",
+      "sha256": "d473f05f7c73d03ca48e48d8562e69d47da9b3ade3fb3c4892a2de3932c4d464"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/UOweH0YitAXhHTas0VPjV/_buildManifest.js",
+      "sha256": "9476e0afd3f9da68a64e6ec58631191fd3eaca62c9f5a377e7517fe9a89e59ea"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/UOweH0YitAXhHTas0VPjV/_clientMiddlewareManifest.js",
+      "sha256": "5483e3295dc35dfe29ea932efc85341c916f10ff78ff5b0e965e003710893a4a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/UOweH0YitAXhHTas0VPjV/_ssgManifest.js",
+      "sha256": "678f6ce2cb80b1fe72fc67e7412be6e2ab6ada083111b64f7c40d35e3cba5e00"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/090y-g47jvewe.css",
+      "sha256": "e64123181bd4cf36c7f34976c39b996ae23fe91d11f9491a4433ca7e5d4b7b78"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/09lgyggnhjlha.js",
+      "sha256": "b218706af8a3ba93b0ed0e54da588c0357e5e8430d8fa563ec5a1f232ca42f1e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/0_mqxoqgfvxhh.css",
+      "sha256": "114d188768156a507f35145cf1fe21a5862143cef9a42fc8042b9a1f76475d66"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/0cz1d0mv5g_q7.js",
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/1b5_j6q9_bu0k.js",
+      "sha256": "328c3a1b9f753f18ec8ae8854e0b3a83cf639589ed2e76067a98c5f255c274d1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/1bbqjv0mjtvzy.js",
+      "sha256": "7b2be66fc092358da976c235a1fb0d494e5b3c0be31e7d7b86e567816dd0ced0"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/1cndeprdo7fvo.js",
+      "sha256": "f87734b384d50b58ffb87927a73c00b67e94738638b1c03a8712f6aff45ccd7e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/1kbva3xp9cg8r.js",
+      "sha256": "c17b215cd3ea4ad85ed383a99efbd4203a6235b46dcada94fb45013dae30f5e5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/2affwm2ro6084.js",
+      "sha256": "210a6ba82cd7bf57e79b37cbd319ba72d3600a2956c75975bc1c73ffe7f8359e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/2l_y_qqi24r7y.js",
+      "sha256": "453ab601507fa4b536085ecb6f6957cc9b27b4db5f1f9dca43b8e1c91dcea46f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/2rikwh75kscsg.js",
+      "sha256": "31ff3c37e974b4a5b062d289e402ebca277abd8d957c2ef2e5742cb8bbefc060"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/2swq0ffg24ugl.css",
+      "sha256": "9ee3a5aaa9b4d9d2c285cd915dbb2133ed715534f814efb23b3b1caf74c8973a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/2wdskklftjs8b.css",
+      "sha256": "8c752d5b393dec31ed97ad6d5b8fc301f529e718fa6be31fc2e35e3d4bd980bd"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/2z3sh82dl8glu.js.map",
+      "sha256": "a8ae20908e3aa88a005bf3b5cadedd7f1107cf28a6e4db9da80280fe9f54de95"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/30xok72cv1g4a.js",
+      "sha256": "386b5e6959faed2a52570fea0eb6831894bfa40bca90f67a4b0fe6106e5f9ff5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/32bb216gc5w1z.css",
+      "sha256": "75c0390a7de166d52c0f6685cc39da9b8956f97d00e321318d01d4a7bc53fcd1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/3byuobrkyz9bj.js",
+      "sha256": "2998459ef0c506d9417d5337fd7c562b13913d9eb939016648e0352c0b037eb2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/3fntmmi971322.js",
+      "sha256": "34ed6abf4c6d0d1bb3dc56d3f133d2a5dbc3a3c89c791deab314e27143ac14ce"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/3p0ve1_9gp4dn.css",
+      "sha256": "8d64c5e050e438bd518614426440c72a45876f9e496a4360d2881235549b5212"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/42mjqtjt-tmvy.js",
+      "sha256": "0ab1a2c6d94fa3516f41d9aea1f18a166689650797a985172ca77810f24e3644"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/turbopack-1cy2wf1ze7pd-.js",
+      "sha256": "18a443ebf4d1dd458959d0e866ee1a4668e0a790d902cc8a3713a69b51bb1f0f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/turbopack-2irwge7c4pj-h.js",
+      "sha256": "8a6890653f2ec345d0cb54e25c861cc81773b0e1cdf80efe78a611ac52559b37"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/chunks/turbopack-worker-2ru9m5gbh1na6.js",
+      "sha256": "861da5809b4f43b053fab88fe560f16efe31827655a06502ada9274a742852de"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/media/barcode.worker.0u7zb800re1az.ts",
+      "sha256": "ac5dbb59f29f5e3dafa5513f4f9fe3eeaca8dd46a2a5f7a6d5a842f28768d705"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/media/maplibre-gl-dev.20x3-5awu0rtw.mjs",
+      "sha256": "461f88a8ebd4231f53321a9001c40834353d08428e23ad79f331b5945521a699"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/media/maplibre-gl-shared-dev.3cujs3u1p0bt2.mjs",
+      "sha256": "cb3b6804354500df908037d5629b829635ceaea3a0ea315a9026d22d5d23083d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/media/maplibre-gl-shared.3n592vt0na6rz.mjs",
+      "sha256": "34c2cb0330cec92e81c4fa7344e7008451442bbb9cca1da3465db4041a934073"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/media/maplibre-gl-worker-dev.1dyjzeito63ts.mjs",
+      "sha256": "8d69f7cfce2fe10fbd146b9308aa4a0cb1eab4c921475ce6fbd1481f2a9721e9"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/media/maplibre-gl-worker.1hfb6nl_qj5oz.mjs",
+      "sha256": "b081c9b3d0691d9d85552b5624f2601f69f24ed37573959d279d322e98e4ee2f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/media/maplibre-gl.1lgabj6522g9e.css",
+      "sha256": "8e2dbbab312dc57656fbb76e9fa5308c75c9d7c7ba5808a7d55bcdb64cc813fa"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/static/media/maplibre-gl.3vqtpaudl-dky.mjs",
+      "sha256": "d84cb65fa75f07a972616cb4ee1902829ca053beae28f7be9b0889131c497afd"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/.next/turbopack",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/next.config.ts",
+      "sha256": "f72975f55ce88b0584453d5ac87a8434886d83f32c0578ad81696a3eaacee949"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/package-lock.json",
+      "sha256": "a8c87642d01fd03cf4388c2986fd184e8e7d49ca1987eed5b7ba9ff080ead541"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/package.json",
+      "sha256": "583416c8f2a45127378efa433de17ce19ac06cd1af49693dc163bf6d28a03aa4"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/qa/address-search-m3/README.md",
+      "sha256": "bc1b22e3cd82cdfef5dffca47760dde7bc44fa901bb24a38962ab41e9b594e6e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/qa/address-search-m3/preflight.mjs",
+      "sha256": "2737a65f10f0258c4f36a7af833d608c0c299c781e85a0a5750027389cedb9ab"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/qa/address-search-m3/preflight.test.mjs",
+      "sha256": "df96af18be56ec324030f50855415d8a80a41e92a1da0e0b70df480efe7e7e6e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/qa/address-search-m3/start.mjs",
+      "sha256": "68502ed40f63543a93c7e24428ce5f99c92f524fcd2ec7329a5495900f54180a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/app/api/address-search/route.ts",
+      "sha256": "9821546e41274e92247e2d9a593aeb5f4ca086eb66d64df35427ae8c983cf316"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/app/api/receipt-capture-session/route.ts",
+      "sha256": "2e5010ca5ec73a18cfb0418bc61a18700964798eb46abb49592e9b4b60a5a3eb"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/app/api/receipt-direct/route.ts",
+      "sha256": "221d33a6c8c323b1a945718f75394fced9b4eaaa93dda9a39d699430853984b4"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/app/api/receipt-ocr/route.ts",
+      "sha256": "5f2393bda11f5a87328b761864528c330429a358e81241859fa020d6b2fabc9f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/app/api/receipt-structured/route.ts",
+      "sha256": "a997632f9860544ad9b110da9052650e89341fb1053426a1453c25e1e3f31414"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/app/globals.css",
+      "sha256": "15d61e58677425d46a6e645b2237c9ae6d0adbbaab8fb89da8907036f2f624b6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/app/layout.tsx",
+      "sha256": "c57dc72a32042e465a2982582a24cea797330e9df4364f9119bf826d1a0613ea"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/app/not-found.tsx",
+      "sha256": "8f0ec10a0a257a7401d2d7193786127880d21521bf1ca415b03017f8cf088efc"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/app/page.tsx",
+      "sha256": "6b7ce56be9e756b6c07ec62ca18df0fcf7e850145b5e5f5e4ad180091d17fa47"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-analytics.test.ts",
+      "sha256": "1bac88719814d4017029fb1f60241cfc93f9469ef5c0517ae520a53fab4a9969"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-analytics.ts",
+      "sha256": "4b5dc4c2b641a3e43d3156ecc58387ab22b621433c94adff5632d741fa1b9c8e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-boundary.test.ts",
+      "sha256": "d18121478c6529eee612797cfb841a00a4f96c64d0524ddb824d4727e293e833"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-data.test.ts",
+      "sha256": "96d315a36aa34ff05ac4481aca56aae077cbb33ff78637e8decc58472f8dd669"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-fixtures.ts",
+      "sha256": "e0157ed1202e0a705f1573e298aeddef1612ecd2f5105fc18bc5dbd2999762e7"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-globe.test.ts",
+      "sha256": "f2642f084f2cbb9fb7872aed04b74e7f3d65fcac9f9ee283546baab2a9905b1b"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-globe.ts",
+      "sha256": "562530ee59fe34a3c451559967a47428428303949a1a9cef1c2d6237f87d8bef"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-repository.test.ts",
+      "sha256": "14b4d8005acf95ac01a270709fb62ef679d913a76c3635b8ae2fe12840f4a18a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-repository.ts",
+      "sha256": "6989ebb2323801521465710544420224c9b4a23a79e6aec5ba41b4c50b4c4d28"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-user.test.ts",
+      "sha256": "0421e478c625ff2218dd1eac703ee6b89cf136fc1b05c789a242b136d3f1441b"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/data/spendscape-user.ts",
+      "sha256": "03f291560a1be2733699a7211f92ea2b3aa0be6bbbf0dd694b05ad8003cfdb0d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/ask/AskSpendscapeExperience.module.css",
+      "sha256": "19a58069ad984daf452144c3a921e562e72c816ca417ddc6c57e30537c4220e1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/ask/AskSpendscapeExperience.tsx",
+      "sha256": "368ecb80ae9802d6ef2c8bffc9c75ffb1a88084e173882f57fd32af32ac48bf6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/ask/ask-spendscape-domain.test.ts",
+      "sha256": "795b1f44f1e7404a8b89647232a1857d533df0221da4744d4f3d21222e76c641"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/ask/ask-spendscape-domain.ts",
+      "sha256": "be16a4c668de307bea1cf2cc9e058f83f8094c059567308754e219f51fbac636"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/CaptureBarcode.tsx",
+      "sha256": "7ae368fedff30c7abe415909fa2744f3c2af148725d96ad37ea4f1f6f4c1d056"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/CaptureCamera.tsx",
+      "sha256": "d2ffcb5de7055333f7460d17a1a9eb5ee68a153c2d3560e5bcc8eba259b5d9cb"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/CaptureExperience.module.css",
+      "sha256": "a75195dee4052c6ed8acd12f3df67cfc8125b73be1daaddd09f40bb2c859504b"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/CaptureExperience.tsx",
+      "sha256": "28eaa53a14357c87522562a8dc14b6cc13dde55f07c72f50591f4b55c2e262f6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/MerchantPlaceReview.tsx",
+      "sha256": "9300e4e4c2618e18aa890d29872289a1eed44fd7bcf4bcfd1749a5fa61be1216"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/PurchaseReview.tsx",
+      "sha256": "46065db399d1dbb765786e55c980da356721de36095b43b51ce2a5d79bb5eb09"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/ReceiptPayableSummary.tsx",
+      "sha256": "839bae530ae2baa99b4e97d5faed6c0ca902d50bba8999a78f9be1057c36dcaa"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/ReceiptReviewDetails.tsx",
+      "sha256": "84844fc55b2a56eb4298e3d1fd3cf913440dd408f600d3ff53f995a887e5f6f3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/barcode-demo-catalog.ts",
+      "sha256": "4ac296582b136e417a29e7c4c04bfea5a59f93b7026d337b583291d64a17d7d9"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/barcode-domain.test.ts",
+      "sha256": "672df543d520257005440228908916505136d8ffb5abaebd875f1ab97a3d91d2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/barcode-domain.ts",
+      "sha256": "c7ebea77983139fa4a41442dbcfd528feacc41bb61ba897f75d1207d57c50fa3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/barcode-reader-result.ts",
+      "sha256": "e7b882fbe37c06a41c09770160a0958823e38e001bed07a8cb597eb24edb3f7a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/barcode-session.test.ts",
+      "sha256": "5bc5cf7ea56b95dbd9a088fd0e93c6a2b9764f43119a62187767c722990fe0aa"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/barcode-session.ts",
+      "sha256": "1798f34694af23831bd45eae4e87db49043792c3dcb9d9206d7c2ba4510d049d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/barcode.worker.ts",
+      "sha256": "ac5dbb59f29f5e3dafa5513f4f9fe3eeaca8dd46a2a5f7a6d5a842f28768d705"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/camera-session.test.ts",
+      "sha256": "a00e0bd271b3ba2ce63cd311c2f50d58ae0317e32a59007c1a43ea4a1257901d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/camera-session.ts",
+      "sha256": "7e3b953bf7c2d7b608dbfd17138aeedfac5208df1011b24aa14eef1937aa86de"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/capture-domain.test.ts",
+      "sha256": "cd8229d2afa98912cb9a15ce2328784aa5c5cdfba63da111cb58ad7e19d7fd66"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/capture-domain.ts",
+      "sha256": "3f1663e424ff3ac0f3f164a913a76cf15798edfafe8475747e5792968bd7f950"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/final-payable.test.ts",
+      "sha256": "e4ac9cf0c501984a7defbca3b79d52405eb32e5bdf9d63986522cffb0e081c81"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-editor-values.test.ts",
+      "sha256": "5efa4b3a8f3c02c51d2a28c5a2851cb40ef63ea71ec2b1e01bc65872e89d8539"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-editor-values.ts",
+      "sha256": "07890daa767fc9d0920d032afc15ea3f07f71df3c095750f8dd91f6d71d595a3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-place-seed.test.ts",
+      "sha256": "0acd54f75f03b1a0b623fb61ce14b8487d607b2855f93f2cc882201a48a7ef2e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-place-seed.ts",
+      "sha256": "62630561b4e76c64400e73e25e5d3d34a1be846edec4d32cd23d8b4dc1f4fe20"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-review-adapter.test.ts",
+      "sha256": "a3baddad099da4c88e956022ba9fe1faf89612f2684bcf1f7f281af4e79d98b2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-review-adapter.ts",
+      "sha256": "2697c9a953c4aa63d97462147ab44636264ab3fc089304a06289e6d75a74cfea"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-review-prefill.test.ts",
+      "sha256": "24246cd127f53d2b06e3be9ae5f3f3089bf234a97754ef010c48ec6bd0d075bd"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-review-prefill.ts",
+      "sha256": "88b64f13cf9d9bc231e71fb4f165fb75cea876b4287c5c86fdeb9c0bb2b469f9"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-review-readiness.test.ts",
+      "sha256": "1d158a16393657709fe0a101c34c010be686e9f5e556b8e2fd5a6a8cc9c3a17c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-review-readiness.ts",
+      "sha256": "9236c387c956fe3ac532616bd56880c3641384160ec333f02a8caa66606653b8"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-review-time.test.ts",
+      "sha256": "3bf9dc4784bbb9bedc99adf79c583ab7338e17cf6c1b88a06ebfe485a68e93e5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/receipt-review-time.ts",
+      "sha256": "4091430152fc581bcbdc815afe68af1d85e67ffc6cb300c14bb88b9a65354e65"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/session-purchase-domain.test.ts",
+      "sha256": "d080d34a4b88bc5417b3549163c384fcb83f147fb3dcc18e927d51bd8f5f4f45"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/session-purchase-domain.ts",
+      "sha256": "bc5923459bb39125053277a18c5f0eb7577aa5449f270747c1845f42b0f8e260"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/unknown-context.test.ts",
+      "sha256": "1941b62f07887b87e2af45cf1031745f42d9411528377d97a61d1b817ef5adc3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/useCaptureBarcode.ts",
+      "sha256": "8a21295d9a8ec7ba7ca1099fdfa8fcd12ac1d2b88d201321b047c6d7c6a4521b"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/capture/useCaptureCamera.ts",
+      "sha256": "7084dce0024abdeab0658294ca42d694e44b313e93f37f4dea4d94fd42730274"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/globe/SpendscapeAnalytics.module.css",
+      "sha256": "164b72c1e2937006bcd010dcb6272e680520fb3d24b1fb931626cd5144618724"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/globe/SpendscapeAnalytics.tsx",
+      "sha256": "44c9bb38934e98dfd362244670c004f8ff44238a12b004e5529185f53f3a52ec"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/globe/SpendscapeGlobe.module.css",
+      "sha256": "7e792aee088d633ab0ef286a1e2cd53db636a2105aa5bd6a64d9526b909a3fe6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/globe/SpendscapeGlobe.tsx",
+      "sha256": "374fd0b514d9bc7d443eeec48e0684ab73c7b569cbc9f6ef9e5adf2e0c1d48bb"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/globe/globe-map-config.test.ts",
+      "sha256": "9d7904d5cb6353de9e3e3454d81634298455184b1b9fdb9bf9ff6816d6a0f529"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/globe/globe-map-config.ts",
+      "sha256": "ed4cf04376c2f26e6705c6754c98e2bb5f2e910bfb6cf08e20927a7cde1ef5fd"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/inbox/SmartInboxExperience.module.css",
+      "sha256": "531e877dd60f121a46eccc91434aae6a0a05b900609f753d334d12ae5e6c3762"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/inbox/SmartInboxExperience.tsx",
+      "sha256": "1486cf66629d982bbf00ed205dd1c6d0a8de6b9ed2fa034797f85b405c70b191"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/inbox/smart-inbox-domain.test.ts",
+      "sha256": "b16d3ef6da9b310f4becf09917265b43d54277327c73dfc2cc4afd5e7a72a2fc"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/inbox/smart-inbox-domain.ts",
+      "sha256": "89871a71d7a8a22219c80c5c3989c431b5571455e9440c8a3e3dc930b0a34a30"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/AddressSearch.tsx",
+      "sha256": "fca8a12b5690306737a74a2c3b0c4ffde62e333e4344402d04a1282c332ee678"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/LocalDataPanel.module.css",
+      "sha256": "a79b587645437c548fd2348a76f1af2fcacbfd4848128dbe97b32fb33a8f30c8"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/LocalDataPanel.tsx",
+      "sha256": "e54140af4a70c2ef799e779ae21de309ec4538a5d9e11cd24c1a2acf35b06488"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/PurchaseLocationReview.module.css",
+      "sha256": "170884e4c0bde7e0f4886dc3cacb832ecdc64f5a161c9cf398b9db4f101721b3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/PurchaseLocationReview.tsx",
+      "sha256": "6456ccd90bb568ad262aed33da6d761ab843958d162003f89c83be642413c272"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/PurchaseTimeCorrection.module.css",
+      "sha256": "172bc10db1b43e6d21ae14e95cf72d51d814b14ae4aa2f061b40c92d7bdcdb61"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/PurchaseTimeCorrection.tsx",
+      "sha256": "64bdf321388527372e9eb0e33e7368c223a2946e6bc301fcb79271e202fd39c4"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/address-search.test.ts",
+      "sha256": "8ac93167a70d0a13e207feb9eeeb76c124071f4e4ac56bfbd651f80b31faf6ed"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/address-search.ts",
+      "sha256": "ab0ab7567515578d7806f2f99e0843758a7270775fb01090bfb740beb09d747e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/local-directory.test.ts",
+      "sha256": "872cbf644510637975b8dcf8f53d660d873bf3494ddc33524f825a233e33e4b5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/local-directory.ts",
+      "sha256": "0e951b8c1ccefc3faf8f220fbdb4fd5e7b80751c56a486a25b29bb6f7cd34508"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/local-purchase-store.test.ts",
+      "sha256": "31efd30a86236f04f57be55e20de1d19042ce54d05de4b507c888fbc366ff83d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/local-purchase-store.ts",
+      "sha256": "b2dc17219b7156d2c4d7f2bf5d68ac680ff5c7724865c8baacf41f918dfb8709"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/local-structure.ts",
+      "sha256": "aaf3bd84724c8d1578cabdb8cc6e94aeee683b24f6fbb73dd78012d9289afa8c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/purchase-location.test.ts",
+      "sha256": "637da8ec78eff1f3f2cecc3de0c70415b49d3622f9af222b067f1e0d6201d527"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/purchase-location.ts",
+      "sha256": "0f335e3dca3bc48581ea357dbcf3193efdb491d4a485f19619af6a2290bdad04"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/purchase-time.test.ts",
+      "sha256": "3bfe5d91a0592505e1dbc8005e5690b3720484ce3bb360778d875963cfcf28d1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/purchase-time.ts",
+      "sha256": "ebf21280c26c91668f33c6536209b44ea3cff5b090560a08032474643ca6a1d5"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/local-purchases/useLocalPurchases.ts",
+      "sha256": "8adf555a410776fc6040e74acc52bd4b411f2b8cfc7425e45dee29d7e1ccc4e2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-demo/NearbyDemoCard.module.css",
+      "sha256": "56b9b265c2db08f14699bd1bb140ace57490985d199478a68401cb4dbe524c1d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-demo/NearbyDemoCard.tsx",
+      "sha256": "3a2f2ae89d2bafbcf3dd43cf76de4c448525f14ca5fd2dc404e01ed0927a15f2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-demo/comparison.test.ts",
+      "sha256": "02b22e677ed5c73b0a5482df6d302dc3e1eaceb89b798c39739062c278522867"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-demo/comparison.ts",
+      "sha256": "3c8b821fce3fb8dbe7929680404cdcff5765fb2b4c2177320d66512426dacca8"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-demo/demo-prices.ts",
+      "sha256": "8593cd7d11158d82fdec5cabf02032b11831046359f1386339c5ca7235184276"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-prices/NearbyPricesReview.module.css",
+      "sha256": "b287a3ba361f9816d0686df5a7bfc18fea16ac871b5a36b708829880a99e4905"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-prices/NearbyPricesReview.tsx",
+      "sha256": "ae65ddde7678f135f7108c27f682564c8b6a9b303771145ea8c362e507788f27"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-prices/price-contract.test.ts",
+      "sha256": "654603c600191a2003dc48c58d2630763d7a99cc6ffb543af028a1a26bcd8966"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-prices/price-contract.ts",
+      "sha256": "5f0c9280e560fd4e8ddd1249091be331b7657c33252893f3a95b7d741539af1a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-prices/receipt-comparison.test.ts",
+      "sha256": "3bbba3042de933b5a3c4d863fad3459928138f7ad641f0543f8d034d9eb093a1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/nearby-prices/receipt-comparison.ts",
+      "sha256": "aa9203a42082e090f581310d37149c8c965768478594e9d9fadf311f007a13e6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/ReceiptImageIntake.tsx",
+      "sha256": "eb742104e853348d928ea9b3a36d35a3571d0257e0620dcfa9ca0e8164fadc73"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/direct-image-boundary.ts",
+      "sha256": "5c8b18b901acce8d32e165b85d5d0b01651f83a16039edac2f7a83d0a4457a11"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/direct-image-contract.ts",
+      "sha256": "4a2ce842c978ce4ae7c829758002fdbd98659e20264932c464f15ba99456cd0f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/direct-image-transport.ts",
+      "sha256": "da10c73797e6b9d3ff948a8e06a29bc0e496048643d43ac65550c4020e022e46"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/direct-image.test.ts",
+      "sha256": "b1af87e9063ec835c0c2a177fd4fde8de1c1560a2e12487aa3739ac36f5ad9e3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/gemini-error-diagnostic.test.ts",
+      "sha256": "a0f07a99f86bcbf37c29c997f2fbe8836c05874fcaccdfecae0e1b36a26ae7d2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/gemini-error-diagnostic.ts",
+      "sha256": "0d6d87fce37ed3bb54f7f1fc7e59a66248737da8b23b24ff937f5fbb888be900"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/image-input.test.ts",
+      "sha256": "161b294e064c7c9cc907b5f71442500bb00504b14620a32b6bc0087864a5c58d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/image-input.ts",
+      "sha256": "2b425414b3edd4215e471205be69a6dcfee504b65c98f20fb6b71f096bbeb639"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/image-session.test.ts",
+      "sha256": "a6acdd896c330917b0c91d2b6a36431fd87881168c48d7968e3af2268bad1f8a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/image-session.ts",
+      "sha256": "5dcbb3c9f15c656d160d6893a7044d058fcce783bb93c8a797604de7cf717fab"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/layout-reason.ts",
+      "sha256": "291dd829095ec8a382b50f17691c5a0703c7da0e1d6b8e2fd9f64fda7e06828e"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/ocr-boundary.test.ts",
+      "sha256": "19907b0f84e1d3d9ecc23b06c25fb2fea6563c7fdb4b4c42bf07d3e0b1f307a6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/ocr-boundary.ts",
+      "sha256": "4daecb3a13665a7e4954183bcff805b3015524f294e5ca9e2d00e49e8f4d78e1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/ocr-fixtures.ts",
+      "sha256": "5fbaf8e61d6c47999c9e2b83b9b260cd6fdab5b89cd3982a3b64ec60366844cc"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/ocr-parser.test.ts",
+      "sha256": "8fc959254303e478d1366fb1080a59d4d73df43d4d30869926327e440ee39ef6"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/ocr-parser.ts",
+      "sha256": "e3a5798a2c33b6bf85eb40905be70d41daacf7322888ff063ba7245f508490f9"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/parser-inspection.test.ts",
+      "sha256": "719e5d3f5b6b522655a13bf0665735777c490ae2c9a0df20c7b5acc44b1f948d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/parser-inspection.ts",
+      "sha256": "1096272e15ccea6d71696c003c7a782d2f14ecbe52c7c794bad7d7faaf39770c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/receipt-failure.test.ts",
+      "sha256": "1d71bd3add9108bbb510e7e573dd85051d582b50727b916a9592f633aa9b6a3d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/receipt-failure.ts",
+      "sha256": "abac5e28234759444521795c9358bb6e7aab49caf5b3f4ff6482b2689c0a6b63"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/row-rejection.test.ts",
+      "sha256": "5d8292eb422c02f69d69b6e3ab75eb77eaecf97cf1f20933438476d64490b6bd"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/row-rejection.ts",
+      "sha256": "3d6a8ae0d4f8eda0736afcceac8917f3a5ecb2759a6b9e176fe3139c2284ce3b"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/short-receipt-parser.test.ts",
+      "sha256": "1013cefcea954cf3dddda02afeba2ebb32104da2dda4b8cdc83d49935bd5cf37"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/short-receipt-parser.ts",
+      "sha256": "8b99ec639b60db6233a3734c7c13f1292f62d14f20bf3ffe1ab89a4d88152f1d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/structured-capture-response.ts",
+      "sha256": "cd7b56c50ddd12243824bb51a3f16341a4ce0813e3c8d53e5dc5b95653ac2c5c"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/structured-image-contract.ts",
+      "sha256": "f6ca143dd73fdbc51f3fb4c6021904080575d6fc990f0af7f84736faced9cd78"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/structured-image-transport.ts",
+      "sha256": "903a73efa4824c6df98046419207705497cb09849e952c580955d99f01426f97"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/structured-image.test.ts",
+      "sha256": "84ef2e848472fdede16fef0a8293af0e3d0194846f71f026b482bd0e5b152106"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/vision-attempt.test.ts",
+      "sha256": "1307df63c1f8ac99ee10d40246f32c0171cb629aa5f514b1bc1174a970903553"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/vision-attempt.ts",
+      "sha256": "6f5d291f0b715c9e9d8665aae67df2c25fbc9268dacb79b084ec913dc5eef1fc"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/vision-fixtures.ts",
+      "sha256": "dcafc944b141fdca14efcecf72904ca03256b5d5524ab4f482e9a9324ec3b5cc"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/vision-local-boundary.ts",
+      "sha256": "b55e8cd9578f125fae37c80ea6ff1c9c8a82a37d34578da9eff1327051a29364"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/vision-local.test.ts",
+      "sha256": "d2f4460cb2e52a100d586bb7f84c0b9697f787db6c360913fe074264f1181848"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/vision-normalize.test.ts",
+      "sha256": "bc3f8c30063bbdf4f34c02d2df42fdc5ff5fe58bcb64546248d1aa37b8bc8240"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/vision-normalize.ts",
+      "sha256": "919da6f00efd1f2bb5909341dd51be6fd820f35e782062a99b94181ab2244869"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/receipt-image/vision-transport.ts",
+      "sha256": "2bf074dd13a385c866966a98312df195b64e981e9b503bcdfc3ea2c2b6f16f60"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/replay/LifeReplayExperience.module.css",
+      "sha256": "125b18f5fcb75eb26b07b2195b89e41cde531663ae199ae417ad8c36365c80ac"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/replay/LifeReplayExperience.tsx",
+      "sha256": "801fcdc3b769e2a1aff1678731aa7cdc803c1f583980bbe1efe39d3a452aa0b1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/replay/life-replay-domain.test.ts",
+      "sha256": "3a569123c1bbaf82f3188eeed5a553e5b328cd490bf93361ca404fb83b9dc44b"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/features/replay/life-replay-domain.ts",
+      "sha256": "73e6039b2b6cf95785bf37a9250d2bc575647688b2a0c91a7fe54c8fd9826b5a"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/address-search-boundary.test.ts",
+      "sha256": "adbc04d2b726ce5b4984fbf4e03e135b9fdd695cd90233bcabb6873c2728d6f2"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/address-search-boundary.ts",
+      "sha256": "dfbad564d0ac39558727a6871e6763189efae5de81ea2b2100df4b3003c5b4ff"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/address-search-local.ts",
+      "sha256": "c7fa663a9527eaf8b9c5010d90ff7f49abf4e3ca6c760d3a47181067b7ede7cd"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/address-search-native.test.ts",
+      "sha256": "b84049957aca385b504b77500d6dbbf7902933dc0638e95a1b6bb1e09d50fa11"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/address-search-native.ts",
+      "sha256": "93c3a525c25308fd9243cde74c0bcd3c802140396f9e57d5d3828b788dd83030"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/address-search-runs.ts",
+      "sha256": "8bf7cfb9f649fd3a50555e6964e20f66bfe233caf9e339759539330444edb650"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/direct-image-diagnostic.ts",
+      "sha256": "a549df4e688db369a7afb8da72b6ccacb24311a50a642a02872b9d63b69fb2e3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/direct-image-pilot.ts",
+      "sha256": "49d04b2c7c60d9b1e472e64934ecd6aa9416ba0483638198fbcc45e098a99d20"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/direct-image-recovery.ts",
+      "sha256": "f496033012bf0dec02b16a6ea92f75d89ac8f03bcf96949b70f756c5be5d76b0"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-capture-diagnostics.test.ts",
+      "sha256": "70d070aa3fd8720236f17a75f63f23b922883d82916450e0095b58ad5fa30d9f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-capture-qa.ts",
+      "sha256": "4dce50b8bc5fa62fbd8aa5ce3ee4101cda26c31b6e253dacf786884574cb4526"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-capture-session.ts",
+      "sha256": "0fc15ef92005e4b7497de9f6cbd9a23d7ef7a9f8cd84798381a7127b8a8016ba"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-capture.test.ts",
+      "sha256": "0a9259a57e4918a9951afb5d7d933168d9efced7463f50574c787e5110b09e36"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-capture.ts",
+      "sha256": "f4dfe283b29b773deb6b2a729828d0d5fef4d53d0736b76180445ec3c5ae5dea"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-direct.test.ts",
+      "sha256": "7047f3a7bdc970ff3be98a8782dbc2e5aaa7af92dc2251b8f60c5e1816c4e211"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-direct.ts",
+      "sha256": "a51624ec76ac8ba07ec6ec576a18560cf18cfdfc6153c76c9ed88dfee4728fe3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-ocr.ts",
+      "sha256": "759343d7fb23e9e481fea89317fd2adc5b80ae06c5237099b7d606810aa37758"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-structured-native.test.ts",
+      "sha256": "e6c2de2845c0686ddfd6d8a58bead61d782a76e967772ae2e95fdb12b0f02c4f"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-structured-native.ts",
+      "sha256": "4412f49830f9100d1d39504cf51bc60dd5179864de648601f8f1dd2de5430a4d"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-structured.test.ts",
+      "sha256": "bb3dc2be86bc917ca026b2b17f0bf566301906ea261906ad96bdbd40f8f09dd3"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/receipt-structured.ts",
+      "sha256": "ad43f960696faf99cb33ea8cedc26e67bb3ccfc178d7f0288f6c7caffa4e7168"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/vision-attempt-record.ts",
+      "sha256": "c6660287180239eb076abf25b10f5be4fc700b5f82b4239cd9054cf11e52a1bb"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/vision-local-reservation.ts",
+      "sha256": "2b1d3f8a1861c9348bca1a4e5f72ae2eba3d9deb934a42fee35eb1f5cda227d0"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/vision-local-run.test.ts",
+      "sha256": "e9efe9899a1c6560dab0c5387222ac621c0159fe6b52276b4fbcd37045dab9ff"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/vision-local-run.ts",
+      "sha256": "5857c0f088486ef5d950dc48ec700d8a4ff8bb5a364189540d1f339244a5cf14"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/src/server/vision-local.ts",
+      "sha256": "cfef4ac4a5ad59a72ca53bc0239fe51b4c464d918ec5f927087c7352eb857bb1"
+    },
+    {
+      "path": "artifacts/college-m3-address-pin-_pl2vht4/app/tsconfig.json",
+      "sha256": "e7c445f9e30e239b4ac43d2bbf4667b4758dab060b1dbbab5026f5d21316c33b"
+    },
+    {
+      "path": "qa/address-search-m3/README.md",
+      "sha256": "bc1b22e3cd82cdfef5dffca47760dde7bc44fa901bb24a38962ab41e9b594e6e"
+    },
+    {
+      "path": "qa/address-search-m3/preflight.mjs",
+      "sha256": "2737a65f10f0258c4f36a7af833d608c0c299c781e85a0a5750027389cedb9ab"
+    },
+    {
+      "path": "qa/address-search-m3/preflight.test.mjs",
+      "sha256": "df96af18be56ec324030f50855415d8a80a41e92a1da0e0b70df480efe7e7e6e"
+    },
+    {
+      "path": "qa/address-search-m3/start.mjs",
+      "sha256": "68502ed40f63543a93c7e24428ce5f99c92f524fcd2ec7329a5495900f54180a"
+    },
+    {
+      "path": "src/features/local-purchases/AddressSearch.tsx",
+      "sha256": "fca8a12b5690306737a74a2c3b0c4ffde62e333e4344402d04a1282c332ee678"
+    },
+    {
+      "path": "src/features/local-purchases/PurchaseLocationReview.tsx",
+      "sha256": "6456ccd90bb568ad262aed33da6d761ab843958d162003f89c83be642413c272"
+    },
+    {
+      "path": "src/features/local-purchases/purchase-location.ts",
+      "sha256": "0f335e3dca3bc48581ea357dbcf3193efdb491d4a485f19619af6a2290bdad04"
+    },
+    {
+      "path": "src/server/address-search-boundary.ts",
+      "sha256": "dfbad564d0ac39558727a6871e6763189efae5de81ea2b2100df4b3003c5b4ff"
+    },
+    {
+      "path": "src/server/address-search-local.ts",
+      "sha256": "c7fa663a9527eaf8b9c5010d90ff7f49abf4e3ca6c760d3a47181067b7ede7cd"
+    },
+    {
+      "path": "src/server/address-search-native.ts",
+      "sha256": "93c3a525c25308fd9243cde74c0bcd3c802140396f9e57d5d3828b788dd83030"
+    },
+    {
+      "path": "src/server/address-search-runs.ts",
+      "sha256": "8bf7cfb9f649fd3a50555e6964e20f66bfe233caf9e339759539330444edb650"
+    }
+  ]
+}

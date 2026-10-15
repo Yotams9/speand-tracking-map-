@@ -1,5 +1,6 @@
 import type { CatalogStoreSummary } from '@/data/price-catalog'
-import type { CatalogStoreChoice, PurchaseReviewInput } from './session-purchase-domain'
+import { catalogStoreIdOf, catalogText, type CatalogStoreChoice } from '../local-purchases/place-provenance'
+import type { PurchaseReviewInput } from './session-purchase-domain'
 
 export type LocatedCatalogStore = CatalogStoreSummary & { location: NonNullable<CatalogStoreSummary['location']> }
 export const NEAREST_STORE_METERS = 200
@@ -7,7 +8,7 @@ export const NEAREST_STORE_METERS = 200
 let pending: Promise<CatalogStoreSummary[]> | null = null
 // One small request per page; a failure is retried on the next form.
 export function loadCatalogStores(): Promise<CatalogStoreSummary[]> {
-  pending ??= fetch('/api/catalog/stores')
+  pending ??= fetch('/api/catalog/stores', { signal: AbortSignal.timeout(15_000) })
     .then(response => response.ok ? response.json() as Promise<{ stores: CatalogStoreSummary[] }> : Promise.reject(new Error('stores')))
     .then(body => body.stores)
   pending.catch(() => { pending = null })
@@ -36,21 +37,47 @@ export function nearestCatalogStore(stores: readonly CatalogStoreSummary[], posi
   return best
 }
 
+// The published name and address become the place's branch and provenance.
 export function catalogChoice(store: LocatedCatalogStore): CatalogStoreChoice {
-  return { id: store.id, chain: store.chain, chainName: { ...store.chainName }, name: store.name, coordinates: [store.location.lon, store.location.lat] }
+  return { id: store.id, chain: store.chain, name: catalogText(store.name), address: catalogText(store.address), coordinates: [store.location.lon, store.location.lat] }
 }
 
-// 'store_shufersal_117' -> 'shufersal-117' for chain stores already on the map.
-export function catalogIdForPlace(placeId: string): string | null {
-  return /^store_[a-z]+_\d+$/.test(placeId) ? placeId.slice('store_'.length).replace('_', '-') : null
+// A chain branch already saved as a place carries its catalog store ID as provenance.
+export function catalogIdForPlace(place: unknown): string | null {
+  return catalogStoreIdOf(place)
 }
 
 // One identified item at a store with a published price: fill the unit price
 // (and an empty quantity and total), never overwrite what the user typed.
-export function withPublishedPrice(input: PurchaseReviewInput, storeId: string | null): PurchaseReviewInput {
+export function withPublishedPrice<T extends PurchaseReviewInput>(input: T, storeId: string | null): T {
   const price = storeId ? input.catalogPrices?.[storeId] : undefined
   const [line] = input.lines
   if (price === undefined || input.lines.length !== 1 || line.price || (input.currency && input.currency !== 'ILS')) return input
   const quantity = line.quantity || '1'
   return { ...input, currency: 'ILS', lines: [{ ...line, price: price.toFixed(2), quantity }], amount: input.amount || (Math.round(price * 100 * Number(quantity)) / 100).toFixed(2) }
+}
+
+// The form keeps dates as UTC minutes ('YYYY-MM-DDTHH:mm'); people read and type
+// them in their own local time. Unparseable text passes through for validation.
+export function nowUtcMinutes(now = new Date()): string {
+  return now.toISOString().slice(0, 16)
+}
+
+export function utcToLocalInput(value: string): string {
+  const date = new Date(`${value}:00Z`)
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value) || !Number.isFinite(date.getTime())) return value
+  const pad = (part: number) => String(part).padStart(2, '0')
+  return `${String(date.getFullYear()).padStart(4, '0')}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+export function localInputToUtc(value: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value
+  const date = new Date(value)
+  return Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 16) : value
+}
+
+// Choosing a chain store means "I'm shopping there": an empty date becomes now.
+// A date the user already typed is never replaced, and "now" stays editable.
+export function withNowIfEmpty<T extends Pick<PurchaseReviewInput, 'date'>>(input: T, now = new Date()): T {
+  return input.date ? input : { ...input, date: nowUtcMinutes(now) }
 }

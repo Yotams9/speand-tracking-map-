@@ -21,8 +21,8 @@ const copy = {
     demo: 'Load demo product for review', loaded: 'Demo product loaded — review only', continue: 'Continue to purchase details', provenance: 'Synthetic demo catalog · fictional product',
     unknown: 'Unknown barcode', unknownBody: 'The code is valid, but is not in this small demo catalog. No real product lookup was made.',
     real: 'Found in Tel Aviv published prices', checking: 'Checking the Tel Aviv price files…', missing: 'Not in the Tel Aviv price files of Shufersal, Rami Levy and Osher Ad. Type the product name below.', lookupError: 'The price files could not be checked right now. Type the product name below.',
-    prices: 'Published shelf prices in Tel Aviv', stores: 'stores', perKg: 'per kg', more: 'more stores · up to', priceNote: 'From the chains’ official price files ({date}). Promotions and club prices are not applied; the price you pay may differ.',
-    name: 'Product name for review', note: 'Identification only. Nothing is added to your purchases. The price you paid, merchant, date and place are unknown.',
+    prices: 'Published shelf prices in Tel Aviv', stores: 'stores', cheapest: 'Cheapest', perKg: 'per kg', more: 'more stores · up to', priceNote: 'From the chains’ official price files ({date}). Promotions and club prices are not applied; the price you pay may differ.',
+    name: 'Product name for review', note: 'Identification only. Nothing is added to your purchases. The price you paid, store, date and place are unknown.',
     retry: 'Retry barcode scan', reset: 'Clear result', original: 'Scanned code', normalized: 'Equivalent GTIN',
   },
   he: {
@@ -37,18 +37,22 @@ const copy = {
     demo: 'טעינת מוצר הדגמה לבדיקה', loaded: 'מוצר ההדגמה נטען — לבדיקה בלבד', continue: 'המשך לפרטי רכישה', provenance: 'קטלוג הדגמה סינתטי · מוצר בדיוני',
     unknown: 'ברקוד לא מוכר', unknownBody: 'הקוד תקין, אך אינו בקטלוג ההדגמה הקטן. לא בוצע חיפוש מוצר אמיתי.',
     real: 'נמצא במחירוני תל אביב', checking: 'בודקים במחירוני תל אביב…', missing: 'המוצר לא נמצא במחירונים של שופרסל, רמי לוי ואושר עד בתל אביב. הקלידו את שם המוצר למטה.', lookupError: 'לא ניתן לבדוק במחירונים כרגע. הקלידו את שם המוצר למטה.',
-    prices: 'מחירי מדף מפורסמים בתל אביב', stores: 'סניפים', perKg: 'לק״ג', more: 'סניפים נוספים · עד', priceNote: 'מתוך קובצי המחירים הרשמיים של הרשתות ({date}). מבצעים ומחירי מועדון אינם כלולים; המחיר בקופה עשוי להיות שונה.',
-    name: 'שם מוצר לבדיקה', note: 'זיהוי בלבד. דבר לא נוסף לרכישות. המחיר ששילמתם, בית העסק, התאריך והמקום אינם ידועים.',
+    prices: 'מחירי מדף מפורסמים בתל אביב', stores: 'סניפים', cheapest: 'הכי זול', perKg: 'לק״ג', more: 'סניפים נוספים · עד', priceNote: 'מתוך קובצי המחירים הרשמיים של הרשתות ({date}). מבצעים ומחירי מועדון אינם כלולים; המחיר בקופה עשוי להיות שונה.',
+    name: 'שם מוצר לבדיקה', note: 'זיהוי בלבד. דבר לא נוסף לרכישות. המחיר ששילמתם, החנות, התאריך והמקום אינם ידועים.',
     retry: 'ניסיון סריקה נוסף', reset: 'ניקוי תוצאה', original: 'הקוד שנסרק', normalized: 'GTIN מקביל',
   },
 } as const
 
-export function CaptureBarcode({ locale, state, identity, onManual, onDemo, onCandidate, onCancel, onRetry, onReset }: {
-  locale: LocaleCode; state: DecoderState; identity: BarcodeIdentity | null
+export function CaptureBarcode({ locale, syntheticQa = false, state, identity, onManual, onDemo, onCandidate, onCancel, onRetry, onReset }: {
+  syntheticQa?: boolean; locale: LocaleCode; state: DecoderState; identity: BarcodeIdentity | null
   onDemo: (code: string, format: string) => void; onCandidate: (name: string, syntheticCatalog: boolean, catalogPrices?: Record<string, number>) => void
   onManual: (code: string, format: string) => void; onCancel: () => void; onRetry: () => void; onReset: () => void
 }) {
-  const t = copy[locale]
+  const t = syntheticQa ? copy[locale] : { ...copy[locale],
+    unknownBody: locale === 'he' ? 'הקוד תקין. חיפוש פרטי מוצר אינו מחובר; הזינו שם מוצר שבדקתם.' : 'The code is valid. Product lookup is not connected; enter a product name you have checked.',
+    'load-error': locale === 'he' ? 'לא ניתן לטעון את הקורא. נסו שוב או הזינו קוד.' : 'The reader could not load. Retry or enter the code.',
+    'decode-error': locale === 'he' ? 'לא ניתן לקרוא את הקוד. נסו שוב או הזינו קוד.' : 'The code could not be read. Retry or enter the code.',
+  }
   const [editing, setEditing] = useState(false)
   const [code, setCode] = useState('')
   const [format, setFormat] = useState<BarcodeFormat>('EAN13')
@@ -56,7 +60,7 @@ export function CaptureBarcode({ locale, state, identity, onManual, onDemo, onCa
   const [demoLoaded, setDemoLoaded] = useState(false)
   const input = useRef<HTMLInputElement>(null)
   const result = useRef<HTMLDivElement>(null)
-  const product = identity ? lookupDemoProduct(identity) : undefined
+  const product = syntheticQa && identity ? lookupDemoProduct(identity) : undefined
   // Barcodes outside the demo catalog are looked up in the Tel Aviv price files on our own server.
   const [lookup, setLookup] = useState<{ gtin: string; state: 'checking' | 'found' | 'missing' | 'error'; product?: CatalogProduct } | null>(null)
   useEffect(() => {
@@ -95,7 +99,15 @@ export function CaptureBarcode({ locale, state, identity, onManual, onDemo, onCa
       <p>{product ? `${product.category[locale]} · ${product.size[locale]}` : real ? [real.manufacturer, real.quantity].filter(Boolean).join(' · ') || real.name : lookup?.state === 'missing' ? t.missing : lookup?.state === 'error' ? t.lookupError : lookup ? t.checking : t.unknownBody}</p>
       {real && <div className={styles.catalogPrices} data-testid="catalog-prices">
         <p>{t.prices} · {real.prices.length}/{real.storesInArea} {t.stores}</p>
-        <ul>{real.prices.slice(0, 5).map(entry => <li key={entry.store.id}><span><bdi>{entry.store.chainName[locale]}</bdi> · <bdi>{entry.store.name}</bdi></span><strong>{money(entry.price)}{real.weighted ? ` ${t.perKg}` : ''}</strong></li>)}</ul>
+        <ul>{real.prices.slice(0, 5).map(entry => {
+          // Same barcode, same unit: the lowest published shelf price is the only one marked.
+          const cheapest = entry.price === real.prices[0].price
+          return <li key={entry.store.id} data-cheapest={cheapest || undefined} data-testid={cheapest ? 'catalog-price-cheapest' : undefined}>
+            <span className={styles.catalogStore}><bdi>{entry.store.chainName[locale]}</bdi><small><bdi>{entry.store.name}</bdi></small></span>
+            {cheapest && <em className={styles.cheapestBadge}>{t.cheapest}</em>}
+            <strong>{money(entry.price)}{real.weighted ? <small> {t.perKg}</small> : null}</strong>
+          </li>
+        })}</ul>
         {real.prices.length > 5 && <p>+{real.prices.length - 5} {t.more} · {money(real.prices.at(-1)!.price)}</p>}
         <small>{t.priceNote.replace('{date}', real.prices[0].store.publishedLocal.slice(0, 10))}</small>
       </div>}
@@ -105,10 +117,10 @@ export function CaptureBarcode({ locale, state, identity, onManual, onDemo, onCa
       <p>{t.note}</p>
       <button type="button" className={styles.primary} data-testid="barcode-review-purchase" onClick={() => onCandidate(name, Boolean(product), real && !real.weighted ? Object.fromEntries(real.prices.map(entry => [entry.store.id, entry.price])) : undefined)}>{t.continue}</button>
     </div>}
-    {(demoLoaded || product?.id === barcodeDemoCatalog[0].id) && <p role="status" data-testid="barcode-demo-loaded">{t.loaded}</p>}
+    {syntheticQa && (demoLoaded || product?.id === barcodeDemoCatalog[0].id) && <p role="status" data-testid="barcode-demo-loaded">{t.loaded}</p>}
     <div className={styles.barcodeActions}>
       <button type="button" className={styles.secondary} data-testid="barcode-manual-open" aria-expanded={editing} onClick={() => { onCancel(); setEditing((value) => !value) }}>{t.manual}</button>
-      <button type="button" className={styles.secondary} data-testid="barcode-demo" disabled={product?.id === barcodeDemoCatalog[0].id} onClick={() => { const demo = barcodeDemoCatalog[0]; onDemo(demo.barcode, demo.format); setDemoLoaded(true) }}>{t.demo}</button>
+      {syntheticQa && <button type="button" className={styles.secondary} data-testid="barcode-demo" disabled={product?.id === barcodeDemoCatalog[0].id} onClick={() => { const demo = barcodeDemoCatalog[0]; onDemo(demo.barcode, demo.format); setDemoLoaded(true) }}>{t.demo}</button>}
       {['empty', 'invalid', 'load-error', 'decode-error', 'found'].includes(state) && <button type="button" className={styles.secondary} data-testid="barcode-retry" onClick={onRetry}>{t.retry}</button>}
       {identity && <button type="button" className={styles.secondary} data-testid="barcode-reset" onClick={() => { onReset(); setCode(''); setName(''); setEditing(false) }}>{t.reset}</button>}
     </div>

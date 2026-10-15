@@ -3,10 +3,10 @@
 import type { Feature, FeatureCollection, Point } from 'geojson'
 
 export type LocaleCode = 'en' | 'he'
-export type PurchaseCategory = 'groceries' | 'food' | 'retail' | 'travel'
+export type PurchaseCategory = 'groceries' | 'food' | 'retail' | 'travel' | 'unknown'
 export type CurrencyCode = 'ILS' | 'EUR' | 'GBP' | 'USD' | 'JPY' | 'AUD' | 'MXN' | 'ZAR'
 export type PurchaseChannel = 'physical' | 'online' | 'unknown'
-export type PaymentMode = 'card' | 'cash' | 'manual'
+export type PaymentMode = 'card' | 'cash' | 'manual' | 'unknown'
 export type PurchaseResolution = 'confirmed' | 'unresolved'
 export type EvidenceKind = 'card-record' | 'receipt' | 'email-receipt' | 'manual-entry'
 
@@ -38,8 +38,9 @@ export interface PurchaseItem {
   label: LocalizedText
   quantity: number
   unit: 'item' | 'kg'
-  unitPrice: number
-  lineTotal: number
+  unitPrice: number // Gross price in original currency major units.
+  discountMinor?: number // Whole-line deduction in original currency minor units; absent means zero.
+  lineTotal: number // Net amount after the explicit line discount.
 }
 
 export interface FxProvenance {
@@ -136,8 +137,13 @@ export function syntheticFx(
 }
 
 
+export function purchaseItemTotalMinor(purchase: Pick<GlobePurchase, 'items' | 'originalCurrency'>): number {
+  const factor = purchase.originalCurrency === 'JPY' ? 1 : 100
+  return purchase.items.reduce((sum, item) => sum + Math.round(item.lineTotal * factor), 0)
+}
+
 export function nestedItemTotal(purchase: GlobePurchase): number {
-  return Math.round(purchase.items.reduce((sum, item) => sum + item.lineTotal, 0) * 100) / 100
+  return purchaseItemTotalMinor(purchase) / (purchase.originalCurrency === 'JPY' ? 1 : 100)
 }
 
 export function baseAmountIlsForPurchase(purchase: GlobePurchase): number {

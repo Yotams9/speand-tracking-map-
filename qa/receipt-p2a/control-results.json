@@ -1,0 +1,405 @@
+{
+  "version": 1,
+  "kind": "constructed-evaluator-controls-NOT-OCR",
+  "modelRuns": 0,
+  "controls": [
+    {
+      "control": "exact-visible-evidence",
+      "fixture": "english-6",
+      "score": {
+        "valid": true,
+        "receiptId": "english-6",
+        "headerErrors": [],
+        "extraRows": [],
+        "omissions": 0,
+        "exactLines": 6,
+        "expectedLines": 6,
+        "fields": {
+          "label": {
+            "exact": 6,
+            "total": 6
+          },
+          "quantityMilli": {
+            "exact": 6,
+            "total": 6
+          },
+          "unit": {
+            "exact": 6,
+            "total": 6
+          },
+          "unitMinor": {
+            "exact": 6,
+            "total": 6
+          },
+          "discountMinor": {
+            "exact": 6,
+            "total": 6
+          },
+          "lineMinor": {
+            "exact": 6,
+            "total": 6
+          }
+        },
+        "correctionFields": 0,
+        "correctionLines": 0,
+        "unnecessaryFlags": 0,
+        "sumExact": true,
+        "evidenceExact": true
+      }
+    },
+    {
+      "control": "exact-visible-evidence",
+      "fixture": "hebrew-6",
+      "score": {
+        "valid": true,
+        "receiptId": "hebrew-6",
+        "headerErrors": [],
+        "extraRows": [],
+        "omissions": 0,
+        "exactLines": 6,
+        "expectedLines": 6,
+        "fields": {
+          "label": {
+            "exact": 6,
+            "total": 6
+          },
+          "quantityMilli": {
+            "exact": 6,
+            "total": 6
+          },
+          "unit": {
+            "exact": 6,
+            "total": 6
+          },
+          "unitMinor": {
+            "exact": 6,
+            "total": 6
+          },
+          "discountMinor": {
+            "exact": 6,
+            "total": 6
+          },
+          "lineMinor": {
+            "exact": 6,
+            "total": 6
+          }
+        },
+        "correctionFields": 0,
+        "correctionLines": 0,
+        "unnecessaryFlags": 0,
+        "sumExact": true,
+        "evidenceExact": true
+      }
+    },
+    {
+      "control": "exact-visible-evidence",
+      "fixture": "mixed-25",
+      "score": {
+        "valid": true,
+        "receiptId": "mixed-25",
+        "headerErrors": [],
+        "extraRows": [],
+        "omissions": 0,
+        "exactLines": 25,
+        "expectedLines": 25,
+        "fields": {
+          "label": {
+            "exact": 25,
+            "total": 25
+          },
+          "quantityMilli": {
+            "exact": 25,
+            "total": 25
+          },
+          "unit": {
+            "exact": 25,
+            "total": 25
+          },
+          "unitMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "discountMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "lineMinor": {
+            "exact": 25,
+            "total": 25
+          }
+        },
+        "correctionFields": 1,
+        "correctionLines": 1,
+        "unnecessaryFlags": 0,
+        "sumExact": true,
+        "evidenceExact": true
+      }
+    },
+    {
+      "control": "exact-visible-evidence",
+      "fixture": "mixed-25-degraded",
+      "score": {
+        "valid": true,
+        "receiptId": "mixed-25-degraded",
+        "headerErrors": [],
+        "extraRows": [],
+        "omissions": 0,
+        "exactLines": 25,
+        "expectedLines": 25,
+        "fields": {
+          "label": {
+            "exact": 25,
+            "total": 25
+          },
+          "quantityMilli": {
+            "exact": 25,
+            "total": 25
+          },
+          "unit": {
+            "exact": 25,
+            "total": 25
+          },
+          "unitMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "discountMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "lineMinor": {
+            "exact": 25,
+            "total": 25
+          }
+        },
+        "correctionFields": 1,
+        "correctionLines": 1,
+        "unnecessaryFlags": 0,
+        "sumExact": true,
+        "evidenceExact": true
+      }
+    },
+    {
+      "control": "swapped-unit-prices",
+      "fixture": "mixed-25",
+      "score": {
+        "valid": true,
+        "receiptId": "mixed-25",
+        "headerErrors": [],
+        "extraRows": [],
+        "omissions": 0,
+        "exactLines": 23,
+        "expectedLines": 25,
+        "fields": {
+          "label": {
+            "exact": 25,
+            "total": 25
+          },
+          "quantityMilli": {
+            "exact": 25,
+            "total": 25
+          },
+          "unit": {
+            "exact": 25,
+            "total": 25
+          },
+          "unitMinor": {
+            "exact": 23,
+            "total": 25
+          },
+          "discountMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "lineMinor": {
+            "exact": 25,
+            "total": 25
+          }
+        },
+        "correctionFields": 3,
+        "correctionLines": 3,
+        "unnecessaryFlags": 0,
+        "sumExact": true,
+        "evidenceExact": false
+      }
+    },
+    {
+      "control": "omitted-repeat",
+      "fixture": "mixed-25",
+      "score": {
+        "valid": true,
+        "receiptId": "mixed-25",
+        "headerErrors": [],
+        "extraRows": [],
+        "omissions": 1,
+        "exactLines": 24,
+        "expectedLines": 25,
+        "fields": {
+          "label": {
+            "exact": 24,
+            "total": 25
+          },
+          "quantityMilli": {
+            "exact": 24,
+            "total": 25
+          },
+          "unit": {
+            "exact": 24,
+            "total": 25
+          },
+          "unitMinor": {
+            "exact": 24,
+            "total": 25
+          },
+          "discountMinor": {
+            "exact": 24,
+            "total": 25
+          },
+          "lineMinor": {
+            "exact": 24,
+            "total": 25
+          }
+        },
+        "correctionFields": 7,
+        "correctionLines": 2,
+        "unnecessaryFlags": 0,
+        "sumExact": false,
+        "evidenceExact": false
+      }
+    },
+    {
+      "control": "wrong-total",
+      "fixture": "mixed-25",
+      "score": {
+        "valid": true,
+        "receiptId": "mixed-25",
+        "headerErrors": [
+          "totalMinor"
+        ],
+        "extraRows": [],
+        "omissions": 0,
+        "exactLines": 25,
+        "expectedLines": 25,
+        "fields": {
+          "label": {
+            "exact": 25,
+            "total": 25
+          },
+          "quantityMilli": {
+            "exact": 25,
+            "total": 25
+          },
+          "unit": {
+            "exact": 25,
+            "total": 25
+          },
+          "unitMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "discountMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "lineMinor": {
+            "exact": 25,
+            "total": 25
+          }
+        },
+        "correctionFields": 2,
+        "correctionLines": 1,
+        "unnecessaryFlags": 0,
+        "sumExact": false,
+        "evidenceExact": false
+      }
+    },
+    {
+      "control": "invented-ambiguous-label",
+      "fixture": "mixed-25",
+      "score": {
+        "valid": true,
+        "receiptId": "mixed-25",
+        "headerErrors": [],
+        "extraRows": [],
+        "omissions": 0,
+        "exactLines": 24,
+        "expectedLines": 25,
+        "fields": {
+          "label": {
+            "exact": 24,
+            "total": 25
+          },
+          "quantityMilli": {
+            "exact": 25,
+            "total": 25
+          },
+          "unit": {
+            "exact": 25,
+            "total": 25
+          },
+          "unitMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "discountMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "lineMinor": {
+            "exact": 25,
+            "total": 25
+          }
+        },
+        "correctionFields": 1,
+        "correctionLines": 1,
+        "unnecessaryFlags": 0,
+        "sumExact": true,
+        "evidenceExact": false
+      }
+    },
+    {
+      "control": "all-lines-uncertain",
+      "fixture": "mixed-25",
+      "score": {
+        "valid": true,
+        "receiptId": "mixed-25",
+        "headerErrors": [],
+        "extraRows": [],
+        "omissions": 0,
+        "exactLines": 25,
+        "expectedLines": 25,
+        "fields": {
+          "label": {
+            "exact": 25,
+            "total": 25
+          },
+          "quantityMilli": {
+            "exact": 25,
+            "total": 25
+          },
+          "unit": {
+            "exact": 25,
+            "total": 25
+          },
+          "unitMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "discountMinor": {
+            "exact": 25,
+            "total": 25
+          },
+          "lineMinor": {
+            "exact": 25,
+            "total": 25
+          }
+        },
+        "correctionFields": 150,
+        "correctionLines": 25,
+        "unnecessaryFlags": 149,
+        "sumExact": true,
+        "evidenceExact": true
+      }
+    }
+  ]
+}
