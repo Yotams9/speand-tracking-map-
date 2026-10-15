@@ -66,6 +66,11 @@ describe('clearing only catalog-owned review values', () => {
     expect(result.directoryIntent?.place).not.toHaveProperty('catalogStoreId')
     expect(edited.directoryIntent.place.catalogStoreId).toBe(store.id)
   })
+  it('restores prior entered facts after choosing an already saved catalog place', () => {
+    const before = { ...blankReview(), directoryIntent: { merchant: { name: 'Independent', category: 'unknown' as const, separate: false } } }
+    const applied = { ...before, merchantId: 'existing', placeId: 'existing-place', directoryIntent: undefined }
+    expect(clearCatalogSelection(applied, { before, applied }).directoryIntent).toEqual(before.directoryIntent)
+  })
   it('does not clear an independently chosen existing place or removed proposal', () => {
     const before = blankReview(), applied = { ...before, ...proposal }
     const current = { merchantId: 'user-merchant', placeId: 'user-place', directoryIntent: undefined }

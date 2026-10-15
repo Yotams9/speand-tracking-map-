@@ -59,7 +59,8 @@ const blankPlace: NonNullable<DirectoryIntent['place']> = { branch: '', address:
 export function clearCatalogSelection(current: CatalogFields, selection: CatalogSelection): CatalogFields {
   const { before, applied } = selection
   function restore<T extends object>(value: T | undefined, prior: T | undefined, proposed: T | undefined, blank: T): T | undefined {
-    if (!value || !proposed) return value
+    if (!proposed) return value ?? prior
+    if (!value) return value
     const keys = Object.keys(blank) as (keyof T)[]
     const edited = keys.some(key => key !== 'confirmed' && key !== 'separate' && value[key] !== proposed[key])
     if (!prior && !edited) return undefined

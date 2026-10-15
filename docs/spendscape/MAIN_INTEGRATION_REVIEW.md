@@ -151,3 +151,58 @@ real repeated-capture duplicate prevention, verify a physical phone, refresh
 prices, qualify old catalog coordinates independently or authorize publication.
 The original local app and real stored purchases remain on their current build.
 Review the isolated candidate before separately authorizing any main update.
+
+
+## Authorized final-review corrections — 15 October 2026
+
+The final review of merge `30c82840183271bec70702e66c0087014dbefb68`
+found three defects, retained in the separate ignored final-review evidence.
+All three are now corrected on the isolated integration branch:
+
+- Legacy line validation uses the existing integer minor-unit, half-up helper.
+  Original unit prices, quantities, line totals and purchase amounts are never
+  rewritten. Native validation is unchanged. Five exact cross-input reproduction
+  cases pass; altered printed amounts and malformed precision remain rejected.
+- No selection reverses unchanged catalog-derived merchant/place values, restores
+  prior independently entered values and retains subsequent independent edits.
+  Partially cleared place facts require reconfirmation. Clearing a selected
+  already-saved catalog place also restores prior review details. No persisted
+  purchase or directory record is modified by selecting or clearing a proposal.
+- Restored Find the store I'm in and Use my current location. Both read browser
+  geolocation only on press, once, with a 10-second timeout and no automatic
+  retry. Nearest within 200 m is a suggestion requiring a separate Review action;
+  it does not auto-select, confirm or save a place. GPS point updates reset
+  confirmation and catalog attribution. Denial/unavailability leaves manual and
+  unresolved alternatives. Edits, closing/unmount and timeout invalidate pending
+  callbacks. No raw GPS read is persisted; only explicitly confirmed place facts
+  can enter the existing atomic save boundary. GPS is never purchase proof.
+
+New evidence: `artifacts/integration-fixes-20261015/` (fresh isolated data).
+Serial unit suite **1131/1131**, final production-browser **40/40**, application
+and integration-QA typechecks, webpack production build and whitespace pass.
+Browser scenarios mock all geolocation/receipt/address responses; no real GPS or
+external provider call. They cover the three corrections plus both-ledger
+hydration/reload, native review/save, duplicate protection, date/Undo, backup/
+restore/interruption, shared pins, city-price expiry and EN/HE mobile layouts.
+Earlier 28-pass/3-fail/9-not-run browser evidence is retained: two new map-count
+assertions ran before readiness, and a backup harness output variable was absent.
+Corrected readiness waiting and supplied isolated output settings, without
+weakening the assertions. Original unit/type-check development failures remain.
+
+Exact cumulative scope (13 files):
+`src/features/capture/{session-purchase-storage.ts,CatalogStoreReview.tsx,
+PurchaseReview.tsx,MerchantPlaceReview.tsx,catalog-stores.ts,catalog-stores.test.ts,
+useReviewGeolocation.ts}`;
+`src/features/local-purchases/main-integration.test.ts`;
+`qa/spendscape-integration-fixes.spec.ts`;
+`playwright.integration.config.ts`; `tsconfig.integration-qa.json`;
+this appended review section; appended `docs/AI_HANDOFF.md` section.
+
+Re-review verdict: **Pass for the three authorized fixes and affected local
+integration flows.** The original main/feature worktrees, protected refs,
+next-env bytes, real ledger, port3172 and historical reservations are preserved.
+Provider request paths and frozen launchers are unchanged. No push, PR, main
+update or deployment. Legacy purchases remain read-only; divergent old-main
+changes still require reconciliation. Prices remain expired/unqualified as
+current quotes, radius qualification stays deferred, and physical-phone/real
+GPS accuracy and real repeated-capture duplicate coverage remain unverified.

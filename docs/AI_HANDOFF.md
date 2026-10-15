@@ -2484,3 +2484,23 @@ Exact file/hunk/hash manifest and preservation evidence:
 artifacts/integration-20261015/. Full conflict/storage/limits report:
 docs/spendscape/MAIN_INTEGRATION_REVIEW.md. Review candidate before any main update.
 Real repeated-capture/phone/provider accuracy gates remain closed/unverified.
+
+
+## Isolated integration final-review fixes — 2026-10-15
+
+Authorized branch `codex/spendscape-main-integration-20261015`, base
+30c82840183271bec70702e66c0087014dbefb68. Three findings corrected: integer
+legacy weighted rounding without changing observed financial facts; reversible
+catalog proposal clearing preserving independent details; restored explicit
+one-shot GPS store/point suggestions, timeout/cancel/late-response protection
+and mandatory location confirmation. No shelf-price autofill or automatic save.
+
+Exact 13-file cumulative scope and behavior are appended to
+`docs/spendscape/MAIN_INTEGRATION_REVIEW.md`; fresh evidence/manifest in
+`artifacts/integration-fixes-20261015/`. Cross-input reproduction 5/5; serial
+units1131/1131; final production browser40/40; app/QA typechecks, webpack build
+and whitespace pass. Earlier harness/readiness failures retained. All providers
+and geolocation mocked in QA; real data and port3172 untouched. Re-review Pass
+for these fixes. Legacy records remain read-only; expired prices, deferred
+radius, physical-device/GPS and closed receipt-benchmark limitations unchanged.
+Only local fix commits authorized; no main update, push, PR or deployment.
