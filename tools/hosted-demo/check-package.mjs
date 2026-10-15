@@ -12,7 +12,7 @@ export function checkTraces(root){
    traces++;const d=JSON.parse(readFileSync(p,'utf8'))
    if(!Array.isArray(d.files)||d.files.length>100000)throw Error('trace-invalid')
    for(const f of d.files){dependencies++;if(typeof f!=='string')throw Error('trace-invalid');const rel=relative(root,resolve(folder,f)).split('\\').join('/'),first=rel.split('/')[0]
-    if(rel.startsWith('../')||privateRoots.has(first)||first.startsWith('.env'))forbidden++
+    if(rel.startsWith('../')||privateRoots.has(first)||first.startsWith('.env')||/\.test\.(?:ts|mjs)$/.test(rel))forbidden++
    }
   }
  }}

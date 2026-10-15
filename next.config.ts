@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: {
     '/*': ['./artifacts/**/*', './qa/**/*', './tools/**/*', './docs/**/*',
       './.vercel/**/*', './.git/**/*', './.agents/**/*', './.claude/**/*',
-      './.cache/**/*', './.env*'],
+      './.cache/**/*', './.env*', './**/*.test.ts', './**/*.test.mjs'],
   },
   // Next 16 blocks dev assets requested through a hostname other than the
   // server's bind host. Keep phone testing limited to loopback and RFC 1918.

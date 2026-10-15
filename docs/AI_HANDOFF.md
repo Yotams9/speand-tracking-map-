@@ -2524,3 +2524,8 @@ Old-project source/prebuilt Preview attempts blocked because the project is paus
 ### Hosting target and package correction — live acceptance still pending
 
 Newproject firstCLI uploadauto-classifiedProduction despitePreviewflag, thenfailedENOENT(localQAlogdependency). Removed only that new error deployment/alias, preserved diagnostics; originalProductionpaused. No keys/providercalls/userdata/operationalwindow. Automaticapprovalreviewblocked another identicalCLI attempt; notrun. Nexttracing exclusion fix preservesdata/catalog but excludesalllocalartifacts/secrets/QA: rebuiltpackage14traces/1544dependencies/0forbidden;8helper/privacychecks. FutureCLIsecretconfigusestdin, no requestfiles. Inertstaticbootstrapproposalawaitsspecificapproval; noPreview/live readiness claim. Continue from artifacts/hosted-completion-20261015/bootstrap-proposal.json and COLLEGE_HOSTED_RELEASE.md.
+
+
+### Approved inert bootstrap / Preview package correction
+
+User approved inert new-project bootstrap only: dpl_CitfdL1o19mwtf7YfwuYzDKAi5rt READY, approved static hash, no app/keys/functions, automatic domains off; originalProductionpaused. Actual subsequent app target correctlyPreview/null but ENOENT tracedtestsource; failedrecord preserved. Excluded testonlyfiles fromtraces and extendedprivacyguard; runtime/provider/request unchanged. No providerkeysetup, operationalquota/window or Gemini/Geoapifycalls yet. Continue correctedPreviewupload before private setup; exact evidence/checkpoint artifacts/hosted-completion-20261015 and COLLEGE_HOSTED_RELEASE.md.
