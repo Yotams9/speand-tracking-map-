@@ -2504,3 +2504,8 @@ and geolocation mocked in QA; real data and port3172 untouched. Re-review Pass
 for these fixes. Legacy records remain read-only; expired prices, deferred
 radius, physical-device/GPS and closed receipt-benchmark limitations unchanged.
 Only local fix commits authorized; no main update, push, PR or deployment.
+
+
+### Protected hosted completion — public price refresh (2026-10-15)
+
+Clean entry5f69f2b on codex/hosted-college-release-20261015. New separately authorized public collection6/8 attempts, verifiedTLS/no retry; three feeds517,585 compressed/8,207,282 expanded bytes. Official Petah Tikva branches104/285 reconfirmed; four common Monster500ml products/eight ILS quotes. Publications10:16:28Z/10:17:39Z on15October; expire24h later. Initial link-inspector rejection retained, corrected offline against cached listing. Existing Tel Aviv catalog, main, other worktrees and historical locks unchanged. Collector8/8, qualifier4/4, hosted/comparison43/43. Exact evidence in artifacts/hosted-completion-20261015; checkpoint COLLEGE_HOSTED_RELEASE.md. Hosted keys/session/Preview/live acceptance still pending; no Gemini/Geoapify call yet.

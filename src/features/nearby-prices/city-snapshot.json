@@ -4,17 +4,17 @@
     "en": "Petah Tikva",
     "he": "פתח תקווה"
   },
-  "directoryHash": "2ba51734a0a9c85969d5e4eb820e430e915464a2f2550a98d57de5c0bb1470e7",
-  "cityEvidence": "Official StoreName פ\"ת abbreviation, raw City7900; not a coordinate/boundary claim",
+  "directoryHash": "1eb9a0bf6503cc2648deefb580bd0773e3ddb84ec7a6e6516ae6c19e3339cece",
+  "cityEvidence": "Official physical branch names and City 7900; coordinates and distances unqualified",
   "snapshot": {
     "version": 1,
     "classification": "qualified",
     "source": {
-      "id": "shufersal-city-20261014",
+      "id": "shufersal-city-20261015",
       "label": "Shufersal public PriceFull",
-      "hash": "7fc805d4f0ad5bdf0518bf74d739248565c01a505ba073c54c1703cfb1af515a",
-      "publishedAt": "2026-10-14T10:18:33.000Z",
-      "fetchedAt": "2026-10-14T14:53:05.720Z",
+      "hash": "b2602e2778e203bc1acc3952e68dcd1a919f4a01593510e4d9944bbc4ebd27c5",
+      "publishedAt": "2026-10-15T10:16:28.000Z",
+      "fetchedAt": "2026-10-15T20:02:46.934Z",
       "currency": "ILS",
       "currencyEvidence": "2015 regulator ItemPrice / shekels-agorot mapping",
       "coverage": "partial"
@@ -160,22 +160,22 @@
       "address": "רוטשילד 180",
       "cityCode": "7900",
       "directoryName": "שלי פ\"ת- גד מכנס",
-      "source": "https://pricesprodpublic.blob.core.windows.net/pricefull/PriceFull7290027600007-001-104-20261014-121701.gz",
-      "hash": "f6a9d7de8819fc3b47c037dc2922d9f938013e74460d4ad7534994b5b5a5933c",
-      "publishedAt": "2026-10-14T10:18:33.000Z",
-      "fetchedAt": "2026-10-14T14:50:57.386Z",
-      "filenamePublicationRaw": "20261014121701"
+      "source": "https://pricesprodpublic.blob.core.windows.net/pricefull/PriceFull7290027600007-001-104-20261015-030000.gz",
+      "hash": "3b97e55a19996d1abcb50175df07a4f7feeb0b29f33e274d079a680be0fcbd54",
+      "publishedAt": "2026-10-15T10:16:28.000Z",
+      "fetchedAt": "2026-10-15T20:02:21.498Z",
+      "filenamePublicationRaw": "20261015030000"
     },
     {
       "storeId": "shufersal-285",
       "address": "סוקולוב 26",
       "cityCode": "7900",
       "directoryName": "אקספרס סוקולוב פ\"ת",
-      "source": "https://pricesprodpublic.blob.core.windows.net/pricefull/PriceFull7290027600007-007-285-20261014-121701.gz",
-      "hash": "f2bf22b292ab7f58f84114a712e3f9f69ac4a76715fed43d0cdedc348daa80ab",
-      "publishedAt": "2026-10-14T10:20:47.000Z",
-      "fetchedAt": "2026-10-14T14:53:05.720Z",
-      "filenamePublicationRaw": "20261014121701"
+      "source": "https://pricesprodpublic.blob.core.windows.net/pricefull/PriceFull7290027600007-007-285-20261015-030000.gz",
+      "hash": "3325b1dc9607d43403853c1730ac2039712a175b7658e7f1b3b28bd777a5f2af",
+      "publishedAt": "2026-10-15T10:17:39.000Z",
+      "fetchedAt": "2026-10-15T20:02:46.934Z",
+      "filenamePublicationRaw": "20261015030000"
     }
   ],
   "itemUpdates": [
