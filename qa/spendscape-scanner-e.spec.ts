@@ -532,6 +532,11 @@ test('in a Tel Aviv supermarket the nearest store, published price and date fill
   await page.getByTestId('review-price-0').fill('9.99'); await expect(page.getByTestId('review-price-0')).toHaveValue('9.99')
   await page.getByTestId('review-price-0').fill(expected)
   await page.getByTestId('review-payment').selectOption('card')
+  // The device location only suggests the branch; saving waits for the person's confirmation.
+  await page.getByTestId('capture-confirm').click()
+  await expect(page.getByTestId('review-catalog-confirmed')).toHaveAttribute('aria-invalid', 'true')
+  await expect(page.getByTestId('capture-success')).toHaveCount(0)
+  await page.getByTestId('review-catalog-confirmed').check()
   await page.getByTestId('capture-confirm').click()
   await expect(page.getByTestId('capture-success')).toBeVisible()
   expect(await qa(page)).toMatchObject({ combinedPurchaseCount: 43, canonicalPins: 13, mapConstructionCount: 1 })

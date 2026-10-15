@@ -345,6 +345,8 @@
 .directoryReview :is(input, select, button):focus-visible { outline: 2px solid #b8f0dd; outline-offset: 3px; }
 .directoryReview .directoryCheck { display: flex; flex-wrap: wrap; align-items: start; gap: 8px; font-size: 13px; line-height: 1.5; }
 .directoryReview .directoryCheck input { width: 22px; height: 22px; min-height: 22px; flex-shrink: 0; }
+.suggestionCheck { display: flex; flex-wrap: wrap; align-items: start; gap: 8px; font-size: 13px; line-height: 1.5; }
+.suggestionCheck input { width: 22px; height: 22px; min-height: 22px; flex-shrink: 0; }
 .directoryCheck small { flex-basis: 100%; }
 @media (min-width: 761px) { .directoryFields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .purchaseReview .directoryReview .directoryCheck { display: grid; grid-template-columns: 22px minmax(0, 1fr); flex-direction: row; }

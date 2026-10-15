@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { canonicalSpendscapeData as data } from '../../data/spendscape-fixtures'
 import { fixtureSpendscapeRepository } from '../../data/spendscape-repository'
 import { userApplicationSnapshot } from '../../data/spendscape-user'
-import { blankReview, saveReviewedPurchase, emptySessionLedger, type PurchaseReviewInput } from '../capture/session-purchase-domain'
-import { composeDirectory, proposeDirectory, validateDirectory, type LocalDirectory } from './local-directory'
+import { blankReview, saveReviewedPurchase, emptySessionLedger, validateReview, type PurchaseReviewInput } from '../capture/session-purchase-domain'
+import { composeDirectory, proposeDirectory, validateDirectory, validDirectoryIntent, type LocalDirectory } from './local-directory'
 import { validateLocalPurchases } from './local-purchase-store'
 import { exportPurchaseBackup, inspectPurchaseBackup } from './purchase-backup'
 import { catalogArea, devicePlaceLabels, type CatalogStoreChoice } from './place-provenance'
@@ -60,6 +60,28 @@ describe('Tel Aviv catalog stores as confirmed places', () => {
     expect(validateDirectory(directory, data, 2)).toEqual(directory)
     expect(() => validateDirectory({ merchants: [merchant], places: [{ ...place, address: 'Typed' }] }, data, 2)).toThrow()
     expect(() => validateDirectory({ merchants: [merchant], places: [{ ...place, branch: { en: 'Corner', he: 'Corner' } }] }, data, 2)).toThrow()
+  })
+  it('a branch suggested by the device location cannot be saved until the person confirms it', async () => {
+    const context = userApplicationSnapshot(await fixtureSpendscapeRepository.loadSnapshot())
+    const review = (locationSuggested?: { confirmed: boolean }): PurchaseReviewInput => ({ ...blankReview(), channel: 'physical', date: '2026-10-04T09:15', currency: 'ILS', payment: 'card', category: 'groceries', amount: '8.20', lines: [{ name: 'Cola', quantity: '1', unit: 'item', price: '8.20' }], directoryIntent: { catalogStore: choice(), ...(locationSuggested ? { locationSuggested } : {}) } })
+    // Suggested, not confirmed: the review and the save both refuse, and nothing is written.
+    expect(validateReview(review({ confirmed: false }), context)).toMatchObject({ 'catalog-confirmed': 'location' })
+    const blocked = saveReviewedPurchase(emptySessionLedger(), 'op-1', review({ confirmed: false }), context, [])
+    expect(blocked.result).toMatchObject({ code: 'invalid', errors: { 'catalog-confirmed': 'location' } })
+    expect(blocked.ledger).toEqual(emptySessionLedger())
+    // Confirmed: the same confirmed catalog place as a branch picked from the list.
+    const confirmed = saveReviewedPurchase(emptySessionLedger(), 'op-2', review({ confirmed: true }), context, [])
+    const picked = saveReviewedPurchase(emptySessionLedger(), 'op-3', review(), context, [])
+    expect(confirmed.result.code).toBe('saved')
+    expect(confirmed.ledger.directory).toEqual(picked.ledger.directory)
+    expect(confirmed.ledger.directory.places[0]).toMatchObject({ source: 'user-confirmed', locationMethod: 'catalog-store', catalogStore: { storeId: 'ramilevi-733' } })
+    // The same holds when the suggested branch is already one of the person's places.
+    const known = composeDirectory(context, confirmed.ledger.directory)
+    expect(proposeDirectory({ catalogStore: choice(), locationSuggested: { confirmed: false } }, '', 'physical', 3, known)).toMatchObject({ errors: { 'catalog-confirmed': 'location' }, placeId: 'local_place_1' })
+    expect(proposeDirectory({ catalogStore: choice(), locationSuggested: { confirmed: true } }, '', 'physical', 3, known)).toMatchObject({ errors: {}, placeId: 'local_place_1', directory: { merchants: [], places: [] } })
+    // The flag exists only with a catalog branch and only in its exact shape.
+    for (const intent of [{ locationSuggested: { confirmed: true } }, { catalogStore: choice(), locationSuggested: { confirmed: 'yes' } }, { catalogStore: choice(), locationSuggested: { confirmed: true, by: 'gps' } }, { catalogStore: choice(), locationSuggested: true }])
+      expect(validDirectoryIntent(intent)).toBe(false)
   })
   it('round-trips through the IndexedDB envelope and the backup file', async () => {
     const context = userApplicationSnapshot(await fixtureSpendscapeRepository.loadSnapshot())

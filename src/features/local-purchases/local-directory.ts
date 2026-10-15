@@ -13,6 +13,9 @@ export interface DirectoryIntent {
   place?: { branch: string; city: string; country: string; address: string; longitude: string; latitude: string; confirmed: boolean; separate: boolean }
   // A chain branch the user chose from the published-price catalog; exclusive with merchant/place.
   catalogStore?: CatalogStoreChoice
+  // Present only when the device location suggested that branch. Location is not
+  // proof of a purchase, so the person must confirm it before it can be saved.
+  locationSuggested?: { confirmed: boolean }
 }
 type Context = { merchants: readonly Merchant[]; places: readonly Place[] }
 const categories = ['groceries', 'food', 'retail', 'travel', 'unknown']
@@ -33,18 +36,22 @@ export const catalogChainOf = (merchant: unknown): CatalogChain | undefined => {
 export function validDirectoryIntent(raw: unknown): raw is DirectoryIntent {
   if (!raw || typeof raw !== 'object') return false
   const keys = Object.keys(raw)
-  if (!keys.length || !exactObject(raw, keys) || keys.some(k => !['merchant', 'place', 'catalogStore'].includes(k))) return false
+  if (!keys.length || !exactObject(raw, keys) || keys.some(k => !['merchant', 'place', 'catalogStore', 'locationSuggested'].includes(k))) return false
   const d = raw as DirectoryIntent
-  if (Object.hasOwn(d, 'catalogStore')) return keys.length === 1 && validCatalogStoreChoice(d.catalogStore)
+  if (Object.hasOwn(d, 'catalogStore')) return keys.every(k => k === 'catalogStore' || k === 'locationSuggested') && validCatalogStoreChoice(d.catalogStore)
+    && (!Object.hasOwn(d, 'locationSuggested') || (exactObject(d.locationSuggested, ['confirmed']) && typeof d.locationSuggested.confirmed === 'boolean'))
+  if (Object.hasOwn(d, 'locationSuggested')) return false
   if (Object.hasOwn(d, 'merchant') && (!exactObject(d.merchant, ['name', 'category', 'separate']) || typeof d.merchant.name !== 'string' || typeof d.merchant.category !== 'string' || typeof d.merchant.separate !== 'boolean')) return false
   if (Object.hasOwn(d, 'place') && (!exactObject(d.place, ['branch', 'city', 'country', 'address', 'longitude', 'latitude', 'confirmed', 'separate']) || ['branch', 'city', 'country', 'address', 'longitude', 'latitude'].some(k => typeof d.place![k as keyof NonNullable<DirectoryIntent['place']>] !== 'string') || typeof d.place.confirmed !== 'boolean' || typeof d.place.separate !== 'boolean')) return false
   return true
 }
 // One merchant per chain and one place per catalog store; a later purchase at
 // the same branch reuses both, so pins and visit counts stay consistent.
-function proposeCatalogPlace(choice: CatalogStoreChoice, channel: string, sequence: number, context: Context): { errors: Record<string, string>; directory: LocalDirectory; merchantId: string; placeId: string } {
+function proposeCatalogPlace(choice: CatalogStoreChoice, suggested: DirectoryIntent['locationSuggested'], channel: string, sequence: number, context: Context): { errors: Record<string, string>; directory: LocalDirectory; merchantId: string; placeId: string } {
   const errors: Record<string, string> = {}, directory = emptyDirectory()
   if (channel !== 'physical') errors.placeId = 'place'
+  // A branch picked from the list is the person's own choice; a suggested one needs their confirmation.
+  if (suggested && !suggested.confirmed) errors['catalog-confirmed'] = 'location'
   const existing = context.places.find(p => catalogStoreIdOf(p) === choice.id)
   if (existing) return { errors, directory, merchantId: existing.merchantId, placeId: existing.id }
   let merchant = context.merchants.find(m => catalogChainOf(m) === choice.chain)
@@ -61,7 +68,7 @@ function proposeCatalogPlace(choice: CatalogStoreChoice, channel: string, sequen
 export function proposeDirectory(intent: unknown, merchantId: string, channel: string, sequence: number, context: Context): { errors: Record<string, string>; directory: LocalDirectory; merchantId: string; placeId: string } {
   const errors: Record<string, string> = {}, directory = emptyDirectory()
   if (!validDirectoryIntent(intent) || !Number.isSafeInteger(sequence) || sequence < 1) return { errors: { directory: 'required' }, directory, merchantId, placeId: '' }
-  if (intent.catalogStore) return proposeCatalogPlace(intent.catalogStore, channel, sequence, context)
+  if (intent.catalogStore) return proposeCatalogPlace(intent.catalogStore, intent.locationSuggested, channel, sequence, context)
   const literal = (s: string) => ({ en: s, he: s })
   let merchant = context.merchants.find(m => m.id === merchantId)
   if (intent.merchant) {
