@@ -5,6 +5,9 @@ import { MAX_SAVINGS_BODY_BYTES, parseSavingsRequest } from '../../../features/s
 
 // The 5 MB catalog stays on the server; the browser sends only barcodes,
 // quantities and an origin, and nothing is stored or forwarded.
+// Privacy: the body (coordinates, barcodes, paid amounts) is only read, validated,
+// computed on and answered. No logging, no storage, no outbound call; the
+// response carries distances, not the origin. Tested in savings-privacy.test.ts.
 export async function POST(request: Request) {
   const text = await request.text().catch(() => null)
   if (text === null || text.length > MAX_SAVINGS_BODY_BYTES) return NextResponse.json({ error: 'body' }, { status: 400 })

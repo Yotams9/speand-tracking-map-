@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { validGtin14, type CatalogChain, type PriceCatalogFile } from '../../data/price-catalog'
 import { computeSavings, distanceM, toMinor, MAX_SAVINGS_ITEMS } from './savings-engine'
 import { parseSavingsRequest } from './savings-request'
+import { priceDateNote } from './savings-copy'
+import { loadTelAvivCatalog } from '../../data/price-catalog'
 import { POST } from '../../app/api/savings/route'
 
 // GTIN-14 with a correct check digit from 13 digits.
@@ -9,6 +11,7 @@ const gtin = (body: string) => {
   const sum = [...body].reverse().reduce((total, digit, index) => total + Number(digit) * (index % 2 ? 1 : 3), 0)
   return body + String((10 - sum % 10) % 10)
 }
+const BROKEN = gtin('0729000000006'), EMPTY = gtin('0729000000007')
 const MILK = gtin('0729000000001'), BREAD = gtin('0729000000002'), CHEESE = gtin('0729000000003'), TOMATO = gtin('0729000000004'), SOAP = gtin('0729000000005'), UNKNOWN = gtin('0729000000009')
 
 const origin = { lat: 32.08, lon: 34.78 }
@@ -33,6 +36,10 @@ const catalog: PriceCatalogFile = {
     [CHEESE]: { n: 'Cheese', m: 'Dairy', q: '200 גרם', w: 0, p: [[0, 20], [2, 18.5]] },
     [TOMATO]: { n: 'Tomatoes', m: '', q: '1 קג', w: 1, p: [[0, 9.9], [1, 5.9]] },
     [SOAP]: { n: 'Soap', m: '', q: '1 יחידות', w: 0, p: [[0, 1.1], [1, 1.1], [2, 1.1]] },
+    // Listed at stores 1 (price 0), 2 (negative), 99 (no such store) and 0 (valid).
+    [BROKEN]: { n: 'Broken rows', m: '', q: '', w: 0, p: [[1, 0], [2, -3], [99, 2], [0, 4.5]] },
+    // Only bad rows: behaves as if not in the catalog.
+    [EMPTY]: { n: 'No valid price', m: '', q: '', w: 0, p: [[1, 0], [99, 2]] },
   },
 }
 
@@ -138,6 +145,73 @@ describe('savings engine', () => {
     expect(computeSavings(catalog, [{ gtin14: MILK, quantity: 1, paidMinor: 1 }], { lat: 31, lon: 35 })).toMatchObject({ outcome: 'no-complete-store', best: null })
     expect(() => computeSavings(catalog, Array.from({ length: MAX_SAVINGS_ITEMS + 1 }, () => ({ gtin14: MILK, quantity: 1 })), origin)).toThrow(RangeError)
     expect(() => computeSavings(catalog, [], { lat: 91, lon: 0 })).toThrow(RangeError)
+  })
+})
+
+describe('savings engine robustness', () => {
+  it('accepts exactly 100 items and rejects 101, in the engine and the request', () => {
+    const items = (n: number) => Array.from({ length: n }, () => ({ gtin14: SOAP, quantity: 1 }))
+    expect(computeSavings(catalog, items(100), origin).complete[0].totalMinor).toBe(100 * 110)
+    expect(() => computeSavings(catalog, items(101), origin)).toThrow(RangeError)
+    expect(parseSavingsRequest({ items: items(100), origin }).ok).toBe(true)
+    expect(parseSavingsRequest({ items: items(101), origin })).toEqual({ ok: false, error: 'items' })
+  })
+  it('rejects zero and negative quantities, and lists fractional ones as not compared', () => {
+    for (const quantity of [0, -1, -0.5]) expect(parseSavingsRequest({ items: [{ gtin14: MILK, quantity }], origin })).toEqual({ ok: false, error: 'quantity' })
+    const fractional = parseSavingsRequest({ items: [{ gtin14: MILK, quantity: 1.5 }], origin })
+    expect(fractional.ok).toBe(true)
+    if (fractional.ok) expect(computeSavings(catalog, fractional.request.items, origin).notCompared).toEqual([{ index: 0, gtin14: MILK, reason: 'unsupported-quantity' }])
+    expect(computeSavings(catalog, [{ gtin14: MILK, quantity: 0 }], origin).notCompared[0].reason).toBe('unsupported-quantity')
+  })
+  it('keeps duplicate barcodes as separate lines whose totals equal the merged quantity', () => {
+    const split = computeSavings(catalog, [{ ref: 'a', gtin14: MILK, quantity: 1, paidMinor: 790 }, { ref: 'b', gtin14: MILK, quantity: 2, paidMinor: 1580 }], origin)
+    const merged = computeSavings(catalog, [{ gtin14: MILK, quantity: 3, paidMinor: 2370 }], origin)
+    expect(split.products.map(p => p.ref)).toEqual(['a', 'b'])
+    expect(split.complete.map(s => [s.store.id, s.totalMinor])).toEqual(merged.complete.map(s => [s.store.id, s.totalMinor]))
+    expect(split.savingMinor).toBe(merged.savingMinor)
+  })
+  it('includes an origin exactly on the radius boundary of a store', () => {
+    // Move the origin so osherad-3 is exactly radiusM away.
+    const radius = distanceM({ lat: 32.08, lon: origin.lon }, { lat: 32.10, lon: origin.lon })
+    expect(computeSavings(catalog, [{ gtin14: BREAD, quantity: 1 }], { lat: 32.08, lon: origin.lon }, radius).complete.map(s => s.store.id)).toContain('osherad-3')
+  })
+  it('ignores catalog rows with price 0, a negative price or a missing store', () => {
+    const result = computeSavings(catalog, [{ gtin14: BROKEN, quantity: 1 }], origin)
+    expect(result.products[0].offers.map(o => [o.store.id, o.unitMinor])).toEqual([['shufersal-1', 450]])
+    expect(result.complete.map(s => s.store.id)).toEqual(['shufersal-1'])
+    expect(computeSavings(catalog, [{ gtin14: EMPTY, quantity: 1 }], origin).notCompared).toEqual([{ index: 0, gtin14: EMPTY, reason: 'not-in-catalog' }])
+  })
+  it('never returns the stores without a location, in the real catalog', async () => {
+    const real = await loadTelAvivCatalog()
+    const unlocated = real.stores.flatMap((store, index) => store.location ? [] : [index])
+    expect(unlocated).toHaveLength(6)
+    const unlocatedIds = new Set(unlocated.map(index => real.stores[index].id))
+    // Products the unlocated stores publish, often cheapest there.
+    const codes = Object.entries(real.products).filter(([, p]) => p.w === 0 && p.p.some(([index]) => unlocated.includes(index))).slice(0, 60).map(([code]) => code)
+    expect(codes.length).toBeGreaterThan(10)
+    for (const code of codes) {
+      const result = computeSavings(real, [{ gtin14: code, quantity: 1, paidMinor: 100 }], { lat: 32.08, lon: 34.78 }, 20_000)
+      const ids = [...result.products.flatMap(p => p.offers.map(o => o.store.id)), ...result.complete.map(s => s.store.id), ...result.partial.map(s => s.store.id)]
+      expect(ids.filter(id => unlocatedIds.has(id))).toEqual([])
+    }
+  })
+})
+
+describe('price-date note', () => {
+  it('comes from the publication times of the stores used, never a literal', () => {
+    const result = computeSavings(catalog, [{ gtin14: MILK, quantity: 1 }], origin)
+    expect(result.published).toEqual({ earliest: '2026-10-04 03:00', latest: '2026-10-04 03:00' })
+    expect(priceDateNote(result, 'he')).toBe('מחירי מדף שפורסמו ב-4.10.2026, ללא מבצעים')
+    expect(priceDateNote(result, 'en')).toBe('Shelf prices published on 4.10.2026, without promotions')
+    const later = { ...catalog, stores: catalog.stores.map((s, i) => i === 2 ? { ...s, publishedLocal: '2026-11-02 06:00' } : s) }
+    const mixed = computeSavings(later, [{ gtin14: MILK, quantity: 1 }], origin)
+    expect(mixed.published).toEqual({ earliest: '2026-10-04 03:00', latest: '2026-11-02 06:00' })
+    expect(priceDateNote(mixed, 'he')).toBe('מחירי מדף שפורסמו בין 4.10.2026 ל-2.11.2026, ללא מבצעים')
+    expect(priceDateNote(mixed, 'en')).toBe('Shelf prices published between 4.10.2026 and 2.11.2026, without promotions')
+    // Nothing nearby: fall back to the catalog build date.
+    const none = computeSavings(catalog, [{ gtin14: MILK, quantity: 1 }], { lat: 31, lon: 35 })
+    expect(none.published).toBeNull()
+    expect(priceDateNote(none, 'en')).toBe('Shelf prices published on 4.10.2026, without promotions')
   })
 })
 

@@ -19,6 +19,10 @@ barcodes** and show the saving.
   `notCompared` with a reason: `no-barcode`, `invalid-barcode`,
   `not-in-catalog`, `weighted`, `unsupported-quantity`. Nothing is dropped
   silently.
+- **Duplicate barcodes** in one basket are kept as separate lines (each keeps
+  its own `ref`, quantity and paid amount). A store's total is the sum over all
+  lines, so it equals the total for the merged quantity; the result is the same
+  either way and nothing is rejected.
 - **Integer agorot.** Catalog prices are converted once (`toMinor`,
   `Math.round(price × 100)`), then only integers are multiplied and summed
   (3 × ₪7.90 = 2370 agorot exactly).
@@ -34,6 +38,10 @@ barcodes** and show the saving.
   store ID. `saving = baseline − best total`. If that is ≤ 0 the outcome is
   `already-cheapest` and no amount is shown (never a negative saving). Other
   outcomes: `no-baseline`, `no-complete-store`, `nothing-comparable`.
+- **Privacy**: `/api/savings` only reads the body, validates it, computes and
+  answers. It does not log, store or forward coordinates or items, the response
+  has `Cache-Control: no-store` and carries distances, not the origin
+  (`savings-privacy.test.ts`).
 - **Location**: the origin is the purchase's saved place. Device location is
   used only after "Use my location" (one read, not saved), only as the origin,
   and is sent only to our own `/api/savings`. It never proves anything.
@@ -48,9 +56,33 @@ barcodes** and show the saving.
 - Published ordinary shelf prices of Shufersal, Rami Levy and Osher Ad in Tel
   Aviv-Yafo (40 branches, 34 located), published 4.10.2026. Promotions and club
   prices are **not** applied.
-- Every comparison shows: "מחירי מדף שפורסמו ב-4.10.2026, ללא מבצעים" /
-  "Shelf prices published on 4.10.2026, without promotions", plus "not a
-  current price, stock level or checkout price".
+- Every comparison shows its price date, e.g. "מחירי מדף שפורסמו ב-4.10.2026,
+  ללא מבצעים" / "Shelf prices published on 4.10.2026, without promotions",
+  plus "not a current price, stock level or checkout price". The date is never
+  a literal: the engine returns `published.earliest/latest` from the
+  `publishedLocal` of the price files of the stores actually in the result
+  (falling back to the catalog's `generatedAt`), and `priceDateNote()` shows one
+  date or a range ("published between X and Y") in Hebrew and English.
+
+## Freshness: how this relates to the 24-hour rule
+
+These are **two different data sources with different rules**, and both stay
+as they are:
+
+| | Petah Tikva city comparison (Shon) | Savings engine (this branch) |
+| --- | --- | --- |
+| Data | `city-snapshot.json`, prices fetched with a `publishedAt`/`fetchedAt` per file | `data/catalog/tel-aviv.json`, one dated snapshot built offline |
+| Claim | "Prices near you **now**" for a receipt | "Shelf prices **as published on** a stated date" |
+| Rule | A quote older than 24 hours (`MAX_PRICE_AGE_MS`) is hidden (`stale`) | Nothing is hidden by age; the publication date is always shown next to the numbers |
+
+Why the older snapshot is still shown: the savings panel never claims a current
+price, stock or checkout price. It compares the same barcodes across branches
+**from the same publication**, so the comparison is internally consistent even
+when the snapshot is days old, and the visible date lets the person judge it.
+The 24-hour rule exists because the city comparison presents prices as current;
+applying it here would hide the whole feature without making any number more
+true. Refreshing the catalog is out of scope; when it is rebuilt, the shown date
+changes with it automatically.
 
 ## Pieces
 
@@ -63,6 +95,7 @@ barcodes** and show the saving.
 | `src/features/savings/SavingsPanel.tsx` | "איפה זה זול יותר?" in purchase detail. |
 | `src/features/savings/BarcodeBranchCompare.tsx` | Barcode result: distance from me, "your branch", "₪X cheaper than your branch". |
 | `src/features/savings/savings-camera.ts` | Keeps the flown-to branch beside/above the open panel. |
+| `src/features/savings/savings-privacy.test.ts` | Proves the route only reads, computes and answers (no logging, storage, outbound call or echoed origin). |
 
 Shared files touched (small, additive): `SpendscapeGlobe.tsx` (panel + camera
 call), `CaptureBarcode.tsx` (distance per row + one component), `next.config.ts`.
@@ -84,7 +117,7 @@ call), `CaptureBarcode.tsx` (distance per row + one component), `next.config.ts`
 
 ```
 npm.cmd run typecheck
-npm.cmd test            # savings: src/features/savings/*.test.ts (34 tests)
+npm.cmd test            # savings: src/features/savings/*.test.ts (43 tests)
 npm.cmd run build
 npx.cmd next start -p 3217 -H 127.0.0.1
 $env:SPENDSCAPE_SAVINGS_BASE='http://127.0.0.1:3217'; npx.cmd playwright test --config qa/savings.config.ts

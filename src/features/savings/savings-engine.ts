@@ -70,8 +70,10 @@ export type SavingsOutcome = 'saving' | 'already-cheapest' | 'no-baseline' | 'no
 export interface SavingsResult {
   radiusM: number
   priceBasis: string
+  /** When the catalog file was built (ISO). */
   generatedAt: string
-  publishedLocal: string | null
+  /** Publication times (local, "YYYY-MM-DD HH:mm") of the price files of the stores in this result; null when none. */
+  published: { earliest: string; latest: string } | null
   originStore: SavingsStore | null
   products: ProductComparison[]
   notCompared: NotComparedItem[]
@@ -189,9 +191,12 @@ export function computeSavings(catalog: PriceCatalogFile, items: readonly Saving
   else outcome = 'already-cheapest'
 
   const originStore = originIndex >= 0 ? nearby.get(originIndex) ?? null : null
-  const published = [...nearby.keys()].map(index => catalog.stores[index].publishedLocal).sort()
+  // The date shown next to a comparison comes from the price files actually used.
+  const usedIds = new Set([...products.flatMap(p => p.offers.map(o => o.store.id)), ...complete.map(e => e.store.id), ...partial.map(e => e.store.id)])
+  const published = catalog.stores.filter(store => usedIds.has(store.id) && /^\d{4}-\d{2}-\d{2}/.test(store.publishedLocal)).map(store => store.publishedLocal).sort()
   return {
-    radiusM, priceBasis: catalog.priceBasis, generatedAt: catalog.generatedAt, publishedLocal: published[0] ?? null,
+    radiusM, priceBasis: catalog.priceBasis, generatedAt: catalog.generatedAt,
+    published: published.length ? { earliest: published[0], latest: published.at(-1)! } : null,
     originStore, products, notCompared, complete, partial, baseline, best, savingMinor, outcome,
   }
 }

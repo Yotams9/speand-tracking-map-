@@ -1,6 +1,7 @@
 ﻿import { test, expect, type Page, type Browser } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { priceDateNote } from '../src/features/savings/savings-copy'
 
 // Savings engine, end to end, as an ordinary fresh user: scan a real Tel Aviv
 // catalog barcode → save it at a chain branch → open the purchase → the
@@ -84,7 +85,10 @@ for (const [width, height] of [[390, 844], [1280, 900]] as const) {
       await expect(page.getByTestId('savings-amount')).toContainText(he ? 'היית חוסך' : 'You’d save')
       await expect(page.getByTestId('savings-best-store')).toContainText(expected.best.store.chainName[locale])
       await expect(page.getByTestId('savings-basis')).toContainText(he ? 'מחיר המדף בסניף שבו קנית' : 'shelf price where you bought')
-      await expect(page.getByTestId('savings-price-date')).toContainText(he ? 'מחירי מדף שפורסמו ב-4.10.2026, ללא מבצעים' : 'Shelf prices published on 4.10.2026, without promotions')
+      // The date comes from the catalog's publication times in the API result, not a literal.
+      expect(expected.published?.earliest).toMatch(/^\d{4}-\d{2}-\d{2} /)
+      await expect(page.getByTestId('savings-price-date')).toContainText(priceDateNote(expected, locale))
+      await expect(page.getByTestId('savings-price-date')).toContainText(he ? 'ללא מבצעים' : 'without promotions')
       await panel.scrollIntoViewIfNeeded()
       await shot(page, '02-savings-panel')
 

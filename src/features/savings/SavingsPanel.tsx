@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { LocaleCode } from '@/data/spendscape-globe'
 import type { SavingsOrigin, SavingsResult, SavingsStore } from './savings-engine'
 import type { SavingsBasket } from './purchase-basket'
-import { formatDistance, formatMinorIls, publishedDate, savingsCopy } from './savings-copy'
+import { formatDistance, formatMinorIls, priceDateNote, savingsCopy } from './savings-copy'
 import styles from './SavingsPanel.module.css'
 
 type Load = { state: 'idle' | 'loading' | 'error' } | { state: 'ready'; result: SavingsResult }
@@ -120,7 +120,7 @@ export function SavingsPanel({ basket, locale, lineLabel, onShowStore }: {
         </li>)}</ul>
       </div>}
 
-      <p className={styles.note} data-testid="savings-price-date">{t.priceDate.replace('{date}', publishedDate(result.publishedLocal ?? result.generatedAt.slice(0, 10)))} · {t.notLive}</p>
+      <p className={styles.note} data-testid="savings-price-date">{priceDateNote(result, locale)} · {t.notLive}</p>
       <p className={styles.note}>{(fromDevice ? t.radiusDevice : t.radius).replace('{radius}', radius)}</p>
     </>}
   </section>
