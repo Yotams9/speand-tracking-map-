@@ -59,3 +59,38 @@ it('preserves two independently bounded ledgers even when their combined size ex
  expect(JSON.stringify(legacy).length).toBeLessThan(2_000_000)
  expect(validateLocalPurchases(value,context)).toEqual(value)
 })
+
+
+describe('legacy weighted rounding compatibility', () => {
+  const cases = [
+    ['0.25', '0.58', '0.15'], ['0.29', '0.5', '0.15'],
+    ['0.45', '0.7', '0.32'], ['0.50', '0.29', '0.15'],
+    ['1.00', '0.5', '0.50'],
+  ]
+  it.each(cases)('retains main-compatible half-up facts %s × %s = %s', async (price, quantity, total) => {
+    const value = structuredClone(legacyFixture)
+    const p = value.records[0].purchase
+    p.items = [{ ...p.items[0], unit: 'kg', quantity: Number(quantity), unitPrice: Number(price), lineTotal: Number(total) }]
+    p.originalAmount = Number(total)
+    const before = JSON.stringify(value)
+    expect(validateLegacyMain(value, context)).toEqual(value)
+    const source = { ...nativeFixture, legacyMain: value }
+    expect(validateLocalPurchases(source, context)).toEqual(source)
+    expect((await inspectPurchaseBackup(await exportPurchaseBackup(source, context), context)).data).toEqual(source)
+    expect(JSON.stringify(value)).toBe(before)
+    for (const wrong of [Number(total) - 0.01, Number(total) + 0.01]) {
+      const invalid = structuredClone(value)
+      invalid.records[0].purchase.items[0].lineTotal = Number(wrong.toFixed(2))
+      invalid.records[0].purchase.originalAmount = Number(wrong.toFixed(2))
+      expect(() => validateLegacyMain(invalid, context)).toThrow('legacy-ledger-invalid')
+    }
+  })
+  it('still rejects native altered printed lines and malformed legacy precision', () => {
+    const native = structuredClone(nativeFixture)
+    native.records[0].purchase.items[0].lineTotal += 0.01
+    expect(() => validateLocalPurchases(native, context)).toThrow()
+    const legacy = structuredClone(legacyFixture)
+    legacy.records[0].purchase.items[0].lineTotal = 12.501
+    expect(() => validateLegacyMain(legacy, context)).toThrow()
+  })
+})

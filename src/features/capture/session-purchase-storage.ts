@@ -2,7 +2,7 @@ import { type EvidenceKind, type FxProvenance, type GlobePurchase, type Localize
 import { denseArray, exactObject } from '../local-purchases/local-structure'
 import { validateBarcode } from './barcode-domain'
 import { type CaptureDraft, type SessionCaptureRecord } from './capture-domain'
-import { reviewCategories, reviewCurrencies, validateReview, type ReviewContext } from './session-purchase-domain'
+import { lineMinorTotal, minorAmount, reviewCategories, reviewCurrencies, validateReview, type ReviewContext } from './session-purchase-domain'
 
 // Added purchases stay in this browser profile until the user removes them.
 // Records, the stores the user added and the ID sequence persist; Undo and
@@ -154,8 +154,10 @@ export function validateLegacyMain(raw: unknown, context: ReviewContext): Legacy
       if (Object.keys(errors).length) throw 0
       if ((p.channel === 'physical' || p.channel === 'online') && p.resolution !== 'confirmed' || p.channel === 'unknown' && p.resolution !== 'unresolved') throw 0
       // Main's v1 contract required printed-line arithmetic and a matching total.
-      const scale = p.originalCurrency === 'JPY' ? 1 : 100
-      if (p.items.some(item => Math.abs(Math.round(item.unitPrice * scale * item.quantity) - Math.round(item.lineTotal * scale)) > 0) || p.items.length && Math.round(p.items.reduce((n,item) => n + item.lineTotal,0) * scale) !== Math.round(p.originalAmount * scale)) throw 0
+      // Match main's integer half-up calculation, including weighted half cents.
+      // Validate observed line totals; never recalculate or rewrite stored facts.
+      const lineAmounts = p.items.map(item => minorAmount(String(item.lineTotal), p.originalCurrency))
+      if (p.items.some((item, index) => lineAmounts[index] === null || lineMinorTotal({ name: item.label.en, price: String(item.unitPrice), quantity: String(item.quantity), unit: item.unit }, p.originalCurrency) !== lineAmounts[index]) || p.items.length && lineAmounts.reduce<number>((sum, amount) => sum + (amount ?? 0), 0) !== minorAmount(String(p.originalAmount), p.originalCurrency)) throw 0
       ids.add(p.id); evidenceIds.add(r.evidence.id)
       highest = Math.max(highest, Number(purchaseIdPattern.exec(p.id)![1]))
     }
