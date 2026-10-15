@@ -19,12 +19,15 @@ function nav(page: Page) { return page.locator(`nav[aria-label="${(page.viewport
 async function capture(page: Page) { await page.getByTestId((page.viewportSize()?.width ?? 1280) < 761 ? 'capture-open-mobile' : 'capture-open-desktop').click() }
 async function inject(page: Page) { await capture(page); await page.waitForFunction(() => typeof (window as any).__SPENDSCAPE_RECEIPT_REVIEW_QA__ === 'function'); await page.evaluate(raw => (window as any).__SPENDSCAPE_RECEIPT_REVIEW_QA__(raw), receipt()); await expect(page.getByTestId('capture-review')).toBeVisible() }
 async function confirm(page: Page, merchant?: string) {
-  if (merchant) await page.getByTestId('review-merchantId').selectOption(merchant)
-  else { await page.getByTestId('review-new-merchant').click(); await page.getByTestId('review-merchantCategory').selectOption('unknown') }
+  // Receipt review pre-fills the observed store as a new-store form; an existing store is chosen after leaving it.
+  if (merchant) { await page.getByRole('button', { name: /^(Use an existing store and place|חזרה לבחירת חנות ומקום קיימים)$/ }).click(); await page.getByTestId('review-merchantId').selectOption(merchant) }
+  else await page.getByTestId('review-merchantCategory').selectOption('unknown')
   await page.getByTestId('review-payment').selectOption('unknown'); await page.getByTestId('review-category').selectOption('unknown'); await page.getByTestId('receipt-timezone').selectOption('UTC'); await page.getByTestId('receipt-confirm-time').click()
   for (let i = 0; i < 5; i++) await page.getByTestId(`review-unit-${i}`).selectOption('item')
 }
 test.beforeEach(async ({ page }) => {
+  // Ordinary users now start in Hebrew; these flows start in English and switch explicitly.
+  await page.addInitScript(() => { if (!localStorage.getItem('spendscape.locale.v1')) localStorage.setItem('spendscape.locale.v1', 'en') })
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.route(/generativelanguage|vision\.googleapis|groq|api\.geoapify|prices\.shufersal|pricesprodpublic/i, () => { throw new Error('provider-forbidden') })
 })
