@@ -235,12 +235,17 @@ export async function migrateLegacyPurchases(deps: LegacyMigrationDeps): Promise
   let plan = planLegacyImport(raw, deps.context, null)
   if (plan.kind === 'needs-catalog') {
     let stores: readonly CatalogStoreSummary[]
-    try { stores = await withTimeout(deps.loadStores(), 10_000) } catch { return { outcome: { status: 'catalog-unavailable', legacyPurchases } } }
+    // Wait a little longer than the store-list request's own 15 s abort, so a
+    // "Try again" always starts a fresh request instead of reusing a doomed one.
+    try { stores = await withTimeout(deps.loadStores(), 16_000) } catch { return { outcome: { status: 'catalog-unavailable', legacyPurchases } } }
     plan = planLegacyImport(raw, deps.context, stores)
   }
   if (plan.kind === 'invalid') return mark({ status: 'skipped-invalid', reason: plan.reason, legacyPurchases })
   if (plan.kind !== 'ready') return { outcome: { status: 'deferred' } }
   const counts: ImportCounts = { purchases: plan.purchases, demoSkipped: plan.demoSkipped, fixtureSkipped: plan.fixtureSkipped, invalidSkipped: plan.invalidSkipped }
+  // Another tab may have decided meanwhile (imported, or continued without importing).
+  const decided = alreadyDone(read(LEGACY_MIGRATION_KEY))
+  if (decided) return { outcome: decided }
   if (plan.purchases === 0) return mark({ status: 'imported', ...counts })
   try {
     const saved = await deps.restore(plan.data)

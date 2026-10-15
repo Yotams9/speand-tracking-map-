@@ -276,6 +276,15 @@ describe('migration run', () => {
     expect(store.writes.every(([key]) => key === LEGACY_MIGRATION_KEY)).toBe(true)
     expect(store.map.get(LEGACY_DEVICE_KEY)).toBe(raw)
   })
+  it('a decision another tab made while this one waited for the store list is kept', async () => {
+    const store = storage({ [LEGACY_DEVICE_KEY]: JSON.stringify(legacyLedger()) })
+    // The other tab continued without importing while this tab's store list was loading.
+    const slow = vi.fn(async (): Promise<readonly CatalogStoreSummary[]> => { skipLegacyImport(store, 3); return stores })
+    const result = await run(store, emptyLocalPurchases(), undefined, slow)
+    expect(result.outcome).toMatchObject({ status: 'already-done', previous: { status: 'skipped-by-user' } })
+    expect(result.restore).not.toHaveBeenCalled()
+    expect(JSON.parse(store.map.get(LEGACY_MIGRATION_KEY)!)).toMatchObject({ status: 'skipped-by-user' })
+  })
   it('continuing without importing keeps an import another tab already finished', async () => {
     const store = storage({ [LEGACY_DEVICE_KEY]: JSON.stringify(legacyLedger()) })
     await run(store)

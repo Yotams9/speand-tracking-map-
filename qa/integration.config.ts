@@ -24,7 +24,7 @@ export default defineConfig({
       testMatch: ['spendscape-receipt-review-integration.spec.ts', 'spendscape-address-search.spec.ts', 'spendscape-local-directory.spec.ts', 'spendscape-nearby-demo.spec.ts', 'spendscape-scanner-e.spec.ts'],
       use: { ...common, baseURL: qaBase, locale: 'en-GB' },
     },
-    { name: 'ordinary', testMatch: ['spendscape-first-run.spec.ts', 'spendscape-night-shots.spec.ts', 'spendscape-contrast.spec.ts'], use: { ...common, locale: 'en-GB' } },
+    { name: 'ordinary', testMatch: ['spendscape-first-run.spec.ts', 'spendscape-night-shots.spec.ts', 'spendscape-contrast.spec.ts', 'spendscape-legacy-migration.spec.ts'], use: { ...common, locale: 'en-GB' } },
     // The requested manual walk-through, scripted: both viewports, both languages.
     { name: 'walk', testMatch: ['spendscape-integration-walk.spec.ts'], use: { ...common, locale: 'en-GB' } },
     {

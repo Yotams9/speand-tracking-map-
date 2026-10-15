@@ -3429,15 +3429,12 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
       essential: repositionWithoutMotion })
   }, [updateSelectedFilter])
 
-  // The earlier ledger is waiting for the published store list; the store stays empty and saving stays blocked.
-  const pendingImport = localData.phase === 'loading' && localData.migration?.status === 'catalog-unavailable' ? localData.migration.legacyPurchases : null
+  // The earlier ledger is waiting for the published store list; the store stays empty and saving stays
+  // blocked. The choice is shown inside the (modal while loading) local data panel.
+  const pendingImport = localData.phase === 'loading' && localData.migration?.status === 'catalog-unavailable'
+    ? { purchases: localData.migration.legacyPurchases, importing: localData.importing, onRetry: () => { void localData.retryMigration() }, onContinue: () => { void localData.continueWithoutImport() } } : null
   return (
     <>
-    {pendingImport !== null && <div role="alert" className={`${styles.migrationNotice} ${styles.migrationPending}`} data-testid="legacy-migration-pending" aria-busy={localData.importing}>
-      <p>{locale === 'he' ? `${pendingImport} רכישות שנשמרו קודם במכשיר הזה ממתינות להעברה, אבל רשימת הסניפים אינה זמינה כרגע. עד שתבחרו, לא ניתן לשמור רכישות חדשות.` : `${pendingImport} purchases saved earlier on this device are waiting to be moved, but the store list is unavailable right now. New purchases cannot be saved until you choose.`}</p>
-      <button type="button" data-testid="legacy-migration-retry" disabled={localData.importing} onClick={() => { void localData.retryMigration() }}>{locale === 'he' ? 'נסו שוב' : 'Try again'}</button>
-      <button type="button" data-testid="legacy-migration-continue" disabled={localData.importing} onClick={() => { void localData.continueWithoutImport() }}>{locale === 'he' ? 'המשך בלי להעביר' : 'Continue without importing'}</button>
-    </div>}
     <main
       inert={localData.busy || localData.phase !== 'ready'}
       data-local-state={localData.phase}
@@ -4243,7 +4240,7 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
         </button>
       </nav>
     </main>
-    <LocalDataPanel locale={locale} open={privacyOpen} phase={localData.phase} busy={localData.busy} writeError={localData.writeError} onClose={() => setPrivacyOpen(false)} onErase={() => localData.commit(emptySessionLedger(), [], true)} emptyDestination={localData.emptyDestination} onExport={localData.exportBackup} onInspect={localData.inspectBackup} onRestore={localData.restoreBackup} />
+    <LocalDataPanel locale={locale} open={privacyOpen} phase={localData.phase} busy={localData.busy} writeError={localData.writeError} onClose={() => setPrivacyOpen(false)} onErase={() => localData.commit(emptySessionLedger(), [], true)} emptyDestination={localData.emptyDestination} onExport={localData.exportBackup} onInspect={localData.inspectBackup} onRestore={localData.restoreBackup} pendingImport={pendingImport} />
     </>
   )
 }
