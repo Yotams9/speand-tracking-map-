@@ -2,6 +2,11 @@ import { createHash } from 'node:crypto'
 import type { DemoPolicy } from './demo-access'
 import { captureContractHash } from './receipt-capture-session'
 
+// Only these fixed Redis rejection reasons may reach the receipt boundary.
+export const quotaRejectionReasons = ['duplicate', 'busy', 'wait', 'expired', 'limit-reached', 'session-stopped'] as const
+export class DemoQuotaRejection extends Error {
+  constructor(readonly reason: typeof quotaRejectionReasons[number]) { super('quota-rejected') }
+}
 export type DemoKind = 'receipt' | 'address'
 export type DemoQuotaStatus = 'available' | 'busy' | 'wait' | 'expired' | 'limit-reached' | 'session-stopped'
 export interface DemoQuotaResult { status: DemoQuotaStatus; used: number; maxRequests: number; remaining: number; reservedMicroUsd: number; expiresAt: number }
@@ -98,18 +103,25 @@ export function createRedisQuota(env: NodeJS.ProcessEnv, policy: DemoPolicy, sen
       const response = await send(config.url, { method: 'POST', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(3000),
         headers: { Authorization: `Bearer ${config.token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(['EVAL', DEMO_QUOTA_LUA, '1', key, quotaPolicyHash(policy), action, kind, digest, outcome, JSON.stringify(quotaPolicy(policy))]) })
-      if (!response.ok || !response.body) { await response.body?.cancel(); throw 0 }
+      // Upstash reports Redis command rejections with HTTP 400. Parse only
+      // the bounded, allowlisted reason; other HTTP failures stay unavailable.
+      if ((!response.ok && response.status !== 400) || !response.body) { await response.body?.cancel(); throw 0 }
       const reader = response.body.getReader(); let size = 0, text = ''
       try { for (;;) { const { done, value } = await reader.read(); if (done) break; size += value.length; if (size > 2048) { await reader.cancel(); throw 0 }; text += new TextDecoder().decode(value) } } finally { reader.releaseLock() }
       const outer = JSON.parse(text)
-      if (typeof outer.result !== 'string' || outer.error) throw 0
+      if (typeof outer.error === 'string') {
+        const reason = outer.error.replace(/^ERR /, '')
+        if (quotaRejectionReasons.includes(reason)) throw new DemoQuotaRejection(reason as typeof quotaRejectionReasons[number])
+        throw 0
+      }
+      if (!response.ok || outer.error !== undefined || typeof outer.result !== 'string') throw 0
       const result = JSON.parse(outer.result) as DemoQuotaResult
       const max = kind === 'receipt' ? policy.receiptLimit : policy.addressLimit
       if (!result || !['available', 'busy', 'wait', 'expired', 'limit-reached', 'session-stopped'].includes(result.status) || result.maxRequests !== max ||
         !Number.isInteger(result.used) || result.used < 0 || result.used > max || result.remaining !== max - result.used ||
         !Number.isInteger(result.reservedMicroUsd) || result.reservedMicroUsd < 0 || result.reservedMicroUsd > policy.ceilingMicroUsd || result.expiresAt !== policy.expiresAt) throw 0
       return { status: result.status, used: result.used, maxRequests: result.maxRequests, remaining: result.remaining, reservedMicroUsd: result.reservedMicroUsd, expiresAt: result.expiresAt }
-    } catch { throw Error('quota-unavailable') }
+    } catch (error) { if (error instanceof DemoQuotaRejection) throw error; throw Error('quota-unavailable') }
   }
   return { status: kind => command('status', kind), reserve: async (kind, digest) => { await command('reserve', kind, digest) }, complete: async (kind, digest, outcome) => { await command('complete', kind, digest, outcome) } }
 }

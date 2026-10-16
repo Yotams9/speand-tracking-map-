@@ -1,7 +1,7 @@
 import 'server-only'
 import { createHash, createHmac } from 'node:crypto'
 import { demoOrigin, demoPolicy, demoRequestRole, type DemoPolicy } from './demo-access'
-import { createRedisQuota, type DemoQuota } from './demo-quota'
+import { createRedisQuota, DemoQuotaRejection, type DemoQuota } from './demo-quota'
 import { createDirectHandler, type DirectSlot } from '../features/receipt-image/direct-image-boundary'
 import { captureResponse } from '../features/receipt-image/structured-capture-response'
 import { safeAttemptEvent, type AttemptEvent, type AttemptDiagnostics } from '../features/receipt-image/vision-attempt'
@@ -29,6 +29,8 @@ export function createHostedReceiptHandler(env: NodeJS.ProcessEnv, send: typeof 
       const names = { 'limit-reached': 'exhausted', 'session-stopped': 'stopped', busy: 'busy-or-interrupted' }
       return reply({ code: 'local-capture-ready', mode: 'native', session: { ...state, state: names[state.status as keyof typeof names] ?? state.status, ceilingMicroUsd: policy.ceilingMicroUsd } })
     } catch { return reply({ code: 'diagnostics-unavailable' }, 503) }
+    const repeat = request.headers.get('x-spendscape-receipt-repeat')
+    if (repeat !== null && !/^[a-f0-9]{32}$/.test(repeat)) return reply({ code: 'request-invalid' }, 400)
     let slotDigest = '', terminal = false
     const events: AttemptEvent[] = [], started = performance.now()
     const finish = async (success: boolean) => { if (slotDigest && !terminal) { terminal = true; await quota.complete('receipt', slotDigest, success ? 'success' : 'failure') } }
@@ -43,10 +45,19 @@ export function createHostedReceiptHandler(env: NodeJS.ProcessEnv, send: typeof 
     const handler = createDirectHandler({ enabled: true, fictionalQa: false, allowRequest: r => authorized(r, policy, env),
       hash: bytes => createHash('sha256').update(bytes).digest('hex'), status: () => quota.status('receipt'),
       slot: async hash => {
-        const hashDigest = digest(policy, 'receipt:' + hash)
+        // A repeat is a new explicit, charged action. Its ID makes retransmission
+        // idempotent; the original image reservation is never cleared.
+        const hashDigest = digest(policy, 'receipt:' + hash + (repeat ? ':repeat:' + repeat : ''))
         const slot: DirectSlot = { diagnostics, consumed: async () => terminal, reserve: async () => {
           if (now() >= policy.expiresAt) throw Error('pilot-stopped')
-          try { await quota.reserve('receipt', hashDigest); slotDigest = hashDigest } catch { throw Error('pilot-stopped') }
+          try { await quota.reserve('receipt', hashDigest); slotDigest = hashDigest } catch (error) {
+            if (error instanceof DemoQuotaRejection) {
+              if (error.reason === 'duplicate') throw Error('attempt-consumed')
+              if (error.reason === 'busy' || error.reason === 'wait') throw Error('pilot-wait')
+              throw Error('pilot-stopped')
+            }
+            throw Error('diagnostics-unavailable')
+          }
         } }; return slot
       },
       recognize: async (bytes, mime, signal, emit) => {
