@@ -5,14 +5,16 @@ import {nearbyQaAllowed,MAX_PRICE_AGE_MS,type Matches,type RowState} from './rec
 import {cityComparison,supportedCity,validateCitySnapshot} from './city-comparison'
 import {NearbyPricesQaReview} from './NearbyPricesQaReview'
 import publicData from './city-snapshot.json'
+import {CatalogReceiptComparison} from './CatalogReceiptComparison'
 import styles from './NearbyPricesReview.module.css'
 const qualified=validateCitySnapshot(publicData)
 export function NearbyPricesReview({purchase,places,locale,onClose}:{purchase:GlobePurchase;places:readonly Place[];locale:LocaleCode;onClose:()=>void}){
- const [qa,setQa]=useState(false)
+ const [qa,setQa]=useState<boolean|null>(null),[mode,setMode]=useState<'catalog'|'city'>('catalog')
  useEffect(()=>setQa(nearbyQaAllowed(location.hostname,location.search)),[])
- return qa?<NearbyPricesQaReview purchase={purchase} places={places} locale={locale} onClose={onClose}/>:<CityReview purchase={purchase} places={places} locale={locale} onClose={onClose}/>
+ if(qa===null)return null
+ return qa?<NearbyPricesQaReview purchase={purchase} places={places} locale={locale} onClose={onClose}/>:<section className={styles.panel} dir={locale==='he'?'rtl':'ltr'} data-testid="nearby-prices-review"><button type="button" className={styles.close} onClick={onClose}>{locale==='he'?'חזרה לרכישה':'Back to purchase'}</button><div className={styles.modeChoice} aria-label={locale==='he'?'סוג השוואה':'Comparison type'}><button type="button" aria-pressed={mode==='catalog'} data-testid="comparison-catalog-mode" onClick={()=>setMode('catalog')}>{locale==='he'?'קטלוג בקרבת הקנייה':'Catalog near purchase'}</button><button type="button" aria-pressed={mode==='city'} data-testid="comparison-city-mode" onClick={()=>setMode('city')}>{locale==='he'?'פרסומי פתח תקווה':'Petah Tikva publications'}</button></div>{mode==='catalog'?<CatalogReceiptComparison purchase={purchase} places={places} locale={locale}/>:<CityReview purchase={purchase} places={places} locale={locale}/>}</section>
 }
-function CityReview({purchase,places,locale,onClose}:{purchase:GlobePurchase;places:readonly Place[];locale:LocaleCode;onClose:()=>void}){
+function CityReview({purchase,places,locale}:{purchase:GlobePurchase;places:readonly Place[];locale:LocaleCode}){
  const he=locale==='he',title=useRef<HTMLHeadingElement>(null)
  const origin=places.find(p=>p.id===purchase.placeId&&p.merchantId===purchase.merchantId)
  const [city,setCity]=useState(()=>origin?supportedCity(localized(origin.city,locale)):'')
@@ -22,8 +24,7 @@ function CityReview({purchase,places,locale,onClose}:{purchase:GlobePurchase;pla
  const expired=!!qualified&&now>Math.min(...qualified.publications.map(p=>Date.parse(p.publishedAt)))+MAX_PRICE_AGE_MS
  const money=(minor:number)=>new Intl.NumberFormat(he?'he-IL':'en-GB',{style:'currency',currency:'ILS'}).format(minor/100)
  const words:Record<RowState,string>=he?{unmatched:'המוצר לא הותאם','confirm-match':'יש לאשר את זהות המוצר והאריזה','identity-unknown':'זהות המוצר אינה מלאה','package-unknown':'האריזה אינה ידועה','unsupported-unit':'יחידת הכמות אינה נתמכת','currency-unknown':'המטבע לא אומת',stale:'פרסום המחיר פג תוקף','no-price':'אין מחיר מאומת',available:'מחיר לפי הפרסום'}:{unmatched:'Product not matched','confirm-match':'Confirm product and package','identity-unknown':'Product identity incomplete','package-unknown':'Package unknown','unsupported-unit':'Quantity unit unsupported','currency-unknown':'Currency unverified',stale:'Price publication expired','no-price':'No qualified price',available:'Published price'}
- return <section className={styles.panel} dir={he?'rtl':'ltr'} aria-labelledby="nearby-prices-title" data-testid="nearby-prices-review">
-  <button type="button" className={styles.close} onClick={onClose}>{he?'חזרה לרכישה':'Back to purchase'}</button>
+ return <section aria-labelledby="nearby-prices-title">
   <h2 id="nearby-prices-title" tabIndex={-1} ref={title}>{he?'השוואת מחירים בעיר':'City price comparison'}</h2>
   <label>{he?'העיר שנבחרה':'Selected city'}<select data-testid="city-price-city" value={city} onChange={e=>{setCity(e.target.value);setMatches({})}}><option value="">{he?'בחרו עיר':'Choose a city'}</option><option value="petah-tikva">{he?'פתח תקווה':'Petah Tikva'}</option></select></label>
   <p>{he?'השוואה בעיר בלבד. מרחקים ורדיוס אינם מאומתים; אין סיכות סניפים.':'City comparison only. Distances and radius are not qualified; no branch pins.'}</p>
