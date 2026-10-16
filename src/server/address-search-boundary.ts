@@ -8,9 +8,9 @@ export function allowedAddressOrigin(request: Request): boolean {
   } catch { return false }
 }
 const respond = (body: unknown, status = 200) => Response.json(body,{status,headers:{'cache-control':'no-store','referrer-policy':'no-referrer'}})
-export function createAddressSearchHandler(ports: { enabled: boolean; fictionalQa?: boolean; reserve: () => Promise<boolean>; search: (input: {address:string;locale:'en'|'he'}, signal: AbortSignal) => Promise<SearchResult> }, timeoutMs = 10_000) {
+export function createAddressSearchHandler(ports: { enabled: boolean; fictionalQa?: boolean; allowRequest?: (request: Request) => boolean; reserve: () => Promise<boolean>; search: (input: {address:string;locale:'en'|'he'}, signal: AbortSignal) => Promise<SearchResult> }, timeoutMs = 10_000) {
   return async (request: Request): Promise<Response> => {
-    if (!allowedAddressOrigin(request) || !ports.enabled) return respond({status:'disabled'},503)
+    if (!(ports.allowRequest ?? allowedAddressOrigin)(request) || !ports.enabled) return respond({status:'disabled'},503)
     if (request.method === 'GET') return respond({status:'available',...(ports.fictionalQa ? {mode:'fictional-qa'} : {})})
     if (request.method !== 'POST' || request.headers.get('content-type') !== 'application/json') return respond({status:'invalid'},400)
     const controller = new AbortController()

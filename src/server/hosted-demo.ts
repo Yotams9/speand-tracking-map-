@@ -7,6 +7,7 @@ import { captureResponse } from '../features/receipt-image/structured-capture-re
 import { safeAttemptEvent, type AttemptEvent, type AttemptDiagnostics } from '../features/receipt-image/vision-attempt'
 import { captureTransport } from './receipt-capture'
 import { capturePricingReady } from './receipt-capture-session'
+import { createAddressSearchHandler, createGeoapifyTransport } from './address-search-boundary'
 
 const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } })
 type QuotaFactory = (policy: DemoPolicy) => DemoQuota
@@ -68,4 +69,42 @@ export function createHostedReceiptHandler(env: NodeJS.ProcessEnv, send: typeof 
     try { return await handler(request) } finally { try { await finish(false) } catch { /* Persisted in-flight reservation stays blocked. */ } }
   }
 }
+// A separately activated address namespace never changes the receipt quota policy.
+export function hostedAddressPolicy(env: NodeJS.ProcessEnv, now = Date.now()): DemoPolicy | null {
+  if (!env.SPENDSCAPE_ADDRESS_RELEASE_ID) return null
+  return demoPolicy({ ...env,
+    SPENDSCAPE_DEMO_RELEASE_ID: env.SPENDSCAPE_ADDRESS_RELEASE_ID,
+    SPENDSCAPE_DEMO_START_AT: env.SPENDSCAPE_ADDRESS_START_AT,
+    SPENDSCAPE_DEMO_EXPIRES_AT: env.SPENDSCAPE_ADDRESS_EXPIRES_AT,
+    SPENDSCAPE_DEMO_RECEIPT_LIMIT: '0',
+    SPENDSCAPE_DEMO_ADDRESS_LIMIT: env.SPENDSCAPE_ADDRESS_REQUEST_LIMIT,
+    SPENDSCAPE_DEMO_CEILING_MICRO_USD: '0',
+  }, now)
+}
+export function createHostedAddressHandler(env: NodeJS.ProcessEnv, send: typeof fetch = fetch, quotaFactory: QuotaFactory = p => createRedisQuota(env, p), now = () => Date.now(), timeoutMs = 10_000) {
+  return async (request: Request) => {
+    const policy = hostedAddressPolicy(env, now())
+    if (!policy || !authorized(request, policy, env) || policy.addressLimit === 0 || env.SPENDSCAPE_ADDRESS_FREE_READY !== '1' || !/^[A-Za-z0-9_-]{16,128}$/.test(env.GEOAPIFY_API_KEY ?? '')) return reply({ status: 'disabled' }, 503)
+    const quota = quotaFactory(policy)
+    if (request.method === 'GET') try { const state = await quota.status('address'); return reply({ status: state.status, mode: 'native-session', session: state }) } catch { return reply({ status: 'unavailable' }, 503) }
+    const id = request.headers.get('x-spendscape-address-submission') ?? ''
+    if (!/^[a-f0-9]{32}$/.test(id)) return reply({ status: 'invalid' }, 400)
+    const submission = digest(policy, 'address:' + id)
+    let reserved = false
+    const handler = createAddressSearchHandler({ enabled: true, allowRequest: r => authorized(r, policy, env),
+      reserve: async () => { if (now() >= policy.expiresAt) return false; try { await quota.reserve('address', submission); reserved = true; return true } catch { return false } },
+      search: async (input, signal) => {
+        if (now() >= policy.expiresAt || signal.aborted) return { status: 'cancelled' }
+        return createGeoapifyTransport(() => env.GEOAPIFY_API_KEY!, send)(input, signal)
+      }
+    }, timeoutMs)
+    const response = await handler(request)
+    if (reserved) {
+      const result = await response.clone().json().catch(() => ({ status: 'unavailable' }))
+      try { await quota.complete('address', submission, ['results', 'no-results'].includes(result.status) ? 'success' : 'failure') } catch { return reply({ status: 'unavailable' }, 503) }
+    }
+    return response
+  }
+}
+export const handleHostedAddress = createHostedAddressHandler(process.env)
 export const handleHostedReceipt = createHostedReceiptHandler(process.env)
