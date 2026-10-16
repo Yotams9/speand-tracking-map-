@@ -18,3 +18,9 @@ export function localOnly(handler: (request: Request) => Response | Promise<Resp
     return handler(request)
   }
 }
+// With SPENDSCAPE_HOSTED_MODE set (Shon's protected demo / presentation mode), the
+// hosted handler runs; it checks its own policy, origin, quota and keys and fails
+// closed. Without it, the route stays local-only exactly as before.
+export function hostedOr(hosted: (request: Request) => Response | Promise<Response>, local: (request: Request) => Response | Promise<Response>, env: Record<string, string | undefined> = process.env) {
+  return env.SPENDSCAPE_HOSTED_MODE ? hosted : localOnly(local, env)
+}

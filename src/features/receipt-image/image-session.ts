@@ -1,7 +1,7 @@
 import { receiptToReviewDraft, type ReceiptReviewDraft } from '../capture/receipt-review-adapter'
 import type { ReceiptImageInfo } from './image-input'
 export type ImagePhase = 'idle' | 'validating' | 'ready' | 'reading' | 'error'
-export type ImageError = 'image-size' | 'image-format' | 'ocr-unavailable' | 'ocr-invalid' | 'layout-unsupported' | 'timeout' | 'parser-inspection'
+export type ImageError = 'image-size' | 'image-format' | 'ocr-unavailable' | 'ocr-invalid' | 'layout-unsupported' | 'timeout' | 'parser-inspection' | 'attempt-consumed'
 export interface ImageState { phase: ImagePhase; preview: string | null; code: ImageError | null }
 export interface ImagePorts {
   inspect: (file: File, signal: AbortSignal) => Promise<ReceiptImageInfo>
@@ -51,6 +51,13 @@ export class ReceiptImageSession {
   }
   private fail(error: unknown) {
     const message = error instanceof Error ? error.message : ''
+    // The provider was not called for this duplicate. Keep the temporary image
+    // only so the user can explicitly approve a new read within the same budget.
+    if (message === 'attempt-consumed') {
+      this.controller?.abort(); this.controller = null
+      if (this.timer) clearTimeout(this.timer); this.timer = null
+      this.emit('ready', 'attempt-consumed'); return
+    }
     const code: ImageError = ['image-size', 'image-format', 'ocr-unavailable', 'layout-unsupported', 'parser-inspection'].includes(message) ? message as ImageError : 'ocr-invalid'
     this.release(); this.emit('error', code)
   }

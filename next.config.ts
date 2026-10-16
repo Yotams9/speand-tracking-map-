@@ -8,6 +8,14 @@ const private172DevOrigins = Array.from(
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Local receipt reservations and private operator artifacts never ship in functions.
+  // Hosted recognition uses the existing Redis counter adapter.
+  outputFileTracingRoot: process.cwd(),
+  outputFileTracingExcludes: {
+    '/*': ['./artifacts/**/*', './qa/**/*', './tools/**/*', './docs/**/*',
+      './.vercel/**/*', './.git/**/*', './.agents/**/*', './.claude/**/*',
+      './.cache/**/*', './.env*', './**/*.test.ts', './**/*.test.mjs'],
+  },
   // Next 16 blocks dev assets requested through a hostname other than the
   // server's bind host. Keep phone testing limited to loopback and RFC 1918.
   allowedDevOrigins: [
@@ -21,6 +29,7 @@ const nextConfig: NextConfig = {
     '/api/catalog/[gtin]': ['./data/catalog/*.json'],
     '/api/catalog/stores': ['./data/catalog/*.json'],
     '/api/savings': ['./data/catalog/*.json'],
+    '/api/catalog/search': ['./data/catalog/*.json'],
   },
 }
 
