@@ -5,14 +5,15 @@ import {nearbyQaAllowed,MAX_PRICE_AGE_MS,type Matches,type RowState} from './rec
 import {cityComparison,supportedCity,validateCitySnapshot} from './city-comparison'
 import {NearbyPricesQaReview} from './NearbyPricesQaReview'
 import publicData from './city-snapshot.json'
-import {CatalogReceiptComparison} from './CatalogReceiptComparison'
+import {ReceiptPricesReview} from '../savings/ReceiptPricesReview'
+import type {SavingsStore} from '../savings/savings-engine'
 import styles from './NearbyPricesReview.module.css'
 const qualified=validateCitySnapshot(publicData)
-export function NearbyPricesReview({purchase,places,locale,onClose}:{purchase:GlobePurchase;places:readonly Place[];locale:LocaleCode;onClose:()=>void}){
- const [qa,setQa]=useState<boolean|null>(null),[mode,setMode]=useState<'catalog'|'city'>('catalog')
+export function NearbyPricesReview({purchase,places,locale,onClose,onShowStore}:{purchase:GlobePurchase;places:readonly Place[];locale:LocaleCode;onClose:()=>void;onShowStore:(store:SavingsStore)=>void}){
+ const [qa,setQa]=useState<boolean|null>(null),[mode,setMode]=useState<'prices'|'city'>('prices')
  useEffect(()=>setQa(nearbyQaAllowed(location.hostname,location.search)),[])
  if(qa===null)return null
- return qa?<NearbyPricesQaReview purchase={purchase} places={places} locale={locale} onClose={onClose}/>:<section className={styles.panel} dir={locale==='he'?'rtl':'ltr'} data-testid="nearby-prices-review"><button type="button" className={styles.close} onClick={onClose}>{locale==='he'?'חזרה לרכישה':'Back to purchase'}</button><div className={styles.modeChoice} aria-label={locale==='he'?'סוג השוואה':'Comparison type'}><button type="button" aria-pressed={mode==='catalog'} data-testid="comparison-catalog-mode" onClick={()=>setMode('catalog')}>{locale==='he'?'קטלוג בקרבת הקנייה':'Catalog near purchase'}</button><button type="button" aria-pressed={mode==='city'} data-testid="comparison-city-mode" onClick={()=>setMode('city')}>{locale==='he'?'פרסומי פתח תקווה':'Petah Tikva publications'}</button></div>{mode==='catalog'?<CatalogReceiptComparison purchase={purchase} places={places} locale={locale}/>:<CityReview purchase={purchase} places={places} locale={locale}/>}</section>
+ return qa?<NearbyPricesQaReview purchase={purchase} places={places} locale={locale} onClose={onClose}/>:<section className={styles.panel} dir={locale==='he'?'rtl':'ltr'} data-testid="nearby-prices-review"><button type="button" className={styles.close} onClick={onClose}>{locale==='he'?'חזרה לרכישה':'Back to purchase'}</button><div className={styles.modeChoice} aria-label={locale==='he'?'סוג השוואה':'Comparison type'}><button type="button" aria-pressed={mode==='prices'} data-testid="comparison-prices-mode" onClick={()=>setMode('prices')}>{locale==='he'?'איפה זה זול יותר?':'Where is it cheaper?'}</button><button type="button" aria-pressed={mode==='city'} data-testid="comparison-city-mode" onClick={()=>setMode('city')}>{locale==='he'?'פרסומי פתח תקווה':'Petah Tikva publications'}</button></div>{mode==='prices'?<ReceiptPricesReview purchase={purchase} places={places} locale={locale} onShowStore={onShowStore}/>:<CityReview purchase={purchase} places={places} locale={locale}/>}</section>
 }
 function CityReview({purchase,places,locale}:{purchase:GlobePurchase;places:readonly Place[];locale:LocaleCode}){
  const he=locale==='he',title=useRef<HTMLHeadingElement>(null)

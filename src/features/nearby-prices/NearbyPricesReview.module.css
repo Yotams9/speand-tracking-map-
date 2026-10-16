@@ -17,11 +17,6 @@
 @media (max-width: 760px) { .panel { inset-block: 72px 88px; inset-inline: 10px; inline-size: auto; padding: 18px; } }
 
 .modeChoice { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
-.modeChoice button, .catalogAction { min-block-size: 44px; padding: 10px 12px; border: 1px solid #416d64; border-radius: 10px; background: #142c2b; color: #6ee7c3; font: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.modeChoice button { min-block-size: 44px; padding: 10px 12px; border: 1px solid #416d64; border-radius: 10px; background: #142c2b; color: #6ee7c3; font: inherit; cursor: pointer; overflow-wrap: anywhere; }
 .modeChoice button[aria-pressed='true'] { border-color: #6ee7c3; background: #23483f; }
 .panel input:not([type='checkbox']) { inline-size: 100%; min-inline-size: 0; min-block-size: 44px; padding: 10px; border: 1px solid #697488; border-radius: 8px; background: #222a37; color: #f1f4fa; font: inherit; }
-.catalogAction { margin-block: 8px; }
-.catalogAction:disabled { opacity: .6; cursor: default; }
-.candidates { list-style: none; padding: 0; }
-.candidates button { inline-size: 100%; display: grid; gap: 5px; text-align: start; }
-.referenceBest { color: #6ee7c3 !important; }

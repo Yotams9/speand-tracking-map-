@@ -70,6 +70,10 @@ import { deleteLocalPurchase, emptySessionLedger, expireSessionPurchaseUndo, sav
 import { isLocated, loadCatalogStores } from '@/features/capture/catalog-stores'
 import { catalogChainNames } from '@/features/local-purchases/place-provenance'
 import { thisMonthSummary } from '@/features/insights/insights-domain'
+import { SavingsPanel } from '@/features/savings/SavingsPanel'
+import { savingsBasket } from '@/features/savings/purchase-basket'
+import { offsetBesidePanel } from '@/features/savings/savings-camera'
+import type { SavingsStore } from '@/features/savings/savings-engine'
 import { DEFAULT_LOCALE, offeredDirectory, readDemoPreference, readLocalePreference, writeDemoPreference, writeLocalePreference } from '@/data/demo-visibility'
 import {
   applySmartInboxDecisions,
@@ -1188,6 +1192,10 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
       ? allEvidence.filter((record) => selectedPurchase.evidenceIds.includes(record.id))
       : [],
     [allEvidence, selectedPurchase],
+  )
+  const selectedSavingsBasket = useMemo(
+    () => selectedPurchase ? savingsBasket(selectedPurchase, sessionCaptureRecords.find(r => r.purchase.id === selectedPurchase.id), userGraph.places) : null,
+    [selectedPurchase, sessionCaptureRecords, userGraph.places],
   )
   const selectedPlacePurchases = useMemo(
     () => selectedPlaceId ? purchasesForPlace(selectedPlaceId, visiblePurchases) : [],
@@ -3426,6 +3434,16 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
       essential: repositionWithoutMotion })
   }, [updateSelectedFilter])
 
+  const showSavingsStore = (store: SavingsStore) => {
+    const reveal = () => runCameraAction('savings-store', map => map.flyTo({
+      center: [store.location.lon, store.location.lat], zoom: 15.6, speed: 1.6,
+      offset: offsetBesidePanel(document.querySelector('[data-testid="purchase-detail"]')?.getBoundingClientRect() ?? null, { width: window.innerWidth, height: window.innerHeight }),
+      ...(reducedMotionRef.current ? { duration: 0 } : {}), essential: reducedMotionRef.current,
+    }))
+    // The receipt comparison covers the map on a phone. Reveal the purchase
+    // sheet first, then put the branch in the visible map area beside it.
+    if (nearbyPurchaseId) { closeTopLayer(); requestAnimationFrame(reveal) } else reveal()
+  }
   return (
     <>
     <main
@@ -4026,6 +4044,8 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
             )}
           </section>
 
+          {selectedSavingsBasket && <SavingsPanel key={selectedPurchase.id} basket={selectedSavingsBasket} locale={locale} lineLabel={ref => { const item = selectedPurchase.items.find(i => i.id === ref); return item ? localized(item.label, locale) : '' }} onShowStore={showSavingsStore} />}
+
           {selectedPurchase.provenance === 'user-reviewed-session' && selectedPurchase.items.length > 0 && <ReceiptPayableSummary itemMinor={purchaseItemTotalMinor(selectedPurchase)} payableMinor={Math.round(selectedPurchase.originalAmount * (selectedPurchase.originalCurrency === 'JPY' ? 1 : 100))} currency={selectedPurchase.originalCurrency} locale={locale} />}
 
           <div className={styles.provenanceBlock}>
@@ -4055,7 +4075,7 @@ export function SpendscapeGlobe({ initialData, demoHistory = noDemo }: Spendscap
         </aside>
       )}
 
-      {!replay && !captureStep && nearbyPurchaseId && selectedPurchase?.id === nearbyPurchaseId && <NearbyPricesReview key={nearbyPurchaseId} purchase={selectedPurchase} places={globePlaces} locale={locale} onClose={closeTopLayer} />}
+      {!replay && !captureStep && nearbyPurchaseId && selectedPurchase?.id === nearbyPurchaseId && <NearbyPricesReview key={nearbyPurchaseId} purchase={selectedPurchase} places={globePlaces} locale={locale} onClose={closeTopLayer} onShowStore={showSavingsStore} />}
 
       {locationPurchaseId && selectedPurchase?.id === locationPurchaseId && selectedMerchant && <div className={styles.locationHost}>
         <PurchaseLocationReview key={locationPurchaseId} locale={locale} merchant={selectedMerchant} places={userGraph.places} currentPlaceId={selectedPurchase.placeId} initialDetails={receiptLocationSeedRef.current} mapAvailable={mapAvailable}

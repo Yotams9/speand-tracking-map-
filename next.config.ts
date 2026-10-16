@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
     '/api/catalog/[gtin]': ['./data/catalog/*.json'],
     '/api/catalog/stores': ['./data/catalog/*.json'],
     '/api/catalog/search': ['./data/catalog/*.json'],
+    '/api/savings': ['./data/catalog/*.json'],
   },
 }
 

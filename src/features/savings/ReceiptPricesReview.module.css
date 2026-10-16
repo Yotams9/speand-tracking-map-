@@ -1,0 +1,12 @@
+.review { display: grid; gap: 14px; }
+.review h2 { margin: 10px 0; }
+.notice { padding: 12px; border: 1px solid #416d64; border-radius: 12px; background: #142c2b; }
+.row { padding: 14px; border: 1px solid #414854; border-radius: 14px; background: #182029; }
+.row h3 { margin-block-start: 0; }
+.action { min-block-size: 44px; margin-block: 8px; padding: 10px 14px; border: 1px solid #416d64; border-radius: 10px; background: #142c2b; color: #6ee7c3; font: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.action:disabled { opacity: .55; cursor: default; }
+.matches { list-style: none; padding: 0; display: grid; gap: 12px; }
+.matches li { display: grid; gap: 4px; padding: 12px; border: 1px solid #596375; border-radius: 12px; }
+.matches .action { inline-size: 100%; }
+.hint, .review small { color: #bfc7d5; font-size: .8rem; line-height: 1.5; }
+.result { scroll-margin-block-start: 16px; }
