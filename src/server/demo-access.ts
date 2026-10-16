@@ -41,7 +41,7 @@ export function demoRequestRole(request: Request, policy: DemoPolicy): DemoRole 
   const matches = (request.headers.get('cookie') ?? '').split(';').map(v => v.trim()).filter(v => v.startsWith(name + '='))
   return matches.length === 1 ? demoRole(matches[0].slice(name.length + 1), policy) : null
 }
-export function demoOrigin(request: Request, policy: DemoPolicy): boolean {
+export function demoOrigin(request: Request, policy: Pick<DemoPolicy, 'origin' | 'test'>): boolean {
   try {
     const url = new URL(request.url), expected = new URL(policy.origin)
     // Next's local production server reconstructs 127.0.0.1 requests with a

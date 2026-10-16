@@ -7,6 +7,7 @@ import { captureResponse } from '../features/receipt-image/structured-capture-re
 import { safeAttemptEvent, type AttemptEvent, type AttemptDiagnostics } from '../features/receipt-image/vision-attempt'
 import { captureTransport } from './receipt-capture'
 import { capturePricingReady } from './receipt-capture-session'
+import { continuousProviderMode, createContinuousAddressHandler, createContinuousReceiptHandler, serviceReceiptCredentialsReady } from './hosted-provider-service'
 import { createAddressSearchHandler, createGeoapifyTransport } from './address-search-boundary'
 
 const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } })
@@ -15,12 +16,12 @@ const digest = (policy: DemoPolicy, value: string) => createHmac('sha256', polic
 // Presentation mode uses the existing API quota without adding an application login.
 const authorized = (request: Request, policy: DemoPolicy, env: NodeJS.ProcessEnv) => demoOrigin(request, policy) && (env.SPENDSCAPE_HOSTED_MODE === 'presentation' || !!demoRequestRole(request, policy))
 export function hostedReceiptReady(env: NodeJS.ProcessEnv, now: number) {
-  return capturePricingReady(new Date(now)) && env.SPENDSCAPE_RECEIPT_PROJECT === 'spendscape-receipt-benchmark' && env.SPENDSCAPE_RECEIPT_PROJECT_NUMBER === '376401338717' && env.SPENDSCAPE_RECEIPT_PREPAY_CONFIRMED === '1' &&
-    /^[A-Za-z0-9_.-]{20,200}$/.test(env.GEMINI_API_KEY ?? '') && /^[a-f0-9]{64}$/.test(env.SPENDSCAPE_RECEIPT_VERIFIED_KEY_SHA256 ?? '') &&
-    createHash('sha256').update(env.GEMINI_API_KEY ?? '').digest('hex') === env.SPENDSCAPE_RECEIPT_VERIFIED_KEY_SHA256
+  return capturePricingReady(new Date(now)) && serviceReceiptCredentialsReady(env)
 }
 export function createHostedReceiptHandler(env: NodeJS.ProcessEnv, send: typeof fetch = fetch, quotaFactory: QuotaFactory = p => createRedisQuota(env, p), now = () => Date.now(), timeoutMs = 45_000) {
+  const continuous = createContinuousReceiptHandler(env, send, timeoutMs)
   return async (request: Request) => {
+    if (continuousProviderMode(env)) return continuous(request)
     const policy = demoPolicy(env, now())
     if (!policy || !authorized(request, policy, env)) return reply({ code: 'ocr-unavailable' }, 503)
     if (!hostedReceiptReady(env, now()) || policy.receiptLimit === 0) return reply({ code: 'ocr-unavailable' }, 503)
@@ -82,7 +83,9 @@ export function hostedAddressPolicy(env: NodeJS.ProcessEnv, now = Date.now()): D
   }, now)
 }
 export function createHostedAddressHandler(env: NodeJS.ProcessEnv, send: typeof fetch = fetch, quotaFactory: QuotaFactory = p => createRedisQuota(env, p), now = () => Date.now(), timeoutMs = 10_000) {
+  const continuous = createContinuousAddressHandler(env, send, timeoutMs)
   return async (request: Request) => {
+    if (continuousProviderMode(env)) return continuous(request)
     const policy = hostedAddressPolicy(env, now())
     if (!policy || !authorized(request, policy, env) || policy.addressLimit === 0 || env.SPENDSCAPE_ADDRESS_FREE_READY !== '1' || !/^[A-Za-z0-9_-]{16,128}$/.test(env.GEOAPIFY_API_KEY ?? '')) return reply({ status: 'disabled' }, 503)
     const quota = quotaFactory(policy)
