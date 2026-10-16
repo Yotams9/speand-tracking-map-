@@ -1,12 +1,12 @@
 'use client'
 import { useRef, useState } from 'react'
 import type { DirectoryIntent } from '../local-purchases/local-directory'
-import type { ReviewContext, ReviewErrors } from './session-purchase-domain'
+import type { ReviewContext, ReviewErrors, PurchaseReviewInput } from './session-purchase-domain'
 import type { LocaleCode } from '../../data/spendscape-globe'
 import styles from './CaptureExperience.module.css'
 const blankPlace = () => ({ branch: '', city: '', country: '', address: '', longitude: '', latitude: '', confirmed: false, separate: false })
-export function MerchantPlaceReview({ intent, merchantId, channel, context, locale, errors, onChange, onChooseMerchant, observedName = '', reviewedAddress = '', receiptMode = false }: {
-  intent?: DirectoryIntent; merchantId: string; channel: string; context: ReviewContext; locale: LocaleCode; errors: ReviewErrors; onChange: (intent?: DirectoryIntent) => void; onChooseMerchant: (id: string) => void; observedName?: string; reviewedAddress?: string; receiptMode?: boolean
+export function MerchantPlaceReview({ intent, merchantId, channel, context, locale, errors, onChange, onChooseMerchant, observedName = '', reviewedAddress = '', receiptMode = false, receiptCategory = '', onReceiptCategory, onReviewedAddress }: {
+  intent?: DirectoryIntent; merchantId: string; channel: string; context: ReviewContext; locale: LocaleCode; errors: ReviewErrors; onChange: (intent?: DirectoryIntent) => void; onChooseMerchant: (id: string) => void; observedName?: string; reviewedAddress?: string; receiptMode?: boolean; receiptCategory?: PurchaseReviewInput['category']; onReceiptCategory?: (category: PurchaseReviewInput['category']) => void; onReviewedAddress?: (address: string) => void
 }) {
   const he = locale === 'he'
   const [locating, setLocating] = useState<'idle' | 'pending' | 'failed'>('idle')
@@ -32,8 +32,10 @@ export function MerchantPlaceReview({ intent, merchantId, channel, context, loca
   }
   return <fieldset className={styles.directoryReview} data-testid="merchant-place-review"><legend>{he ? 'חנות ומיקום במכשיר הזה' : 'Store and place on this device'}</legend>
     <p>{receiptMode ? (he ? 'אין צורך במיקום כדי לשמור. שם החנות והכתובת מולאו לבדיקה; סיכה דורשת אישור מיקום נפרד לאחר שמירה.' : 'Location is not needed to save. Store name and address are filled for review; a pin requires separate location confirmation after saving.') : he ? 'אין הסקת מיקום. מקום חדש דורש פרטים וקואורדינטות שתאשרו. אם אינם ידועים, בחרו מקום לא פתור ללא סיכה.' : 'No location is inferred. A new place needs details and coordinates you confirm. If unknown, choose unresolved with no pin.'}</p>
+    {receiptMode && <label>{he ? 'כתובת מהקבלה · לבדיקה ואישור מיקום' : 'Receipt address · review before confirming a location'}<input data-testid="receipt-address-review" dir="auto" maxLength={500} value={reviewedAddress} onChange={e => onReviewedAddress?.(e.target.value)} /><small>{he ? 'הכתובת מולאה מהקבלה וניתנת לתיקון. לאחר שמירה היא תועבר לטופס אישור המיקום; סיכה תתווסף רק לאחר אישור נקודה במפה.' : 'Prefilled from the receipt and editable. After saving, it carries into location confirmation; a pin is added only after you confirm a map point.'}</small></label>}
+    {receiptMode && !intent?.merchant && <label>{he ? 'קטגוריה' : 'Category'}<select {...attrs('category')} value={receiptCategory} onChange={e => onReceiptCategory?.(e.target.value as PurchaseReviewInput['category'])}><option value="">{he ? 'בחירה…' : 'Choose…'}</option>{(['groceries','food','retail','travel','unknown'] as const).map((v,i)=><option key={v} value={v}>{he ? ['מכולת','אוכל','קמעונאות','נסיעות','לא ידוע'][i] : v === 'unknown' ? 'Unknown' : v}</option>)}</select>{error('category')}</label>}
     {!intent ? <div className={styles.directoryActions}>
-      {channel === 'physical' && <label>{he ? 'חנות קיימת לסניף חדש' : 'Existing store for a new branch'}<select data-testid="review-branch-merchant" value={merchantId} onChange={e => onChooseMerchant(e.target.value)}><option value="">{he ? 'בחירה…' : 'Choose…'}</option>{context.merchants.filter(m => !m.onlineOnly).map(m => <option key={m.id} value={m.id}>{m.name[locale]}</option>)}</select></label>}
+      {!receiptMode && channel === 'physical' && <label>{he ? 'חנות קיימת לסניף חדש' : 'Existing store for a new branch'}<select data-testid="review-branch-merchant" value={merchantId} onChange={e => onChooseMerchant(e.target.value)}><option value="">{he ? 'בחירה…' : 'Choose…'}</option>{context.merchants.filter(m => !m.onlineOnly).map(m => <option key={m.id} value={m.id}>{m.name[locale]}</option>)}</select></label>}
       <button type="button" data-testid="review-new-merchant" onClick={() => onChange({ merchant: { name: observedName, category: '', separate: false }, ...(!receiptMode && channel === 'physical' ? { place: proposedPlace() } : {}) })}>{observedName ? (he ? 'בדיקה והוספה של החנות שנצפתה' : 'Review and create the observed store') : (he ? 'הוספת חנות חדשה' : 'Create a new store')}</button>
       {!receiptMode && channel === 'physical' && merchant && !merchant.onlineOnly && <button type="button" data-testid="review-new-branch" onClick={() => onChange({ place: proposedPlace() })}>{he ? 'הוספת סניף לחנות הנבחרת' : 'Add a branch to the selected store'}</button>}
     </div> : <>
